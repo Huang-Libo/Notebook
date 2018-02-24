@@ -28,6 +28,12 @@ R GUI 切换回中文(建议还是使用英文, 中文翻译不一定靠谱):
 defaults write org.R-project.R force.LANG zh_CN.UTF-8
 ```
 
+分割线
+
+---
+
+分割线: 如果仅需修改 Language, 参考上面👆的内容即可. 如果想了解其他细节, 可以往下看.
+
 ## 修改默认 Language 的痛点
 
 在 Windows 操作系统上还是很好修改默认 Language 的, 直接在安装目录的 etc 目录下的 RConsole 文件中添加 `language = en` 即可. 参考[这里](https://www.zhihu.com/question/21127155/answer/58369102
