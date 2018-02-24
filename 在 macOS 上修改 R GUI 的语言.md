@@ -57,7 +57,7 @@ R.app 是 R 的一个可视化环境. 目前最关键的问题是 R.app 是日�
 
 > 虽然没有找到相关配置文件, 但是我摸索到一个替代方案.
 
-右键 `R.app`, 把除了 `English.lproj` 以外的其他以 `.lproj` 结尾的目录移动到新建的 `lproj-bak` 目录中, 最后重启 `R.app`.
+右键 `R.app`, 点击`显示包内容`, 进入 `Resources` 目录, 把除了 `English.lproj` 以外的其他以 `.lproj` 结尾的目录移动到新建的 `lproj-bak` 目录中, 最后重启 `R.app`.
 
 ![](media/15194730111137.jpg)
 
