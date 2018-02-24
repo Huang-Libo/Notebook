@@ -2,7 +2,10 @@
 
 最近需要用 R 语言, 所以在 `macOS 10.13.2` 上安装了 R. 安装好之后发现 R GUI 居然是日语的, 这让我蒙圈了, 我用的又不是日文系统, 为什么会显示日文, 难道这个二进制包是一个日本人打出来的? 
 
-紧接着我发现, R GUI 的默认语言有点不好改.
+![让人蒙圈的日语](media/15194702029143.jpg)
+
+
+**紧接着我发现, R GUI 的默认 Language 有点不好改.**
 
 ## 修改默认 Language 的痛点
 
@@ -22,7 +25,7 @@
 从安装说明里面可以看出:
 
 1. 这个安装包包含 `R Framework` 和 `R.app GUI`;
-2. R Framework 的安装路径是 `/Library/Framework`, 经过一番探索可发现其配置文件在 `/Library/Frameworks/R.framework/Resources/etc/` 目录下(需要 root 权限), 但没发现可配置语言的地方. 另外, 这里是终端中的 R 的配置文件, 应该也不能改 R.app 的默认语言.
+2. R Framework 的安装路径是 `/Library/Framework`, 经过一番探索可发现其配置文件在 `/Library/Frameworks/R.framework/Resources/etc/` 目录下(需要 root 权限), 但没发现可配置 Language 的地方. 另外, 这里是终端中的 R 的配置文件, 应该也不能改 R.app 的默认 Language.
 
 ![](media/15194722689558.jpg)
 
@@ -50,8 +53,6 @@ $ defaults write org.R-project.R force.LANG en_US.UTF-8
 
 R.app 是 R 的一个可视化环境. 目前最关键的问题是 R.app 是日文的, 并且不知道有没有对应的配置文件可以修改默认 Language, 反正我找了好久都没有找到.  
 
-![让人蒙圈的日语](media/15194702029143.jpg)
-
 ## 修改 R.app GUI 的默认 Language
 
 > 虽然没有找到相关配置文件, 但是我摸索到一个替代方案.
@@ -60,14 +61,14 @@ R.app 是 R 的一个可视化环境. 目前最关键的问题是 R.app 是日�
 
 ![](media/15194730111137.jpg)
 
-最后我们会发现默认语言恢复成英语了, 菜单栏和提示信息都是英文: 
+最后我们会发现默认 Language 恢复成英语了, 菜单栏和提示信息都是英文: 
 
 ![](media/15194731892943.jpg)
 
 ## 后记
 
 1. `Resources` 目录下的 `ReadMe.txt` 包含 `Localization` 相关的信息, 但目前痛点已解决, 等以后有新需求的时候再看它吧.
-2. 如果直接从源码安装, 应该也能自行指定语言, 不过我没试, 有兴趣的同学可以试试.
+2. 如果直接从源码安装, 应该也能自行指定 Language, 不过我没试, 有兴趣的同学可以试试.
 
 ## 资源
 
