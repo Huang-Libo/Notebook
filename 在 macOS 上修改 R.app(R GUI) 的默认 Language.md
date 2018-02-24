@@ -22,6 +22,12 @@ defaults write org.R-project.R force.LANG en_US.UTF-8
   
 至于为什么之前的那台电脑使用上面的这行配置无效, 我也不得而知, 可能是太久没重启电脑导致的吧...
 
+R GUI 切换回中文(建议还是使用英文, 中文翻译不一定靠谱):  
+
+```
+defaults write org.R-project.R force.LANG zh_CN.UTF-8
+```
+
 ## 修改默认 Language 的痛点
 
 在 Windows 操作系统上还是很好修改默认 Language 的, 直接在安装目录的 etc 目录下的 RConsole 文件中添加 `language = en` 即可. 参考[这里](https://www.zhihu.com/question/21127155/answer/58369102
