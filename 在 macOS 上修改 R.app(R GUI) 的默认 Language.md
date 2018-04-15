@@ -1,4 +1,4 @@
-# 在 macOS 上修改 R.app(R GUI) 的默认 Language
+在 macOS 上修改 R.app(R GUI) 的默认 Language
 
 最近需要用 R 语言, 所以在 `macOS 10.13.2` 上安装了 R. 安装好之后发现 R GUI 居然是日语的, 这让我蒙圈了, 我用的又不是日文系统, 为什么会显示日文, 难道这个二进制包是一个日本人打出来的? 
 
@@ -32,7 +32,7 @@ defaults write org.R-project.R force.LANG zh_CN.UTF-8
 
 ---
 
-分割线: 如果仅需修改 Language, 参考上面👆的内容即可. 如果想了解其他细节, 可以往下看.
+分割线: 如果仅需修改 Language, 参考上面👆的内容即可. 如果上面的方法不起作用，或者是想了解其他细节, 可以往下看.
 
 ## 修改默认 Language 的痛点
 
