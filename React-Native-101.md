@@ -118,3 +118,31 @@ npx react-native run-ios
 **其他方案**：
 
 - [在已有的 APP 中集成 RN](https://reactnative.dev/docs/integration-with-existing-apps)
+
+## 运行项目
+
+### 启动 Metro
+
+> Metro, the JavaScript bundler that ships with React Native.
+>  
+> Metro "takes in an entry file and various options, and returns a single JavaScript file that includes all your code and its dependencies."—Metro Docs
+>  
+> If you're familiar with web development, Metro is a lot like webpack—for React Native apps. Unlike Kotlin or Java, JavaScript isn't compiled—and neither is React Native. Bundling isn't the same as compiling, but it can help improve startup performance and translate some platform-specific JavaScript into more widely supported JavaScript.
+
+在项目的目录下执行以下命令即可启动 Metro ：
+
+```console
+npx react-native start
+```
+
+### 在 iOS 模拟器中启动应用
+
+让 Metro Bundler 在单独的终端中运行，再开启一个终端来启动应用：
+
+```console
+npx react-native run-ios
+```
+
+项目编译完成后，就会在模拟器中运行。
+
+也可以直接在 Xcode 中运行 ios 目录下的 `.xcworkspace` 工程。
