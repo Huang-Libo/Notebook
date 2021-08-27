@@ -146,3 +146,11 @@ npx react-native run-ios
 项目编译完成后，就会在模拟器中运行。
 
 也可以直接在 Xcode 中运行 ios 目录下的 `.xcworkspace` 工程。
+
+### 在真机上运行项目
+
+略。
+
+### 修改代码
+
+在 App.js 中修改代码，在 iOS 模拟器中执行 cmd + R 来刷新。
