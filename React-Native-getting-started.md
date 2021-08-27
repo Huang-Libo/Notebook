@@ -108,3 +108,43 @@ export default App;
 各类组件的关系图：
 
 ![diagram_react-native-components.svg](media/React-Native-Docs/diagram_react-native-components.svg)
+
+## React 基础
+
+> [React 的官方文档](https://reactjs.org/docs/getting-started.html)
+
+React 的核心概念：
+
+- components
+- JSX
+- props
+- state
+
+### 你的第一个组件
+
+示例代码：
+
+```javascript
+import React from 'react';
+import { Text } from 'react-native';
+
+const Cat = () => {
+  return (
+    <Text>Hello, I am your cat!</Text>
+  );
+}
+
+export default Cat;
+```
+
+这个组件以 function 开头：
+
+```javascript
+const Cat = () => {};
+```
+
+Function Components 返回的内容会被渲染成 **React element** 。这个 Cat 组件将被渲染成 `<Text>` 元素。
+
+最后，使用 JavaScript 的 [export default](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/export) 导出这个组件。
+
+注：其他导出组件方式可参考这个 [handy cheatsheet on JavaScript imports and exports](https://medium.com/dailyjs/javascript-module-cheatsheet-7bd474f1d829) 。
