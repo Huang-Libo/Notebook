@@ -62,6 +62,8 @@ npm start # 或使用 expo start
 
 使用 Homebrew 安装 Node 和 Watchman ：
 
+说明：使用 `n` 命令可以快速安装不同的 `node` 版本，非常方便，比如执行 `n 14.17.5` 即可安装 *14.17.5* 版本的 `node` 。
+
 ```console
 brew install node
 brew install watchman
@@ -219,3 +221,5 @@ drwxr-xr-x  2 huanglibo  admin    64B Aug 28 00:50 watchman
     "version": "2021.08.23.00"
 }
 ```
+
+最后，执行 `npx react-native run-ios` ，项目能正常运行了。
