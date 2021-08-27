@@ -127,11 +127,9 @@ npx react-native run-ios
 
 ### 启动 Metro
 
-> Metro, the JavaScript bundler that ships with React Native.  
->  
-> Metro "takes in an entry file and various options, and returns a single JavaScript file that includes all your code and its dependencies." —Metro Docs  
->  
-> If you're familiar with web development, Metro is a lot like webpack—for React Native apps. Unlike Kotlin or Java, JavaScript isn't compiled—and neither is React Native. Bundling isn't the same as compiling, but it can help improve startup performance and translate some platform-specific JavaScript into more widely supported JavaScript.  
+> - Metro, the JavaScript bundler that ships with React Native.  
+> - Metro "takes in an entry file and various options, and returns a single JavaScript file that includes all your code and its dependencies." —Metro Docs  
+> - If you're familiar with web development, Metro is a lot like webpack—for React Native apps. Unlike Kotlin or Java, JavaScript isn't compiled—and neither is React Native. Bundling isn't the same as compiling, but it can help improve startup performance and translate some platform-specific JavaScript into more widely supported JavaScript.  
 
 在项目的目录下执行以下命令即可启动 Metro ：
 
@@ -157,4 +155,4 @@ npx react-native run-ios
 
 ### 修改代码
 
-在 App.js 中修改代码，在 iOS 模拟器中执行 cmd + R 来刷新。
+在 `App.js` 中修改代码，在 iOS 模拟器中执行 <kbd>⌘</kbd> + <kbd>R</kbd> 来刷新页面。
