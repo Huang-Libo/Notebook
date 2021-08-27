@@ -1,4 +1,4 @@
-# 配置 React Native 的开发环境
+# React Native：配置开发环境
 
 ## 简介
 
