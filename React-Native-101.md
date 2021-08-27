@@ -75,7 +75,11 @@ brew install watchman
 gem install cocoapods
 ```
 
-*React Native command line interface* 是随 *Node.js* 发布的，执行方式：`npx react-native <command>` 。
+*React Native command line interface* 是随 *Node.js* 发布的，执行方式：
+
+```console
+npx react-native <command>
+```
 
 ### 创建应用
 
@@ -95,10 +99,10 @@ npx react-native init AwesomeProject
 ```plaintext
 Run instructions for Android:
     • Have an Android emulator running (quickest way to get started), or a device connected.
-    • cd "/Users/huanglibo/RNDemo" && npx react-native run-android
+    • cd "RNDemo" && npx react-native run-android
 
 Run instructions for iOS:
-  • cd "/Users/huanglibo/RNDemo" && npx react-native run-ios
+  • cd "RNDemo" && npx react-native run-ios
   - or -
   • Open RNDemo/ios/RNDemo.xcworkspace in Xcode or run "xed -b ios"
   • Hit the Run button
@@ -123,11 +127,11 @@ npx react-native run-ios
 
 ### 启动 Metro
 
-> Metro, the JavaScript bundler that ships with React Native.
+> Metro, the JavaScript bundler that ships with React Native.  
 >  
-> Metro "takes in an entry file and various options, and returns a single JavaScript file that includes all your code and its dependencies."—Metro Docs
+> Metro "takes in an entry file and various options, and returns a single JavaScript file that includes all your code and its dependencies." —Metro Docs  
 >  
-> If you're familiar with web development, Metro is a lot like webpack—for React Native apps. Unlike Kotlin or Java, JavaScript isn't compiled—and neither is React Native. Bundling isn't the same as compiling, but it can help improve startup performance and translate some platform-specific JavaScript into more widely supported JavaScript.
+> If you're familiar with web development, Metro is a lot like webpack—for React Native apps. Unlike Kotlin or Java, JavaScript isn't compiled—and neither is React Native. Bundling isn't the same as compiling, but it can help improve startup performance and translate some platform-specific JavaScript into more widely supported JavaScript.  
 
 在项目的目录下执行以下命令即可启动 Metro ：
 
