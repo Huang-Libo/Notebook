@@ -520,3 +520,100 @@ export default App;
 ```
 
 `ScrollView` 适合用于展示内容有限的页面，因为 `ScrollView` 中所有的元素都会被渲染，即使它们还没有出现在屏幕上。因此，如果你有一个很长的 list 要展示，你应该使用 `FlatList` 。
+
+## List Views
+
+React Native 提供了一套用于展示列表数据的组件，较常用的是 [FlatList](https://reactnative.dev/docs/flatlist) 和 [SectionList](https://reactnative.dev/docs/sectionlist) 。
+
+和 `ScrollView` 组件不同的是，`FlatList` 组件只会渲染当前展示在屏幕上的元素，而不是一次性渲染所有元素。
+
+`FlatList` 组件需要两个 prop ：`data` 和 `renderItem` 。`data` 是列表的数据源；`renderItem` 从数据源中取出一项然后返回一个 *formatted component* 来渲染。
+
+下面的示例使用硬编码数据创建了一个 `FlatList` 。`data` 中的每一项被渲染成了一个 `Text` 组件：
+
+```javascript
+import React from 'react';
+import { FlatList, StyleSheet, Text, SafeAreaView } from 'react-native';
+
+const styles = StyleSheet.create({
+  container: {
+   flex: 1,
+   paddingTop: 22
+  },
+  item: {
+    padding: 10,
+    fontSize: 18,
+    height: 44,
+  },
+});
+
+const FlatListBasics = () => {
+  return (
+    <SafeAreaView style={styles.container}>
+      <FlatList
+        data={[
+          {key: 'Devin'},
+          {key: 'Dan'},
+          {key: 'Dominic'},
+          {key: 'Jackson'},
+          {key: 'James'},
+          {key: 'Joel'},
+          {key: 'John'},
+          {key: 'Jillian'},
+          {key: 'Jimmy'},
+          {key: 'Julie'},
+        ]}
+        renderItem={({item}) => <Text style={styles.item}>{item.key}</Text>}
+      />
+    </SafeAreaView>
+  );
+}
+
+export default FlatListBasics;
+```
+
+如果想把页面分成多个 section ，类似 iOS 中的 `UITableView` ，则可以使用 `SectionList` ：
+
+```javascript
+import React from 'react';
+import { SectionList, StyleSheet, Text, SafeAreaView } from 'react-native';
+
+const styles = StyleSheet.create({
+  container: {
+   flex: 1,
+   paddingTop: 22
+  },
+  sectionHeader: {
+    paddingTop: 2,
+    paddingLeft: 10,
+    paddingRight: 10,
+    paddingBottom: 2,
+    fontSize: 14,
+    fontWeight: 'bold',
+    backgroundColor: 'rgba(247,247,247,1.0)',
+  },
+  item: {
+    padding: 10,
+    fontSize: 18,
+    height: 44,
+  },
+})
+
+const SectionListBasics = () => {
+    return (
+      <SafeAreaView style={styles.container}>
+        <SectionList
+          sections={[
+            {title: 'D', data: ['Devin', 'Dan', 'Dominic']},
+            {title: 'J', data: ['Jackson', 'James', 'Jillian', 'Jimmy', 'Joel', 'John', 'Julie']},
+          ]}
+          renderItem={({item}) => <Text style={styles.item}>{item}</Text>}
+          renderSectionHeader={({section}) => <Text style={styles.sectionHeader}>{section.title}</Text>}
+          keyExtractor={(item, index) => index}
+        />
+      </SafeAreaView>
+    );
+}
+
+export default SectionListBasics;
+```
