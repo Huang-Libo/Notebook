@@ -308,3 +308,118 @@ export default CatApp;
 > In JSX, JavaScript values are referenced with `{}`. This is handy if you are passing something other than a string as props, like an array or number: `<Cat food={["fish", "kibble"]} age={2} />`.
 >  
 > However, JS objects are also denoted with curly braces: `{width: 200, height: 200}`. **Therefore, to pass a JS object in JSX, you must wrap the object in another pair of curly braces**: `{{width: 200, height: 200}}`
+
+## State
+
+`props` 是用来配置组件的渲染方式的参数，而 `state` 是组件的 personal data storage 。`state` 用于*数据随时间变化*或*根据用户的交互而变化*的场景。State gives your components memory!
+
+> As a general rule, use props to configure a component when it renders. Use state to keep track of any component data that you expect to change over time.
+
+在下面的例子中，猫咖啡馆中的两只猫等着被投喂。它们的饥饿状态以 state 的方式存储，且会在点击“投喂”按钮后发生变化（不同于它们的名字，名字是固定不变的）。
+
+开发者可以调用 [React’s useState Hook](https://reactjs.org/docs/hooks-state.html) 来给组件添加 `state` 。
+
+> A Hook is a kind of function that lets you “hook into” React features. For example, `useState` is a Hook that lets you add state to function components.
+>  
+> You can learn more about [other kinds of Hooks in the React documentation](https://reactjs.org/docs/hooks-intro.html).
+
+示例：
+
+```javascript
+import React, { useState } from "react";
+import { Button, Text, View } from "react-native";
+
+const Cat = (props) => {
+  const [isHungry, setIsHungry] = useState(true);
+
+  return (
+    <View>
+      <Text>
+        I am {props.name}, and I am {isHungry ? "hungry" : "full"}!
+      </Text>
+      <Button
+        onPress={() => {
+          setIsHungry(false);
+        }}
+        disabled={!isHungry}
+        title={isHungry ? "Pour me some milk, please!" : "Thank you!"}
+      />
+    </View>
+  );
+}
+
+const Cafe = () => {
+  return (
+    <>
+      <Cat name="Munkustrap" />
+      <Cat name="Spot" />
+    </>
+  );
+}
+
+export default Cafe;
+```
+
+接下来对上述代码进行解读。
+
+首先，需要从 React 中导入 `useState` ：
+
+```javascript
+import React, { useState } from 'react';
+```
+
+然后，通过在组件的函数中调用 `useState` 来声明组件的*状态*，在这个例子中，`useState` 创建了一个 `isHungry` *状态*变量：
+
+```javascript
+const Cat = (props) => {
+  const [isHungry, setIsHungry] = useState(true);
+  // ...
+};
+```
+
+> You can use `useState` to track any kind of data: `strings`, `numbers`, `Booleans`, `arrays`, `objects`. For example, you can track the number of times a cat has been petted with `const [timesPetted, setTimesPetted] = useState(0)`!
+
+调用 `useState` 做了两件事情：
+
+- 创建一个含初值的 `state` 变量；
+- 创建一个函数来设置 `state` 变量的值。
+
+命名规则建议：`[<getter>, <setter>] = useState(<initialValue>)` 。
+
+接下来，添加了 [Button](https://reactnative.dev/docs/button) *Core Component* ，并设置了 `onPress` prop ：
+
+```javascript
+<Button
+  onPress={() => {
+    setIsHungry(false);
+  }}
+  //..
+/>
+```
+
+当用户点击按钮时，会触发 `onPress` ，然后调用 `setIsHungry(false)` ，将 `isHungry` state 变量设置为 `false` 。当 `isHungry` 为 `false` 时，`Button` 组件的 `disable` prop 会被设置成 `true` ，且 `title` 也会改变：
+
+```javascript
+<Button
+  //..
+  disabled={!isHungry}
+  title={isHungry ? 'Pour me some milk, please!' : 'Thank you!'}
+/>
+```
+
+> You might’ve noticed that although `isHungry` is a `const`, it is seemingly reassignable! What is happening is when a state-setting function like `setIsHungry` is called, its component will re-render. In this case the `Cat` function will run again—and this time, `useState` will give us the next value of `isHungry`.
+
+最后，把 `Cat` 组件添加到 `Cafe` 组件中：
+
+```javascript
+const Cafe = () => {
+  return (
+    <>
+      <Cat name="Munkustrap" />
+      <Cat name="Spot" />
+    </>
+  );
+};
+```
+
+>See the `<>` and `</>` above? These bits of JSX are [fragments](https://reactjs.org/docs/fragments.html). Adjacent JSX elements must be wrapped in an enclosing tag. Fragments let you do that without nesting an extra, unnecessary wrapping element like `View`.
