@@ -617,3 +617,9 @@ const SectionListBasics = () => {
 
 export default SectionListBasics;
 ```
+
+## FAQ
+
+- [Troubleshooting](https://reactnative.dev/docs/troubleshooting)
+- [Platform Specific Code](https://reactnative.dev/docs/platform-specific-code)
+- [More Resources](https://reactnative.dev/docs/more-resources)
