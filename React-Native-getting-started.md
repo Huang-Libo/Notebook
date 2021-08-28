@@ -248,3 +248,63 @@ export default Cafe;
 包含其他组件的称为 parent component 。在上述例子中，`Cafe` 是 parent component ，`Cat` 是 child component 。
 
 在 `Cafe` 组件中可以添加任意多的 `Cat` 组件。每个 `<Cat>` 渲染为一个独立的 element ，可以使用 `props` 来分别定制它们。
+
+## Props
+
+`Props` 是 Properties 的简写。可以使用 `Props` 自定义 React 组件。例如，在下面的代码中，为每个 `<Cat>` 组件传入了不同的 `name` 变量：
+
+```javascript
+import React from 'react';
+import { Text, View } from 'react-native';
+
+const Cat = (props) => {
+  return (
+    <View>
+      <Text>Hello, I am {props.name}!</Text>
+    </View>
+  );
+}
+
+const Cafe = () => {
+  return (
+    <View>
+      <Cat name="Maru" />
+      <Cat name="Jellylorum" />
+      <Cat name="Spot" />
+    </View>
+  );
+}
+
+export default Cafe;
+```
+
+React Native 的大部分 *Core Components* 可以使用 `props` 来自定义，比如，在使用 [Image](https://reactnative.dev/docs/image) 组件时，可以传递一个名为 `source` 的 prop 来指定 image 的来源：
+
+```javascript
+import React from 'react';
+import { Text, View, Image } from 'react-native';
+
+const CatApp = () => {
+  return (
+    <View>
+      <Image
+        source={{uri: "https://reactnative.dev/docs/assets/p_cat1.png"}}
+        style={{width: 200, height: 200}}
+      />
+      <Text>Hello, I am your cat!</Text>
+    </View>
+  );
+}
+
+export default CatApp;
+```
+
+`Image` 组件有许多不同的 `props` ，比如 `style` ，它接受*设计*和*布局*相关的`属性-值`对的 JS 对象 。详情可参考 [Image 组件的文档](https://reactnative.dev/docs/image#props)。
+
+**说明**：
+
+> Notice the double curly braces `{{ }}` surrounding `style`‘s width and height.  
+>  
+> In JSX, JavaScript values are referenced with `{}`. This is handy if you are passing something other than a string as props, like an array or number: `<Cat food={["fish", "kibble"]} age={2} />`.
+>  
+> However, JS objects are also denoted with curly braces: `{width: 200, height: 200}`. **Therefore, to pass a JS object in JSX, you must wrap the object in another pair of curly braces**: `{{width: 200, height: 200}}`
