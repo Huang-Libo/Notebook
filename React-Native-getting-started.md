@@ -407,7 +407,7 @@ const Cat = (props) => {
 />
 ```
 
-> You might’ve noticed that although `isHungry` is a `const`, it is seemingly reassignable! What is happening is when a state-setting function like `setIsHungry` is called, its component will re-render. In this case the `Cat` function will run again—and this time, `useState` will give us the next value of `isHungry`.
+> You might’ve noticed that although `isHungry` is a `const`, it is seemingly reassignable! What is happening is when a state-setting function like `setIsHungry` is called, its **component will re-render**. In this case the `Cat` function will run again—and this time, `useState` will give us the next value of `isHungry`.
 
 最后，把 `Cat` 组件添加到 `Cafe` 组件中：
 
@@ -423,3 +423,43 @@ const Cafe = () => {
 ```
 
 >See the `<>` and `</>` above? These bits of JSX are [fragments](https://reactjs.org/docs/fragments.html). Adjacent JSX elements must be wrapped in an enclosing tag. Fragments let you do that without nesting an extra, unnecessary wrapping element like `View`.
+
+## TextInput
+
+[TextInput](https://reactnative.dev/docs/textinput#content) 是一个 *Core Component* ，它允许用户输入文本。
+
+- `TextInput` 有一个 `onChangeText` prop ，这个 prop 可设置一个函数，这个函数会在 text 发生变化时被调用。
+- `TextInput` 还有一个 `onSubmitEditing` prop ，它携带的函数会在 text 被提交的时候被调用。
+
+示例：
+
+```javascript
+import React, { useState } from 'react';
+import { Text, TextInput, View } from 'react-native';
+
+const PizzaTranslator = () => {
+  const [text, setText] = useState('');
+  return (
+    <View style={{padding: 10}}>
+      <TextInput
+        style={{height: 40}}
+        placeholder="Type here to translate!"
+        onChangeText={text => setText(text)}
+        defaultValue={text}
+      />
+      <Text style={{padding: 10, fontSize: 42}}>
+        {text.split(' ').map((word) => word && '🍕').join(' ')}
+      </Text>
+    </View>
+  );
+}
+
+export default PizzaTranslator;
+```
+
+在这个例子中，我们把 `text` 存储在 state 中，因为它会被用户更改。
+
+**相关文档**：
+
+- [React docs on controlled components](https://reactjs.org/docs/forms.html#controlled-components)
+- [reference docs for TextInput](https://reactnative.dev/docs/textinput)
