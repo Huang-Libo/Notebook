@@ -1,12 +1,11 @@
 # React Native：配置开发环境
 
+文档：[React Native - environment setup](https://reactnative.dev/docs/environment-setup)
+
 ## 简介
 
-文档：[开发环境配置](https://reactnative.dev/docs/environment-setup)
-
-- 如果你是移动开发的新手，最简单的开始方式是使用 `Expo CLI` （有一些限制，适合玩具项目）。需要指定版本的 *Node.js* 和一个手机或模拟器。
-  - 如果想直接在浏览器上试试，可使用 [Snack](https://snack.expo.dev/) 。
-- 如果你熟悉移动开发，推荐使用 *React Native CLI* ，这需要搭配 Xcode 或 Android Studio 来使用。
+- **如果你是移动开发的新手**，最简单的开始方式是使用 `Expo CLI` （功能有限，适合玩具项目或小型项目）。如果想直接在浏览器上试试，可使用 [Snack](https://snack.expo.dev/)（高峰期使用要排队）。
+- **如果你熟悉移动开发**，推荐使用 *React Native CLI* ，这需要搭配 Xcode 或 Android Studio 来使用。
 
 ## 使用 Expo CLI
 
@@ -38,7 +37,7 @@ npm start # 或使用 expo start
 
 在 iOS 设备上，用自带的相机扫描终端中生成的二维码，就会跳转到 *Expo Go* 应用内。
 
-修改并保存 App.js 文件，应用就会自动更新。
+修改并保存 `App.js` 文件，应用就会自动更新。
 
 **注意**：
 
@@ -85,7 +84,7 @@ npx react-native <command>
 
 ### 创建应用
 
-使用 RN 内建的 npx 创建一个名为 AwesomeProject 的新应用：
+使用 RN 内建的 `npx` 创建一个名为 AwesomeProject 的新应用：
 
 ```console
 npx react-native init AwesomeProject
@@ -119,7 +118,7 @@ Run instructions for macOS:
 npx react-native run-ios
 ```
 
-或者打开 ios 目录下的 .xcworkspace（也可执行 `xed -b ios` ），然后在 Xcode 中运行项目。
+或者打开 ios 目录下的 `.xcworkspace`（也可执行 `xed -b ios` ），然后在 Xcode 中运行项目。
 
 **其他方案**：
 
@@ -141,7 +140,7 @@ npx react-native start
 
 ### 在 iOS 模拟器中启动应用
 
-让 Metro Bundler 在单独的终端中运行，再开启一个终端来启动应用：
+让 *Metro Bundler* 在单独的终端中运行，再开启一个终端来启动应用：
 
 ```console
 npx react-native run-ios
