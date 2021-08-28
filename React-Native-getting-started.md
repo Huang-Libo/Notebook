@@ -463,3 +463,60 @@ export default PizzaTranslator;
 
 - [React docs on controlled components](https://reactjs.org/docs/forms.html#controlled-components)
 - [reference docs for TextInput](https://reactnative.dev/docs/textinput)
+
+## ScrollView
+
+下面是一个创建 vertical `ScrollView` 的示例：
+
+```javascript
+import React from 'react';
+import { SafeAreaView, Image, ScrollView, Text } from 'react-native';
+
+const logo = {
+  uri: 'https://reactnative.dev/img/tiny_logo.png',
+  width: 64,
+  height: 64
+};
+
+const App = () => (
+  <SafeAreaView>
+    <ScrollView>
+      <Text style={{ fontSize: 96 }}>Scroll me plz</Text>
+      <Image source={logo} />
+      <Image source={logo} />
+      <Image source={logo} />
+      <Image source={logo} />
+      <Image source={logo} />
+      <Text style={{ fontSize: 96 }}>If you like</Text>
+      <Image source={logo} />
+      <Image source={logo} />
+      <Image source={logo} />
+      <Image source={logo} />
+      <Image source={logo} />
+      <Text style={{ fontSize: 96 }}>Scrolling down</Text>
+      <Image source={logo} />
+      <Image source={logo} />
+      <Image source={logo} />
+      <Image source={logo} />
+      <Image source={logo} />
+      <Text style={{ fontSize: 96 }}>What's the best</Text>
+      <Image source={logo} />
+      <Image source={logo} />
+      <Image source={logo} />
+      <Image source={logo} />
+      <Image source={logo} />
+      <Text style={{ fontSize: 96 }}>Framework around?</Text>
+      <Image source={logo} />
+      <Image source={logo} />
+      <Image source={logo} />
+      <Image source={logo} />
+      <Image source={logo} />
+      <Text style={{ fontSize: 80 }}>React Native</Text>
+    </ScrollView>
+  </SafeAreaView>
+);
+
+export default App;
+```
+
+`ScrollView` 适合用于展示内容有限的页面，因为 `ScrollView` 中所有的元素都会被渲染，即使它们还没有出现在屏幕上。因此，如果你有一个很长的 list 要展示，你应该使用 `FlatList` 。
