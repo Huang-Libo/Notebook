@@ -4,10 +4,16 @@
 
 ## 简介
 
-- **如果你是移动开发的新手**，最简单的开始方式是使用 `Expo CLI` （功能有限，适合玩具项目或小型项目）。如果想直接在浏览器上试试，可使用 [Snack](https://snack.expo.dev/)（高峰期使用要排队）。
+- **如果你是移动开发的新手**，最简单的开始方式是使用 `Expo CLI` （功能有限，适合玩具项目或小型项目）。如果想直接在浏览器上试试，可使用 [Snack](https://snack.expo.dev/)。
 - **如果你熟悉移动开发**，推荐使用 *React Native CLI* ，这需要搭配 Xcode 或 Android Studio 来使用。
 
-## 使用 Expo CLI
+## 使用 Expo 预览官方文档中的示例
+
+[React Native 的官方文档](https://reactnative.dev/docs/getting-started)中有很多代码示例，并且在代码旁有实时预览（默认是 Web 版的预览），也可以选择 iOS 或 Android 的预览（高峰期使用需要排队）。
+
+还有一种方案是在自己的手机上查看预览。先在手机上下载 [Expo Go](https://expo.dev/client) 应用，然后用 iPhone 自带的相机扫描二维码，即可跳转到 *Expo Go* 应用内并打开相应的预览。
+
+## 在本机使用 Expo CLI
 
 > 说明：Expo 只适合玩一玩，不感兴趣可以跳过本节内容。
 
@@ -33,15 +39,18 @@ npm start # 或使用 expo start
 
 这将为你启动一个 development server 。
 
-在手机上安装 [Expo Go](https://expo.dev/client) 应用，并将手机和电脑连接到同一个网络下。
-
-在 iOS 设备上，用自带的相机扫描终端中生成的二维码，就会跳转到 *Expo Go* 应用内。
+在手机上安装 [Expo Go](https://expo.dev/client) 应用，并将手机和电脑连接到同一个网络下。 在 iPhone 上使用自带的相机扫描终端中生成的二维码，就会跳转到 *Expo Go* 应用内并展示相应的预览页面。
 
 修改并保存 `App.js` 文件，应用就会自动更新。
 
 **注意**：
 
-使用 Expo 提供的 managed workflow 有一些限制，比如有些 iOS 和 Android 的 API 不能使用；SDK 不是所有的后台代码执行都支持；免费版的 build 有时候要排队；等等。
+使用 Expo 提供的 managed workflow 有一些限制，比如：
+
+- 有些 iOS 和 Android 的 API 不能使用；
+- SDK 不是所有的后台代码执行都支持；
+- 免费版的 build 有时候要排队；
+- ...
 
 详情请看 Expo 的文档：[Expo 的限制](https://docs.expo.dev/introduction/why-not-expo/)
 
@@ -162,13 +171,15 @@ npx react-native run-ios
 
 ### watchman 导致的 RN 项目运行失败
 
-执行 `npx react-native run-ios` 运行 RN 项目，终端内提示 `/usr/local/var/run/watchman/` 这个目录不存在，这个目录本应该是 `watchman` 安装时产生的，但使用 `brew` 重新安装 `watchman` 也未能修复这个问题。
+**问题**：执行 `npx react-native run-ios` 运行 RN 项目，终端内提示 `/usr/local/var/run/watchman/` 这个目录不存在。
 
-执行 `watchman version` ，也是提示上述目录不存在。
+**分析**：这个目录本应该是 `watchman` 安装时产生的，但使用 `brew` 重新安装 `watchman` 也未能修复这个问题。执行 `watchman version` ，也是提示上述目录不存在。
 
-根据 watchman 项目中[这个 issue 的回答](https://github.com/facebook/watchman/issues/640#issuecomment-416983649)，可以自行创建相关目录，设置合适的目录权限即可。
+**相关资料**：根据 watchman 项目中[这个 issue 的回答](https://github.com/facebook/watchman/issues/640#issuecomment-416983649)，可以自行创建相关目录，设置合适的目录权限即可。
 
-先在 `/usr/local/var` 目录下创建 **run** 目录（如果没有此目录才需执行）：
+**下面介绍解决此问题的详细步骤**：
+
+在 `/usr/local/var` 目录下创建 **run** 目录（如果没有此目录才需执行）：
 
 ```console
 sudo mkdir run
