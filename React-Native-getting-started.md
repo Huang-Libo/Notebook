@@ -9,7 +9,7 @@
 - [A re-introduction to JavaScript (JS tutorial)](https://developer.mozilla.org/en-US/docs/Web/JavaScript/A_re-introduction_to_JavaScript)
 - [JavaScript Docs](https://developer.mozilla.org/en-US/docs/Web/JavaScript)
 
-## Function Components 和 Class Components
+## Function Components & Class Components
 
 组件有两种写法，classes 或 functions 。
 
@@ -147,7 +147,7 @@ const Cat = () => {};
 
 **说明**：其他导出组件方式可参考这个 [handy cheatsheet on JavaScript imports and exports](https://medium.com/dailyjs/javascript-module-cheatsheet-7bd474f1d829) 。
 
-## JSX
+### JSX
 
 > React 的官方文档中关于 JSX 的介绍：[a comprehensive guide to JSX](https://reactjs.org/docs/jsx-in-depth.html) 。
 
