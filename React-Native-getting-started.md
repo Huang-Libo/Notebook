@@ -1,5 +1,7 @@
 # React Native 101
 
+文档：[React Native - getting started](https://reactnative.dev/docs/getting-started)
+
 ## 前置课程：JavaScript
 
 想快速熟悉 `JavaScript` ，推荐阅读 [MDN Web Docs](https://developer.mozilla.org/) 的这两份文档：
@@ -55,19 +57,15 @@ class HelloWorldApp extends Component {
 export default HelloWorldApp;
 ```
 
-## Native Components
+## Native Components & Core Components
 
 React Native 在 **runtime** 期间为这些组件创建相应的原生的控件。
 
-React Native 内置了一些常用的 Native Components ，它们被称为 React Native 的 Core Components 。
+React Native 内置了一些常用的 *Native Components* ，它们被称为 React Native 的 *Core Components* 。开发者也可以根据实际需求构建自己的组件。
 
-开发者也可以根据实际需求构建自己的组件。
+> 相关链接🔗 ：[所有 Core Components 的文档](https://reactnative.dev/docs/components-and-apis)。
 
-## Core Components
-
-> 查看[所有 Core Components 的文档](https://reactnative.dev/docs/components-and-apis)。
-
-最常用的 Core Components ：
+最常用的 *Core Components*（[截图来源](https://reactnative.dev/docs/intro-react-native-components#core-components)）：
 
 ![Core-Components.jpg](media/React-Native-Docs/Core-Components.jpg)
 
@@ -143,8 +141,8 @@ export default Cat;
 const Cat = () => {};
 ```
 
-Function Components 返回的内容会被渲染成 **React element** 。这个 Cat 组件将被渲染成 `<Text>` 元素。
+*Function Components* 返回的内容会被渲染成 **React element** 。这个 Cat 组件将被渲染成 `<Text>` 元素。
 
 最后，使用 JavaScript 的 [export default](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/export) 导出这个组件。
 
-注：其他导出组件方式可参考这个 [handy cheatsheet on JavaScript imports and exports](https://medium.com/dailyjs/javascript-module-cheatsheet-7bd474f1d829) 。
+**说明**：其他导出组件方式可参考这个 [handy cheatsheet on JavaScript imports and exports](https://medium.com/dailyjs/javascript-module-cheatsheet-7bd474f1d829) 。
