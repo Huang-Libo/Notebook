@@ -11,7 +11,7 @@
 
 注意：在模拟器上使用时，要确保 `I/O → Keyboard → Connect Hardware Keyboard` 已勾选 ☑️。
 
-![React-Native-In-APP-Dev-Menu.png](media/React-Native-Docs-Image/React-Native-In-APP-Dev-Menu.png)
+![React-Native-In-APP-Dev-Menu.png](media/React-Native-Docs-Image/In-APP-Dev-Menu.jpg)
 
 ### Chrome Developer Tools
 
@@ -54,3 +54,15 @@ react-devtools
 - 执行 `npm install --save-dev react-devtools` 以添加 `react-devtools` 包到你的项目中；
 - 然后添加 `"react-devtools": "react-devtools"` 到你的 `package.json` 的 `scripts` section ；
 - 最后在你的项目的目录下执行 `npm run react-devtools` 来打开 `DevTools` 。
+
+## 符号解析
+
+> 在 *React Native template project* 中， `metro-symbolicate` 包是默认安装的。
+
+Release build 的报错堆栈需要进行*符号解析*后才能看到原始内容。将生成的 `source map` 和`stack trace` 传给 `metro-symbolicate` 即可进行符号解析。
+
+## Testing
+
+<https://reactnative.dev/docs/testing-overview>
+
+![diagram_testing.svg](/media/React-Native-Docs-Image/diagram_testing.svg)
