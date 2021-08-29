@@ -161,7 +161,7 @@ npx react-native run-ios
 
 ### 在真机上运行项目
 
-略。
+[Running On Device](https://reactnative.dev/docs/running-on-device)
 
 ### 修改代码
 
