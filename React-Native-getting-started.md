@@ -67,7 +67,7 @@ React Native 内置了一些常用的 *Native Components* ，它们被称为 Rea
 
 最常用的 *Core Components*（[截图来源](https://reactnative.dev/docs/intro-react-native-components#core-components)）：
 
-![Core-Components.jpg](media/React-Native-Docs/Core-Components.jpg)
+![Core-Components.jpg](media/React-Native-Docs-Image/Core-Components.jpg)
 
 示例：
 
@@ -105,7 +105,7 @@ export default App;
 
 各类组件的关系图：
 
-![diagram_react-native-components.svg](media/React-Native-Docs/diagram_react-native-components.svg)
+![diagram_react-native-components.svg](media/React-Native-Docs-Image/diagram_react-native-components.svg)
 
 ## React 基础
 
