@@ -1,6 +1,6 @@
 # React Native：基础
 
-文档：[React Native - getting started](https://reactnative.dev/docs/getting-started)
+文档：[React Native - Basics](https://reactnative.dev/docs/getting-started)
 
 ## 前置课程：JavaScript
 

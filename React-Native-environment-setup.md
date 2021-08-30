@@ -1,6 +1,6 @@
 # React Native：配置开发环境
 
-文档：[React Native - environment setup](https://reactnative.dev/docs/environment-setup)
+文档：[React Native - Environment setup](https://reactnative.dev/docs/environment-setup)
 
 ## 简介
 
