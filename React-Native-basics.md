@@ -1,4 +1,4 @@
-# React Native 101
+# React Native：基础
 
 文档：[React Native - getting started](https://reactnative.dev/docs/getting-started)
 
