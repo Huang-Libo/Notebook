@@ -137,3 +137,40 @@ const PercentageDimensionsBasics = () => {
 
 export default PercentageDimensionsBasics;
 ```
+
+## Layout with Flexbox
+
+> Flexbox works the same way in React Native as it does in CSS on the web, with a few exceptions. The defaults are different, with `flexDirection` defaulting to `column` instead of `row`, `alignContent` defaulting to `flex-start` instead of `stretch`, `flexShrink` defaulting to `0` instead of `1`, the `flex` parameter only supporting a single number.
+
+一个组件可以使用 *Flexbox algorithm* 来指定它的子组件的布局。Flexbox 的设计宗旨是在不同的屏幕尺寸上提供一致的布局。常用的有 `flexDirection`, `alignItems`, `justifyContent` 。
+
+### Flex
+
+示例：
+
+```javascript
+import React from "react";
+import { StyleSheet, Text, View } from "react-native";
+
+const Flex = () => {
+  return (
+    <View style={[styles.container, {
+      // Try setting `flexDirection` to `"row"`.
+      flexDirection: "column"
+    }]}>
+      <View style={{ flex: 1, backgroundColor: "red" }} />
+      <View style={{ flex: 2, backgroundColor: "darkorange" }} />
+      <View style={{ flex: 3, backgroundColor: "green" }} />
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    padding: 20,
+  },
+});
+
+export default Flex;
+```
