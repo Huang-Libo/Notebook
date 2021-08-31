@@ -9,9 +9,9 @@
 - 在真机上，摇一摇手机；
 - 在模拟器上，使用快捷键 `⌘D` 或 `⌃⌘Z` 。
 
-注意：在模拟器上使用时，要确保 `I/O → Keyboard → Connect Hardware Keyboard` 已勾选 ☑️。
-
 ![React-Native-In-APP-Dev-Menu.png](media/React-Native-Docs-Image/In-APP-Dev-Menu.jpg)
+
+注意：在模拟器上使用时，要确保 `I/O → Keyboard → Connect Hardware Keyboard` 已勾选 ☑️ 。
 
 ### Chrome Developer Tools
 
