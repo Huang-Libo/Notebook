@@ -101,9 +101,9 @@ const FlexDimensionsBasics = () => {
 export default FlexDimensionsBasics;
 ```
 
-在这个例子中，如果把父组件的 `style={{ flex: 1 }` 去掉，由于父组件没有了任何 dimension ，因此所有的子组件就都无法展开了；如果把父组件的 `flex: 1` 改成 `height: 300` ，能正常显示，父组件的高度变成了 `300px` ，子组件也相应缩小了。
-
 > A component can only expand to fill available space if its parent has dimensions greater than 0. If a parent does not have either a fixed width and height or flex, the parent will have dimensions of 0 and the flex children will not be visible.
+
+在这个例子中，如果把父组件的 `style={{ flex: 1 }` 去掉，由于父组件没有了任何 dimension ，因此所有的子组件就都无法展开了；如果把父组件的 `flex: 1` 改成 `height: 300` ，能正常显示，父组件的高度变成了 `300px` ，子组件也相应缩小了。
 
 ### Percentage Dimensions
 
