@@ -1080,6 +1080,243 @@ const styles = StyleSheet.create({
 export default FlexWrapLayout;
 ```
 
+### Flex Basis, Grow, and Shrink
+
+#### flexBasis
+
+[flexBasis](https://reactnative.dev/docs/layout-props#flexbasisAA) 是使用`与轴无关 (axis-independent)` 的方式为子组件设置沿**主轴**方向的默认大小。为子组件设置 `flexBasis` 与以下的操作效果一样：
+
+- 如果父组件设置了 `flexDirection: row` ，设置子组件的 `flexBasis` 相当于为子组件设置了 `width` ；
+- 如果父组件设置了 `flexDirection: column` ，设置子组件的 `flexBasis` 相当于为子组件设置了 `height` 。
+
+`flexBasis` 设置的大小是子组件的**默认大小**，是 `flexGrow` 和 `flexShrink` 计算完成之前使用的值。
+
+参考：[MDN CSS flex-basis](https://developer.mozilla.org/zh-CN/docs/Web/CSS/flex-basis)
+
+#### flexGrow
+
+[flexGrow](https://reactnative.dev/docs/layout-props#flexgrow) 设置了一个 flex 项主尺寸的 flex 增长系数。它指定了 flex 容器中剩余空间的多少应该分配给项目（ flex 增长系数）。
+
+主尺寸是项的宽度或高度，这取决于 `flexDirection` 值。
+
+剩余的空间是 flex 容器的大小减去所有 flex 项的大小加起来的大小。如果所有的兄弟项目都有相同的 `flexGrow` 系数，那么所有的项目将获得相同的剩余空间，否则将根据不同的 `flexGrow` 系数定义的比例进行分配。
+
+flexGrow 与其他的 flex 属性 `flexShrink` 和 `flexBasis` 一起使用，通常使用 flex 速记来定义，以确保所有的值都被设置。
+
+参考：[MDN CSS flex-grow](https://developer.mozilla.org/zh-CN/docs/Web/CSS/flex-grow)
+
+#### flexShrink
+
+flexShrink 属性指定了 flex 元素的收缩规则。flex 元素仅在默认宽度之和大于容器的时候才会发生收缩，其收缩的大小是依据 `flexShrink` 的值。
+
+#### 示例
+
+```javascript
+import React, { useState } from "react";
+import {
+  View,
+  SafeAreaView,
+  Text,
+  TextInput,
+  StyleSheet,
+} from "react-native";
+
+const App = () => {
+  const [powderblue, setPowderblue] = useState({
+    flexGrow: 0,
+    flexShrink: 1,
+    flexBasis: "auto",
+  });
+  const [skyblue, setSkyblue] = useState({
+    flexGrow: 1,
+    flexShrink: 0,
+    flexBasis: 100,
+  });
+  const [steelblue, setSteelblue] = useState({
+    flexGrow: 0,
+    flexShrink: 1,
+    flexBasis: 200,
+  });
+  return (
+    <SafeAreaView style={styles.container}>
+      <View
+        style={[
+          styles.container,
+          {
+            flexDirection: "row",
+            alignContent: "space-between",
+          },
+        ]}
+      >
+        <BoxInfo
+          color="powderblue"
+          {...powderblue}
+          setStyle={setPowderblue}
+        />
+        <BoxInfo
+          color="skyblue"
+          {...skyblue}
+          setStyle={setSkyblue}
+        />
+        <BoxInfo
+          color="steelblue"
+          {...steelblue}
+          setStyle={setSteelblue}
+        />
+      </View>
+      <View style={styles.previewContainer}>
+        <View
+          style={[
+            styles.box,
+            {
+              flexBasis: powderblue.flexBasis,
+              flexGrow: powderblue.flexGrow,
+              flexShrink: powderblue.flexShrink,
+              backgroundColor: "powderblue",
+            },
+          ]}
+        />
+        <View
+          style={[
+            styles.box,
+            {
+              flexBasis: skyblue.flexBasis,
+              flexGrow: skyblue.flexGrow,
+              flexShrink: skyblue.flexShrink,
+              backgroundColor: "skyblue",
+            },
+          ]}
+        />
+        <View
+          style={[
+            styles.box,
+            {
+              flexBasis: steelblue.flexBasis,
+              flexGrow: steelblue.flexGrow,
+              flexShrink: steelblue.flexShrink,
+              backgroundColor: "steelblue",
+            },
+          ]}
+        />
+      </View>
+    </SafeAreaView>
+  );
+};
+
+const BoxInfo = ({
+  color,
+  flexBasis,
+  flexShrink,
+  setStyle,
+  flexGrow,
+}) => (
+  <View style={[styles.row, { flexDirection: "column" }]}>
+    <View
+      style={[
+        styles.boxLabel,
+        {
+          backgroundColor: color,
+        },
+      ]}
+    >
+      <Text
+        style={{
+          color: "#fff",
+          fontWeight: "500",
+          textAlign: "center",
+        }}
+      >
+        Box
+      </Text>
+    </View>
+    <Text style={styles.label}>flexBasis</Text>
+    <TextInput
+      value={flexBasis}
+      style={styles.input}
+      onChangeText={(fB) =>
+        setStyle((value) => ({
+          ...value,
+          flexBasis: isNaN(parseInt(fB))
+            ? "auto"
+            : parseInt(fB),
+        }))
+      }
+    />
+    <Text style={styles.label}>flexShrink</Text>
+    <TextInput
+      value={flexShrink}
+      style={styles.input}
+      onChangeText={(fS) =>
+        setStyle((value) => ({
+          ...value,
+          flexShrink: isNaN(parseInt(fS))
+            ? ""
+            : parseInt(fS),
+        }))
+      }
+    />
+    <Text style={styles.label}>flexGrow</Text>
+    <TextInput
+      value={flexGrow}
+      style={styles.input}
+      onChangeText={(fG) =>
+        setStyle((value) => ({
+          ...value,
+          flexGrow: isNaN(parseInt(fG))
+            ? ""
+            : parseInt(fG),
+        }))
+      }
+    />
+  </View>
+);
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    paddingHorizontal: 10,
+  },
+  box: {
+    flex: 1,
+    height: 50,
+    width: 50,
+  },
+  boxLabel: {
+    minWidth: 80,
+    padding: 8,
+    borderRadius: 4,
+    marginTop: 8,
+  },
+  label: {
+    marginTop: 6,
+    fontSize: 16,
+    fontWeight: "100",
+  },
+  previewContainer: {
+    flex: 1,
+    flexDirection: "row",
+    backgroundColor: "aliceblue",
+  },
+  row: {
+    flex: 1,
+    flexDirection: "row",
+    flexWrap: "wrap",
+    alignItems: "center",
+    marginBottom: 10,
+  },
+  input: {
+    borderBottomWidth: 1,
+    paddingVertical: 3,
+    width: 50,
+    textAlign: "center",
+  },
+});
+
+export default App;
+```
+
+参考：[MDN CSS flex-shrink](https://developer.mozilla.org/zh-CN/docs/Web/CSS/flex-shrink)
+
 ## 参考资料
 
 - [The Full React Native Layout Cheat Sheet](https://medium.com/wix-engineering/the-full-react-native-layout-cheat-sheet-a4147802405c)
