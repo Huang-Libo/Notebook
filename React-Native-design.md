@@ -415,3 +415,132 @@ const styles = StyleSheet.create({
 
 export default DirectionLayout;
 ```
+
+### Justify Content
+
+[justifyContent](https://reactnative.dev/docs/layout-props#justifycontent) 描述了如何在其容器的主轴内对齐子容器。
+
+- `flex-start`：默认值；
+- `flex-end`
+- `center`
+- `space-between`
+- `space-around`：均匀排列每个元素，每个元素周围分配相同的空间；
+- `space-evenly`：均匀排列每个元素，每个元素之间的间隔相等。
+
+可参考 MDN 中的 [CSS 的文档](https://developer.mozilla.org/zh-CN/docs/Web/CSS/justify-content) 。
+
+```javascript
+import React, { useState } from "react";
+import { View, SafeAreaView, TouchableOpacity, Text, StyleSheet } from "react-native";
+
+const JustifyContentBasics = () => {
+  const [justifyContent, setJustifyContent] = useState("flex-start");
+
+  return (
+    <PreviewLayout
+      label="justifyContent"
+      selectedValue={justifyContent}
+      values={[
+        "flex-start",
+        "flex-end",
+        "center",
+        "space-between",
+        "space-around",
+        "space-evenly",
+      ]}
+      setSelectedValue={setJustifyContent}
+    >
+      <View
+        style={[styles.box, { backgroundColor: "powderblue" }]}
+      />
+      <View
+        style={[styles.box, { backgroundColor: "skyblue" }]}
+      />
+      <View
+        style={[styles.box, { backgroundColor: "steelblue" }]}
+      />
+    </PreviewLayout>
+  );
+};
+
+const PreviewLayout = ({
+  label,
+  children,
+  values,
+  selectedValue,
+  setSelectedValue,
+}) => (
+  <SafeAreaView style={{ padding: 10, flex: 1 }}>
+    <Text style={styles.label}>{label}</Text>
+    <View style={styles.row}>
+      {values.map((value) => (
+        <TouchableOpacity
+          key={value}
+          onPress={() => setSelectedValue(value)}
+          style={[styles.button, selectedValue === value && styles.selected]}
+        >
+          <Text
+            style={[
+              styles.buttonLabel,
+              selectedValue === value && styles.selectedLabel,
+            ]}
+          >
+            {value}
+          </Text>
+        </TouchableOpacity>
+      ))}
+    </View>
+    <View style={[styles.container, { [label]: selectedValue }]}>
+      {children}
+    </View>
+  </SafeAreaView>
+);
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    // 可以尝试改成 column
+    flexDirection: "row",
+    marginTop: 8,
+    backgroundColor: "aliceblue",
+  },
+  box: {
+    width: 50,
+    height: 50,
+  },
+  row: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+  },
+  button: {
+    paddingHorizontal: 8,
+    paddingVertical: 6,
+    borderRadius: 4,
+    backgroundColor: "oldlace",
+    alignSelf: "flex-start",
+    marginHorizontal: "1%",
+    marginBottom: 6,
+    minWidth: "48%",
+    textAlign: "center",
+  },
+  selected: {
+    backgroundColor: "coral",
+    borderWidth: 0,
+  },
+  buttonLabel: {
+    fontSize: 12,
+    fontWeight: "500",
+    color: "coral",
+  },
+  selectedLabel: {
+    color: "white",
+  },
+  label: {
+    textAlign: "center",
+    marginBottom: 10,
+    fontSize: 24,
+  },
+});
+
+export default JustifyContentBasics;
+```
