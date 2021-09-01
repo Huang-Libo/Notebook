@@ -946,6 +946,140 @@ const styles = StyleSheet.create({
 export default AlignContentLayout;
 ```
 
+### Flex Wrap
+
+[flexWrap](https://reactnative.dev/docs/layout-props#flexwrap) 属性设置在容器上，它控制子组件沿主轴溢出时发生的情况。默认情况下，子元素被强制缩为一行(which can shrink elements)。如果允许 wrap ，则需要沿着主轴将物品 wrap 成多条线。
+
+在使用 wrap 时，可以使用 `alignContent` 指定如何在容器中放置行。
+
+```javascript
+import React, { useState } from "react";
+import { View, SafeAreaView, TouchableOpacity, Text, StyleSheet } from "react-native";
+
+const FlexWrapLayout = () => {
+  const [flexWrap, setFlexWrap] = useState("wrap");
+
+  return (
+    <PreviewLayout
+      label="flexWrap"
+      selectedValue={flexWrap}
+      values={["wrap", "nowrap"]}
+      setSelectedValue={setFlexWrap}>
+      <View
+        style={[styles.box, { backgroundColor: "orangered" }]}
+      />
+      <View
+        style={[styles.box, { backgroundColor: "orange" }]}
+      />
+      <View
+        style={[styles.box, { backgroundColor: "mediumseagreen" }]}
+      />
+      <View
+        style={[styles.box, { backgroundColor: "deepskyblue" }]}
+      />
+      <View
+        style={[styles.box, { backgroundColor: "mediumturquoise" }]}
+      />
+      <View
+        style={[styles.box, { backgroundColor: "mediumslateblue" }]}
+      />
+      <View
+        style={[styles.box, { backgroundColor: "purple" }]}
+      />
+    </PreviewLayout>
+  );
+};
+
+const PreviewLayout = ({
+  label,
+  children,
+  values,
+  selectedValue,
+  setSelectedValue,
+}) => (
+  <SafeAreaView style={{ padding: 10, flex: 1 }}>
+    <Text style={styles.label}>{label}</Text>
+    <View style={styles.row}>
+      {values.map((value) => (
+        <TouchableOpacity
+          key={value}
+          onPress={() => setSelectedValue(value)}
+          style={[
+            styles.button,
+            selectedValue === value && styles.selected,
+          ]}
+        >
+          <Text
+            style={[
+              styles.buttonLabel,
+              selectedValue === value &&
+                styles.selectedLabel,
+            ]}
+          >
+            {value}
+          </Text>
+        </TouchableOpacity>
+      ))}
+    </View>
+    <View
+      style={[
+        styles.container,
+        { [label]: selectedValue },
+      ]}
+    >
+      {children}
+    </View>
+  </SafeAreaView>
+);
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    marginTop: 8,
+    padding: 8,
+    backgroundColor: "aliceblue",
+    maxHeight: 300,
+  },
+  box: {
+    width: 50,
+    height: 80,
+  },
+  row: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+  },
+  button: {
+    paddingHorizontal: 8,
+    paddingVertical: 6,
+    borderRadius: 4,
+    backgroundColor: "oldlace",
+    marginHorizontal: "1%",
+    marginBottom: 6,
+    minWidth: "48%",
+    textAlign: "center",
+  },
+  selected: {
+    backgroundColor: "coral",
+    borderWidth: 0,
+  },
+  buttonLabel: {
+    fontSize: 12,
+    fontWeight: "500",
+    color: "coral",
+  },
+  selectedLabel: {
+    color: "white",
+  },
+  label: {
+    textAlign: "center",
+    marginBottom: 10,
+    fontSize: 24,
+  },
+});
+
+export default FlexWrapLayout;
+```
+
 ## 参考资料
 
 - [The Full React Native Layout Cheat Sheet](https://medium.com/wix-engineering/the-full-react-native-layout-cheat-sheet-a4147802405c)
