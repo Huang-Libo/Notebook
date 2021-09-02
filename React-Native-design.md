@@ -1681,6 +1681,14 @@ var icon = this.props.active
 <Image source={icon} />;
 ```
 
+### Static Non-Image Resources
+
+上面描述的 `require` 语法也可以用于*静态地*包含在项目中的*音频*、*视频*或*文档文件*。支持的最常见的文件类型包括 `.mp3` 、`.wav` 、`.mp4` 、`.mov` 、`.html` 、`.pdf` 等。
+
+要注意的是
+
+需要注意的是，*视频*必须使用*绝对定位 (absolute positioning)* 而不是 `flexGrow` ，因为大小信息目前不传递给非图像资产。对于直接链接到 Xcode 或 Android 的 Assets 文件夹中的视频，则不会出现这种限制。
+
 ## 参考资料
 
 - [The Full React Native Layout Cheat Sheet](https://medium.com/wix-engineering/the-full-react-native-layout-cheat-sheet-a4147802405c)
