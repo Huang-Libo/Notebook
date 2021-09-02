@@ -1635,6 +1635,8 @@ export default PositionLayout;
 
 ### Static Image Resources
 
+> 打入 bundle 中的静态图片在使用时可以不指定宽高，bundler 能获取其默认大小。
+
 React Native 提供了一种统一的方式来管理你的 Android 和 iOS 应用中的图像和其他媒体资源。
 
 ```javascript
@@ -1700,7 +1702,45 @@ var icon = this.props.active
 />
 ```
 
+在 Android assets 目录中的图片，需要使用 `asset:/` scheme ：
+
+```javascript
+<Image
+  source={{ uri: 'asset:/app_icon.png' }}
+  style={{ width: 40, height: 40 }}
+/>
+```
+
 这些方法不提供安全检查。你要确保这些图像在 App 中可用。你还必须手动指定图像尺寸。
+
+### Network Images
+
+和静态资源不同的是，你需要手动指定从网络中下载的图片的宽高：
+
+```javascript
+// GOOD
+<Image source={{uri: 'https://reactjs.org/logo-og.png'}}
+       style={{width: 400, height: 400}} />
+
+// BAD
+<Image source={{uri: 'https://reactjs.org/logo-og.png'}} />
+```
+
+如果你想在图片的请求中添加 header 和 body ，你可以在 `source` 对象中设置它们：
+
+```javascript
+<Image
+  source={{
+    uri: 'https://reactjs.org/logo-og.png',
+    method: 'POST',
+    headers: {
+      Pragma: 'no-cache'
+    },
+    body: 'Your Body goes here'
+  }}
+  style={{ width: 400, height: 400 }}
+/>
+```
 
 ## 参考资料
 
