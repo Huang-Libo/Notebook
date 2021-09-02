@@ -1726,7 +1726,11 @@ var icon = this.props.active
 <Image source={{uri: 'https://reactjs.org/logo-og.png'}} />
 ```
 
-如果你想在图片的请求中添加 header 和 body ，你可以在 `source` 对象中设置它们：
+如果你想在图片的请求中添加 header 和 body ，你可以在 `source` 对象中设置它们。
+
+示例：
+
+> 这个图片资源是否不能这样请求，貌似加了这些参数后就无法正常显示了，只有最开始闪一下就再也不展示了。
 
 ```javascript
 <Image
@@ -1737,6 +1741,47 @@ var icon = this.props.active
       Pragma: 'no-cache'
     },
     body: 'Your Body goes here'
+  }}
+  style={{ width: 400, height: 400 }}
+/>
+```
+
+### Uri Data Images
+
+有时，你可能会从 REST API 调用获得编码后的图像数据。你可以使用 `data:` uri scheme 来使用这些图片。和网络资源一样，你需要手动指定图片的宽高。
+
+示例：
+
+```javascript
+<Image
+  style={{
+    width: 51,
+    height: 51,
+    resizeMode: 'contain'
+  }}
+  source={{
+    uri:
+      'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADMAAAAzCAYAAAA6oTAqAAAAEXRFWHRTb2Z0d2FyZQBwbmdjcnVzaEB1SfMAAABQSURBVGje7dSxCQBACARB+2/ab8BEeQNhFi6WSYzYLYudDQYGBgYGBgYGBgYGBgYGBgZmcvDqYGBgmhivGQYGBgYGBgYGBgYGBgYGBgbmQw+P/eMrC5UTVAAAAABJRU5ErkJggg=='
+  }}
+/>
+```
+
+### Cache Control (iOS Only)
+
+`cache` 属性使你可以控制网络层如何与 cache 交互。
+
+- `default`：使用 Native 代码中设置的策略；
+- `reload`：（**不使用缓存、只从网络加载**）URL 的数据将从原始源加载。不应该使用现有的缓存数据来满足 URL 加载请求。
+- `force-cache`：**（优先使用缓存，若缓存没有则从网络加载**）现有的缓存数据将用于满足请求，而不管它的过期日期。如果缓存中没有与请求对应的现有数据，则从原始源加载数据。
+- `only-if-cached`：（**只从缓存中获取图片，如果缓存没有则加载失败**）现有的缓存数据将用于满足请求，而不管它的过期日期。如果缓存中没有与 URL 加载请求对应的数据，则不会尝试从原始源加载数据，然后加载被认为失败。
+
+示例：
+
+```javascript
+<Image
+  source={{
+    uri: 'https://reactjs.org/logo-og.png',
+    cache: 'only-if-cached'
   }}
   style={{ width: 400, height: 400 }}
 />
