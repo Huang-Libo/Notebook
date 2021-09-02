@@ -1685,9 +1685,22 @@ var icon = this.props.active
 
 上面描述的 `require` 语法也可以用于*静态地*包含在项目中的*音频*、*视频*或*文档文件*。支持的最常见的文件类型包括 `.mp3` 、`.wav` 、`.mp4` 、`.mov` 、`.html` 、`.pdf` 等。
 
-要注意的是
-
 需要注意的是，*视频*必须使用*绝对定位 (absolute positioning)* 而不是 `flexGrow` ，因为大小信息目前不传递给非图像资产。对于直接链接到 Xcode 或 Android 的 Assets 文件夹中的视频，则不会出现这种限制。
+
+### Images From Hybrid App's Resources
+
+如果你在构建一个 hybrid 应用（一些 UI 使用 React Native，另一些 UI 使用 Native 的），你可以在 RN 中使用已经打包到 App 中的图片。
+
+在 Xcode 的 asset 中或 Android 的 drawable 目录中的图片，使用不带拓展名的图片名称：
+
+```javascript
+<Image
+  source={{ uri: 'app_icon' }}
+  style={{ width: 40, height: 40 }}
+/>
+```
+
+这些方法不提供安全检查。你要确保这些图像在 App 中可用。你还必须手动指定图像尺寸。
 
 ## 参考资料
 
