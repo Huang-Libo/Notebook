@@ -1,7 +1,8 @@
 # React Native：设计
 
-文档：[React Native - Design](https://reactnative.dev/docs/style)
-Playground：[yoga](https://yogalayout.com/playground)
+- 官方文档：[React Native - Design](https://reactnative.dev/docs/style)
+- Playground：[yoga playground](https://yogalayout.com/playground)
+- 文档中推荐博客：[The Full React Native Layout Cheat Sheet](https://medium.com/wix-engineering/the-full-react-native-layout-cheat-sheet-a4147802405c)
 
 ## Style
 
@@ -1787,6 +1788,58 @@ var icon = this.props.active
 />
 ```
 
-## 参考资料
+### Local Filesystem Images
 
-- [The Full React Native Layout Cheat Sheet](https://medium.com/wix-engineering/the-full-react-native-layout-cheat-sheet-a4147802405c)
+有关使用 `Images.xcassets` 之外的本地资源的示例，请参阅 [react-native-cameraroll](https://github.com/react-native-cameraroll/react-native-cameraroll) 。
+
+### Background Image via Nesting
+
+与 Web 上的 `background-image` 类似，React Native 使用 [`<ImageBackground>`](https://reactnative.dev/docs/imagebackground) 组件展示背景图片，它的 props 和 `<Image>` 组件一样。
+
+`<ImageBackground>` 组件有时候可能不能我们的更定制化的需求，如果要自定义背景图组件，请参看 [ImageBackground 组件的文档](https://reactnative.dev/docs/imagebackground)。
+
+示例：
+
+```javascript
+import React from "react";
+import { ImageBackground, StyleSheet, Text, View } from "react-native";
+
+const image = { uri: "https://reactjs.org/logo-og.png" };
+
+const App = () => (
+  <View style={styles.container}>
+    <ImageBackground source={image} resizeMode="cover" style={styles.image}>
+      <Text style={styles.text}>Inside</Text>
+    </ImageBackground>
+  </View>
+);
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  image: {
+    flex: 1,
+    justifyContent: "center"
+  },
+  text: {
+    color: "white",
+    fontSize: 42,
+    lineHeight: 84,
+    fontWeight: "bold",
+    textAlign: "center",
+    backgroundColor: "#000000c0"
+  }
+});
+
+export default App;
+```
+
+### iOS Border Radius Styles
+
+Please note that the following corner specific, border radius style properties are currently ignored by iOS's image component:
+
+- `borderTopLeftRadius`
+- `borderTopRightRadius`
+- `borderBottomLeftRadius`
+- `borderBottomRightRadius`
