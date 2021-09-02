@@ -1,4 +1,4 @@
-# React Native：Networking
+# React Native：网络
 
 - [官方文档](https://reactnative.dev/docs/network)
 
@@ -32,7 +32,7 @@ fetch('https://mywebsite.com/endpoint/', {
 });
 ```
 
-## Handling the response
+### Handling the response
 
 网络本质上是一种异步操作。`Fetch` 方法将返回一个 [Promise](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise) ，它使异步代码的编写变得简单:
 
