@@ -1631,6 +1631,56 @@ const styles = StyleSheet.create({
 export default PositionLayout;
 ```
 
+## Images
+
+### Static Image Resources
+
+React Native 提供了一种统一的方式来管理你的 Android 和 iOS 应用中的图像和其他媒体资源。
+
+```javascript
+<Image source={require('./my-icon.png')} />
+```
+
+图像名称的解析方式与 JS 模块的解析方式相同。在上述例子中，`bundler` 将在与需要它的组件相同的文件夹中寻找 `my-icon.png` 。
+
+你可以使用 `@2x` 和 `@3x` 后缀为不同像素密度的屏幕提供图片。如果你有下面这样的文件结构：
+
+```plaintext
+.
+├── button.js
+└── img
+    ├── check.png
+    ├── check@2x.png
+    └── check@3x.png
+```
+
+且在 `button.js` 的代码中包含：
+
+```javascript
+<Image source={require('./img/check.png')} />
+```
+
+`check@2x.png` 将用于 *iPhone 7* ，`check@3x.png` 将用于 *iPhone 7 Plus* 。如果没有匹配屏幕密度的图像，将选择最接近的选项。
+
+使用静态图片资源的示例：
+
+```javascript
+// GOOD
+<Image source={require('./my-icon.png')} />;
+
+// BAD
+var icon = this.props.active
+  ? 'my-icon-active'
+  : 'my-icon-inactive';
+<Image source={require('./' + icon + '.png')} />;
+
+// GOOD
+var icon = this.props.active
+  ? require('./my-icon-active.png')
+  : require('./my-icon-inactive.png');
+<Image source={icon} />;
+```
+
 ## 参考资料
 
 - [The Full React Native Layout Cheat Sheet](https://medium.com/wix-engineering/the-full-react-native-layout-cheat-sheet-a4147802405c)
