@@ -92,13 +92,13 @@ export default App = () => {
   }, []);
 
   return (
-    <SafeAreaView style={{ flex: 1, padding: 24 }}>
+    <SafeAreaView style={{ flex: 1, padding: 24 , left: 10, top: 10 }}>
       {isLoading ? <ActivityIndicator/> : (
         <FlatList
           data={data}
           keyExtractor={({ id }, index) => id}
           renderItem={({ item }) => (
-            <Text>{item.title}, {item.releaseYear}</Text>
+            <Text>{item.id}, {item.title}, {item.releaseYear}</Text>
           )}
         />
       )}
