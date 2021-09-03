@@ -16,7 +16,7 @@
 fetch('https://mywebsite.com/mydata.json');
 ```
 
-Fetch 也提供了一个可选的参数，来设置 HTTP Method 、 header 、 body 等。完整的参数列表可参考 [Fetch Request docs](https://developer.mozilla.org/en-US/docs/Web/API/Request)
+Fetch 也提供了一个可选的参数来设置 HTTP Method 、 Header 、 Body 等。完整的参数列表可参考 [Fetch Request docs](https://developer.mozilla.org/en-US/docs/Web/API/Request) 。
 
 ```javascript
 fetch('https://mywebsite.com/endpoint/', {
@@ -106,3 +106,59 @@ export default App = () => {
   );
 };
 ```
+
+## Using Other Networking Libraries
+
+[XMLHttpRequest API](https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest) 是内建在 React Native 里的。这意味着您可以使用依赖于它的第三方库，如 [axios](https://github.com/mzabriskie/axios) ，或者直接使用 `XMLHttpRequest` ：
+
+> The security model for XMLHttpRequest is different than on web as there is no concept of [CORS](http://en.wikipedia.org/wiki/Cross-origin_resource_sharing) in native apps.
+
+```javascript
+var request = new XMLHttpRequest();
+request.onreadystatechange = (e) => {
+  if (request.readyState !== 4) {
+    return;
+  }
+
+  if (request.status === 200) {
+    console.log('success', request.responseText);
+  } else {
+    console.warn('error');
+  }
+};
+
+request.open('GET', 'https://mywebsite.com/endpoint/');
+request.send();
+```
+
+## WebSocket Support
+
+React Native 也支持 [WebSockets](https://developer.mozilla.org/en-US/docs/Web/API/WebSocket) （一种在单个 TCP 连接上提供全双工通信通道的协议）。
+
+```javascript
+var ws = new WebSocket('ws://host.com/path');
+
+ws.onopen = () => {
+  // connection opened
+  ws.send('something'); // send a message
+};
+
+ws.onmessage = (e) => {
+  // a message was received
+  console.log(e.data);
+};
+
+ws.onerror = (e) => {
+  // an error occurred
+  console.log(e.message);
+};
+
+ws.onclose = (e) => {
+  // connection closed
+  console.log(e.code, e.reason);
+};
+```
+
+## Security
+
+<https://reactnative.dev/docs/security>
