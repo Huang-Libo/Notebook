@@ -14,7 +14,7 @@
 
 示例：
 
-```javascript
+```jsx
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
@@ -56,7 +56,7 @@ export default LotsOfStyles;
 
 示例：
 
-```javascript
+```jsx
 import React from 'react';
 import { View } from 'react-native';
 
@@ -83,7 +83,7 @@ export default FixedDimensionsBasics;
 
 在组件的 `style` 中使用 `flex` 以根据可用空间的大小来动态地展开和收缩组件。通常你会使用 `flex: 1` ，它告诉组件填满所有可用空间，并在具有相同父组件的其他组件之间平均共享。给定的 `flex` 值越大，组件所占的空间比就越高。
 
-```javascript
+```jsx
 import React from 'react';
 import { View } from 'react-native';
 
@@ -115,7 +115,7 @@ export default FlexDimensionsBasics;
 
 但我把父组件的 `style={{ height: '100%' }}` 去掉后，子组件还是能正常展示，为什么呢？
 
-```javascript
+```jsx
 import React from 'react';
 import { View } from 'react-native';
 
@@ -152,7 +152,7 @@ export default PercentageDimensionsBasics;
 
 示例：
 
-```javascript
+```jsx
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 
@@ -190,7 +190,7 @@ export default Flex;
 
 示例：
 
-```javascript
+```jsx
 import React, { useState } from "react";
 import { StyleSheet, Text, TouchableOpacity, View, SafeAreaView } from "react-native";
 
@@ -309,7 +309,7 @@ Layout [direction](https://reactnative.dev/docs/layout-props#direction) 指定�
 
 示例：
 
-```javascript
+```jsx
 import React, { useState } from "react";
 import { View, TouchableOpacity, Text, StyleSheet, SafeAreaView } from "react-native";
 
@@ -431,7 +431,7 @@ export default DirectionLayout;
 
 可参考 MDN 中的 [CSS 的文档](https://developer.mozilla.org/zh-CN/docs/Web/CSS/justify-content) 。
 
-```javascript
+```jsx
 import React, { useState } from "react";
 import { View, SafeAreaView, TouchableOpacity, Text, StyleSheet } from "react-native";
 
@@ -559,7 +559,7 @@ export default JustifyContentBasics;
 
 说明：要使 `stretch` 生效，子组件不能设置 `fixed dimension` 。
 
-```javascript
+```jsx
 import React, { useState } from "react";
 import {
   View,
@@ -696,7 +696,7 @@ export default AlignItemsLayout;
 
 示例：
 
-```javascript
+```jsx
 import React, { useState } from "react";
 import { View, SafeAreaView, TouchableOpacity, Text, StyleSheet } from "react-native";
 
@@ -816,7 +816,7 @@ export default AlignSelfLayout;
 
 [alignContent](https://reactnative.dev/docs/layout-props#aligncontent) defines the distribution of **lines** along the cross-axis. This only has effect when items are wrapped to multiple lines using `flexWrap`.
 
-```javascript
+```jsx
 import React, { useState } from "react";
 import { View, SafeAreaView, TouchableOpacity, Text, StyleSheet } from "react-native";
 
@@ -953,7 +953,7 @@ export default AlignContentLayout;
 
 在使用 wrap 时，可以使用 `alignContent` 指定如何在容器中放置行。
 
-```javascript
+```jsx
 import React, { useState } from "react";
 import { View, SafeAreaView, TouchableOpacity, Text, StyleSheet } from "react-native";
 
@@ -1116,7 +1116,7 @@ flexGrow 与其他的 flex 属性 `flexShrink` 和 `flexBasis` 一起使用，�
 
 > 这个示例有一些 Bug 待修复。
 
-```javascript
+```jsx
 import React, { useState } from "react";
 import {
   View,
@@ -1330,7 +1330,7 @@ export default App;
 
 示例：
 
-```javascript
+```jsx
 import React, { useState } from "react";
 import {
   View,
@@ -1492,7 +1492,7 @@ export default WidthHeightBasics;
 
 示例：
 
-```javascript
+```jsx
 import React, { useState } from "react";
 import {
   View,
@@ -1640,7 +1640,7 @@ export default PositionLayout;
 
 React Native 提供了一种统一的方式来管理你的 Android 和 iOS 应用中的图像和其他媒体资源。
 
-```javascript
+```jsx
 <Image source={require('./my-icon.png')} />
 ```
 
@@ -1659,7 +1659,7 @@ React Native 提供了一种统一的方式来管理你的 Android 和 iOS 应�
 
 且在 `button.js` 的代码中包含：
 
-```javascript
+```jsx
 <Image source={require('./img/check.png')} />
 ```
 
@@ -1667,7 +1667,7 @@ React Native 提供了一种统一的方式来管理你的 Android 和 iOS 应�
 
 使用静态图片资源的示例：
 
-```javascript
+```jsx
 // GOOD
 <Image source={require('./my-icon.png')} />;
 
@@ -1696,7 +1696,7 @@ var icon = this.props.active
 
 在 Xcode 的 asset 中或 Android 的 drawable 目录中的图片，使用不带拓展名的图片名称：
 
-```javascript
+```jsx
 <Image
   source={{ uri: 'app_icon' }}
   style={{ width: 40, height: 40 }}
@@ -1705,7 +1705,7 @@ var icon = this.props.active
 
 在 Android assets 目录中的图片，需要使用 `asset:/` scheme ：
 
-```javascript
+```jsx
 <Image
   source={{ uri: 'asset:/app_icon.png' }}
   style={{ width: 40, height: 40 }}
@@ -1718,7 +1718,7 @@ var icon = this.props.active
 
 和静态资源不同的是，你需要手动指定从网络中下载的图片的宽高：
 
-```javascript
+```jsx
 // GOOD
 <Image source={{uri: 'https://reactjs.org/logo-og.png'}}
        style={{width: 400, height: 400}} />
@@ -1733,7 +1733,7 @@ var icon = this.props.active
 
 > 这个图片资源是否不能这样请求，貌似加了这些参数后就无法正常显示了，只有最开始闪一下就再也不展示了。
 
-```javascript
+```jsx
 <Image
   source={{
     uri: 'https://reactjs.org/logo-og.png',
@@ -1753,7 +1753,7 @@ var icon = this.props.active
 
 示例：
 
-```javascript
+```jsx
 <Image
   style={{
     width: 51,
@@ -1778,7 +1778,7 @@ var icon = this.props.active
 
 示例：
 
-```javascript
+```jsx
 <Image
   source={{
     uri: 'https://reactjs.org/logo-og.png',
@@ -1800,7 +1800,7 @@ var icon = this.props.active
 
 示例：
 
-```javascript
+```jsx
 import React from "react";
 import { ImageBackground, StyleSheet, Text, View } from "react-native";
 

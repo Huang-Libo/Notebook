@@ -15,7 +15,7 @@
 
 *Function Components*（推荐写法）：
 
-```javascript
+```jsx
 import React from 'react';
 import { Text, View } from 'react-native';
 
@@ -36,7 +36,7 @@ export default HelloWorldApp;
 
 *Class Components* ：
 
-```javascript
+```jsx
 import React, { Component } from 'react';
 import { Text, View } from 'react-native';
 
@@ -71,7 +71,7 @@ React Native 内置了一些常用的 *Native Components* ，它们被称为 Rea
 
 示例：
 
-```javascript
+```jsx
 import React from 'react';
 import { View, Text, Image, ScrollView, TextInput } from 'react-native';
 
@@ -122,7 +122,7 @@ React 的核心概念：
 
 示例代码：
 
-```javascript
+```jsx
 import React from 'react';
 import { Text } from 'react-native';
 
@@ -137,7 +137,7 @@ export default Cat;
 
 这个组件以 function 开头：
 
-```javascript
+```jsx
 const Cat = () => {};
 ```
 
@@ -153,7 +153,7 @@ const Cat = () => {};
 
 React 和 React Native 都可使用 JSX ，这种 JavaScript 语法使 React 元素的编写更便利。由于 JSX 是 JavaScript ，因此可以在 JSX 内使用变量，如下面 `<Text>` 组件使用中的 `name` 变量（在 JSX 中使用花括号 `{}` 包裹）：
 
-```javascript
+```jsx
 import React from 'react';
 import { Text } from 'react-native';
 
@@ -169,7 +169,7 @@ export default Cat;
 
 任何 JavaScript 表达式都可放在花括号中执行，如下面代码中的 `{getFullName("Rum", "Tum", "Tugger")}` 方法调用：
 
-```javascript
+```jsx
 import React from 'react';
 import { Text } from 'react-native';
 
@@ -194,7 +194,7 @@ export default Cat;
 
 可以在自定义的组件中将不同的 *Core Components* 组合起来，形成一个新的组件，React Native 会一起渲染它们：
 
-```javascript
+```jsx
 import React from 'react';
 import { Text, TextInput, View } from 'react-native';
 
@@ -219,7 +219,7 @@ export default Cat;
 
 在其他组件中可以使用封装好的组件。在下面的 `Cafe` 组件中，通过 `<Cat />` 使用封装好的 `Cat` 组件：
 
-```javascript
+```jsx
 import React from 'react';
 import { Text, View } from 'react-native';
 
@@ -253,7 +253,7 @@ export default Cafe;
 
 `Props` 是 Properties 的简写。可以使用 `Props` 自定义 React 组件。例如，在下面的代码中，为每个 `<Cat>` 组件传入了不同的 `name` 变量：
 
-```javascript
+```jsx
 import React from 'react';
 import { Text, View } from 'react-native';
 
@@ -280,7 +280,7 @@ export default Cafe;
 
 React Native 的大部分 *Core Components* 可以使用 `props` 来自定义，比如，在使用 [Image](https://reactnative.dev/docs/image) 组件时，可以传递一个名为 `source` 的 prop 来指定 image 的来源：
 
-```javascript
+```jsx
 import React from 'react';
 import { Text, View, Image } from 'react-native';
 
@@ -325,7 +325,7 @@ export default CatApp;
 
 示例：
 
-```javascript
+```jsx
 import React, { useState } from "react";
 import { Button, Text, View } from "react-native";
 
@@ -364,13 +364,13 @@ export default Cafe;
 
 首先，需要从 React 中导入 `useState` ：
 
-```javascript
+```jsx
 import React, { useState } from 'react';
 ```
 
 然后，通过在组件的函数中调用 `useState` 来声明组件的*状态*，在这个例子中，`useState` 创建了一个 `isHungry` *状态*变量：
 
-```javascript
+```jsx
 const Cat = (props) => {
   const [isHungry, setIsHungry] = useState(true);
   // ...
@@ -388,7 +388,7 @@ const Cat = (props) => {
 
 接下来，添加了 [Button](https://reactnative.dev/docs/button) *Core Component* ，并设置了 `onPress` prop ：
 
-```javascript
+```jsx
 <Button
   onPress={() => {
     setIsHungry(false);
@@ -399,7 +399,7 @@ const Cat = (props) => {
 
 当用户点击按钮时，会触发 `onPress` ，然后调用 `setIsHungry(false)` ，将 `isHungry` state 变量设置为 `false` 。当 `isHungry` 为 `false` 时，`Button` 组件的 `disable` prop 会被设置成 `true` ，且 `title` 也会改变：
 
-```javascript
+```jsx
 <Button
   //..
   disabled={!isHungry}
@@ -411,7 +411,7 @@ const Cat = (props) => {
 
 最后，把 `Cat` 组件添加到 `Cafe` 组件中：
 
-```javascript
+```jsx
 const Cafe = () => {
   return (
     <>
@@ -433,7 +433,7 @@ const Cafe = () => {
 
 示例：
 
-```javascript
+```jsx
 import React, { useState } from 'react';
 import { Text, TextInput, View } from 'react-native';
 
@@ -468,7 +468,7 @@ export default PizzaTranslator;
 
 下面是一个创建 vertical `ScrollView` 的示例：
 
-```javascript
+```jsx
 import React from 'react';
 import { SafeAreaView, Image, ScrollView, Text } from 'react-native';
 
@@ -531,7 +531,7 @@ React Native 提供了一套用于展示列表数据的组件，较常用的是 
 
 下面的示例使用硬编码数据创建了一个 `FlatList` 。`data` 中的每一项被渲染成了一个 `Text` 组件：
 
-```javascript
+```jsx
 import React from 'react';
 import { FlatList, StyleSheet, Text, SafeAreaView } from 'react-native';
 
@@ -574,7 +574,7 @@ export default FlatListBasics;
 
 如果想把页面分成多个 section ，类似 iOS 中的 `UITableView` ，则可以使用 `SectionList` ：
 
-```javascript
+```jsx
 import React from 'react';
 import { SectionList, StyleSheet, Text, SafeAreaView } from 'react-native';
 

@@ -87,7 +87,7 @@ const { CalendarModule } = ReactNative.NativeModules;
 
 你可以使用 `RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD` 来创建一个原生的同步方法：
 
-```objc
+```objectivec
 RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(getName)
 {
     return [[UIDevice currentDevice] name];
@@ -164,7 +164,7 @@ NativeCalendarModule.createCalendarEvent('foo', 'bar');
 
 原生模块可以通过重写原生方法 `-constantsToExport` 来导出常量。如：
 
-```objc
+```objectivec
 - (NSDictionary *)constantsToExport
 {
     return @{ @"DEFAULT_EVENT_NAME": @"New Event" };
