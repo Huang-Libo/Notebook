@@ -183,3 +183,103 @@ Technically, it is possible to access constants exported in `-constantsToExport`
 注意：常量是在初始化的时候导出的，如果你在运行时修改了 `-constantsToExport` 方法中的值，对 JavaScript 环境是不生效的。
 
 对于 iOS 项目，如果重写了 `-constantsToExport` ，则还需要重写 `+requiresMainQueueSetup:` 方法来让 React Native 知道你的模块是否需要在主线程上初始化（在任何 JavaScript 代码执行之前）。否则，你会看到一个警告：在未来，你的模块可能会在后台线程上初始化，除非你明确选择使用 `+requiresMainQueueSetup:` 来指定在主线程执行。如果你的模块不需要访问 `UIKit` ，那么你应该在 `+ requiresMainQueueSetup:` 中返回 `NO` 。
+
+### Callbacks
+
+`callback` 在异步方法中用于把数据从 Objective-C 传递到 JavaScript 。**它们还可以用于在原生代码中异步执行 JS 。**
+
+对于 iOS ，`callback` 是使用 `RCTResponseSenderBlock` 类型实现的。注意，`RCTResponseSenderBlock` 只接受一个数组类型的参数。如：
+
+```objectivec
+RCT_EXPORT_METHOD(createCalendarEvent:(NSString *)title
+                  location:(NSString *)location
+                  callback:(RCTResponseSenderBlock)callback)
+{
+    NSInteger eventId = 101;
+    callback(@[@(eventId)]);
+
+    RCTLogInfo(@"[Xcode]Pretending to create an event %@ at %@", title, location);
+}
+```
+
+在 JavaScript 中调用上述方法，第三个参数就是回调：
+
+```jsx
+const onPress = () => {
+  NativeCalendarModule.createCalendarEvent(
+    'Party',
+    '04-12-2020',
+    (eventId) => {
+      console.log(`Created a new event with id ${eventId}`);
+    }
+  );
+```
+
+原生模块应该只调用一次它的回调函数。但是，它可以存储回调，并在稍后调用它。这个模式通常用于包装需要委托的 iOS API — 参见 [RCTAlertManager](https://github.com/facebook/react-native/blob/main/React/CoreModules/RCTAlertManager.mm) 的示例。**如果回调从未调用，则会泄漏一些内存。**
+
+有两种方法处理包含错误信息的回调。第一种方法是遵循 Node 的约定，将传递给**回调数组**（即 callback 唯一的数组类型的参数）的第一个参数视为错误对象：
+
+```objectivec
+RCT_EXPORT_METHOD(createCalendarEventCallback:(NSString *)title
+                  location:(NSString *)location
+                  callback:(RCTResponseSenderBlock)callback)
+{
+    NSNumber *eventId = [NSNumber numberWithInt:123];
+    callback(@[[NSNull null], eventId]);
+}
+```
+
+在 JavaScript 中，你可以检查第一个参数来判断是否有 error ：
+
+```jsx
+const onPress = () => {
+  NativeCalendarModule.createCalendarEventCallback(
+    'testName',
+    'testLocation',
+    (error, eventId) => {
+      if (error) {
+        console.error(`Error found! ${error}`);
+      }
+      console.log(`event id ${eventId} returned`);
+    }
+  );
+};
+```
+
+第二种可选的方法是使用两个独立的 callback ，`onFailure` 和 `onSuccess` ：
+
+```objectivec
+RCT_EXPORT_METHOD(createCalendarEventCallback:(NSString *)title
+                  location:(NSString *)location
+                  errorCallback:(RCTResponseSenderBlock)errorCallback
+                  successCallback:(RCTResponseSenderBlock)successCallback)
+{
+  @try {
+    NSNumber *eventId = [NSNumber numberWithInt:456];
+    successCallback(@[eventId]);
+  }
+
+  @catch ( NSException *e ) {
+    errorCallback(@[e]);
+  }
+}
+```
+
+然后在 JavaScript 中，你可以为错误和成功的响应分别添加一个的回调:
+
+```jsx
+const onPress = () => {
+  NativeCalendarModule.createCalendarEventCallback(
+    'testName',
+    'testLocation',
+    (error) => {
+      console.error(`Error found! ${error}`);
+    },
+    (eventId) => {
+      console.log(`event id ${eventId} returned`);
+    }
+  );
+};
+```
+
+If you want to pass error-like objects to JavaScript, use `RCTMakeError` from [RCTUtils.h](https://github.com/facebook/react-native/blob/main/React/Base/RCTUtils.h). Right now this only passes an Error-shaped dictionary to JavaScript, but React Native aims to automatically generate real JavaScript Error objects in the future. You can also provide a `RCTResponseErrorBlock` argument, which is used for error callbacks and accepts an `NSError \* object`. Please note that this argument type will not be supported with **TurboModules**.
