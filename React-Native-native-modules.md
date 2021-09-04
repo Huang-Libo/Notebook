@@ -1,4 +1,4 @@
-# React Native：Native Modules
+# React Native：原生模块
 
 - 文档：<https://reactnative.dev/docs/native-modules-ios>
 
@@ -159,3 +159,27 @@ NativeCalendarModule.createCalendarEvent('foo', 'bar');
 ### 参数类型
 
 <https://reactnative.dev/docs/next/native-modules-ios#argument-types>
+
+### 导出常量
+
+原生模块可以通过重写原生方法 `-constantsToExport` 来导出常量。如：
+
+```objc
+- (NSDictionary *)constantsToExport
+{
+    return @{ @"DEFAULT_EVENT_NAME": @"New Event" };
+}
+```
+
+在 JS 中可通过在原生模块上调用 `getConstants()` 来访问上面导出的常量：
+
+```jsx
+const { DEFAULT_EVENT_NAME } = CalendarModule.getConstants();
+console.log(DEFAULT_EVENT_NAME);
+```
+
+Technically, it is possible to access constants exported in `-constantsToExport` directly off the `NativeModule` object. This will no longer be supported with **TurboModules**, so we encourage the community to switch to the above approach to avoid necessary migration down the line.
+
+注意：常量是在初始化的时候导出的，如果你在运行时修改了 `-constantsToExport` 方法中的值，对 JavaScript 环境是不生效的。
+
+对于 iOS 项目，如果重写了 `-constantsToExport` ，则还需要重写 `+requiresMainQueueSetup:` 方法来让 React Native 知道你的模块是否需要在主线程上初始化（在任何 JavaScript 代码执行之前）。否则，你会看到一个警告：在未来，你的模块可能会在后台线程上初始化，除非你明确选择使用 `+requiresMainQueueSetup:` 来指定在主线程执行。如果你的模块不需要访问 `UIKit` ，那么你应该在 `+ requiresMainQueueSetup:` 中返回 `NO` 。
