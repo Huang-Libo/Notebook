@@ -12,13 +12,13 @@
 
 示例：
 
-```javascript
+```jsx
 fetch('https://mywebsite.com/mydata.json');
 ```
 
 Fetch 也提供了一个可选的参数来设置 HTTP Method 、 Header 、 Body 等。完整的参数列表可参考 [Fetch Request docs](https://developer.mozilla.org/en-US/docs/Web/API/Request) 。
 
-```javascript
+```jsx
 fetch('https://mywebsite.com/endpoint/', {
   method: 'POST',
   headers: {
@@ -36,7 +36,7 @@ fetch('https://mywebsite.com/endpoint/', {
 
 网络本质上是一种异步操作。`Fetch` 方法将返回一个 [Promise](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise) ，它使异步代码的编写变得简单:
 
-```javascript
+```jsx
 const getMoviesFromApi = () => {
   return fetch('https://reactnative.dev/movies.json')
     .then((response) => response.json())
@@ -51,7 +51,7 @@ const getMoviesFromApi = () => {
 
 你也可以在 React Native 中使用 `async` / `await` 语法：
 
-```javascript
+```jsx
 const getMoviesFromApiAsync = async () => {
   try {
     const response = await fetch(
@@ -67,7 +67,7 @@ const getMoviesFromApiAsync = async () => {
 
 **可运行的示例**：
 
-```javascript
+```jsx
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, FlatList, Text, View, SafeAreaView } from 'react-native';
 
@@ -113,7 +113,7 @@ export default App = () => {
 
 > The security model for XMLHttpRequest is different than on web as there is no concept of [CORS](http://en.wikipedia.org/wiki/Cross-origin_resource_sharing) in native apps.
 
-```javascript
+```jsx
 var request = new XMLHttpRequest();
 request.onreadystatechange = (e) => {
   if (request.readyState !== 4) {
@@ -135,7 +135,7 @@ request.send();
 
 React Native 也支持 [WebSockets](https://developer.mozilla.org/en-US/docs/Web/API/WebSocket) （一种在单个 TCP 连接上提供全双工通信通道的协议）。
 
-```javascript
+```jsx
 var ws = new WebSocket('ws://host.com/path');
 
 ws.onopen = () => {
