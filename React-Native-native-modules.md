@@ -283,3 +283,39 @@ const onPress = () => {
 ```
 
 If you want to pass error-like objects to JavaScript, use `RCTMakeError` from [RCTUtils.h](https://github.com/facebook/react-native/blob/main/React/Base/RCTUtils.h). Right now this only passes an Error-shaped dictionary to JavaScript, but React Native aims to automatically generate real JavaScript Error objects in the future. You can also provide a `RCTResponseErrorBlock` argument, which is used for error callbacks and accepts an `NSError \* object`. Please note that this argument type will not be supported with **TurboModules**.
+
+### Promise
+
+原生模块也可以实现一个 `Promise` ，这可以简化你的 JavaScript ，特别是当你使用 `ES2016` 的 `async`/`await` 语法时。当一个原生模块方法的最后一个参数是 `RCTPromiseResolveBlock` 和 `RCTPromiseRejectBlock` 时，它对应的 JS 方法将返回一个 JS `Promise` 对象。如：
+
+```objectivec
+RCT_EXPORT_METHOD(createCalendarEvent:(NSString *)title
+                 location:(NSString *)location
+                 resolver:(RCTPromiseResolveBlock)resolve
+                 rejecter:(RCTPromiseRejectBlock)reject)
+{
+//    NSInteger eventId = createCalendarEvent();
+    NSInteger eventId = 789;
+    if (eventId) {
+        resolve(@(eventId));
+    } else {
+        reject(@"event_failure", @"no event id returned", nil);
+    }
+}
+```
+
+这个方法对应的 JavaScript 返回一个 `Promise` 。这意味着你可以在 `async` 函数中使用 `await` 关键字来调用它并等待它的结果：
+
+```jsx
+const onPress = async () => {
+  try {
+    const eventId = await NativeCalendarModule.createCalendarEvent(
+      'Party',
+      'my house'
+    );
+    console.log(`Created a new event with id ${eventId}`);
+  } catch (e) {
+    console.error(e);
+  }
+};
+```
