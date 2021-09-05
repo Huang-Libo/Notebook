@@ -9,7 +9,7 @@
 - 在真机上，摇一摇手机；
 - 在模拟器上，使用快捷键 `⌘D` 或 `⌃⌘Z` 。
 
-![React-Native-In-APP-Dev-Menu.png](media/React-Native-Docs-Image/In-APP-Dev-Menu.jpg)
+![React-Native-In-APP-Dev-Menu.png](../media/React-Native-Docs/In-APP-Dev-Menu.jpg)
 
 注意：在模拟器上使用时，要确保 `I/O → Keyboard → Connect Hardware Keyboard` 已勾选 ☑️ 。
 
@@ -65,4 +65,4 @@ Release build 的报错堆栈需要进行*符号解析*后才能看到原始内�
 
 <https://reactnative.dev/docs/testing-overview>
 
-![diagram_testing.svg](/media/React-Native-Docs-Image/diagram_testing.svg)
+![diagram_testing.svg](/media/React-Native-Docs/diagram_testing.svg)

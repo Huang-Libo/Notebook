@@ -2,7 +2,7 @@
 
 最近需要用 R 语言，所以在 `macOS 10.13.2` 上安装了 `R.app` 。 安装好之后发现 *R GUI* 居然是日语的，这让我蒙圈了，我用的又不是日文系统，为什么会显示日文，难道这个二进制包是一个日本人打出来的?
 
-![R-Language-issue-1](media/R-Language-issue-1.jpg)
+![R-Language-issue-1](../media/R-Language-issue/1.jpg)
 
 ~~紧接着我发现，R  GUI 的默认 Language 有点不好改。~~
 
@@ -49,20 +49,20 @@ defaults write org.R-project.R force.LANG zh_CN.UTF-8
 
 安装时，从[清华大学的镜像站](https://mirrors.tuna.tsinghua.edu.cn/CRAN/) 直接下二进制的 `.pkg` 安装包：
 
-![R-Language-issue-2](media/R-Language-issue-2.jpg)
+![R-Language-issue-2](../media/R-Language-issue/2.jpg)
 
 从安装说明里面可以看出:
 
 1. 这个安装包包含 `R Framework` 和 `R.app GUI` ;
 2. *R Framework* 的安装路径是 `/Library/Framework`，经过一番探索可发现其配置文件在 `/Library/Frameworks/R.framework/Resources/etc/` 目录下（需要 root 权限），但没发现可配置 Language 的地方。 另外，这里是终端中的 R 的配置文件，应该也不能改 R.app 的默认 Language。
 
-![R-Language-issue-3](media/R-Language-issue-3.jpg)
+![R-Language-issue-3](../media/R-Language-issue/3.jpg)
 
 ### R Framework
 
 R Framework 是可在命令行中使用的 R 环境，直接在终端输入 `R` 即可：
 
-![R-Language-issue-4](media/R-Language-issue-4.jpg)
+![R-Language-issue-4](../media/R-Language-issue/4.jpg)
 
 在终端里面默认的 Language 是英文的，如果不是，则在 R 环境中输入(参考[这里](https://cran.r-project.org/bin/macosx/RMacOSX-FAQ.html#Internationalization-of-the-R_002eapp))：  
 
@@ -88,11 +88,11 @@ R.app 是 R 的一个可视化环境。 目前最关键的问题是 R.app 是日
 
 右键 `R.app`，点击`显示包内容`，进入 `Resources` 目录，把除了 `English.lproj` 以外的其他以 `.lproj` 结尾的目录移动到新建的 `lproj-bak` 目录中，最后重启 `R.app`。
 
-![R-Language-issue-5](media/R-Language-issue-5.jpg)
+![R-Language-issue-5](../media/R-Language-issue/5.jpg)
 
 最后我们会发现默认 Language 恢复成英语了，菜单栏和提示信息都是英文：
 
-![R-Language-issue-6](media/R-Language-issue-6.jpg)
+![R-Language-issue-6](../media/R-Language-issue/6.jpg)
 
 ## 后记
 
@@ -103,4 +103,4 @@ R.app 是 R 的一个可视化环境。 目前最关键的问题是 R.app 是日
 
 在折腾的过程中，也有人推荐了开源的 [RStudio](https://www.rstudio.com/products/rstudio/download/#download)，看起来智能一点，喜欢折腾的同学也可以试试：  
 
-![R-Language-issue-7](media/R-Language-issue-7.jpg)
+![R-Language-issue-7](../media/R-Language-issue/7.jpg)
