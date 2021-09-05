@@ -387,3 +387,43 @@ const subscription = calendarManagerEmitter.addListener(
 // 别忘了取消订阅，通常在 componentWillUnmount 生命周期方法中实现。
 subscription.remove();
 ```
+
+### 多线程
+
+除非原生模块提供了自己的方法队列，否则它不应该对调用它的线程做任何假设。目前，如果原生模块不提供方法队列，React Native 将为它创建一个单独的 GCD 队列，并在那里调用它的方法。请注意，这是一个实现细节，可能会更改。
+
+如果您想显式地为原生模块提供方法队列，请重写原生模块中的 `- (dispatch_queue_t)methodQueue` 方法。例如，如果它需要使用一个只能在主线程执行的 iOS API，它应该通过如下方式指定:
+
+```objectivec
+- (dispatch_queue_t)methodQueue
+{
+  return dispatch_get_main_queue();
+}
+```
+
+类似地，如果某个操作可能需要很长时间才能完成，原生模块可以指定它自己的队列去执行。同样，React Native 目前将为你的原生模块提供一个单独的方法队列，但这是一个你不应该依赖的实现细节。如果你不提供你自己的方法队列，在将来，你的原生模块的长时间运行的操作可能会阻塞其他不相关的原生模块上执行的异步调用。例如，`RCTAsyncLocalStorage` 模块创建了自己的队列，这样 React 队列就不会在等待可能很慢的磁盘访问时被阻塞。
+
+```objectivec
+- (dispatch_queue_t)methodQueue
+{
+ return dispatch_queue_create("com.facebook.React.AsyncLocalStorageQueue", DISPATCH_QUEUE_SERIAL);
+}
+```
+
+指定的 `methodQueue` 将被模块中的所有方法共享。如果你的方法中只有一个是长时间运行的（或由于某些原因需要在不同的队列上运行），你可以在方法内部使用 `dispatch_async` 在另一个队列上执行特定方法的代码，而不影响其他方法：
+
+```objectivec
+RCT_EXPORT_METHOD(doSomethingExpensive:(NSString *)param callback:(RCTResponseSenderBlock)callback)
+{
+ dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+   // Call long-running code on background thread
+   ...
+   // You can invoke callback from any thread/queue
+   callback(@[...]);
+ });
+}
+```
+
+> Sharing dispatch queues between modules
+>  
+> The `methodQueue` method will be called once when the module is initialized, and then retained by React Native, so there is no need to keep a reference to the queue yourself, unless you wish to make use of it within your module. However, if you wish to share the same queue between multiple modules then you will need to ensure that you retain and return the same queue instance for each of them.
