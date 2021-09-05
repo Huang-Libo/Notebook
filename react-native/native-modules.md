@@ -427,3 +427,20 @@ RCT_EXPORT_METHOD(doSomethingExpensive:(NSString *)param callback:(RCTResponseSe
 > Sharing dispatch queues between modules
 >  
 > The `methodQueue` method will be called once when the module is initialized, and then retained by React Native, so there is no need to keep a reference to the queue yourself, unless you wish to make use of it within your module. However, if you wish to share the same queue between multiple modules then you will need to ensure that you retain and return the same queue instance for each of them.
+
+### 依赖注入 (Dependency Injection)
+
+`bridge` 会自动注册实现了 `RCTBridgeModule` 协议的模块，但是你可能也希望能够自己去初始化自定义的模块实例，这样可以*注入依赖 (inject dependencies)* 。
+
+要实现这个功能，你需要实现 `RCTBridgeDelegate` 协议，初始化 `RCTBridge` ，并且在初始化方法里指定代理。然后用初始化好的 `RCTBridge` 实例初始化一个 `RCTRootView` 。
+
+```objectivec
+id<RCTBridgeDelegate> moduleInitialiser = [[classThatImplementsRCTBridgeDelegate alloc] init];
+
+RCTBridge *bridge = [[RCTBridge alloc] initWithDelegate:moduleInitialiser launchOptions:nil];
+
+RCTRootView *rootView = [[RCTRootView alloc]
+                        initWithBridge:bridge
+                            moduleName:kModuleName
+                     initialProperties:nil];
+```
