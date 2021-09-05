@@ -1,4 +1,4 @@
-# React Native：设计
+# 设计
 
 - 官方文档：[React Native - Design](https://reactnative.dev/docs/style)
 - Playground：[yoga playground](https://yogalayout.com/playground)

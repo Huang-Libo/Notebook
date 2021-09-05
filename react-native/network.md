@@ -1,4 +1,4 @@
-# React Native：网络
+# 网络
 
 - [官方文档](https://reactnative.dev/docs/network)
 

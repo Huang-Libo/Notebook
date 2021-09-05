@@ -1,4 +1,4 @@
-# React Native：FAQ
+# FAQ
 
 ## watchman 导致的 RN 项目运行失败
 
