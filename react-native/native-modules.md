@@ -444,3 +444,13 @@ RCTRootView *rootView = [[RCTRootView alloc]
                             moduleName:kModuleName
                      initialProperties:nil];
 ```
+
+### Exporting Swift
+
+<https://reactnative.dev/docs/native-modules-ios#exporting-swift>
+
+### Reserved Method Names
+
+#### invalidate
+
+原生模块可以通过实现 `- (void)invalidate` 方法来遵守 iOS 上的 `RCTInvalidating` 协议。这个方法可以在 **native bridge** 失效时调用（例如：在 dev mode 中执行 reload 时）。请在必要时使用此机制对本机模块进行必要的清理。
