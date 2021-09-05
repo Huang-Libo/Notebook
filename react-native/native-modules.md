@@ -319,3 +319,71 @@ const onPress = async () => {
   }
 };
 ```
+
+### 发送事件到 JavaScript
+
+原生模块可以向 JavaScript 发送事件通知，而无需直接调用。例如，你可能希望向 JavaScript 发出通知，提醒本地 iOS 日历应用中将很快出现一个日历事件。首选的方法是创建 `RCTEventEmitter` 的子类，实现 `supportedEvents` 方法并调用 `[self sendEventWithName:body:]` 。
+
+添加 `RCTEventEmitter` 的子类 `CalendarManager` ：
+
+```objectivec
+//  CalendarManager.h
+
+#import <React/RCTEventEmitter.h>
+
+@interface CalendarManager : RCTEventEmitter
+@end
+```
+
+如果你在没有监听器的情况下发出通知而消耗了不必要的资源，则会收到警告。为了避免这种情况，并优化模块的工作负载（例如通过取消订阅上游通知或暂停后台任务），你可以在 `RCTEventEmitter` 子类中重写 `startObserving` 和 `stopObserving` 方法。
+
+```objectivec
+@implementation CalendarManager
+{
+  BOOL hasListeners;
+}
+
+RCT_EXPORT_MODULE();
+
+- (NSArray<NSString *> *)supportedEvents {
+    return @[@"EventReminder"];
+}
+
+// Will be called when this module's first listener is added.
+- (void)startObserving {
+    hasListeners = YES;
+    // Set up any upstream listeners or background tasks as necessary
+}
+
+// Will be called when this module's last listener is removed, or on dealloc.
+- (void)stopObserving {
+    hasListeners = NO;
+    // Remove upstream listeners, stop unnecessary background tasks
+}
+
+- (void)calendarEventReminderReceived:(NSNotification *)notification
+{
+  NSString *eventName = notification.userInfo[@"name"];
+  if (hasListeners) { // Only send events if anyone is listening
+    [self sendEventWithName:@"EventReminder" body:@{@"name": eventName}];
+  }
+}
+@end
+```
+
+JavaScript 端的代码可以创建一个包含你的模块的 `NativeEventEmitter` 实例来订阅这些事件。
+
+```jsx
+import { NativeEventEmitter, NativeModules } from 'react-native';
+const { CalendarManager } = NativeModules;
+
+const calendarManagerEmitter = new NativeEventEmitter(CalendarManager);
+
+const subscription = calendarManagerEmitter.addListener(
+  'EventReminder',
+  (reminder) => console.log(reminder.name)
+);
+// ...
+// 别忘了取消订阅，通常在 componentWillUnmount 生命周期方法中实现。
+subscription.remove();
+```
