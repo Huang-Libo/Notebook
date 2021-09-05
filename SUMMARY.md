@@ -12,7 +12,7 @@
 - [React Native：原生模块](react-native/native-modules.md)
 - [React Native：FAQ](react-native/faq.md)
 
-## Swift
+## 🐦 Swift
 
 - [Swift Inbox](swift/inbox.md)
 
