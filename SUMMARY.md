@@ -10,6 +10,7 @@
 - [设计](react-native/design.md)
 - [网络和安全](react-native/network-and-security.md)
 - [原生模块](react-native/native-modules.md)
+- [原生组件](react-native/native-components.md)
 - [FAQ](react-native/faq.md)
 
 ## 🐦 Swift
