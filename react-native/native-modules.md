@@ -500,4 +500,22 @@ Run the example app on Android:
 Good luck!
 ```
 
+运行 iOS 项目时报错：
+
+```plaintext
+react-native-awesome-module/example/ios/Pods/Headers/Public/Flipper-Folly/folly/portability/Time.h:52:17: 
+Typedef redefinition with different types ('uint8_t' (aka 'unsigned char') vs 'enum clockid_t')
+```
+
+原因是 `Flipper-Folly` 库中有个宏的 `__IPHONE_10_0` 应该改为 `__IPHONE_12_0` ，但直接改源码不太合适，可以在 Podfile 的 `post_install` 中添加：
+
+```diff
+post_install do |installer|
+  flipper_post_install(installer)
++  `sed -i -e  $'s/__IPHONE_10_0/__IPHONE_12_0/' Pods/Flipper-Folly/folly/portability/Time.h`
+end
+```
+
+再次执行 `pod install` 后，`Flipper-Folly` 源码中有问题的宏就被更正了。
+
 > 另一个创建 module 的第三方工具：[create-react-native-module](https://github.com/brodybits/create-react-native-module)
