@@ -507,7 +507,7 @@ react-native-awesome-module/example/ios/Pods/Headers/Public/Flipper-Folly/folly/
 Typedef redefinition with different types ('uint8_t' (aka 'unsigned char') vs 'enum clockid_t')
 ```
 
-原因是 `Flipper-Folly` 库中有个宏的 `__IPHONE_10_0` 应该改为 `__IPHONE_12_0` ，但直接改源码不太合适，可以在 Podfile 的 `post_install` 中添加：
+原因是 `Flipper-Folly` 库中有个宏的 `__IPHONE_10_0` 应该改为 `__IPHONE_12_0` ，但直接改源码不太合适，可以在 Podfile 的 `post_install` 中添加（参考 [flipper issue 的评论](https://github.com/facebook/flipper/issues/834#issuecomment-902886771) ）：
 
 ```diff
 post_install do |installer|
