@@ -454,3 +454,50 @@ RCTRootView *rootView = [[RCTRootView alloc]
 #### invalidate
 
 原生模块可以通过实现 `- (void)invalidate` 方法来遵守 iOS 上的 `RCTInvalidating` 协议。这个方法可以在 **native bridge** 失效时调用（例如：在 dev mode 中执行 reload 时）。请在必要时使用此机制对本机模块进行必要的清理。
+
+## Native Modules NPM Package Setup
+
+> [NPM 文档：Contributing packages to the registry
+](https://docs.npmjs.com/packages-and-modules/contributing-packages-to-the-registry)
+
+为了建立原生模块的基本项目结构，我们将使用社区工具 [create-react-native-library](https://github.com/callstack/react-native-builder-bob) ：
+
+```console
+npx create-react-native-library react-native-awesome-module
+```
+
+交互式配置：
+
+```plaintext
+npx: installed 81 in 9.109s
+✔ What is the name of the npm package? … react-native-demo-module
+✔ What is the description for the package? … rn demo module
+✔ What is the name of package author? … Huang-Libo
+✔ What is the email address for the package author? … LiboHwang+IT@gmail.com
+✔ What is the URL for the package author? … https://github.com/Huang-Libo
+✔ What is the URL for the repository? … https://github.com/Bob-Playground/react-native-demo-module
+✔ Which languages do you want to use? › Java & Objective-C
+✔ What type of library do you want to develop? › Native module (to expose native APIs)
+```
+
+执行成功的输出：
+
+```plaintext
+Project created successfully at react-native-awesome-module!
+
+Get started with the project:
+
+  $ yarn
+
+Run the example app on iOS:
+
+  $ yarn example ios
+
+Run the example app on Android:
+
+  $ yarn example android
+
+Good luck!
+```
+
+> 另一个创建 module 的第三方工具：[create-react-native-module](https://github.com/brodybits/create-react-native-module)
