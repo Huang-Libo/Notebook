@@ -73,7 +73,7 @@ import { NativeModules } from 'react-native';
 const { CalendarModule } = ReactNative.NativeModules;
 ```
 
-### 导出原生方法给 JavaScript
+### 原生方法导出
 
 #### 异步方法：RCT_EXPORT_METHOD
 
