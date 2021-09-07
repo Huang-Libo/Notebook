@@ -44,7 +44,7 @@ RCT_EXPORT_MODULE(RNTMap)
 @end
 ```
 
-不要对 `- (UIView *)view` 导出的 view 实例上设置 `frame` 或 `backgroundColor` 等属性，因为 React Native 会覆盖你设置的值，最终生效的是 JavaScript 组件设置的 layout props 。如果你需要更细的控制粒度，最好将你想样式化的 UIView 实例包装在另一个 UIView 中，并返回包装器 UIView 。参考 [React Native issue 2948](https://github.com/facebook/react-native/issues/2948#issuecomment-259145135) 。
+不要在 `- (UIView *)view` 导出的 view 实例上设置 `frame` 或 `backgroundColor` 等属性，因为 React Native 会覆盖你设置的值，最终生效的是 JavaScript 组件设置的 layout props 。如果你需要更细的控制粒度，最好将你想样式化的 `UIView` 实例包装在另一个 `UIView` 中，并返回这个 *wrapper* `UIView` 。参考 [React Native issue 2948](https://github.com/facebook/react-native/issues/2948#issuecomment-259145135) 。
 
 **在 VS Code 中添加**：
 
@@ -60,9 +60,16 @@ module.exports = requireNativeComponent('RNTMap');
 `APP.js`
 
 ```jsx
-return (
-  <MapView style={{flex: 1}} />
-);
+import React, { Component } from 'react';
+import MapView from './MapView.js';
+
+class App extends Component {
+  render() {
+    return <MapView style={{flex: 1}} />;
+  }
+}
+
+export default App;
 ```
 
 这现在是 JavaScript 中的一个功能齐全的原生地图视图组件，包含缩放和其他本地手势支持。但我们还不能从 JavaScript 控制它 :(
