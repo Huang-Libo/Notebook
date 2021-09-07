@@ -155,6 +155,18 @@ npx react-native start
 npx react-native run-ios
 ```
 
+也可以使用 `--simulator` 选项来指定模拟器的型号：
+
+```console
+npx react-native run-ios --simulator="iPhone SE (1st generation)"
+```
+
+查看当前项目可用的的模拟器列表：
+
+```console
+xcrun simctl list devices
+```
+
 项目编译完成后，就会在模拟器中运行。
 
 也可以直接在 Xcode 中运行 ios 目录下的 `.xcworkspace` 工程。
