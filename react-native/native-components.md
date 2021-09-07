@@ -303,7 +303,7 @@ class App extends Component {
 export default App;
 ```
 
-### Events
+### 导出事件的回调
 
 现在我们有了一个原生的 map 组件，我们可以从 JS 中自由控制它，但是我们如何处理来自用户的事件，比如当用户缩放或平移 map 来改变可见区域时，如何将事件传递给 JS ?
 
@@ -510,3 +510,15 @@ class App extends Component {
 
 export default App;
 ```
+
+### Handling multiple native views
+
+<https://reactnative.dev/docs/native-components-ios#handling-multiple-native-views>
+
+### Styles
+
+<https://reactnative.dev/docs/native-components-ios#styles>
+
+## Direct Manipulation
+
+<https://reactnative.dev/docs/direct-manipulation#composite-components-and-setnativeprops>
