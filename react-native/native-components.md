@@ -50,7 +50,7 @@ RCT_EXPORT_MODULE(RNTMap)
 
 `MapView.js`
 
-> 注意：不可在 `MapView.js` 中执行 `⌘S` ，否则会报错：“There are two approaches to error handling with callbacks” 。原因是 `requireNativeComponent` 被执行了两次。如果报错了，可在其他文件（比如 `APP.js` ）执行 `⌘S` 或在 Metro 终端任务中输入 `r` 来刷新项目。
+> 注意：不可在 `MapView.js` 中执行 `⌘S` ，否则会报错：“There are two approaches to error handling with callbacks” 。原因是 `requireNativeComponent` 被执行了两次。如果报错了，可在其他文件（比如 `App.js` ）执行 `⌘S` 或在 Metro 终端任务中输入 `r` 来刷新项目。
 
 ```jsx
 import { requireNativeComponent } from 'react-native';
@@ -59,7 +59,7 @@ import { requireNativeComponent } from 'react-native';
 module.exports = requireNativeComponent('RNTMap');
 ```
 
-`APP.js`
+`App.js`
 
 ```jsx
 import React, { Component } from 'react';
@@ -186,6 +186,25 @@ RCT_CUSTOM_VIEW_PROPERTY(region, MKCoordinateRegion, MKMapView)
 
 @end
 
+@implementation RNTMapManager
+
+RCT_EXPORT_MODULE(RNTMap)
+
+RCT_EXPORT_VIEW_PROPERTY(zoomEnabled, BOOL)
+
+RCT_CUSTOM_VIEW_PROPERTY(region, MKCoordinateRegion, MKMapView)
+{
+    MKCoordinateRegion myRegion = json ? [RCTConvert MKCoordinateRegion:json] : defaultView.region;
+    [view setRegion:myRegion animated:YES];
+}
+
+- (UIView *)view
+{
+    return [[MKMapView alloc] init];
+}
+
+@end
+
 @implementation RCTConvert(MapKit)
 
 + (MKCoordinateSpan)MKCoordinateSpan:(id)json
@@ -203,25 +222,6 @@ RCT_CUSTOM_VIEW_PROPERTY(region, MKCoordinateRegion, MKMapView)
         [self CLLocationCoordinate2D:json],
         [self MKCoordinateSpan:json]
     };
-}
-
-@end
-
-@implementation RNTMapManager
-
-RCT_EXPORT_MODULE(RNTMap)
-
-RCT_EXPORT_VIEW_PROPERTY(zoomEnabled, BOOL)
-
-RCT_CUSTOM_VIEW_PROPERTY(region, MKCoordinateRegion, MKMapView)
-{
-    MKCoordinateRegion myRegion = json ? [RCTConvert MKCoordinateRegion:json] : defaultView.region;
-    [view setRegion:myRegion animated:YES];
-}
-
-- (UIView *)view
-{
-    return [[MKMapView alloc] init];
 }
 
 @end
@@ -276,7 +276,7 @@ var RNTMap = requireNativeComponent('RNTMap');
 module.exports = MapView;
 ```
 
-在 `APP.js` 中为 `MapView` 设置 `region` 属性：
+在 `App.js` 中为 `MapView` 设置 `region` 属性：
 
 ```jsx
 import React, { Component } from 'react';
@@ -292,8 +292,216 @@ class App extends Component {
     };
     return (
       <MapView
-        region={region}
         zoomEnabled={false}
+        region={region}
+        style={{ flex: 1 }}
+      />
+    );
+  }
+}
+
+export default App;
+```
+
+### Events
+
+现在我们有了一个原生的 map 组件，我们可以从 JS 中自由控制它，但是我们如何处理来自用户的事件，比如当用户缩放或平移 map 来改变可见区域时，如何将事件传递给 JS ?
+
+在之前的代码中，我们在 manager 的 `- (UIView *)view` 方法中返回的是 `MKMapView` 的实例，由于我们无法往 `MKMapView` 中添加新属性，因此需要新建一个 `MKMapView` 的子类 `RNTMapView` ，然后在这个类中添加名为 `onRegionChange` 的 `RCTBubblingEventBlock` 类型的属性。
+
+> 要注意的是，所有的 `RCTBubblingEventBlock` 类型的属性，必须以 `on` 开头。
+
+```objectivec
+#import <MapKit/MapKit.h>
+#import <React/RCTComponent.h>
+
+@interface RNTMapView : MKMapView
+
+@property (nonatomic, copy) RCTBubblingEventBlock onRegionChange;
+
+@end
+```
+
+对 `RNTMapManager` 的修改：
+
+- 在 `RNTMapManager` 中使用 `RCT_EXPORT_VIEW_PROPERTY` 宏添加 `onRegionChange` 属性；
+- 在 `- (UIView *)view` 中返回 `RNTMapView` 的实例；
+- `RNTMapManager` 类遵守 `MKMapViewDelegate` 协议，在 `- mapView:regionDidChangeAnimated:` 中调用 `onRegionChange` 回调即可调用 JavaScript 中对应的回调 prop ；
+
+```objectivec
+#import "RNTMapManager.h"
+#import "RNTMapView.h"
+#import <React/RCTConvert.h>
+#import <MapKit/MapKit.h>
+#import <CoreLocation/CoreLocation.h>
+#import <React/RCTConvert+CoreLocation.h>
+
+@interface RCTConvert (Mapkit)
+
++ (MKCoordinateSpan)MKCoordinateSpan:(id)json;
++ (MKCoordinateRegion)MKCoordinateRegion:(id)json;
+
+@end
+
+@interface RNTMapManager () <MKMapViewDelegate>
+
+@end
+
+@implementation RNTMapManager
+
+RCT_EXPORT_MODULE(RNTMap)
+
+RCT_EXPORT_VIEW_PROPERTY(zoomEnabled, BOOL)
+
+RCT_EXPORT_VIEW_PROPERTY(onRegionChange, RCTBubblingEventBlock)
+
+RCT_CUSTOM_VIEW_PROPERTY(region, MKCoordinateRegion, MKMapView)
+{
+    MKCoordinateRegion myRegion = json ? [RCTConvert MKCoordinateRegion:json] : defaultView.region;
+    [view setRegion:myRegion animated:YES];
+}
+
+- (UIView *)view
+{
+    RNTMapView *mapView = [RNTMapView new];
+    mapView.delegate = self;
+    return mapView;
+}
+
+#pragma mark MKMapViewDelegate
+
+- (void)mapView:(RNTMapView *)mapView regionDidChangeAnimated:(BOOL)animated
+{
+  if (!mapView.onRegionChange) {
+    return;
+  }
+
+  MKCoordinateRegion region = mapView.region;
+  mapView.onRegionChange(@{
+    @"region": @{
+      @"latitude": @(region.center.latitude),
+      @"longitude": @(region.center.longitude),
+      @"latitudeDelta": @(region.span.latitudeDelta),
+      @"longitudeDelta": @(region.span.longitudeDelta),
+    }
+  });
+}
+
+@end
+
+@implementation RCTConvert(MapKit)
+
++ (MKCoordinateSpan)MKCoordinateSpan:(id)json
+{
+    json = [self NSDictionary:json];
+    return (MKCoordinateSpan){
+        [self CLLocationDegrees:json[@"latitudeDelta"]],
+        [self CLLocationDegrees:json[@"longitudeDelta"]]
+    };
+}
+
++ (MKCoordinateRegion)MKCoordinateRegion:(id)json
+{
+    return (MKCoordinateRegion){
+        [self CLLocationCoordinate2D:json],
+        [self MKCoordinateSpan:json]
+    };
+}
+
+@end
+```
+
+在 `MapView.js` 的类和 `propTypes` 中添加 `onRegionChange` 相关逻辑：
+
+```jsx
+// MapView.js
+import PropTypes from 'prop-types';
+import React from 'react';
+import { requireNativeComponent } from 'react-native';
+
+class MapView extends React.Component {
+    _onRegionChange = (event) => {
+      if (!this.props.onRegionChange) {
+        return;
+      }
+  
+      // process raw event...
+      this.props.onRegionChange(event.nativeEvent);
+    };
+    render() {
+      return (
+        <RNTMap
+          {...this.props}
+          onRegionChange={this._onRegionChange}
+        />
+      );
+    }
+  }
+
+MapView.propTypes = {
+    /**
+     * A Boolean value that determines whether the user may use pinch
+     * gestures to zoom in and out of the map.
+     */
+    zoomEnabled: PropTypes.bool,
+    
+    /**
+     * Callback that is called continuously when the user is dragging the map.
+     */
+    onRegionChange: PropTypes.func,
+  
+    /**
+     * The region to be displayed by the map.
+     *
+     * The region is defined by the center coordinates and the span of
+     * coordinates to display.
+     */
+    region: PropTypes.shape({
+      /**
+       * Coordinates for the center of the map.
+       */
+      latitude: PropTypes.number.isRequired,
+      longitude: PropTypes.number.isRequired,
+  
+      /**
+       * Distance between the minimum and the maximum latitude/longitude
+       * to be displayed.
+       */
+      latitudeDelta: PropTypes.number.isRequired,
+      longitudeDelta: PropTypes.number.isRequired,
+    }),
+  };
+  
+
+var RNTMap = requireNativeComponent('RNTMap');
+
+module.exports = MapView;
+```
+
+在 `App.js` 中添加 `onRegionChange` ：
+
+```jsx
+import React, { Component } from 'react';
+import MapView from './MapView.js';
+
+class App extends Component {
+  onRegionChange(event) {
+    // Do stuff with event.region.latitude, etc.
+    
+  }
+
+  render() {
+    var region = {
+      latitude: 39.95,
+      longitude: 116.31,
+      latitudeDelta: 0.02,
+      longitudeDelta: 0.02,
+    };
+    return (
+      <MapView
+        zoomEnabled={false}
+        region={region}
+        onRegionChange={this.onRegionChange}
         style={{ flex: 1 }}
       />
     );
