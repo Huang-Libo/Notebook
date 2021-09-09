@@ -6,6 +6,10 @@
 
 - [安装](react/installation.md)
 
+## 8️⃣ 八股文
+
+- [8](8/8.md)
+
 ## 📱 React Native
 
 - [配置开发环境](react-native/environment-setup.md)
