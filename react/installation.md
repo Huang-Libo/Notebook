@@ -218,3 +218,16 @@ document.querySelectorAll('.like_button_container')
     );
   });
 ```
+
+## 为生产环境压缩 JavaScript 代码
+
+在将你的网站部署到生产环境之前，要注意未经压缩的 JavaScript 可能会显著降低用户的访问速度。
+
+如果你已经压缩了应用代码，如果你确保已部署的 HTML 加载了以 `production.min.js` 结尾的 React 版本，那么**你的网站是生产就绪（production-ready）**的：
+
+```javascript
+<script src="https://unpkg.com/react@17/umd/react.production.min.js" crossorigin></script>
+<script src="https://unpkg.com/react-dom@17/umd/react-dom.production.min.js" crossorigin></script>
+```
+
+压缩代码的步骤可参考[这个 gist](https://gist.github.com/gaearon/42a2ffa41b8319948f9be4076286e1f3) 。
