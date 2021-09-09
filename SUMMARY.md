@@ -2,7 +2,11 @@
 
 - [README](README.md)
 
-## ⚛️ React Native
+## ⚛️ React
+
+- [安装](react/installation.md)
+
+## 📱 React Native
 
 - [配置开发环境](react-native/environment-setup.md)
 - [基础](react-native/basics.md)
