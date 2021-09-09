@@ -231,3 +231,90 @@ document.querySelectorAll('.like_button_container')
 ```
 
 压缩代码的步骤可参考[这个 gist](https://gist.github.com/gaearon/42a2ffa41b8319948f9be4076286e1f3) 。
+
+## 可选：使用 React 和 JSX
+
+在上面的示例中，我们只依赖了浏览器原生支持的特性。这就是为什么我们使用了 JavaScript 函数调用来告诉 React 要显示什么：
+
+```javascript
+const e = React.createElement;
+
+// 显示一个 "Like" <button>
+return e(
+  'button',
+  { onClick: () => this.setState({ liked: true }) },
+  'Like'
+);
+```
+
+然而，React 还提供了一种使用 JSX 编写界面的方式：
+
+```jsx
+// 显示一个 "Like" <button>
+return (
+  <button onClick={() => this.setState({ liked: true })}>
+    Like
+  </button>
+);
+```
+
+### 快速尝试 JSX
+
+在项目中尝试 JSX 最快的方法是在页面中添加这个 `<script>` 标签：
+
+```html
+<script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+```
+
+现在，你可以在任何 `<script>` 标签内使用 JSX，方法是在为其添加 `type="text/babel"` 属性。
+
+一个使用了 JSX 的 HTML 文件的[例子](https://raw.githubusercontent.com/reactjs/reactjs.org/main/static/html/single-file-example.html)：
+
+```jsx
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Hello World</title>
+    <script src="https://unpkg.com/react@17/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"></script>
+
+    <!-- Don't use this in production: -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="text/babel">
+
+      ReactDOM.render(
+        <h1>Hello, world!</h1>,
+        document.getElementById('root')
+      );
+
+    </script>
+    <!--
+      Note: this page is a great way to try React but it's not suitable for production.
+      It slowly compiles JSX with Babel in the browser and uses a large development build of React.
+
+      Read this section for a production-ready setup with JSX:
+      https://reactjs.org/docs/add-react-to-a-website.html#add-jsx-to-a-project
+
+      In a larger project, you can use an integrated toolchain that includes JSX instead:
+      https://reactjs.org/docs/create-a-new-react-app.html
+
+      You can also use React without JSX, in which case you can remove Babel:
+      https://reactjs.org/docs/react-without-jsx.html
+    -->
+  </body>
+</html>
+```
+
+这种方式适合于学习和创建简单的示例。然而，它会使你的网站变慢，并且**不适用于生产环境**。当你准备好更进一步时，删除你添加的这个新的 `<script>` 标签以及 `type="text/babel"` 属性。取而代之的，在下一小节中，你将设置一个 **JSX 预处理器**来自动转换所有 `<script>` 标签的内容。
+
+### 将 JSX 添加到项目
+
+<https://zh-hans.reactjs.org/docs/add-react-to-a-website.html#add-jsx-to-a-project>
+
+### 运行 JSX 预处理器
+
+<https://zh-hans.reactjs.org/docs/add-react-to-a-website.html#run-jsx-preprocessor>
