@@ -38,7 +38,7 @@ fishhook 是一个非常简单的库，支持对 iOS 模拟器和真机上（实
             __attribute__ ((section ("__DATA,__interpose"))) = { (const void*)(unsigned long)&_replacement, (const void*)(unsigned long)&_replacee };
 ```
 
- 源码中给出的示例：
+ 源码中给出的示例是使用自定义的 `my_open()` 替换 `open()` 函数 ：
 
 ```c
 static
@@ -56,11 +56,13 @@ DYLD_INTERPOSE(my_open, open)
 
 ## fishhook 使用示例
 
+### 示例一：重绑定 `open` 和 `close`
+
 ```objectivec
 #import <dlfcn.h>
 #import <UIKit/UIKit.h>
+#import <fishhook/fishhook.h>
 #import "AppDelegate.h"
-#import "fishhook.h"
  
 static int (*orig_close)(int);
 static int (*orig_open)(const char *, int, ...);
@@ -130,4 +132,93 @@ Calling real open('/var/containers/Bundle/Application/8250D7D8-4893-486C-B5FC-FB
 Mach-O Magic Number: feedfacf 
 Calling real close(3)
 ...
+```
+
+### 示例二：重绑定 `printf`
+
+```objectivec
+#import <fishhook/fishhook.h>
+
+static int (*orig_printf)(const char * __restrict, ...);
+
+int my_printf(const char * __restrict fmt, ...) {
+    char *extra = "🤯";
+    char *result = malloc(strlen(fmt) + strlen(extra));
+    strcpy(result, extra);
+    strcat(result, fmt);
+    return orig_printf(result);
+}
+
+int main(int argc, char * argv[]) {
+    NSString * appDelegateClassName;
+    @autoreleasepool {
+        printf("Before hook printf\n");
+        // Use fishhook to rebind symbols
+        struct rebinding rebindings[1] = {
+            {"printf", my_printf, (void *)&orig_printf}
+        };
+        rebind_symbols(rebindings, 1);
+        int a = 666;
+        printf("After hook printf, %d\n", a);
+        
+        // Setup code that might create autoreleased objects goes here.
+        appDelegateClassName = NSStringFromClass([AppDelegate class]);
+    }
+    return UIApplicationMain(argc, argv, nil, appDelegateClassName);
+}
+```
+
+示例输出：
+
+```plaintext
+Before hook printf
+🤯After hook printf, 0
+```
+
+### 示例三：重绑定 `NSLog`
+
+```objectivec
+#import <fishhook/fishhook.h>
+
+// 用于记录原 NSLog 的函数指针
+static void (*orig_NSLog)(NSString *format, ...);
+
+@implementation ViewController
+
+// 自定义的 NSLog
+void my_NSLog(NSString *format, ...) {
+    if(!format) {
+        return;
+    }
+    // 在原始输出中添加额外的信息
+    NSString *extra = @"🤯";
+    format = [extra stringByAppendingString:format];
+    va_list args;
+    va_start(args, format);
+    NSString *message = [[NSString alloc] initWithFormat:format arguments:args];
+    // 调用原 NSLog
+    orig_NSLog(@"%@", message);
+    va_end(args);
+}
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    
+    NSLog(@"Before hook NSLog\n");
+    // 调用 fishhook 来重新绑定 NSLog 对应的符号
+    struct rebinding rebindings[1] = {
+        {"NSLog", my_NSLog, (void *)&orig_NSLog}
+    };
+    rebind_symbols(rebindings, 1);
+    NSLog(@"After hook NSLog\n");
+}
+
+@end
+```
+
+示例输出：
+
+```plaintext
+2021-09-14 21:58:24.319771+0800 Example[8722:6392547] Before hook NSLog
+2021-09-14 21:58:24.329150+0800 Example[8722:6392547] 🤯After hook NSLog
 ```
