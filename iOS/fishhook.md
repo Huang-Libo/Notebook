@@ -141,12 +141,18 @@ Calling real close(3)
 
 static int (*orig_printf)(const char * __restrict, ...);
 
-int my_printf(const char * __restrict fmt, ...) {
-    char *extra = "🤯";
-    char *result = malloc(strlen(fmt) + strlen(extra));
-    strcpy(result, extra);
-    strcat(result, fmt);
-    return orig_printf(result);
+int my_printf(const char *format, ...)
+{
+    // 打印额外的前缀
+    orig_printf("🤯 ");
+    int retVal = 0;
+    // 取出变长参数
+    va_list args;
+    va_start(args, format);
+    retVal = vprintf(format, args);
+    va_end(args);
+
+    return retVal;
 }
 
 int main(int argc, char * argv[]) {
@@ -172,7 +178,7 @@ int main(int argc, char * argv[]) {
 
 ```plaintext
 Before hook printf
-🤯After hook printf, 0
+🤯 After hook printf, 666
 ```
 
 ### 示例三：重绑定 `NSLog`
@@ -191,7 +197,7 @@ void my_NSLog(NSString *format, ...) {
         return;
     }
     // 在原始输出中添加额外的信息
-    NSString *extra = @"🤯";
+    NSString *extra = @"🤯 ";
     format = [extra stringByAppendingString:format];
     va_list args;
     va_start(args, format);
@@ -220,5 +226,5 @@ void my_NSLog(NSString *format, ...) {
 
 ```plaintext
 2021-09-14 21:58:24.319771+0800 Example[8722:6392547] Before hook NSLog
-2021-09-14 21:58:24.329150+0800 Example[8722:6392547] 🤯After hook NSLog
+2021-09-14 21:58:24.329150+0800 Example[8722:6392547] 🤯 After hook NSLog
 ```
