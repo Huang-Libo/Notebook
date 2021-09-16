@@ -239,13 +239,13 @@ void my_NSLog(NSString *format, ...) {
 首先要明确：
 
 - 项目依赖的动态库**不会**编译到 mach-o 文件中，系统中所有的进程共享动态库；
-- **本地 C 函数**包括**项目源码中实现的 C 函数**和**静态库中的 C 函数**，它们的共同特点是都被编译到了 mach-o 文件中。因此*本地 C 函数*可理解为当前 mach-o 中的 C 函数，它们存在于 `__TEXT` 代码段中。
+- **本地 C 函数**指**项目源码中实现的 C 函数**和**项目引入的静态库中的 C 函数**，它们的共同特点是都被编译到了 mach-o 文件中，位在于 `__TEXT` 代码段。
 
 ### 示例一：调用动态库中的 C 函数
 
 > 源码：<https://github.com/Huang-Libo/fishhook/blob/main/Symbol-Example-1/HelloWorld.c>
 
-这里以 C 标准库中的 `printf` 函数为例，演示源码中引用的动态库中的函数的调用方式。
+这里以 C 标准库中的 `printf` 函数的调用为例，演示源码中引用的动态库中的函数的调用方式。
 
 先看一段简单的 C 代码，在 `main` 函数中只调用了 `printf` 函数：
 
@@ -265,17 +265,6 @@ int main(int argc, const char * argv[]) {
 clang HelloWorld.c
 ```
 
-`nm` 命令可*列出 mach-o 文件中的符号 (list symbols from object files)* 。可以在终端中使用 `man nm` 查看其文档。
-
-`nm` 的输出包含 3 列：
-
-- 第 1 列是 **The symbol value** ，即符号的地址，默认使用 16 进制；
-- 第 2 列是 **The symbol type** ，即符号的类型；
-  - `U` ：表示 `undefined` ，即未定义，因此没有对应的地址；
-  - `T` ：表示符号位于 `__TEXT` 段，即代码所在区域；
-  - `d` ：表示符号在已初始化的数据区；
-- 第 3 列是 **The symbol name** ，即符号的名称。
-
 `nm -n a.out` 输出：
 
 ```plaintext
@@ -286,7 +275,20 @@ clang HelloWorld.c
 0000000100008008 d __dyld_private
 ```
 
-可以看出 `_printf` 符号类型是 `undefined` ；另一个 `undefined` 类型的符号是 `dyld_stub_binder` ，这个符号稍后介绍。
+可以看出 `_printf` 符号类型是 `undefined` ；此外，还有一个名为 `dyld_stub_binder` 的符号也是 `undefined` 类型，这个符号稍后介绍。
+
+**关于 `nm` 命令**：
+
+`nm` 命令可*列出 mach-o 文件中的符号 (list symbols from object files)* 。可以在终端中使用 `man nm` 查看其文档。
+
+`nm` 的输出包含 3 列：
+
+- 第 1 列是 **The symbol value** ，即符号的地址，默认使用 16 进制；
+- 第 2 列是 **The symbol type** ，即符号的类型；
+  - `U` ：表示 `undefined` ，即未定义，因此没有对应的地址；
+  - `T` ：表示符号位于 `__TEXT` 段，即代码所在区域；
+  - `d` ：表示符号在已初始化的数据区；
+- 第 3 列是 **The symbol name** ，即符号的名称。
 
 ### 示例二：调用本地的 C 函数
 
