@@ -233,3 +233,87 @@ void my_NSLog(NSString *format, ...) {
 2021-09-14 21:58:24.319771+0800 Example[8722:6392547] Before hook NSLog
 2021-09-14 21:58:24.329150+0800 Example[8722:6392547] 🤯 After hook NSLog
 ```
+
+## 系统调用 C 函数的流程
+
+## 示例一：C 源码中动态库函数的调用
+
+> 源码：<https://github.com/Huang-Libo/fishhook/blob/main/Symbol-Example-1/HelloWorld.c>
+
+这里以 C 标准库中的 `printf` 函数为例，演示源码中引用的动态库中的函数的调用方式。
+
+先看一段简单的 C 代码，在 `main` 函数中只调用了 `printf` 函数：
+
+```c
+#include <stdio.h>
+
+int main(int argc, const char * argv[]) {
+    printf("Hello, World!\n");
+    return 0;
+}
+
+```
+
+使用 clang 编译，生成可执行文件 `a.out` ：
+
+```console
+clang HelloWorld.c
+```
+
+`nm` 命令可*列出 mach-o 文件中的符号 (list symbols from object files)* 。可以在终端中使用 `man nm` 查看其文档。
+
+`nm` 的输出包含 3 列：
+
+- 第 1 列是 **The symbol value** ，即符号的地址，默认使用 16 进制；
+- 第 2 列是 **The symbol type** ，即符号的类型；
+  - `U` ：表示 `undefined` ，即未定义，因此没有对应的地址；
+  - `T` ：表示符号位于 `__TEXT` 段，即代码所在区域；
+  - `d` ：表示符号在已初始化的数据区；
+- 第 3 列是 **The symbol name** ，即符号的名称。
+
+`nm -n a.out` 输出：
+
+```plaintext
+                 U _printf
+                 U dyld_stub_binder
+0000000100000000 T __mh_execute_header
+0000000100003f50 T _main
+0000000100008008 d __dyld_private
+```
+
+可以看出 `_printf` 符号类型是 `undefined` ；另一个 `undefined` 类型的符号是 `dyld_stub_binder` ，这个符号稍后介绍。
+
+### 示例二：C 源码中自定义函数的调用
+
+> 源码：<https://github.com/Huang-Libo/fishhook/blob/main/Symbol-Example-2/Symbol-Example/main.c>
+
+接下来在上述源码中添加一个 `my_hello` 函数：
+
+```c
+#include <stdio.h>
+
+void my_hello() {
+    printf("My Hello!\n");
+}
+
+int main(int argc, const char * argv[]) {
+    printf("Hello, World!\n");
+    return 0;
+}
+```
+
+调用 `clang HelloWorld.c` 重新编译后，再输入 `nm -n a.out` 查看 `a.out` 中的符号列表：
+
+```plaintext
+                 U _printf
+                 U dyld_stub_binder
+0000000100000000 T __mh_execute_header
+0000000100003f20 T _my_hello
+0000000100003f40 T _main
+0000000100008008 d __dyld_private
+```
+
+> C 函数对应的符号名，是在函数名前加一个下划线。
+
+可以看到我们自定义的 `my_hello` 函数对应的符号 `_my_hello` 是有地址的，且在 `__TEXT` 段中。
+
