@@ -234,9 +234,14 @@ void my_NSLog(NSString *format, ...) {
 2021-09-14 21:58:24.329150+0800 Example[8722:6392547] 🤯 After hook NSLog
 ```
 
-## 系统调用 C 函数的流程
+## 调用 C 语言动态库函数和本地函数的不同之处
 
-## 示例一：C 源码中动态库函数的调用
+首先要明确：
+
+- 项目依赖的动态库**不会**编译到 mach-o 文件中，系统中所有的进程共享动态库；
+- **本地 C 函数**包括**项目源码中实现的 C 函数**和**静态库中的 C 函数**，它们的共同特点是都被编译到了 mach-o 文件中。因此*本地 C 函数*可理解为当前 mach-o 中的 C 函数，它们存在于 `__TEXT` 代码段中。
+
+### 示例一：调用动态库中的 C 函数
 
 > 源码：<https://github.com/Huang-Libo/fishhook/blob/main/Symbol-Example-1/HelloWorld.c>
 
@@ -283,7 +288,7 @@ clang HelloWorld.c
 
 可以看出 `_printf` 符号类型是 `undefined` ；另一个 `undefined` 类型的符号是 `dyld_stub_binder` ，这个符号稍后介绍。
 
-### 示例二：C 源码中自定义函数的调用
+### 示例二：调用本地的 C 函数
 
 > 源码：<https://github.com/Huang-Libo/fishhook/blob/main/Symbol-Example-2/Symbol-Example/main.c>
 
