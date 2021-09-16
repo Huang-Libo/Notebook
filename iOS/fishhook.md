@@ -181,6 +181,11 @@ Before hook printf
 🤯 After hook printf, 666
 ```
 
+**注意**：在实现 `my_printf` 时，需要使用 `va_start` 和 `va_end` 取出 `printf` 的第二个参数、这是个“*变长参数*”，然后存入到 `va_list` 类型的变量中，最后传递给 `vprintf` 函数的第二个参数。可参考：
+
+- GNU `glibc` 的 `printf.c` <https://code.woboq.org/userspace/glibc/stdio-common/printf.c.html>
+- Apple `libc` 的 `printf.c` ：<https://opensource.apple.com/source/Libc/Libc-1439.100.3/stdio/FreeBSD/printf.c.auto.html>
+
 ### 示例三：重绑定 `NSLog`
 
 ```objectivec
