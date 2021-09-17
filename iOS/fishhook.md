@@ -471,7 +471,7 @@ imp___stubs__printf   // (__TEXT,__stubs)
           -> dyld_stub_binder          // 外部符号
 ```
 
-`dyld_stub_binder` 就是 `dyld` 中的一个辅助函数，职责是绑定外部符号。比如，外部符号 `_printf` 在 `(__DATA,__la_symbol_ptr)` 中的 **Data** 初始值是 `0x100003f88` ，也就是说 `_printf` 最初指向的是 `0x100003f88`，在调用一系列指令后，最终调用了 `dyld_stub_binder` ，它会去内存中查找 `_printf` 符号的实际地址，找到后将 `0x100003f88` 替换为 `_printf` 的实际地址，下次调用 `_printf` 时，就能直接调用了。
+`dyld_stub_binder` 是 `dyld` 中的一个辅助函数，职责是绑定外部符号。比如，外部符号 `_printf` 在 `(__DATA,__la_symbol_ptr)` 中的 **Data** 初始值是 `0x100003f88` ，也就是说 `_printf` 最初指向的是 `0x100003f88`，在调用一系列指令后，最终调用了 `dyld_stub_binder` ，它会去内存中查找 `_printf` 符号的实际地址，找到后将 `0x100003f88` 替换为 `_printf` 的实际地址，下次调用 `_printf` 时，就能直接调用，而无需再调用 dyld_stub_binder。
 
 `printf()` 函数**第 n 次 (n >= 2)** 调用时的流程：
 
@@ -479,5 +479,5 @@ imp___stubs__printf   // (__TEXT,__stubs)
 imp___stubs__printf   // (__TEXT,__stubs)
   -> _printf_ptr      // (__DATA,__la_symbol_ptr)
     -> _printf        // 外部符号
-      -> _printf 的实际地址 // 无需再调用 dyld_stub_binder
+      -> 0x????????   // _printf 的实际地址
 ```
