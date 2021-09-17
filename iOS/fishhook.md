@@ -324,3 +324,162 @@ int main(int argc, const char * argv[]) {
 
 可以看到我们自定义的 `my_hello` 函数对应的符号 `_my_hello` 是有地址的，且在 `__TEXT` 段中。
 
+## 探索 printf 的调用流程
+
+### Hopper 汇编
+
+#### _main
+
+使用 Hopper 打开 [Symbol-Example](https://github.com/Huang-Libo/fishhook/tree/main/Symbol-Example-2) 项目生成的可执行文件。入口是位于 `(__TEXT,__text)` 的 `_main` ：
+
+![hopper-_main.jpg](../media/iOS/fishhook/hopper-_main.jpg)
+
+在 `_main` 中可以看到在 `0x100003f5f` 地址上执行了 `call` ，对应的符号是 `imp___stubs__printf` ，注释是 `printf` ，说明这一行汇编对应的就是 `main()` 函数内的 `printf()` 函数调用 ：
+
+```c
+0000000100003f5f call imp___stubs__printf
+```
+
+#### imp___stubs__printf
+
+双击 `imp___stubs__printf` 跳入其定义中：
+
+![hopper-imp___stubs__printf.jpg](../media/iOS/fishhook/hopper-imp___stubs__printf.jpg)
+
+可看到它位于 `(__TEXT,__stubs)` ，入口地址是 `0x100003f72` ，在其内出现了新的符号 `_printf_ptr` ：
+
+```c
+              imp___stubs__printf:
+0000000100003f72 jmp qword [_printf_ptr]
+```
+
+#### _printf_ptr
+
+双击 `_printf_ptr` ，跳入其定义中：
+
+![hopper-_printf_ptr.jpg](../media/iOS/fishhook/hopper-_printf_ptr.jpg)
+
+可看到它位于 `(__DATA,__la_symbol_ptr)` 中，它的内部存储的是 *Lazy Symbol Pointer* ，也就是说这里面存储的符号在第一次被调用时才执行绑定。
+
+可看到其内有一个 `extern` 的 `_printf` 符号：
+
+```c
+              _printf_ptr:
+0000000100008000 extern _printf
+```
+
+**编者注**：感觉 **Hopper** 生成的汇编中的 `(__DATA,__la_symbol_ptr)` 内少了一些数据，导致 `_printf` 的调用链路断在后面将讲到的外部符号所在区域了。实际上，用 **MachOView** 查看 `(__DATA,__la_symbol_ptr)` ，可以看到 `_printf` 符号还有个属性是 **Data** ，其值是 **0x100003F88** ，这个地址位于 `(__TEXT,__stub_helper)` 内，这个地址值很重要，通过这个地址值，就能把 `_printf` 和 `dyld_stub_binder` 关联起来了，稍后将详细介绍。
+
+![Mach-O-__DATA__la_symbol_ptr.jpg](../media/iOS/fishhook/Mach-O-__DATA__la_symbol_ptr.jpg)
+
+#### _printf
+
+双击 `_printf` ，会跳入到其定义：
+
+![hopper-external-symbols-1.jpg](../media/iOS/fishhook/hopper-external-symbols-1.jpg)
+
+这里显示的是*外部符号 (External Symbols)* **，Hopper** 生成的汇编的调用链路就断在这里了，如之前所述，应该是因为 `(__DATA,__la_symbol_ptr)` 内有些信息没有显示。
+
+从地址值上看，外部符号位于所有符号的最后面（在 **MachOView** 中没有这个专门展示外部符号的地方，这两个地址值 `0x100014000` 和 `0x100014008` 也较大，在 **MachOView** 中没有相应的区域）：
+
+![hopper-external-symbols-2.jpg](../media/iOS/fishhook/hopper-external-symbols-2.jpg)
+
+这两个外部符号对应的汇编代码是：
+
+```c
+             _printf:
+0000000100014000 extern function code 
+             dyld_stub_binder:
+0000000100014008 extern function code 
+```
+
+`_printf` 和 `dyld_stub_binder` 的注释分别是：
+
+```c
+; in /usr/lib/libSystem.B.dylib, CODE XREF=imp___stubs__printf, DATA XREF=_printf_ptr
+; in /usr/lib/libSystem.B.dylib, CODE XREF=0x100003f81, DATA XREF=dyld_stub_binder_100004000
+```
+
+从注释中可看出：
+
+1）这两个符号都来自 `/usr/lib/libSystem.B.dylib` 。
+2）`printf` 的调用流程是：
+
+```c
+imp___stubs__printf   // (__TEXT,__stubs)
+  -> _printf_ptr      // (__DATA,__la_symbol_ptr)
+    -> _printf        // 外部符号
+```
+
+3）`dyld_stub_binder` 的调用流程是：
+
+```c
+0x100003f81                      // (__TEXT,__stub_helper)
+  -> dyld_stub_binder_100004000  // (__DATA,__got)
+    -> dyld_stub_binder          // 外部符号
+```
+
+`_printf` 和 `dyld_stub_binder` 是强相关的，但根据目前的线索还看不出来它俩的联系。
+
+接下来先详细查看 `dyld_stub_binder` 这个外部符号的调用流程。
+
+#### (__TEXT,__stub_helper)
+
+顺着上面的外部符号 `dyld_stub_binder` 的注释给出的地址 `0x100003f81` ，可在 `(__TEXT,__stub_helper)` 中可以看到这一行出现了新符号 `dyld_stub_binder_100004000` ：
+
+![hopper-__stub_helper.jpg](../media/iOS/fishhook/hopper-__stub_helper.jpg)
+
+在 `0x100003f81` 左侧有一个蓝色箭头指向下方，实际上就是指向的 `dyld_stub_binder_100004000` 。
+
+另外，在左侧可以看到一个红色箭头。在上图的地址中，我们再次看到了上文提到的 **0x100003f88** ，这个地址也就是 `_printf` 符号中 **Data** 中存储的值。在 **0x100003f88** 执行了 `push` 指令后，接着执行了 `jmp` 指令跳转到开头处 `0x100003f78`。
+
+在 `0x100003f78` 出现了新符号 `__dyld_private` ，暂不讨论。**最后**会执行 `0x100003f81` 中的执行，跳转到 `dyld_stub_binder_100004000` 符号所在地址。
+
+文本版汇编：
+
+```c
+0000000100003f78 lea r11, qword [__dyld_private]
+0000000100003f7f push r11
+0000000100003f81 jmp qword [dyld_stub_binder_100004000]
+0000000100003f87 nop
+0000000100003f88 push 0x0
+0000000100003f8d jmp 0x100003f78
+```
+
+#### dyld_stub_binder_100004000
+
+双击 `dyld_stub_binder_100004000` 跳入到其定义中，可看到它位于 `(__DATA,__got)` 中，它的内部存的是 *Non-Lazy symbol pointer* ，也就是应用在启动的 **pre-main** 阶段就会被绑定的符号：
+
+![hopper-dyld_stub_binder.jpg](../media/iOS/fishhook/hopper-dyld_stub_binder.jpg)
+
+#### dyld_stub_binder
+
+双击 `dyld_stub_binder` 跳入其定义中，就来到了老地方，External Symbols ：
+
+![hopper-external-symbols-1.jpg](../media/iOS/fishhook/hopper-external-symbols-1.jpg)
+
+#### 小结
+
+综上所述，我们可以得出**一个重要结论：在 Mach-O 中，`_printf` 符号指向的是 `__stub_helper` 区域，在执行完一系列指令后，最终指向了 `dyld_stub_binder` 符号。**
+
+`printf()` 函数**第 1 次**调用时的流程：
+
+```c
+imp___stubs__printf   // (__TEXT,__stubs)
+  -> _printf_ptr      // (__DATA,__la_symbol_ptr)
+    -> _printf        // 外部符号
+      -> 0x100003f88 -> 0x100003f81    // (__TEXT,__stub_helper)
+        -> dyld_stub_binder_100004000  // (__DATA,__got)
+          -> dyld_stub_binder          // 外部符号
+```
+
+`dyld_stub_binder` 就是 `dyld` 中的一个辅助函数，职责是绑定外部符号。比如，外部符号 `_printf` 在 `(__DATA,__la_symbol_ptr)` 中的 **Data** 初始值是 `0x100003f88` ，也就是说 `_printf` 最初指向的是 `0x100003f88`，在调用一系列指令后，最终调用了 `dyld_stub_binder` ，它会去内存中查找 `_printf` 符号的实际地址，找到后将 `0x100003f88` 替换为 `_printf` 的实际地址，下次调用 `_printf` 时，就能直接调用了。
+
+`printf()` 函数**第 n 次 (n >= 2)** 调用时的流程：
+
+```c
+imp___stubs__printf   // (__TEXT,__stubs)
+  -> _printf_ptr      // (__DATA,__la_symbol_ptr)
+    -> _printf        // 外部符号
+      -> _printf 的实际地址 // 无需再调用 dyld_stub_binder
+```
