@@ -376,13 +376,13 @@ int main(int argc, const char * argv[]) {
 
 ![hopper-external-symbols-1.jpg](../media/iOS/fishhook/hopper-external-symbols-1.jpg)
 
-这里显示的是*外部符号 (External Symbols)* **，Hopper** 生成的汇编的调用链路就断在这里了，如之前所述，应该是因为 `(__DATA,__la_symbol_ptr)` 内有些信息没有显示。
+这里显示的是*外部符号 (External Symbols)* ， 在 **Hopper** 生成的汇编中，`printf()` 函数的调用链路就断在这里了，如之前所述，应该是因为 `(__DATA,__la_symbol_ptr)` 内有些信息没有显示。
 
-从地址值上看，外部符号位于所有符号的最后面（在 **MachOView** 中没有这个专门展示外部符号的地方，这两个地址值 `0x100014000` 和 `0x100014008` 也较大，在 **MachOView** 中没有相应的区域）：
+从地址值上看，外部符号位于所有符号的最后面（在 **MachOView** 中没有这个专门展示外部符号的地方，这两个地址值 `0x100014000` 和 `0x100014008` 也较大，在 **MachOView** 中没有显示相应的区域）：
 
 ![hopper-external-symbols-2.jpg](../media/iOS/fishhook/hopper-external-symbols-2.jpg)
 
-这两个外部符号对应的汇编代码是：
+这两个外部符号对应的汇编是：
 
 ```c
              _printf:
@@ -430,7 +430,7 @@ imp___stubs__printf   // (__TEXT,__stubs)
 
 在 `0x100003f81` 左侧有一个蓝色箭头指向下方，实际上就是指向的 `dyld_stub_binder_100004000` 。
 
-另外，在左侧可以看到一个红色箭头。在上图的地址中，我们再次看到了上文提到的 **0x100003f88** ，这个地址也就是 `_printf` 符号中 **Data** 中存储的值。在 **0x100003f88** 执行了 `push` 指令后，接着执行了 `jmp` 指令跳转到开头处 `0x100003f78`。
+另外，在左侧可以看到一个红色箭头。在上图的地址中，我们再次看到了上文提到的 **0x100003f88** ，这个地址也就是 `_printf` 符号中的 **Data** 字段存储的值。在 **0x100003f88** 执行了 `push` 指令后，接着执行了 `jmp` 指令跳转到开头处 `0x100003f78`。
 
 在 `0x100003f78` 出现了新符号 `__dyld_private` ，暂不讨论。**最后**会执行 `0x100003f81` 中的指令，跳转到 `dyld_stub_binder_100004000` 符号所在地址。
 
@@ -472,7 +472,7 @@ imp___stubs__printf   // (__TEXT,__stubs)
           -> dyld_stub_binder          // 外部符号
 ```
 
-`dyld_stub_binder` 是 `dyld` 中的一个辅助函数，职责是绑定外部符号。比如，外部符号 `_printf` 在 `(__DATA,__la_symbol_ptr)` 中的 **Data** 初始值是 `0x100003f88` ，也就是说 `_printf` 最初指向的是 `0x100003f88`，在调用一系列指令后，最终调用了 `dyld_stub_binder` 。
+`dyld_stub_binder` 是 `dyld` 中的一个辅助函数，职责是绑定外部符号。比如，外部符号 `_printf` 在 `(__DATA,__la_symbol_ptr)` 中的 **Data** 初始值是 `0x100003f88` ，也就是说 `_printf` 最初指向的是 `(__TEXT,__stub_helper)` 内的 `0x100003f88`，在调用一系列指令后，最终调用了 `dyld_stub_binder` 。
 
 `dyld_stub_binder` 会去内存中查找 `_printf` 符号的实际地址，找到后将 `(__DATA,__la_symbol_ptr)` 中 `_printf` 的 **Data** 值由 `0x100003f88` 替换为 `_printf` 的实际地址，下次调用 `_printf` 时，就能直接调用其函数的实现，而无需再调用 `dyld_stub_binder` 。
 
