@@ -338,7 +338,7 @@ int main(int argc, const char * argv[]) {
 0000000100003f5f call imp___stubs__printf
 ```
 
-### imp___stubs__printf
+### `imp___stubs__printf`
 
 双击 `imp___stubs__printf` 跳入其定义中：
 
@@ -401,6 +401,7 @@ int main(int argc, const char * argv[]) {
 从注释中可看出：
 
 1）这两个符号都来自 `/usr/lib/libSystem.B.dylib` 。
+
 2）`printf` 的调用流程是：
 
 ```c
@@ -431,9 +432,9 @@ imp___stubs__printf   // (__TEXT,__stubs)
 
 另外，在左侧可以看到一个红色箭头。在上图的地址中，我们再次看到了上文提到的 **0x100003f88** ，这个地址也就是 `_printf` 符号中 **Data** 中存储的值。在 **0x100003f88** 执行了 `push` 指令后，接着执行了 `jmp` 指令跳转到开头处 `0x100003f78`。
 
-在 `0x100003f78` 出现了新符号 `__dyld_private` ，暂不讨论。**最后**会执行 `0x100003f81` 中的执行，跳转到 `dyld_stub_binder_100004000` 符号所在地址。
+在 `0x100003f78` 出现了新符号 `__dyld_private` ，暂不讨论。**最后**会执行 `0x100003f81` 中的指令，跳转到 `dyld_stub_binder_100004000` 符号所在地址。
 
-文本版汇编：
+上图中的汇编：
 
 ```c
 0000000100003f78 lea r11, qword [__dyld_private]
@@ -471,7 +472,9 @@ imp___stubs__printf   // (__TEXT,__stubs)
           -> dyld_stub_binder          // 外部符号
 ```
 
-`dyld_stub_binder` 是 `dyld` 中的一个辅助函数，职责是绑定外部符号。比如，外部符号 `_printf` 在 `(__DATA,__la_symbol_ptr)` 中的 **Data** 初始值是 `0x100003f88` ，也就是说 `_printf` 最初指向的是 `0x100003f88`，在调用一系列指令后，最终调用了 `dyld_stub_binder` ，它会去内存中查找 `_printf` 符号的实际地址，找到后将 `0x100003f88` 替换为 `_printf` 的实际地址，下次调用 `_printf` 时，就能直接调用，而无需再调用 dyld_stub_binder。
+`dyld_stub_binder` 是 `dyld` 中的一个辅助函数，职责是绑定外部符号。比如，外部符号 `_printf` 在 `(__DATA,__la_symbol_ptr)` 中的 **Data** 初始值是 `0x100003f88` ，也就是说 `_printf` 最初指向的是 `0x100003f88`，在调用一系列指令后，最终调用了 `dyld_stub_binder` 。
+
+`dyld_stub_binder` 会去内存中查找 `_printf` 符号的实际地址，找到后将 `(__DATA,__la_symbol_ptr)` 中 `_printf` 的 **Data** 值由 `0x100003f88` 替换为 `_printf` 的实际地址，下次调用 `_printf` 时，就能直接调用其函数的实现，而无需再调用 `dyld_stub_binder` 。
 
 `printf()` 函数**第 n 次 (n >= 2)** 调用时的流程：
 
@@ -479,5 +482,5 @@ imp___stubs__printf   // (__TEXT,__stubs)
 imp___stubs__printf   // (__TEXT,__stubs)
   -> _printf_ptr      // (__DATA,__la_symbol_ptr)
     -> _printf        // 外部符号
-      -> 0x????????   // _printf 的实际地址
+      -> 0x????????   // _printf 符号的实际地址
 ```
