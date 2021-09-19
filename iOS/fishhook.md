@@ -236,10 +236,10 @@ void my_NSLog(NSString *format, ...) {
 
 ## 调用 C 语言动态库函数和本地函数的不同之处
 
-首先要明确：
+先看两个重要的结论，后面讲会对它们进行详细地讲解：
 
 - 项目依赖的动态库**不会**编译到 mach-o 文件中，系统中所有的进程共享动态库；
-- **本地 C 函数**指**项目源码中实现的 C 函数**和**项目引入的静态库中的 C 函数**，它们的共同特点是都被编译到了 mach-o 文件中，位在于 `__TEXT` 代码段。
+- 这里说的**本地 C 函数**指**项目源码中实现的 C 函数**和**项目引入的静态库中的 C 函数**，它们的共同特点是都被编译到了 mach-o 文件中，位于 `__TEXT` 代码段。
 
 ### 示例一：调用动态库中的 C 函数
 
@@ -325,6 +325,10 @@ int main(int argc, const char * argv[]) {
 可以看到我们自定义的 `my_hello` 函数对应的符号 `_my_hello` 是有地址的，且在 `__TEXT` 段中。
 
 ## 探索 printf 的调用流程 1 : Hopper 汇编
+
+> 源码：<https://github.com/Huang-Libo/fishhook/blob/main/Symbol-Example-2/Symbol-Example/main.c>
+
+接下来对上述源码生成的 Mach-O 进行详细分析。
 
 ### _main
 
@@ -422,7 +426,7 @@ imp___stubs__printf   // (__TEXT,__stubs)
 
 接下来先详细查看 `dyld_stub_binder` 这个外部符号的调用流程。
 
-### (__TEXT,__stub_helper)
+### `(__TEXT,__stub_helper)`
 
 顺着上面的外部符号 `dyld_stub_binder` 的注释给出的地址 `0x100003f81` ，可在 `(__TEXT,__stub_helper)` 中可以看到这一行出现了新符号 `dyld_stub_binder_100004000` ：
 
@@ -446,6 +450,8 @@ imp___stubs__printf   // (__TEXT,__stubs)
 ```
 
 ### dyld_stub_binder_100004000
+
+> `dyld_stub_binder_100004000` 后面的 `100004000` 实际上是 `dyld_stub_binder` 在当前 Mach-O 中的地址值，在别的 Mach-O 中会是其它值。
 
 双击 `dyld_stub_binder_100004000` 跳入到其定义中，可看到它位于 `(__DATA,__got)` 中，它的内部存的是 *Non-Lazy symbol pointer* ，也就是应用在启动的 **pre-main** 阶段就会被绑定的符号：
 
