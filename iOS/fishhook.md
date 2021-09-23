@@ -602,9 +602,45 @@ int main(int argc, const char * argv[]) {
 
 ![Xcode-breakpointer-printf-4.jpg](../media/iOS/fishhook/Xcode-breakpointer-printf-4.jpg)
 
-然后再执行 step into instruction ，可以看到 `printf()` 的注释中给的调用地址是 `0x00007fff204620b8` ，这个值明显不属于当前 Mach-O ，这是 `printf()` 函数的实现在内存中的真实地址。
+然后再执行 step into instruction ，可以看到 `printf()` 的注释中给的调用地址是 `0x7fff204620b8` ，这个值明显不属于当前 Mach-O ，这是 `printf()` 函数的实现在内存中的真实地址。
 
 ![Xcode-breakpointer-printf-5.jpg](../media/iOS/fishhook/Xcode-breakpointer-printf-5.jpg)
 
 因此可以得知，`printf()` 在第一次调用时调用的是 `dyld_stub_binder` ，之后的调用就是直接调用内存中 `printf()` 的函数指针。
+
+### 在 lldb 中调试汇编
+
+1）获取*基地址 (base address)* ：
+
+在 `lldb` 中输入 `image list` ，在输出的结果中，第一个就是我们的 **Symbol-Example** ，可看到它的基地址是 `0x100000000` 。
+
+```console
+(lldb) image list
+[  0] 8BC24CE7-BA67-3598-8712-C3F410A8B5B2 0x0000000100000000 $HOME/Library/Developer/Xcode/DerivedData/Symbol-Example-cqadvucdgstwdugejwjckmxooiec/Build/Products/Debug/Symbol-Example 
+[  1] 1AC76561-4F9A-34B1-BA7C-4516CACEAED7 0x0000000100014000 /usr/lib/dyld 
+[  2] A8309074-31CC-31F0-A143-81DF019F7A86 0x00007fff2a762000 /usr/lib/libSystem.B.dylib 
+...
+```
+
+在之前的分析中，我们可知 `_printf` 在 `(__DATA,__la_symbol_ptr)` 中，且最初指向 `(__TEXT,__stub_helper)` 。可以看到 `_printf` 符号的偏移量是 `0x8000` ：
+
+![Mach-O-__DATA__la_symbol_ptr.jpg](../media/iOS/fishhook/Mach-O-__DATA__la_symbol_ptr.jpg)
+
+2）查看 `_printf` 符号中存储的内容
+
+根据这些信息，我们可以在 `lldb` 中可以查看 `_printf` 符号中存储的内容。输入 `x 0x100000000+0x8000`（`x` 是 `memory read` 的简写）。
+
+`(__DATA,__la_symbol_ptr)` 中存储的实际上是指针数组，因此 `_printf` 符号的值占用 **8 字节**。
+
+**说明**：1 字节是 8 位，而 1 个 16 进制数字可以表示 4 位，所以**两个 16 进制数可以表示 1 字节**。
+
+由于是**小端**，因此实际地址是 `0x100003f88` ，输入 `dis -s 100003f88` 查看该地址上的汇编，可以看到第二行执行 `jmp` 指令跳转到 `0x100003f78` ，由之前在 Hopper 和 MachOView 中的分析可得知，`0x100003f78` 位于 `(__TEXT,__stub_helper)` ，最终调用了 `dyld_stub_binder` 。
+
+`_printf` 符号的值的内容如红框中所示：
+
+![Xcode-printf-symbol-memory-read-1.jpg](../media/iOS/fishhook/Xcode-printf-symbol-memory-read-1.jpg)
+
+当第一次调用 `printf()` 完成后，再查看这个位置上的汇编代码，发现 `_printf` 符号对应的指针值变成了 `0x7fff204620b8` ，且后面紧随了一行 ``libsystem_c.dylib`printf`` ，说明 `(__DATA,__la_symbol_ptr)` 的 `_printf` 符号中已存储了对应的函数实现的地址：
+
+![Xcode-printf-symbol-memory-read-2.jpg](../media/iOS/fishhook/Xcode-printf-symbol-memory-read-2.jpg)
 
