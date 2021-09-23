@@ -644,3 +644,27 @@ int main(int argc, const char * argv[]) {
 
 ![Xcode-printf-symbol-memory-read-2.jpg](../media/iOS/fishhook/Xcode-printf-symbol-memory-read-2.jpg)
 
+## 位置无关代码
+
+前面讨论了许多 `stub` 相关的内容，那么 `stub` 到底是什么呢？
+
+> The static linker is responsible for generating all stub functions, stub helper functions, lazy and non-lazy pointers, as well as the indirect symbol table needed by the dynamic loader (dyld).  
+> ---摘自 [Apple 文档](https://developer.apple.com/library/archive/documentation/DeveloperTools/Conceptual/MachOTopics/1-Articles/indirect_addressing.html) 。
+
+由文档可知，*静态连接器 (static linker)* 负责生成了所有的 `stub functions`, `stub helper functions`, `lazy pointers`, `non-lazy pointers`, 以及 `dyld` 会用到的 `indirect symbol table`（比如查询符号来自于哪个 dylib ）。
+
+由于系统的动态库会被加载到任意位置，如果代码调用了系统动态库中的 C 函数，编译器在生成 Mach-O 可执行文件时无法知道该函数的实际地址，因此会插入一个 **stub** ，这样的代码也被称为**位置无关代码 (Position independent code, PIC)**。
+
+在**启动应用时或者第一次使用该符号时**再由 `dyld` 去查找符号对应的实现，将实际的函数指针值填入到 `(__DATA_CONST,__got)` 或 `(__DATA,__la_symbol_ptr)` 对应的条目中。
+
+## 适用范围
+
+根据上述分析，我们可以得知 fishhook 的适用范围：
+
+- 自己源码中实现的 C 函数、静态库中的 C 函数**不能**被 hook 。
+  - 因为它们的函数的地址在编译时就确定了，存储在 Mach-O 文件的 `__TEXT` 段。由于 `__TEXT` 段是只读的，且会进行代码签名验证，因此是不能修改的。
+  - （启动阶段 dyld 执行 rebase 的时候，dyld 给指针地址加上偏移量就是指针的真实地址。这个过程是在 pre-main 阶段由 dyld 执行的，我们无法干预。）
+- 系统动态库的 C 函数可以被 hook 。
+  - 如果代码调用了系统动态库中的 C 函数，由于编译器在生成 Mach-O 可执行文件时无法知道该函数的实际地址，因此会插入一个 **stub** 。**stub** 存储在 Mach-O 文件中的 `(__DATA,__la_symbol_ptr)` 中，即 *Lazy Symbol Pointers* ，这些指针最终会调用 `dyld_stub_binder` 函数。只有第一次调用函数时，才会通过 `dyld_stub_binder` 去查找函数的真实地址。
+  - 比如 `_printf` 符号，在第一次调用时，`dyld_stub_binder` 函数通过调用 dyld 内部的函数找到 `_printf` 的真实地址，并写入到 `(__DATA,__la_symbol_ptr)` 中，之后再次访问 `_printf` 时，就能直接跳转到 `_printf` 的真实地址了。
+
