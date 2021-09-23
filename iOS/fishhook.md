@@ -56,7 +56,7 @@ DYLD_INTERPOSE(my_open, open)
 
 ## fishhook 使用示例
 
-### 示例一：重绑定 `open` 和 `close`
+### 示例一：重绑定 `open()` 和 `close()`
 
 ```objectivec
 #import <dlfcn.h>
@@ -134,7 +134,7 @@ Calling real close(3)
 ...
 ```
 
-### 示例二：重绑定 `printf`
+### 示例二：重绑定 `printf()`
 
 ```objectivec
 #import <fishhook/fishhook.h>
@@ -181,12 +181,12 @@ Before hook printf
 🤯 After hook printf, 666
 ```
 
-**注意**：在实现 `my_printf` 时，需要使用 `va_start` 和 `va_end` 取出 `printf` 的第二个参数、这是个“*变长参数*”，然后存入到 `va_list` 类型的变量中，最后传递给 `vprintf` 函数的第二个参数。可参考：
+**注意**：在实现 `my_printf` 时，需要使用 `va_start` 和 `va_end` 取出 `printf()` 的第二个参数、这是个“*变长参数*”，然后存入到 `va_list` 类型的变量中，最后传递给 `vprintf` 函数的第二个参数。可参考：
 
 - GNU `glibc` 的 `printf.c` <https://code.woboq.org/userspace/glibc/stdio-common/printf.c.html>
 - Apple `libc` 的 `printf.c` ：<https://opensource.apple.com/source/Libc/Libc-1439.100.3/stdio/FreeBSD/printf.c.auto.html>
 
-### 示例三：重绑定 `NSLog`
+### 示例三：重绑定 `NSLog()`
 
 ```objectivec
 #import <fishhook/fishhook.h>
@@ -242,9 +242,9 @@ void my_NSLog(NSString *format, ...) {
 
 > 源码：<https://github.com/Huang-Libo/fishhook/blob/main/Symbol-Example-1/HelloWorld.c>
 
-这里以 C 标准库中的 `printf` 函数的调用为例，演示源码中引用的动态库中的函数的调用方式。
+这里以 C 标准库中的 `printf()` 函数的调用为例，演示源码中引用的动态库中的函数的调用方式。
 
-先看一段简单的 C 代码，在 `main` 函数中只调用了 `printf` 函数：
+先看一段简单的 C 代码，在 `main()` 函数中只调用了 `printf()` 函数：
 
 ```c
 #include <stdio.h>
@@ -325,7 +325,7 @@ int main(int argc, const char * argv[]) {
 
 自己源码中的 C 函数在编译时就确定了函数地址，而动态库中的 C 函数在编译时没有确定函数地址。
 
-## 使用 Hopper 探索 printf 的调用流程
+## 1. 使用 Hopper 探索 printf 的调用流程
 
 > 源码：<https://github.com/Huang-Libo/fishhook/blob/main/Symbol-Example-2/Symbol-Example/main.c>
 
@@ -337,7 +337,7 @@ int main(int argc, const char * argv[]) {
 
 ![hopper-_main.jpg](../media/iOS/fishhook/hopper-_main.jpg)
 
-在 `_main` 中可以看到在 `0x100003f5f` 地址上执行了 `call` ，对应的符号是 `imp___stubs__printf` ，注释是 `printf` ，说明这一行汇编对应的就是 `main()` 函数内的 `printf()` 函数调用 ：
+在 `_main` 中可以看到在 `0x100003f5f` 地址上执行了 `call` ，对应的符号是 `imp___stubs__printf` ，注释是 `printf()` ，说明这一行汇编对应的就是 `main()` 函数内的 `printf()` 函数调用 ：
 
 ```c
 0000000100003f5f call imp___stubs__printf
@@ -407,7 +407,7 @@ int main(int argc, const char * argv[]) {
 
 1）这两个符号都来自 `/usr/lib/libSystem.B.dylib` 。
 
-2）`printf` 的调用流程是：
+2）`printf()` 的调用流程是：
 
 ```c
 imp___stubs__printf   // (__TEXT,__stubs)
@@ -492,7 +492,7 @@ imp___stubs__printf   // (__TEXT,__stubs)
       -> 0x????????   // _printf 符号的实际地址
 ```
 
-## 使用 MachOView 探索 printf 的调用流程
+## 2. 使用 MachOView 探索 printf 的调用流程
 
 > 源码：<https://github.com/Huang-Libo/fishhook/blob/main/Symbol-Example-2/Symbol-Example/main.c>
 
@@ -542,10 +542,69 @@ FF2579000000 jmp *0x00000079(%rip)
 
 ### 小结
 
-这一节使用 MachOView 追溯了 `printf` 函数的调用流程，中间有些调用链不太明确，需要结合之前在 Hopper 中的找到的信息来追溯。
+这一节使用 MachOView 追溯了 `printf()` 函数的调用流程，中间有些调用链不太明确，需要结合之前在 Hopper 中的找到的信息来追溯。
 
 **Hopper 和 MachOView 的对比**：
 
 - 使用 Hopper 查看函数的调用流程很方便，双击就能执行跳转，且生成的汇编代码更易读。
 - MachOView 的包含一些 Hopper 没有的信息，但生成的汇编代码可读性略差。可以把它们结合起来使用。
+
+## 3. 使用 Xcode 探索 printf 的调用流程
+
+### Xcode 调试汇编代码的方法
+
+要在 Xcode 中打断点时查看对应的汇编代码，需要勾选 *Always Show Disassembly* ：
+
+![Xcode-Always-Show-Disassembly.jpg](../media/iOS/fishhook/Xcode-Always-Show-Disassembly.jpg)
+
+在汇编中调试的技巧：**按住 <kbd>Control</kbd> 键**再点击调试按钮，就能以汇编指令为单位进行调试了。
+
+1）单步，跳到下一个汇编指令 (Step over Instruction) ：
+
+说明：在 `lldb` 中输入 `si` 也可以。
+
+![Xcode-lldb-step-over-instruction.jpg](../media/iOS/fishhook/Xcode-lldb-step-over-instruction.jpg)
+
+2）进入汇编指令的方法调用 (Step into Instruction) ：
+
+![Xcode-lldb-step-into-instruction.jpg](../media/iOS/fishhook/Xcode-lldb-step-into-instruction.jpg)
+
+### 调试汇编代码
+
+还是之前使用的代码：
+
+```c
+#include <stdio.h>
+
+void my_hello(void) {
+    printf("My Hello!\n");
+}
+
+int main(int argc, const char * argv[]) {
+    printf("Hello, World!\n");
+    return 0;
+}
+```
+
+在 `main()` 函数调用 `printf()` 的地方打断点，运行项目后就能断在对应的汇编代码中。然后**单步**执行到 `0x100003f5f` ，可以看到这一行汇编调用了 `callq`，对应的地址是 `0x1003f72` ，注释是 `symbol stub for: printf` 。由之前 Hopper 和 MachOView 中的分析也可得知，这个地址位于 `(__TEXT,__stubs)` ，存储的是符号桩：
+
+![Xcode-breakpointer-printf-1.jpg](../media/iOS/fishhook/Xcode-breakpointer-printf-1.jpg)
+
+执行 step into instruction ，可看到 `printf()` 的内容，汇编指令是 `jmpq *0x4088(%rip)` ，看不太懂 😅 ，但后面的注释出现了一个熟悉的地址 `0x100003f88` ，由之前 Hopper 和 MachOView 中的分析也可得知，这个地址位于 `(__TEXT,__stub_helper)` ，且最终指向 `dyld_stub_binder` ：
+
+![Xcode-breakpointer-printf-2.jpg](../media/iOS/fishhook/Xcode-breakpointer-printf-2.jpg)
+
+我们再加一行 `printf()`  函数的调用：
+
+![Xcode-breakpointer-printf-3.jpg](../media/iOS/fishhook/Xcode-breakpointer-printf-3.jpg)
+
+由上面分析已知第一次调用 `printf()` 时，最终调用的是 `dyld_stub_binder` 。这次我们单步执行到第二个 `printf()` 调用（由于修改了代码，`printf()` 函数的地址变成了 `0x100003f62` ，不过没关系，不影响后续探索）：
+
+![Xcode-breakpointer-printf-4.jpg](../media/iOS/fishhook/Xcode-breakpointer-printf-4.jpg)
+
+然后再执行 step into instruction ，可以看到 `printf()` 的注释中给的调用地址是 `0x00007fff204620b8` ，这个值明显不属于当前 Mach-O ，这是 `printf()` 函数的实现在内存中的真实地址。
+
+![Xcode-breakpointer-printf-5.jpg](../media/iOS/fishhook/Xcode-breakpointer-printf-5.jpg)
+
+因此可以得知，`printf()` 在第一次调用时调用的是 `dyld_stub_binder` ，之后的调用就是直接调用内存中 `printf()` 的函数指针。
 
