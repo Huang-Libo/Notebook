@@ -325,7 +325,7 @@ int main(int argc, const char * argv[]) {
 
 自己源码中的 C 函数在编译时就确定了函数地址，而动态库中的 C 函数在编译时没有确定函数地址。
 
-## 探索 printf 的调用流程 1 : Hopper 汇编
+## 使用 Hopper 探索 printf 的调用流程
 
 > 源码：<https://github.com/Huang-Libo/fishhook/blob/main/Symbol-Example-2/Symbol-Example/main.c>
 
@@ -492,7 +492,7 @@ imp___stubs__printf   // (__TEXT,__stubs)
       -> 0x????????   // _printf 符号的实际地址
 ```
 
-## MachOView
+## 使用 MachOView 探索 printf 的调用流程
 
 > 源码：<https://github.com/Huang-Libo/fishhook/blob/main/Symbol-Example-2/Symbol-Example/main.c>
 
