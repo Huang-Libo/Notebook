@@ -672,6 +672,5 @@ int main(int argc, const char * argv[]) {
 ## 参考资料
 
 - [巧用符号表 - 探求 fishhook 原理（一）](https://www.desgard.com/c/iosre/2017/12/16/fishhook-1.html)
-- [验证试验 - 探求 fishhook 原理（二）
-](https://www.desgard.com/c/iosre/2018/02/03/fishhook-2.html)
+- [验证试验 - 探求 fishhook 原理（二）](https://www.desgard.com/c/iosre/2018/02/03/fishhook-2.html)ault.com/a/1190000038540683)
 
