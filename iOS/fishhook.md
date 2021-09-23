@@ -491,3 +491,61 @@ imp___stubs__printf   // (__TEXT,__stubs)
     -> _printf        // 外部符号
       -> 0x????????   // _printf 符号的实际地址
 ```
+
+## MachOView
+
+> 源码：<https://github.com/Huang-Libo/fishhook/blob/main/Symbol-Example-2/Symbol-Example/main.c>
+
+上一节使用 Hopper 对编译生成的 Mach-O 文件进行详细分析，接下来再用 MachOView 分析一遍，大多数时候可以将这两个工具结合起来使用。
+
+**说明**：在 Debug 环境中加载 Mach-O 时，Mach-O 的偏移量是固定值 `0x100000000`（可在 `lldb` 中使用 `image list` 查看首个 image 的起始值）。
+
+（**疑问**：为何 Mach-O **内部**的有些地址值也加上了 `0x100000000` ？Mach-O 中的地址应该是不需要加偏移量的吧？）
+
+### `(__TEXT,__text)`
+
+先查看 `(__TEXT,__text)` 中的汇编代码，在 `0x3F5F` 地址中调用了 `callq` ，对应的地址是 `0x3F72` 。
+
+![Mach-O-__TEXT__text.jpg](../media/iOS/fishhook/Mach-O-__TEXT__text.jpg)
+
+### `(__TEXT,__stubs)`
+
+`0x3F72` 位于 `(__TEXT,__stub_helper)` ，这个 section 存储的是所有的符号桩。（**疑问**：调用链断在这里了，根据之前在 Hopper 中的分析，接下来应该要跳转到 `(__DATA,__la_symbol_ptr)` 区域中。另外，这里的 `Data` 中存在的 `0xFF2588400000` 是什么值？）
+
+![Mach-O-__TEXT__stubs.jpg](../media/iOS/fishhook/Mach-O-__TEXT__stubs.jpg)
+
+### `(__DATA,__la_symbol_ptr)`
+
+在 `(__DATA,__la_symbol_ptr)` 中，可以看到 `_printf` 相关条目的 `Data` 值是 `0x100003F88` 。
+
+![Mach-O-__DATA__la_symbol_ptr.jpg](../media/iOS/fishhook/Mach-O-__DATA__la_symbol_ptr.jpg)
+
+### `(__TEXT,__stub_helper)`
+
+`0x100003F88` 位于 `(__TEXT,__stub_helper)` ，在执行 `pushq` 指令之后，接着执行 `jmp` 指令跳转到 `0x3F78` ，最终将执行 `0x3F81` 中的 `jmp` 指令。
+
+在之前的 Hopper 分析中，我们可以看到 `0x3F81` 实际上是跳转到了 `(__DATA_CONST,__got)` 的 `dyld_stub_binder` 。但在 MachOView 中不那么直观。需要看得懂这里的汇编才行 😅 。
+
+`0x3F81` 的汇编指令：
+
+```c
+FF2579000000 jmp *0x00000079(%rip)
+```
+
+![Mach-O-__TEXT__stub_helper.jpg](../media/iOS/fishhook/Mach-O-__TEXT__stub_helper.jpg)
+
+### `(__DATA_CONST,__got)`
+
+最后来到了 `(__DATA_CONST,__got)` ，这个 section 存储的是 Non-Lazy Symbol Pointers ，也就是启动时就会绑定的符号。 `dyld_stub_binder` 就位于这个区域。
+
+![Mach-O-__DATA_CONST__got.jpg](../media/iOS/fishhook/Mach-O-__DATA_CONST__got.jpg)
+
+### 小结
+
+这一节使用 MachOView 追溯了 `printf` 函数的调用流程，中间有些调用链不太明确，需要结合之前在 Hopper 中的找到的信息来追溯。
+
+**Hopper 和 MachOView 的对比**：
+
+- 使用 Hopper 查看函数的调用流程很方便，双击就能执行跳转，且生成的汇编代码更易读。
+- MachOView 的包含一些 Hopper 没有的信息，但生成的汇编代码可读性略差。可以把它们结合起来使用。
+
