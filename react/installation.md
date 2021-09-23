@@ -318,3 +318,9 @@ return (
 ### 运行 JSX 预处理器
 
 <https://zh-hans.reactjs.org/docs/add-react-to-a-website.html#run-jsx-preprocessor>
+
+## 创建新的 React 应用
+
+### Create React App
+
+[Create React App](https://github.com/facebookincubator/create-react-app) 是一个用于学习 React 的舒适环境，也是用 React 创建新的单页应用的最佳方式。
