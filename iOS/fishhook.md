@@ -234,12 +234,9 @@ void my_NSLog(NSString *format, ...) {
 2021-09-14 21:58:24.329150+0800 Example[8722:6392547] 🤯 After hook NSLog
 ```
 
-## 调用 C 语言动态库函数和本地函数的不同之处
+## 调用动态库中的 C 函数的不同之处
 
-先看两个重要的结论，后面讲会对它们进行详细地讲解：
-
-- 项目依赖的动态库**不会**编译到 mach-o 文件中，系统中所有的进程共享动态库；
-- 这里说的**本地 C 函数**指**项目源码中实现的 C 函数**和**项目引入的静态库中的 C 函数**，它们的共同特点是都被编译到了 mach-o 文件中，位于 `__TEXT` 代码段。
+**提问**：调用动态库中的 C 函数与调用自己源码中的 C 函数有何不同？
 
 ### 示例一：调用动态库中的 C 函数
 
@@ -277,7 +274,7 @@ clang HelloWorld.c
 
 可以看出 `_printf` 符号类型是 `undefined` ；此外，还有一个名为 `dyld_stub_binder` 的符号也是 `undefined` 类型，这个符号稍后介绍。
 
-**关于 `nm` 命令**：
+**符号表查看工具 - `nm` 命令**：
 
 `nm` 命令可*列出 mach-o 文件中的符号 (list symbols from object files)* 。可以在终端中使用 `man nm` 查看其文档。
 
@@ -290,7 +287,7 @@ clang HelloWorld.c
   - `d` ：表示符号在已初始化的数据区；
 - 第 3 列是 **The symbol name** ，即符号的名称。
 
-### 示例二：调用本地的 C 函数
+### 示例二：调用自己源码中的 C 函数
 
 > 源码：<https://github.com/Huang-Libo/fishhook/blob/main/Symbol-Example-2/Symbol-Example/main.c>
 
@@ -323,6 +320,10 @@ int main(int argc, const char * argv[]) {
 > C 函数对应的符号名，是在函数名前加一个下划线。
 
 可以看到我们自定义的 `my_hello` 函数对应的符号 `_my_hello` 是有地址的，且在 `__TEXT` 段中。
+
+### 小结
+
+自己源码中的 C 函数在编译时就确定了函数地址，而动态库中的 C 函数在编译时没有确定函数地址。
 
 ## 探索 printf 的调用流程 1 : Hopper 汇编
 
