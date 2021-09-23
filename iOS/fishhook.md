@@ -659,12 +659,19 @@ int main(int argc, const char * argv[]) {
 
 ## 适用范围
 
-根据上述分析，我们可以得知 fishhook 的适用范围：
+根据上述分析，我们可以得知 fishhook 的适用范围（简而言之就是**外部符号可以被 hook ， 内部符号无法被 hook** ）：
 
 - 自己源码中实现的 C 函数、静态库中的 C 函数**不能**被 hook 。
   - 因为它们的函数的地址在编译时就确定了，存储在 Mach-O 文件的 `__TEXT` 段。由于 `__TEXT` 段是只读的，且会进行代码签名验证，因此是不能修改的。
   - （启动阶段 dyld 执行 rebase 的时候，dyld 给指针地址加上偏移量就是指针的真实地址。这个过程是在 pre-main 阶段由 dyld 执行的，我们无法干预。）
 - 系统动态库的 C 函数可以被 hook 。
-  - 如果代码调用了系统动态库中的 C 函数，由于编译器在生成 Mach-O 可执行文件时无法知道该函数的实际地址，因此会插入一个 **stub** 。**stub** 存储在 Mach-O 文件中的 `(__DATA,__la_symbol_ptr)` 中，即 *Lazy Symbol Pointers* ，这些指针最终会调用 `dyld_stub_binder` 函数。只有第一次调用函数时，才会通过 `dyld_stub_binder` 去查找函数的真实地址。
+  - 如果代码调用了系统动态库中的 C 函数，由于编译器在生成 Mach-O 可执行文件时无法知道该函数的实际地址，因此会插入一个 **stub** 。**stub** 存储在 Mach-O 文件中的 `(__DATA,__la_symbol_ptr)` 中，即 *Lazy Symbol Pointers* ，这些指针最终会调用 `dyld_stub_binder` 函数。只有第一次调用函数时，才会通过 `dyld_stub_binder` 去查找函数的真实地址并完成**符号绑定 (symbol bind)**。
   - 比如 `_printf` 符号，在第一次调用时，`dyld_stub_binder` 函数通过调用 dyld 内部的函数找到 `_printf` 的真实地址，并写入到 `(__DATA,__la_symbol_ptr)` 中，之后再次访问 `_printf` 时，就能直接跳转到 `_printf` 的真实地址了。
+
+
+## 参考资料
+
+- [巧用符号表 - 探求 fishhook 原理（一）](https://www.desgard.com/c/iosre/2017/12/16/fishhook-1.html)
+- [验证试验 - 探求 fishhook 原理（二）
+](https://www.desgard.com/c/iosre/2018/02/03/fishhook-2.html)
 
