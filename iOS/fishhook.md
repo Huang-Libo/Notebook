@@ -657,7 +657,7 @@ int main(int argc, const char * argv[]) {
 
 在**启动应用时或者第一次使用该符号时**再由 `dyld` 去查找符号对应的实现，将实际的函数指针值填入到 `(__DATA_CONST,__got)` 或 `(__DATA,__la_symbol_ptr)` 对应的条目中。
 
-## 适用范围
+## fishhook 的适用范围
 
 根据上述分析，我们可以得知 fishhook 的适用范围（简而言之就是**外部符号可以被 hook ， 内部符号无法被 hook** ）：
 
@@ -672,5 +672,5 @@ int main(int argc, const char * argv[]) {
 ## 参考资料
 
 - [巧用符号表 - 探求 fishhook 原理（一）](https://www.desgard.com/c/iosre/2017/12/16/fishhook-1.html)
-- [验证试验 - 探求 fishhook 原理（二）](https://www.desgard.com/c/iosre/2018/02/03/fishhook-2.html)ault.com/a/1190000038540683)
+- [验证试验 - 探求 fishhook 原理（二）](https://www.desgard.com/c/iosre/2018/02/03/fishhook-2.html)
 
