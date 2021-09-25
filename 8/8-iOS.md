@@ -1,5 +1,14 @@
 # 8-iOS
 
+## UIView 和 CALayer 的区别
+
+- `UIView` 属于 `UIKit` 框架，仅用于 iOS 系统，它可以响应交互事件；而 `CALayer` 属于 `Core Animation` 框架，是 iOS 和 macOS 通用的，它只负责页面的绘制，无法响应交互事件。
+- 每个 `UIView` 都有一个相应的 `CALayer` 属性；
+- `CALayer` 有一个 `CALayerDelegate` 类型的 `delegate` 属性，而 `UIView` 通常就是 `CALayer` 的 `delegate` ；
+- 这样的设计遵守了单一职责的原则，使得 `CALayer` 在不同平台上可以被复用。
+  - 在不同类型的设备上，交互逻辑也是不一样的。比如在 iOS 系统上是触摸操作，负责交互的是 `UIKit` 中的 `UIView` ；在 macOS 系统上是键鼠操作，负责交互的是 `AppKit` 中的 `NSView` 。
+  - 但它们的图形绘制的方式是一样的，`UIView` 和 `NSView` 的底层都是使用 `CALayer` 进行绘制的。
+
 ## iOS 系统响应触摸事件的机制
 
 1）手指触碰屏幕，屏幕感应到触碰后，将事件交由 `IOKit` 处理。
@@ -7,7 +16,7 @@
 2）`IOKit` 将触摸事件封装成一个 `IOHIDEvent` 对象，并通过 `mach port` 传递给 `SpringBoad` 进程。
 
 - `mach port` ：进程端口，各进程之间通过它进行通信。
-- `SpringBoad` 是一个系统进程，可以理解为桌面系统，可以**统一管理和分发系统接收到的触摸事件**。
+- `SpringBoad` ：是一个系统进程，可以理解为桌面系统，可以**统一管理和分发系统接收到的触摸事件**。
 
 3）`SpringBoard` 进程因接收到触摸事件，触发了主线程 `RunLoop` 的 `source1` 事件源的回调。此时 `SpringBoard` 会根据当前桌面的状态，判断应该由谁处理此次触摸事件。因为事件发生时，你可能正在桌面上翻页，也可能正在刷微博。
 
