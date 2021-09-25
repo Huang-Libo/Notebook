@@ -575,7 +575,9 @@ FF2579000000 jmp *0x00000079(%rip)
 
 ![Xcode-breakpointer-printf-1-5.jpg](../media/iOS/fishhook/Xcode-breakpointer-printf-1-5.jpg)
 
-执行 *step over instruction* 跳到 `callq 0x100003f72` 的下一行，此时已完成第一次 `printf` 的调用，可以在 `lldb` 中查看此时 `(__DATA,__la_symbol_ptr)` 中 `_printf` 符号的 **Data** 值。
+上面已探索到 `dyld_stub_binder` 的实现了，这时我们需要 step out ，看看执行完 `dyld_stub_binder` 之后，`_printf` 符号的地址值是什么。
+
+但在汇编中点击 *step out* 按钮无反应，原因暂不明，我们暂且先重新运行项目，并单步执行到 `callq 0x100003f72` 的下一行，此时已完成第一次 `printf` 的调用，可以在 `lldb` 中查看此时 `(__DATA,__la_symbol_ptr)` 中 `_printf` 符号的 **Data** 值。
 
 输入 `x 0x100000000+0x8000` ，可以看到 `_printf` 中的 **Data** 值已变成了以 `0x7fff` 开头的很大的地址；再使用 `dis -s` 查看该地址上的汇编，发现此地址指向的内容就是 `printf` 函数的实现：
 
@@ -583,13 +585,13 @@ FF2579000000 jmp *0x00000079(%rip)
 
 ### 第二次调用 printf 的流程
 
-由上一节的内容可知，完成第一次 `printf` 函数的调用后，`(__DATA,__la_symbol_ptr)` 中 `_printf` 符号的 **Data** 值已填入了 `printf` 函数实现的地址。
+由上一节的内容可知，完成第一次 `printf()` 函数的调用后，`(__DATA,__la_symbol_ptr)` 中 `_printf` 符号的 **Data** 值已填入了 `printf()` 的函数实现的地址。
 
-接下来我们在源码中再加一行 `printf()`  函数，看看第二次调用 `printf` 的流程：
+接下来我们在源码中再加一行 `printf()`  函数，看看第二次调用 `printf()` 的流程：
 
 ![Xcode-breakpointer-printf-2-1.jpg](../media/iOS/fishhook/Xcode-breakpointer-printf-2-1.jpg)
 
-由上面分析已知第一次调用 `printf()` 时，最终调用的是 `dyld_stub_binder` 。这次我们单步执行到第二个 `printf()` 调用（由于修改了代码，`printf()` 函数的地址变成了 `0x100003f62` ，不过没关系，不影响后续探索）：
+由上面分析已知第一次调用 `_printf` 符号时，会先调用到 `dyld_stub_binder` 符号。这次我们单步执行到第二个 `_printf` 符号的调用（由于修改了代码，`_printf` 符号的地址变成了 `0x100003f62` ，不过没关系，不影响后续探索）：
 
 ![Xcode-breakpointer-printf-2-2.jpg](../media/iOS/fishhook/Xcode-breakpointer-printf-2-2.jpg)
 
