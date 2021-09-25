@@ -549,7 +549,7 @@ FF2579000000 jmp *0x00000079(%rip)
 
 ![Xcode-lldb-step-over-instruction.jpg](../media/iOS/fishhook/Xcode-lldb-step-over-instruction.jpg)
 
-2）进入汇编指令的方法调用 (Step into Instruction) ：
+2）跳入汇编指令的方法调用 (*Step into Instruction*) ：
 
 ![Xcode-lldb-step-into-instruction.jpg](../media/iOS/fishhook/Xcode-lldb-step-into-instruction.jpg)
 
@@ -557,41 +557,49 @@ FF2579000000 jmp *0x00000079(%rip)
 
 在 `main()` 函数调用 `printf()` 的地方打断点，运行项目后就能断在对应的汇编代码中。然后**单步**执行到 `0x100003f5f` ，可以看到这一行汇编调用了 `callq`，对应的地址是 `0x1003f72` ，注释是 `symbol stub for: printf` 。由之前 Hopper 和 MachOView 中的分析也可得知，这个地址位于 `(__TEXT,__stubs)` ，存储的是符号桩：
 
-![Xcode-breakpointer-printf-1.jpg](../media/iOS/fishhook/Xcode-breakpointer-printf-1.jpg)
+![Xcode-breakpointer-printf-1-1.jpg](../media/iOS/fishhook/Xcode-breakpointer-printf-1-1.jpg)
 
-执行 step into instruction ，可看到 `printf()` 的内容，汇编指令是 `jmpq *0x4088(%rip)` ，虽看不太懂 😅 ，但后面的注释出现了一个熟悉的地址 `0x100003f88` ：
+执行 *step into instruction* ，可看到 `printf` 的内容，汇编指令是 `jmpq *0x4088(%rip)` ，虽看不太懂 😅 ，但后面的注释出现了一个熟悉的地址 `0x100003f88` ：
 
-![Xcode-breakpointer-printf-2.jpg](../media/iOS/fishhook/Xcode-breakpointer-printf-2.jpg)
+![Xcode-breakpointer-printf-1-2.jpg](../media/iOS/fishhook/Xcode-breakpointer-printf-1-2.jpg)
 
 再跳入 `0x100003f88` ，由之前 Hopper 和 MachOView 中的分析也可得知，这个地址位于 `(__TEXT,__stub_helper)` ，且最终会调用到 `dyld_stub_binder` 。这里又有一个 `jmp` 指令，地址是 `0x100003f78` ：
 
-![Xcode-breakpointer-printf-3.jpg](../media/iOS/fishhook/Xcode-breakpointer-printf-3.jpg)
+![Xcode-breakpointer-printf-1-3.jpg](../media/iOS/fishhook/Xcode-breakpointer-printf-1-3.jpg)
 
-跳入 `0x100003f78` ，可以看到在地址 `0x100003f81` 中的汇编代码是 `jmpq *0x79(%rip)` ，后面的注释给出了一个很大的地址，并注明是 `dyld_stub_binder` ：
+跳入 `0x100003f78` ，可以看到在地址 `0x100003f81` 中的汇编代码是 `jmpq *0x79(%rip)` ，后面的注释给出了一个以 `0x7fff` 开头的很大的地址，并注明是 `dyld_stub_binder` ：
 
-![Xcode-breakpointer-printf-4.jpg](../media/iOS/fishhook/Xcode-breakpointer-printf-4.jpg)
+![Xcode-breakpointer-printf-1-4.jpg](../media/iOS/fishhook/Xcode-breakpointer-printf-1-4.jpg)
 
 再跳入这个地址中，可以看到这里是 `dyld_stub_binder` 的实现，由开头的 ``libdyld.dylib`dyld_stub_binder`` 可以看出，`dyld_stub_binder` 属于 `libdyld.dylib` 这个动态库：
 
-![Xcode-breakpointer-printf-5.jpg](../media/iOS/fishhook/Xcode-breakpointer-printf-5.jpg)
+![Xcode-breakpointer-printf-1-5.jpg](../media/iOS/fishhook/Xcode-breakpointer-printf-1-5.jpg)
+
+执行 *step over instruction* 跳到 `callq 0x100003f72` 的下一行，此时已完成第一次 `printf` 的调用，可以在 `lldb` 中查看此时 `(__DATA,__la_symbol_ptr)` 中 `_printf` 符号的 **Data** 值。
+
+输入 `x 0x100000000+0x8000` ，可以看到 `_printf` 中的 **Data** 值已变成了以 `0x7fff` 开头的很大的地址；再使用 `dis -s` 查看该地址上的汇编，发现此地址指向的内容就是 `printf` 函数的实现：
+
+![Xcode-breakpointer-printf-1-6.jpg](../media/iOS/fishhook/Xcode-breakpointer-printf-1-6.jpg)
 
 ### 第二次调用 printf 的流程
 
-我们再加一行 `printf()`  函数的调用：
+由上一节的内容可知，完成第一次 `printf` 函数的调用后，`(__DATA,__la_symbol_ptr)` 中 `_printf` 符号的 **Data** 值已填入了 `printf` 函数实现的地址。
 
-![Xcode-breakpointer-printf-6.jpg](../media/iOS/fishhook/Xcode-breakpointer-printf-6.jpg)
+接下来我们在源码中再加一行 `printf()`  函数，看看第二次调用 `printf` 的流程：
+
+![Xcode-breakpointer-printf-2-1.jpg](../media/iOS/fishhook/Xcode-breakpointer-printf-2-1.jpg)
 
 由上面分析已知第一次调用 `printf()` 时，最终调用的是 `dyld_stub_binder` 。这次我们单步执行到第二个 `printf()` 调用（由于修改了代码，`printf()` 函数的地址变成了 `0x100003f62` ，不过没关系，不影响后续探索）：
 
-![Xcode-breakpointer-printf-7.jpg](../media/iOS/fishhook/Xcode-breakpointer-printf-7.jpg)
+![Xcode-breakpointer-printf-2-2.jpg](../media/iOS/fishhook/Xcode-breakpointer-printf-2-2.jpg)
 
-然后再执行 step into instruction ，可以看到 `printf()` 的注释中给的调用地址是 `0x7fff204620b8` ，这个值明显不属于当前 Mach-O ，这是 `printf()` 函数的实现在内存中的真实地址。
+然后再执行 *step into instruction* ，可以看到 `printf` 的注释中给的是一个以 `0x7fff` 开头的很大的地址，这个值明显不属于当前 Mach-O ，这就是 `printf()` 函数的实现在内存中的真实地址。
 
-![Xcode-breakpointer-printf-8.jpg](../media/iOS/fishhook/Xcode-breakpointer-printf-8.jpg)
+![Xcode-breakpointer-printf-2-3.jpg](../media/iOS/fishhook/Xcode-breakpointer-printf-2-3.jpg)
 
-因此可以得知，`printf()` 在第一次调用时调用的是 `dyld_stub_binder` ，之后的调用就是直接调用内存中 `printf()` 的函数指针。
+因此可以得知，`_printf` 在第一次调用时，会先调用到 `dyld_stub_binder` ，`dyld_stub_binder` 获取到 `_printf` 符号的真实地址后，将指针值填入 `(__DATA,__la_symbol_ptr)` 对应的条目中，此时就能完成第一次 `_printf` 的调用。第二次及之后的 `_printf` 调用就是直接调用其内存中的函数实现了。
 
-**说明**：上述案例中出现了 `dyld_stub_binder` 地址值不一样的情况，这是正常的。这些图是笔者在不同日期截取的，重启系统后，由于动态库每次都会被加载到不同的地址，因此动态库中函数的地址也是不固定的。
+**说明**：在上述案例中，出现了不同截图中 `dyld_stub_binder` 的函数实现地址值不一样的情况，这是正常的。这些图是笔者在不同日期截取的，而重启系统后，动态库每次都会被加载到不同的地址，因此动态库中函数的地址也是不固定的。（`_printf` 也是同样的情况）
 
 ## 4. 使用 LLDB 探索 printf 的调用流程
 
@@ -606,6 +614,8 @@ FF2579000000 jmp *0x00000079(%rip)
 [  2] A8309074-31CC-31F0-A143-81DF019F7A86 0x00007fff2a762000 /usr/lib/libSystem.B.dylib 
 ...
 ```
+
+### 从 MachOView 中获取符号的偏移量 (offset)
 
 在之前的分析中，我们可知 `_printf` 在 `(__DATA,__la_symbol_ptr)` 中，且最初指向 `(__TEXT,__stub_helper)` 。可以看到 `_printf` 符号的偏移量是 `0x8000` ：
 
@@ -622,14 +632,14 @@ FF2579000000 jmp *0x00000079(%rip)
 下图中操作流程的解释：
 
 - 输入 `dis -s 0x100003f88` 查看该地址上的汇编，可以看到第二行执行 `jmp` 指令跳转到 `0x100003f78` ；
-- 输入 `dis -s 0x100003f78` 查看该地址上的汇编，在 `0x100003f81` 上的汇编是 `jmpq *0x79(%rip)` ，注释中给了一个很大的地址，并注明是 `dyld_stub_binder` ；
-- 同理，再使用 `dis` 命令查看这个很大的地址上的汇编，可看到这个地址就是 `dyld_stub_binder` 的实现。
+- 输入 `dis -s 0x100003f78` 查看该地址上的汇编，在 `0x100003f81` 上的汇编是 `jmpq *0x79(%rip)` ，注释中给了一个以 `0x7fff` 开头的很大的地址，并注明是 `dyld_stub_binder` ；
+- 同理，再使用 `dis` 命令查看这个以 `0x7fff` 开头的这个地址上的汇编，可看到这个地址就是 `dyld_stub_binder` 的实现。
 
 ![lldb-memory-read-1.jpg](../media/iOS/fishhook/lldb-memory-read-1.jpg)
 
 ### 第二次调用 printf
 
-当第一次调用 `printf()` 完成后，再查看这个位置上的汇编代码，发现 `_printf` 符号对应的指针值变成了一个很大的地址，且后面紧随了一行 ``libsystem_c.dylib`printf`` ，说明 `(__DATA,__la_symbol_ptr)` 的 `_printf` 符号中已存储了 `printf()` 函数实现的地址：
+当第一次调用 `printf()` 完成后，再查看这个位置上的汇编代码，发现 `_printf` 符号对应的指针值变成了一个以 `0x7fff` 开头的很大的地址，且后面紧随了一行 ``libsystem_c.dylib`printf`` ，说明此时 `(__DATA,__la_symbol_ptr)` 中的 `_printf` 符号中已存储了 `printf()` 函数实现的地址：
 
 ![lldb-memory-read-2.jpg](../media/iOS/fishhook/lldb-memory-read-2.jpg)
 
@@ -643,7 +653,7 @@ Xcode GUI 操作起来比较直观，界面的可读性更强，也能跟踪断�
 
 ## 位置无关代码
 
-前面讨论了许多 `stub` 相关的内容，那么 `stub` 到底是什么呢？
+前面的章节中出现了许多 `stub` 相关的内容，那么 `stub` 到底是什么呢？
 
 > The static linker is responsible for generating all stub functions, stub helper functions, lazy and non-lazy pointers, as well as the indirect symbol table needed by the dynamic loader (dyld).  
 > ---摘自 [Apple 文档](https://developer.apple.com/library/archive/documentation/DeveloperTools/Conceptual/MachOTopics/1-Articles/indirect_addressing.html) 。
