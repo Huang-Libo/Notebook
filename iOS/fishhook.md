@@ -579,7 +579,7 @@ FF2579000000 jmp *0x00000079(%rip)
 
 但在汇编中点击 *step out* 按钮无反应，原因暂不明，我们暂且先重新运行项目，并单步执行到 `callq 0x100003f72` 的下一行，此时已完成第一次 `printf` 的调用，可以在 `lldb` 中查看此时 `(__DATA,__la_symbol_ptr)` 中 `_printf` 符号的 **Data** 值。
 
-输入 `x 0x100000000+0x8000` ，可以看到 `_printf` 中的 **Data** 值已变成了以 `0x7fff` 开头的很大的地址；再使用 `dis -s` 查看该地址上的汇编，发现此地址指向的内容就是 `printf` 函数的实现：
+在 `lldb` 中输入 `x 0x100000000+0x8000` ，可以看到 `_printf` 中的 **Data** 值已变成了以 `0x7fff` 开头的很大的地址；再使用 `dis -s` 查看该地址上的汇编，发现此地址指向的内容就是 `printf` 函数的实现：
 
 ![Xcode-breakpointer-printf-1-6.jpg](../media/iOS/fishhook/Xcode-breakpointer-printf-1-6.jpg)
 
@@ -599,7 +599,7 @@ FF2579000000 jmp *0x00000079(%rip)
 
 ![Xcode-breakpointer-printf-2-3.jpg](../media/iOS/fishhook/Xcode-breakpointer-printf-2-3.jpg)
 
-因此可以得知，`_printf` 在第一次调用时，会先调用到 `dyld_stub_binder` ，`dyld_stub_binder` 获取到 `_printf` 符号的真实地址后，将指针值填入 `(__DATA,__la_symbol_ptr)` 对应的条目中，此时就能完成第一次 `_printf` 的调用。第二次及之后的 `_printf` 调用就是直接调用其内存中的函数实现了。
+综上所述，`_printf` 在第一次调用时，会先调用到 `dyld_stub_binder` ，`dyld_stub_binder` 获取到 `_printf` 符号的真实地址后，将指针值填入 `(__DATA,__la_symbol_ptr)` 对应的条目中，此时就能完成第一次 `_printf` 的调用。第二次及之后的 `_printf` 调用就是直接调用 `_printf` 在内存中的函数实现了。
 
 **说明**：在上述案例中，出现了不同截图中 `dyld_stub_binder` 的函数实现地址值不一样的情况，这是正常的。这些图是笔者在不同日期截取的，而重启系统后，动态库每次都会被加载到不同的地址，因此动态库中函数的地址也是不固定的。（`_printf` 也是同样的情况）
 
@@ -641,7 +641,7 @@ FF2579000000 jmp *0x00000079(%rip)
 
 ### 第二次调用 printf
 
-当第一次调用 `printf()` 完成后，再查看这个位置上的汇编代码，发现 `_printf` 符号对应的指针值变成了一个以 `0x7fff` 开头的很大的地址，且后面紧随了一行 ``libsystem_c.dylib`printf`` ，说明此时 `(__DATA,__la_symbol_ptr)` 中的 `_printf` 符号中已存储了 `printf()` 函数实现的地址：
+当第一次调用 `printf()` 完成后，再查看这个位置上的汇编代码，发现 `_printf` 符号对应的指针值变成了一个以 `0x7fff` 开头的很大的地址，且后面紧随了一行 ``libsystem_c.dylib`printf`` ，说明此时 `(__DATA,__la_symbol_ptr)` 中的 `_printf` 符号中已存储了 `printf()` 的函数实现的地址：
 
 ![lldb-memory-read-2.jpg](../media/iOS/fishhook/lldb-memory-read-2.jpg)
 
@@ -649,32 +649,32 @@ FF2579000000 jmp *0x00000079(%rip)
 
 Xcode GUI 操作起来比较直观，界面的可读性更强，也能跟踪断点熟悉流程。
 
-使用 `lldb` 查看汇编的内容，比使用 Xcode GUI 操作更快捷，免去了 step over instruction 和 step into instruction 的操作。
+使用 `lldb` 查看汇编的内容，比使用 Xcode GUI 操作更快捷，免去了 *step over instruction* 和 *step into instruction* 的操作。
 
 大多数时候可以把它俩结合起来使用。
 
-## 位置无关代码
+## PIC : 位置无关代码
 
 前面的章节中出现了许多 `stub` 相关的内容，那么 `stub` 到底是什么呢？
 
 > The static linker is responsible for generating all stub functions, stub helper functions, lazy and non-lazy pointers, as well as the indirect symbol table needed by the dynamic loader (dyld).  
 > ---摘自 [Apple 文档](https://developer.apple.com/library/archive/documentation/DeveloperTools/Conceptual/MachOTopics/1-Articles/indirect_addressing.html) 。
 
-由文档可知，*静态连接器 (static linker)* 负责生成了所有的 `stub functions`, `stub helper functions`, `lazy pointers`, `non-lazy pointers`, 以及 `dyld` 会用到的 `indirect symbol table`（比如查询符号来自于哪个 dylib ）。
+由文档可知，*静态连接器 (static linker)* 负责生成了所有的 `stub functions`, `stub helper functions`, `lazy pointers`, `non-lazy pointers`, 以及 `dyld` 会用到的 `indirect symbol table`（可用于查询符号来自于哪个 dylib ）。
 
-由于系统的动态库会被加载到任意位置，如果代码调用了系统动态库中的 C 函数，编译器在生成 Mach-O 可执行文件时无法知道该函数的实际地址，因此会插入一个 **stub** ，这样的代码也被称为**位置无关代码 (Position independent code, PIC)**。
+由于系统的动态库会被加载到任意位置，如果代码调用了系统动态库中的 C 函数，编译器在生成 Mach-O 可执行文件时无法知道该函数的实际地址，因此会插入一个 **stub** ，或称作**符号桩**，这样的代码也被称为**位置无关代码 (Position independent code, PIC)**。
 
-在**启动应用时或者第一次使用该符号时**再由 `dyld` 去查找符号对应的实现，将实际的函数指针值填入到 `(__DATA_CONST,__got)` 或 `(__DATA,__la_symbol_ptr)` 对应的条目中。
+在**启动应用时或者第一次使用该符号时**再由 `dyld` 去查找符号对应的实现，将实际的函数指针值填入到 `(__DATA_CONST,__got)` 或 `(__DATA,__la_symbol_ptr)` 对应的符号的 **Data** 中。
 
 ## fishhook 的适用范围
 
 根据上述分析，我们可以得知 fishhook 的适用范围（简而言之就是**外部符号可以被 hook ， 内部符号无法被 hook** ）：
 
-- 自己源码中实现的 C 函数、静态库中的 C 函数**不能**被 hook 。
+- 自己源码中实现的 C 函数、静态库中的 C 函数**不能**被 hook 。（内部符号）
   - 因为它们的函数的地址在编译时就确定了，存储在 Mach-O 文件的 `__TEXT` 段。由于 `__TEXT` 段是只读的，且会进行代码签名验证，因此是不能修改的。
   - （启动阶段 dyld 执行 rebase 的时候，dyld 给指针地址加上偏移量就是指针的真实地址。这个过程是在 pre-main 阶段由 dyld 执行的，我们无法干预。）
-- 系统动态库的 C 函数可以被 hook 。
-  - 如果代码调用了系统动态库中的 C 函数，由于编译器在生成 Mach-O 可执行文件时无法知道该函数的实际地址，因此会插入一个 **stub** 。**stub** 存储在 Mach-O 文件中的 `(__DATA,__la_symbol_ptr)` 中，即 *Lazy Symbol Pointers* 。在第一次调用函数时，通过 `dyld_stub_binder` 去查找函数的真实地址并完成**符号绑定 (symbol bind)**。
+- 系统动态库的 C 函数可以被 hook 。（外部符号）
+  - 如果代码调用了系统动态库中的 C 函数，由于编译器在生成 Mach-O 可执行文件时无法知道该函数的实际地址，因此会插入一个 **stub**（符号桩）。**stub** 存储在 Mach-O 文件的 `(__DATA,__la_symbol_ptr)` 或 `(__DATA_CONST,__got)` 中。 `__la_symbol_ptr` 在第一次调用符号时，通过 `dyld_stub_binder` 去查找符号的真实地址并完成**符号绑定 (symbol bind)**。
   - 比如 `_printf` 符号，在第一次调用时，`dyld_stub_binder` 函数通过调用 dyld 内部的函数找到 `_printf` 的真实地址，并写入到 `(__DATA,__la_symbol_ptr)` 中，之后再次访问 `_printf` 时，就能直接跳转到 `_printf` 的真实地址了。
 
 
