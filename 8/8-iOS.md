@@ -64,6 +64,48 @@
 - 若是前者（即前台无 APP 运行），则触发 `SpringBoard` 本身主线程 `RunLoop` 的 `source0` 事件源的回调，将事件交由桌面系统去消耗；
 - 若是后者（即有 APP 正在前台运行），则将触摸事件通过 `IPC`（进程间通信）传递给前台 APP 进程。
 
+## Objective-C 方法调用的本质
+
+Objective-C 的方法调用在编译时会被转换成 `objc_msgSend` 函数调用，比如：
+
+```objectivec
+NSObject *obj = [[NSObject alloc] init];
+```
+
+在终端中使用 clang 转成对应的 cpp 代码：
+
+```console
+xcrun -sdk iphoneos clang -arch arm64 -rewrite-objc main.m
+```
+
+cpp 代码：
+
+```cpp
+NSObject *obj = ((NSObject *(*)(id, SEL))(void *)objc_msgSend)((id)((NSObject *(*)(id, SEL))(void *)objc_msgSend)((id)objc_getClass("NSObject"), sel_registerName("alloc")), sel_registerName("init"));
+```
+
+将类型转换去掉，可以看到基本结构是：
+
+```cpp
+NSObject *obj = objc_msgSend(objc_msgSend(objc_getClass("NSObject"), sel_registerName("alloc")), sel_registerName("init"));
+```
+
+实际上是调用了两次 `objc_msgSend` ，相当于：
+
+```cpp
+id obj1 = objc_msgSend(objc_getClass("NSObject"), sel_registerName("alloc"));
+id obj2 = objc_msgSend(obj1, sel_registerName("init"));
+```
+
+两个 Runtime 函数的功能：
+
+- `objc_getClass` ：通过给定的 `C 字符串`查找相应名称的`类`。
+- `sel_registerName` ：向 Objective-C 运行时系统注册一个方法，将方法名映射到一个 `SEL` ，并返回 `SEL` 的值。在将方法添加到类定义之前，必须向 Objective-C 运行时系统注册方法名以获取方法的 `SEL` 。如果方法名已经注册，该函数将简单地返回 `SEL` 。
+
+可以看出 `objc_getClass` 和 `sel_registerName` 的参数都是 C 字符串，因此，它们都是在**运行时**通过给定的字符串去查找对应的类和 `SEL` 。
+
+因此，在编译时只是将 Objective-C 的方法调用转成了 `objc_msgSend` ，在运行时再通过 `objc_getClass` 和 `sel_registerName` 来查找对应的`类`和`方法`。
+
 ## fishhook 的原理 & 位置无关代码
 
 > 参考：[fishhook & PIC](../iOS/fishhook.md)
