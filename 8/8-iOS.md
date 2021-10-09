@@ -1,5 +1,13 @@
 # 8-iOS
 
+- [8-iOS](#8-ios)
+  - [「从历年 weak 看 iOS 面试】」](#从历年-weak-看-ios-面试)
+  - [UIView 和 CALayer 的区别](#uiview-和-calayer-的区别)
+  - [寻找两个 UIView 的最近的公共 View](#寻找两个-uiview-的最近的公共-view)
+  - [iOS 系统响应触摸事件的机制](#ios-系统响应触摸事件的机制)
+  - [Objective-C 方法调用的本质](#objective-c-方法调用的本质)
+  - [fishhook 的原理 & 位置无关代码](#fishhook-的原理--位置无关代码)
+
 ## 「从历年 weak 看 iOS 面试】」
 
 > 来源：孙源老铁的微博[我就叫Sunny怎么了](https://weibo.com/u/1364395395)，有改动。
@@ -174,7 +182,7 @@ id obj2 = objc_msgSend(obj1, sel_registerName("init"));
 
 > 参考：[fishhook & PIC](../iOS/fishhook.md)
 
-fishhook 的功能：对**外部符号**进行*符号重绑定 (symbol rebind)* 。要说清楚它的实现原理，需要先说*位置无关代码 (Position Independent Code, PIC)*。
+fishhook 的功能：对**外部符号**进行*符号重绑定 (symbol rebind)* 。它本质上是利用了*位置无关代码 (Position Independent Code， PIC)* 相关的特性。
 
 **位置无关代码**：
 
@@ -182,9 +190,9 @@ fishhook 的功能：对**外部符号**进行*符号重绑定 (symbol rebind)* 
 
 如果代码中有**外部符号**，比如系统动态库的 C 函数，由于编译器在生成 Mach-O 文件时无法知道该函数的实际地址，因此会插入一个 **stub（符号桩）**。
 
-外部符号的地址值存储在 Mach-O 文件的 `(__DATA,__la_symbol_ptr)` 或 `(__DATA_CONST,__got)` 中。其中， `__la_symbol_ptr` 中的符号是惰性绑定的，它的初始值是指向 Mach-O 的 `(__TEXT,__stub_helper)` 区域，经过调用一系列汇编指令之后，最终指向了 `dyld_stub_binder` 。
+外部符号的地址值存储在 Mach-O 文件的 `(__DATA，__la_symbol_ptr)` 或 `(__DATA_CONST，__got)` 中。其中， `__la_symbol_ptr` 中的符号是惰性绑定的，它的初始值是指向 Mach-O 的 `(__TEXT，__stub_helper)` 区域，经过调用一系列汇编指令之后，最终指向了 `dyld_stub_binder()` 方法。
 
-在第一次调用惰性绑定的符号时，会通过 `dyld_stub_binder` 去查找符号的真实地址、填入到 `__la_symbol_ptr` 对应的符号的 **Data** 中，这样就完成了*符号绑定 (symbol bind)*。之后再调用这个符号时，就能直接调用它的实现了。
+在第一次调用惰性绑定的符号时，会通过 `dyld_stub_binder()` 方法去查找符号的真实地址、填入到 `__la_symbol_ptr` 对应的符号的 **Data** 中，这样就完成了*符号绑定 (symbol bind)*。之后再调用这个符号时，就能直接调用它的实现了。
 
 **fishhook 的适用范围**：
 
@@ -196,4 +204,3 @@ fishhook 的功能：对**外部符号**进行*符号重绑定 (symbol rebind)* 
 **fishhook 的原理**：
 
 修改 `__la_symbol_ptr` 中外部符号存储的地址值，将它改为我们自己实现的函数的地址值。同时用一个函数指针存储外部符号的原始实现，这样就还能调用到该符号的原始实现。
-
