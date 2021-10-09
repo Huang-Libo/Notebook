@@ -8,5 +8,5 @@
 
 ## GitHub (private)
 
-- [目录](SUMMARY.md)
 - <https://github.com/Huang-Libo/Notebook>
+- 目录：<https://github.com/Huang-Libo/Notebook/blob/master/SUMMARY.md>
