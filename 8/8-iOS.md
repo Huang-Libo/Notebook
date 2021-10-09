@@ -9,6 +9,47 @@
   - 在不同类型的设备上，交互逻辑也是不一样的。比如在 iOS 系统上是触摸操作，负责交互的是 `UIKit` 中的 `UIView` ；在 macOS 系统上是键鼠操作，负责交互的是 `AppKit` 中的 `NSView` 。
   - 但它们的图形绘制的方式是一样的，`UIView` 和 `NSView` 的底层都是使用 `CALayer` 进行绘制的。
 
+## 寻找两个 UIView 的最近的公共 View
+
+来源：[唐巧的公众号](https://mp.weixin.qq.com/s?__biz=MjM5NTIyNTUyMQ==&mid=562061601&idx=1&sn=a409387dbbbd77282237b7d91dc18884&scene=19#wechat_redirect)，有改动。
+
+一个 `UIViewController` 中的所有 `view` 之间的关系其实可以看成一颗树，`UIViewController` 的 `view` 变量是这颗树的根节点，其它的 `view` 都是根节点的直接或间接子节点。
+
+所以我们可以通过 `view` 的 `superview` 属性，一直找到根节点。需要注意的是，在代码中，我们还需要考虑各种非法输入，如果输入了 `nil` ，则也需要处理，避免异常。
+
+以下是找到指定 `view` 到根 `view` 的路径代码：
+
+```objectivec
++ (NSArray *)superViews:(UIView *)view {
+    if (view == nil) {
+        return @[];
+    }
+    NSMutableArray *result = [NSMutableArray array];
+    while (view != nil) {
+        [result addObject:view];
+        view = view.superview;
+    }
+    return [result copy];
+}
+```
+
+然后对于两个 view A 和 view B，我们可以得到两个路径。将一个路径中的所有点先放进 `NSSet` 中，然后遍历另一个数组，检查当前的 view 是否在 `NSSet` 中：
+
+```objectivec
++ (UIView *)commonView_2:(UIView *)viewA andView:(UIView *)viewB {
+    NSArray *arr1 = [self superViews:viewA];
+    NSArray *arr2 = [self superViews:viewB];
+    NSSet *set = [NSSet setWithArray:arr2];
+    for (NSUInteger i = 0; i < arr1.count; ++i) {
+        UIView *targetView = arr1[i];
+        if ([set containsObject:targetView]) {
+            return targetView;
+        }
+    }
+    return nil;
+}
+```
+
 ## iOS 系统响应触摸事件的机制
 
 1）手指触碰屏幕，屏幕感应到触碰后，将事件交由 `IOKit` 处理。
