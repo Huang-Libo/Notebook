@@ -11,6 +11,8 @@
     - [添加 weak 变量](#添加-weak-变量)
     - [weak 指针置为 nil 的过程](#weak-指针置为-nil-的过程)
     - [Objective-C 方法调用的本质](#objective-c-方法调用的本质)
+  - [RunLoop](#runloop)
+    - [source0 和 source1 有什么区别](#source0-和-source1-有什么区别)
   - [开源库](#开源库)
     - [fishhook 的原理 & 位置无关代码](#fishhook-的原理--位置无关代码)
 
@@ -209,6 +211,105 @@ id obj2 = objc_msgSend(obj1, sel_registerName("init"));
 可以看出 `objc_getClass` 和 `sel_registerName` 的参数都是 C 字符串，因此，它们都是在**运行时**通过给定的字符串去查找对应的类和 `SEL` 。
 
 因此，在编译时只是将 Objective-C 的方法调用转成了 `objc_msgSend` ，在运行时再通过 `objc_getClass` 和 `sel_registerName` 来查找对应的`类`和`方法`。
+
+## RunLoop
+
+### source0 和 source1 有什么区别
+
+> 参考：[iOS 从源码解析 RunLoop (九)](https://juejin.cn/post/6913094534037504014#heading-0)
+
+先说结论：
+
+- `source1` ：是基于 mach port 的，来自系统内核或者其他进程或线程的事件，可以**主动唤醒**休眠中的 RunLoop。mach port 是进程间通信的一种方式。
+- `source0` ：不是基于 port 的，无法主动唤醒 RunLoop 。（进入休眠的 RunLoop 仅能通过 mach port 和 mach_msg 来唤醒）。
+
+再看源码：
+
+`__CFRunLoopSource` 的定义：
+
+```c
+struct __CFRunLoopSource {
+    CFRuntimeBase _base;
+    uint32_t _bits;
+    pthread_mutex_t _lock;
+    CFIndex _order;			/* immutable */
+    CFMutableBagRef _runLoops;
+    union {
+        CFRunLoopSourceContext version0;	/* immutable, except invalidation */
+        CFRunLoopSourceContext1 version1;	/* immutable, except invalidation */
+    } _context;
+};
+```
+
+其中的 `version0` 、`version1` 分别对应 `source0` 和 `source1` 。
+
+`CFRunLoopSourceContext` 的定义：
+
+```c
+typedef struct {
+    CFIndex	version;
+    void *	info;
+    const void *(*retain)(const void *info);
+    void	(*release)(const void *info);
+    CFStringRef	(*copyDescription)(const void *info);
+    Boolean	(*equal)(const void *info1, const void *info2);
+    CFHashCode	(*hash)(const void *info);
+    void	(*schedule)(void *info, CFRunLoopRef rl, CFStringRef mode);
+    void	(*cancel)(void *info, CFRunLoopRef rl, CFStringRef mode);
+    void	(*perform)(void *info);
+} CFRunLoopSourceContext;
+```
+
+参数：
+
+- `info` ：作为 `perform` 函数的参数；
+- `schedule` ：当 `source0` 加入到 RunLoop 时触发的回调函数（在 `CFRunLoopAddSource` 函数中可看到其被调用）；
+- `cancel` ：当 `source0` 从 RunLoop 中移除时触发的回调函数；
+- `perform` ：`source0` 要执行的任务块，当 `source0` 事件被触发时的回调, 调用 `__CFRUNLOOP_IS_CALLING_OUT_TO_A_SOURCE0_PERFORM_FUNCTION__` 函数来执行 `perform(info)` 。
+
+`CFRunLoopSourceContext1` ：
+
+```c
+typedef struct {
+    CFIndex	version;
+    void *	info;
+    const void *(*retain)(const void *info);
+    void	(*release)(const void *info);
+    CFStringRef	(*copyDescription)(const void *info);
+    Boolean	(*equal)(const void *info1, const void *info2);
+    CFHashCode	(*hash)(const void *info);
+#if (TARGET_OS_MAC && !(TARGET_OS_EMBEDDED || TARGET_OS_IPHONE)) || (TARGET_OS_EMBEDDED || TARGET_OS_IPHONE)
+    mach_port_t	(*getPort)(void *info);
+    void *	(*perform)(void *msg, CFIndex size, CFAllocatorRef allocator, void *info);
+#else
+    void *	(*getPort)(void *info);
+    void	(*perform)(void *info);
+#endif
+} CFRunLoopSourceContext1;
+```
+
+参数：
+
+- `info` ：作为 `perform` 函数的参数；
+- `getPort` ：函数指针，用于当 `source1` 被添加到 RunLoop 中的时候，从该函数中获取具体的 `mach_port_t` 对象，用来唤醒 RunLoop 。
+- `perform` ：函数指针，即指向 RunLoop 被唤醒后 `source1` 要执行的回调函数，调用 `__CFRUNLOOP_IS_CALLING_OUT_TO_A_SOURCE1_PERFORM_FUNCTION__` 函数来执行。
+
+解读：
+
+`source0` 仅包含一个 `perform` 函数指针，它并不能主动唤醒 RunLoop（**进入休眠的 RunLoop 仅能通过 mach port 和 mach_msg 来唤醒**）。
+
+使用 `source0` 时，需要先调用 `CFRunLoopSourceSignal(rls)` 将这个 `source0` 标记为待处理，然后手动调用 `CFRunLoopWakeUp(rl)` 来唤醒 RunLoop ( `CFRunLoopWakeUp` 函数内部是通过 RunLoop 实例的 `_wakeUpPort` 成员变量来唤醒 RunLoop 的），唤醒后的 RunLoop 继续执行 `__CFRunLoopRun` 函数内部的外层 `do...while` 循环来执行 timer 、 source 以及 observer 。
+
+通过调用 `__CFRunLoopDoSources0` 函数来执行 `source0` 事件，执行过后的 `source0` 会被 `__CFRunLoopSourceUnsetSignaled(rls)` 标记为已处理，后续 RunLoop 循环中不会再执行标记为已处理的 `source0` 。
+
+`source0` 不同于不重复执行的 timer 和 RunLoop 的 block 链表中的 block 节点，`source0` 执行过后不会自己主动移除，不重复执行的 timer 和 block 执行过后会自己主动移除，执行过后的 `source0` 可手动调用 `CFRunLoopRemoveSource(CFRunLoopGetCurrent(), rls, kCFRunLoopDefaultMode)` 来移除。
+
+source0 具体执行时的函数如下，info 做参数执行 perform 函数：
+
+```c
+// perform(info)
+__CFRUNLOOP_IS_CALLING_OUT_TO_A_SOURCE0_PERFORM_FUNCTION__(rls->_context.version0.perform, rls->_context.version0.info); 
+```
 
 ## 开源库
 
