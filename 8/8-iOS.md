@@ -1,17 +1,89 @@
 # 8-iOS
 
 - [8-iOS](#8-ios)
-  - [「从历年 weak 看 iOS 面试】」](#从历年-weak-看-ios-面试)
-  - [dealloc 的流程](#dealloc-的流程)
-  - [添加 weak 变量](#添加-weak-变量)
-  - [weak 指针置为 nil 的过程](#weak-指针置为-nil-的过程)
-  - [UIView 和 CALayer 的区别](#uiview-和-calayer-的区别)
-  - [寻找两个 UIView 的最近的公共 View](#寻找两个-uiview-的最近的公共-view)
-  - [iOS 系统响应触摸事件的机制](#ios-系统响应触摸事件的机制)
-  - [Objective-C 方法调用的本质](#objective-c-方法调用的本质)
-  - [fishhook 的原理 & 位置无关代码](#fishhook-的原理--位置无关代码)
+  - [基础](#基础)
+    - [UIView 和 CALayer 的区别](#uiview-和-calayer-的区别)
+    - [寻找两个 UIView 的最近的公共 View](#寻找两个-uiview-的最近的公共-view)
+    - [iOS 系统响应触摸事件的机制](#ios-系统响应触摸事件的机制)
+  - [Runtime](#runtime)
+    - [「从历年 weak 看 iOS 面试】」](#从历年-weak-看-ios-面试)
+    - [dealloc 的流程](#dealloc-的流程)
+    - [添加 weak 变量](#添加-weak-变量)
+    - [weak 指针置为 nil 的过程](#weak-指针置为-nil-的过程)
+    - [Objective-C 方法调用的本质](#objective-c-方法调用的本质)
+  - [开源库](#开源库)
+    - [fishhook 的原理 & 位置无关代码](#fishhook-的原理--位置无关代码)
 
-## 「从历年 weak 看 iOS 面试】」
+## 基础
+
+### UIView 和 CALayer 的区别
+
+- `UIView` 属于 `UIKit` 框架，用于 iOS 系统，它可以响应交互事件；而 `CALayer` 属于 `Core Animation` 框架，是 iOS 和 macOS 通用的，它只负责页面的绘制，无法响应交互事件。
+- 这样的设计遵守了单一职责的原则，使得 `CALayer` 在不同平台上可以被复用。
+  - 在不同类型的设备上，交互逻辑是不一样的：
+    - 在 iOS 系统上是**触摸操作**，负责交互的是 `UIKit` 中的 `UIView` ；
+    - 在 macOS 系统上是**键鼠操作**，负责交互的是 `AppKit` 中的 `NSView` 。
+  - 但它们的图形绘制的方式是一样的，`UIView` 和 `NSView` 的底层都是使用 `CALayer` 进行绘制的。
+- 每个 `UIView` 都有一个相应的 `layer` 属性，在 `layer` 中有一个 `delegate` 属性，而 `UIView` 通常就是 `CALayer` 的 `delegate` 。
+
+### 寻找两个 UIView 的最近的公共 View
+
+来源：[唐巧的公众号](https://mp.weixin.qq.com/s?__biz=MjM5NTIyNTUyMQ==&mid=562061601&idx=1&sn=a409387dbbbd77282237b7d91dc18884&scene=19#wechat_redirect)，有改动。
+
+一个 `UIViewController` 中的所有 `view` 之间的关系其实可以看成一颗树，`UIViewController` 的 `view` 变量是这颗树的根节点，其它的 `view` 都是根节点的直接或间接子节点。
+
+所以我们可以通过 `view` 的 `superview` 属性一直找到根节点。（需要注意的是，在代码中，我们还需要考虑各种非法输入，如果输入了 `nil` ，则也需要处理，避免异常。）
+
+以下是找到指定 `view` 到根 `view` 的路径代码：
+
+```objectivec
++ (NSArray *)superViews:(UIView *)view {
+    if (view == nil) {
+        return @[];
+    }
+    NSMutableArray *result = [NSMutableArray array];
+    while (view != nil) {
+        [result addObject:view];
+        view = view.superview;
+    }
+    return [result copy];
+}
+```
+
+然后对于两个 view A 和 view B，我们可以得到两个路径。将一个路径中的所有点先放进 `NSSet` 中，然后遍历另一个数组，检查当前的 `view` 是否在 `NSSet` 中：
+
+```objectivec
++ (UIView *)commonView_2:(UIView *)viewA andView:(UIView *)viewB {
+    NSArray *arr1 = [self superViews:viewA];
+    NSArray *arr2 = [self superViews:viewB];
+    NSSet *set = [NSSet setWithArray:arr2];
+    for (NSUInteger i = 0; i < arr1.count; ++i) {
+        UIView *targetView = arr1[i];
+        if ([set containsObject:targetView]) {
+            return targetView;
+        }
+    }
+    return nil;
+}
+```
+
+### iOS 系统响应触摸事件的机制
+
+1）手指触碰屏幕，屏幕感应到触碰后，将事件交由 `IOKit` 处理。
+
+2）`IOKit` 将触摸事件封装成一个 `IOHIDEvent` 对象，并通过 `mach port` 传递给 `SpringBoad` 进程。
+
+- `mach port` ：进程端口，各进程之间通过它进行通信。
+- `SpringBoad` ：是一个系统进程，可以理解为桌面系统，可以**统一管理和分发系统接收到的触摸事件**。
+
+3）`SpringBoard` 进程因接收到触摸事件，触发了主线程 `RunLoop` 的 `source1` 事件源的回调。此时 `SpringBoard` 会根据当前桌面的状态，判断应该由谁处理此次触摸事件。因为事件发生时，你可能正在桌面上翻页，也可能正在刷微博。
+
+- 若是前者（即前台无 APP 运行），则触发 `SpringBoard` 本身主线程 `RunLoop` 的 `source0` 事件源的回调，将事件交由桌面系统去消耗；
+- 若是后者（即有 APP 正在前台运行），则将触摸事件通过 `IPC`（进程间通信）传递给前台 APP 进程。
+
+## Runtime
+
+### 「从历年 weak 看 iOS 面试】」
 
 > 来源：孙源老铁的微博[我就叫Sunny怎么了](https://weibo.com/u/1364395395)，有改动。
 
@@ -75,7 +147,7 @@
 
 面试官：等写完后，面试官慢悠悠的说，小伙子不错，我考虑考虑，你先回去吧
 
-## dealloc 的流程
+### dealloc 的流程
 
 > 参考：[iOS - 老生常谈内存管理（四）：内存管理方法源码分析](https://juejin.cn/post/6844904131719593998#heading-63)
 
@@ -83,84 +155,20 @@
 2. 如果没有就直接调用 `free` 函数销毁对象；
 3. 如果有就先调用 `object_dispose` 做一些释放对象前的处理（把弱引用指针置为 `nil` 、移除关联对象、调用 `object_cxxDestruct` 、在 `SideTable` 的引用计数表中查出引用计数等等），最后用 `free` 函数销毁对象。
 
-## 添加 weak 变量
+### 添加 weak 变量
 
 经过一系列的函数调用栈，最终在 `weak_register_no_lock()` 函数当中，进行弱引用变量的添加，具体添加的位置是通过哈希算法来查找的。
 
 - 如果对应位置已经存在当前对象的弱引用表（数组），那就把弱引用变量添加进去；
 - 如果不存在的话，就创建一个弱引用表，然后将弱引用变量添加进去。
 
-## weak 指针置为 nil 的过程
+### weak 指针置为 nil 的过程
 
 当一个对象被销毁时，在 `dealloc` 方法内部经过一系列的函数调用栈，通过两次哈希查找，第一次根据对象的地址找到它所在的 `SideTable` ，第二次根据对象的地址在 `SideTable` 的 `weak_table` 中找到它的弱引用表。
 
 最后遍历弱引用数组，将指向对象的 `weak` 变量全都置为 `nil` 。
 
-## UIView 和 CALayer 的区别
-
-- `UIView` 属于 `UIKit` 框架，仅用于 iOS 系统，它可以响应交互事件；而 `CALayer` 属于 `Core Animation` 框架，是 iOS 和 macOS 通用的，它只负责页面的绘制，无法响应交互事件。
-- 每个 `UIView` 都有一个相应的 `CALayer` 属性；
-- `CALayer` 有一个 `CALayerDelegate` 类型的 `delegate` 属性，而 `UIView` 通常就是 `CALayer` 的 `delegate` ；
-- 这样的设计遵守了单一职责的原则，使得 `CALayer` 在不同平台上可以被复用。
-  - 在不同类型的设备上，交互逻辑也是不一样的。比如在 iOS 系统上是触摸操作，负责交互的是 `UIKit` 中的 `UIView` ；在 macOS 系统上是键鼠操作，负责交互的是 `AppKit` 中的 `NSView` 。
-  - 但它们的图形绘制的方式是一样的，`UIView` 和 `NSView` 的底层都是使用 `CALayer` 进行绘制的。
-
-## 寻找两个 UIView 的最近的公共 View
-
-来源：[唐巧的公众号](https://mp.weixin.qq.com/s?__biz=MjM5NTIyNTUyMQ==&mid=562061601&idx=1&sn=a409387dbbbd77282237b7d91dc18884&scene=19#wechat_redirect)，有改动。
-
-一个 `UIViewController` 中的所有 `view` 之间的关系其实可以看成一颗树，`UIViewController` 的 `view` 变量是这颗树的根节点，其它的 `view` 都是根节点的直接或间接子节点。
-
-所以我们可以通过 `view` 的 `superview` 属性，一直找到根节点。需要注意的是，在代码中，我们还需要考虑各种非法输入，如果输入了 `nil` ，则也需要处理，避免异常。
-
-以下是找到指定 `view` 到根 `view` 的路径代码：
-
-```objectivec
-+ (NSArray *)superViews:(UIView *)view {
-    if (view == nil) {
-        return @[];
-    }
-    NSMutableArray *result = [NSMutableArray array];
-    while (view != nil) {
-        [result addObject:view];
-        view = view.superview;
-    }
-    return [result copy];
-}
-```
-
-然后对于两个 view A 和 view B，我们可以得到两个路径。将一个路径中的所有点先放进 `NSSet` 中，然后遍历另一个数组，检查当前的 view 是否在 `NSSet` 中：
-
-```objectivec
-+ (UIView *)commonView_2:(UIView *)viewA andView:(UIView *)viewB {
-    NSArray *arr1 = [self superViews:viewA];
-    NSArray *arr2 = [self superViews:viewB];
-    NSSet *set = [NSSet setWithArray:arr2];
-    for (NSUInteger i = 0; i < arr1.count; ++i) {
-        UIView *targetView = arr1[i];
-        if ([set containsObject:targetView]) {
-            return targetView;
-        }
-    }
-    return nil;
-}
-```
-
-## iOS 系统响应触摸事件的机制
-
-1）手指触碰屏幕，屏幕感应到触碰后，将事件交由 `IOKit` 处理。
-
-2）`IOKit` 将触摸事件封装成一个 `IOHIDEvent` 对象，并通过 `mach port` 传递给 `SpringBoad` 进程。
-
-- `mach port` ：进程端口，各进程之间通过它进行通信。
-- `SpringBoad` ：是一个系统进程，可以理解为桌面系统，可以**统一管理和分发系统接收到的触摸事件**。
-
-3）`SpringBoard` 进程因接收到触摸事件，触发了主线程 `RunLoop` 的 `source1` 事件源的回调。此时 `SpringBoard` 会根据当前桌面的状态，判断应该由谁处理此次触摸事件。因为事件发生时，你可能正在桌面上翻页，也可能正在刷微博。
-
-- 若是前者（即前台无 APP 运行），则触发 `SpringBoard` 本身主线程 `RunLoop` 的 `source0` 事件源的回调，将事件交由桌面系统去消耗；
-- 若是后者（即有 APP 正在前台运行），则将触摸事件通过 `IPC`（进程间通信）传递给前台 APP 进程。
-
-## Objective-C 方法调用的本质
+### Objective-C 方法调用的本质
 
 Objective-C 的方法调用在编译时会被转换成 `objc_msgSend` 函数调用，比如：
 
@@ -202,7 +210,9 @@ id obj2 = objc_msgSend(obj1, sel_registerName("init"));
 
 因此，在编译时只是将 Objective-C 的方法调用转成了 `objc_msgSend` ，在运行时再通过 `objc_getClass` 和 `sel_registerName` 来查找对应的`类`和`方法`。
 
-## fishhook 的原理 & 位置无关代码
+## 开源库
+
+### fishhook 的原理 & 位置无关代码
 
 > 参考：[fishhook & PIC](../iOS/fishhook.md)
 
