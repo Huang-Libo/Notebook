@@ -13,6 +13,7 @@
     - [weak 指针置为 nil 的过程](#weak-指针置为-nil-的过程)
     - [Objective-C 方法调用的本质](#objective-c-方法调用的本质)
   - [RunLoop](#runloop)
+    - [简介](#简介)
     - [source0 和 source1 有什么区别](#source0-和-source1-有什么区别)
     - [RunLoop 与线程的关系](#runloop-与线程的关系)
     - [RunLoop 与事件响应](#runloop-与事件响应)
@@ -218,6 +219,19 @@ id obj2 = objc_msgSend(obj1, sel_registerName("init"));
 因此，在编译时只是将 Objective-C 的方法调用转成了 `objc_msgSend` ，在运行时再通过 `objc_getClass` 和 `sel_registerName` 来查找对应的`类`和`方法`。
 
 ## RunLoop
+
+### 简介
+
+RunLoop 实际上就是一个事件循环，用于管理其需要处理的事件和消息。有任务时执行，无任务时休眠。
+
+macOS/iOS 系统中，提供了两个这样的对象：`NSRunLoop` 和 `CFRunLoopRef` 。
+
+- `CFRunLoopRef` 是在 `CoreFoundation` 框架内的，它提供了纯 C 函数的 API ，所有这些 API 都是**线程安全**的。
+- `NSRunLoop` 是基于 `CFRunLoopRef` 的封装，提供了面向对象的 API，但是这些 API **不是线程安全**的。
+
+`CFRunLoopRef` 的代码是[开源](https://opensource.apple.com/source/CF/CF-1153.18/CFRunLoop.c)的，你可以在这里 <http://opensource.apple.com/tarballs/CF/> 下载到整个 `CoreFoundation` 的源码来查看。
+
+Swift 开源后，苹果又维护了一个跨平台的 `CoreFoundation` 版本：<https://github.com/apple/swift-corelibs-foundation/> ，这个版本的源码可能和现有 iOS 系统中的实现略不一样，但更容易编译，而且已经适配了 Linux/Windows。
 
 ### source0 和 source1 有什么区别
 
