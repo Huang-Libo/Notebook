@@ -13,6 +13,7 @@
     - [weak 指针置为 nil 的过程](#weak-指针置为-nil-的过程)
     - [Objective-C 方法调用的本质](#objective-c-方法调用的本质)
   - [RunLoop](#runloop)
+    - [源码](#源码)
     - [简介](#简介)
     - [source0 和 source1 有什么区别](#source0-和-source1-有什么区别)
     - [RunLoop 与线程的关系](#runloop-与线程的关系)
@@ -220,6 +221,11 @@ id obj2 = objc_msgSend(obj1, sel_registerName("init"));
 
 ## RunLoop
 
+### 源码
+
+- `CFRunLoopRef` 的代码 `CFRunLoop.c` 是开源的，可以在这里 <http://opensource.apple.com/tarballs/CF/> 下载到整个 `CoreFoundation` 的源码。
+- Swift 开源后，苹果又维护了一个跨平台的 `CoreFoundation` 版本：<https://github.com/apple/swift-corelibs-foundation/> ，这个版本的源码可能和现有 iOS 系统中的实现略不一样，但更容易编译，而且已经适配了 Linux/Windows 。
+
 ### 简介
 
 RunLoop 实际上就是一个事件循环，用于管理其需要处理的事件和消息。有任务时执行，无任务时休眠。
@@ -227,11 +233,18 @@ RunLoop 实际上就是一个事件循环，用于管理其需要处理的事件
 macOS/iOS 系统中，提供了两个这样的对象：`NSRunLoop` 和 `CFRunLoopRef` 。
 
 - `CFRunLoopRef` 是在 `CoreFoundation` 框架内的，它提供了纯 C 函数的 API ，所有这些 API 都是**线程安全**的。
-- `NSRunLoop` 是基于 `CFRunLoopRef` 的封装，提供了面向对象的 API，但是这些 API **不是线程安全**的。
+- `NSRunLoop` 是基于 `CFRunLoopRef` 的封装，提供了面向对象的 API ，但是这些 API **不是线程安全**的。
 
-`CFRunLoopRef` 的代码是[开源](https://opensource.apple.com/source/CF/CF-1153.18/CFRunLoop.c)的，你可以在这里 <http://opensource.apple.com/tarballs/CF/> 下载到整个 `CoreFoundation` 的源码来查看。
+RunLoop 主要处理以下 6 类事件：
 
-Swift 开源后，苹果又维护了一个跨平台的 `CoreFoundation` 版本：<https://github.com/apple/swift-corelibs-foundation/> ，这个版本的源码可能和现有 iOS 系统中的实现略不一样，但更容易编译，而且已经适配了 Linux/Windows。
+```c
+static void __CFRUNLOOP_IS_SERVICING_THE_MAIN_DISPATCH_QUEUE__();
+static void __CFRUNLOOP_IS_CALLING_OUT_TO_A_BLOCK__();
+static void __CFRUNLOOP_IS_CALLING_OUT_TO_A_TIMER_CALLBACK_FUNCTION__();
+static void __CFRUNLOOP_IS_CALLING_OUT_TO_A_SOURCE0_PERFORM_FUNCTION__();
+static void __CFRUNLOOP_IS_CALLING_OUT_TO_A_SOURCE1_PERFORM_FUNCTION__();
+static void __CFRUNLOOP_IS_CALLING_OUT_TO_AN_OBSERVER_CALLBACK_FUNCTION__();
+```
 
 ### source0 和 source1 有什么区别
 
@@ -262,7 +275,7 @@ struct __CFRunLoopSource {
 
 其中的 `version0` 、`version1` 分别对应 `source0` 和 `source1` 。
 
-`CFRunLoopSourceContext` 的定义：
+上述 `CFRunLoopSourceContext` 的定义：
 
 ```c
 typedef struct {
@@ -286,7 +299,7 @@ typedef struct {
 - `cancel` ：当 `source0` 从 RunLoop 中移除时触发的回调函数；
 - `perform` ：`source0` 要执行的任务块，当 `source0` 事件被触发时的回调, 调用 `__CFRUNLOOP_IS_CALLING_OUT_TO_A_SOURCE0_PERFORM_FUNCTION__` 函数来执行 `perform(info)` 。
 
-`CFRunLoopSourceContext1` ：
+上述 `CFRunLoopSourceContext1` 的定义为：
 
 ```c
 typedef struct {
@@ -332,7 +345,7 @@ __CFRUNLOOP_IS_CALLING_OUT_TO_A_SOURCE0_PERFORM_FUNCTION__(rls->_context.version
 
 ### RunLoop 与线程的关系
 
-> [ibireme 的博客：深入理解RunLoop](https://blog.ibireme.com/2015/05/18/runloop/)
+> [ibireme 的博客：《深入理解 RunLoop 》](https://blog.ibireme.com/2015/05/18/runloop/)
 
 线程和 RunLoop 之间是一一对应的，其关系是保存在一个全局的 Dictionary 里。线程刚创建时并没有 RunLoop，如果你不主动获取，那它一直都不会有。
 
@@ -353,11 +366,11 @@ iOS 开发中能遇到两个线程对象: `pthread_t` 和 `NSThread` 。过去�
 
 ### RunLoop 与事件响应
 
-苹果注册了一个 `Source1` (基于 mach port 的) 用来接收系统事件，其回调函数为 `__IOHIDEventSystemClientQueueCallback()` 。
+苹果注册了一个 `source1` (是基于 mach port 的) 用来接收系统事件，其回调函数为 `__IOHIDEventSystemClientQueueCallback()` 。
 
 当一个硬件事件（触摸/锁屏/摇晃等）发生后，首先由 `IOKit.framework` 生成一个 `IOHIDEvent` 事件并由 SpringBoard 接收。这个过程的详细情况可以参考[这里](https://iphonedev.wiki/index.php/IOHIDFamily)。
 
-SpringBoard 只接收按键(锁屏/静音等)，触摸，加速，接近传感器等几种 Event，随后用 mach port 转发给需要的 App 进程。随后苹果注册的那个 `Source1` 就会触发回调，并调用 `_UIApplicationHandleEventQueue()` 进行应用内部的分发。
+SpringBoard 只接收按键(锁屏/静音等)，触摸，加速，接近传感器等几种 Event，随后用 mach port 转发给需要的 App 进程。随后苹果注册的那个 `source1` 就会触发回调，并调用 `_UIApplicationHandleEventQueue()` 进行应用内部的分发。
 
 `_UIApplicationHandleEventQueue()` 会把 `IOHIDEvent` 处理并包装成 `UIEvent` 进行处理或分发，其中包括识别 `UIGesture`/处理屏幕旋转/发送给 `UIWindow` 等。通常事件比如 `UIButton` 点击、touchesBegin/Move/End/Cancel 事件都是在这个回调中完成的。
 
