@@ -209,7 +209,7 @@ CFRunLoopRemoveTimer(CFRunLoopRef rl, CFRunLoopTimerRef timer, CFStringRef mode)
 
 根据苹果在[文档](https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/Multithreading/RunLoopManagement/RunLoopManagement.html#//apple_ref/doc/uid/10000057i-CH16-SW23)里的说明，RunLoop 内部的逻辑大致如下：
 
-<img src="../media/Digest/RunLoop-ibireme/RunLoop_1.png" width="80%"/>
+![RunLoop_1.png](../media/Digest/RunLoop-ibireme/RunLoop_1.png)
 
 RunLoop 内部是一个 `do...while` 循环。当你调用 `CFRunLoopRun()` 时，线程就会一直停留在这个循环里，直到超时或被手动停止，该函数才会返回：
 
@@ -665,7 +665,7 @@ NSURLSession    ->AFNetworking2+ , Alamofire
 - `CFSocket` 线程是处理底层 socket 连接的。
 - `NSURLConnectionLoader` 这个线程内部会使用 RunLoop 来接收底层 socket 的事件，并通过之前添加的 Source0 通知到上层的 `delegate` 。
 
-<img src="../media/Digest/RunLoop-ibireme/RunLoop_network.png" width="80%"/>
+![RunLoop_network.png](../media/Digest/RunLoop-ibireme/RunLoop_network.png)
 
 `NSURLConnectionLoader` 中的 RunLoop 通过一些基于 mach port 的 Source1 接收来自底层 `CFSocket` 的通知。当收到通知后，其会在合适的时机向 `CFMultiplexerSource` 等 Source0 发送通知，同时唤醒 `delegate` 线程的 RunLoop 来让其处理这些通知。`CFMultiplexerSource` 会在 `delegate` 线程的 RunLoop 对 `delegate` 执行实际的回调。
 
