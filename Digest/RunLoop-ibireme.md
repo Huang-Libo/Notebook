@@ -5,16 +5,16 @@
 <h2>目录</h2>
 
 - [ibireme :《深入理解 RunLoop》](#ibireme-深入理解-runloop)
-  - [源码](#源码)
+  - [RunLoop 的源码](#runloop-的源码)
   - [RunLoop 的概念](#runloop-的概念)
-    - [RunLoop 与线程的关系](#runloop-与线程的关系)
+  - [RunLoop 与线程的关系](#runloop-与线程的关系)
   - [RunLoop 对外的接口](#runloop-对外的接口)
     - [CFRunLoopModeRef](#cfrunloopmoderef)
     - [CFRunLoopSourceRef](#cfrunloopsourceref)
     - [CFRunLoopTimerRef](#cfrunlooptimerref)
     - [CFRunLoopObserverRef](#cfrunloopobserverref)
 
-## 源码
+## RunLoop 的源码
 
 `CFRunLoopRef` 的代码 `CFRunLoop.c` 是开源的，可以在这里 <http://opensource.apple.com/tarballs/CF/> 下载到整个 `CoreFoundation` 的源码。
 
@@ -31,7 +31,7 @@ macOS/iOS 系统中，提供了两个这样的对象：`NSRunLoop` 和 `CFRunLoo
 - `CFRunLoopRef` 是在 `CoreFoundation` 框架内的，它提供了纯 C 函数的 API ，所有这些 API 都是**线程安全**的。
 - `NSRunLoop` 是基于 `CFRunLoopRef` 的封装，提供了面向对象的 API ，但是这些 API **不是线程安全**的。
 
-### RunLoop 与线程的关系
+## RunLoop 与线程的关系
 
 **线程和 RunLoop 之间是一一对应的**，其关系是保存在一个全局的 Dictionary 里。线程刚创建时并没有 RunLoop，如果不主动获取，那它一直都不会有。RunLoop 的创建是发生在第一次获取时，RunLoop 的销毁是发生在线程结束时。你只能在一个线程的内部获取其 RunLoop（主线程除外）。
 
