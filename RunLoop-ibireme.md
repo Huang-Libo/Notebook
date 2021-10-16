@@ -8,6 +8,8 @@
   - [源码](#源码)
   - [RunLoop 的概念](#runloop-的概念)
     - [RunLoop 与线程的关系](#runloop-与线程的关系)
+  - [RunLoop 对外的接口](#runloop-对外的接口)
+    - [CFRunLoopModeRef](#cfrunloopmoderef)
 
 ## 源码
 
@@ -83,3 +85,25 @@ iOS 开发中能遇到两个线程对象: `pthread_t` 和 `NSThread` 。过去�
 - 也可以通过 `pthread_self()` 或 `[NSThread currentThread]` 来获取当前线程。
 
 `CFRunLoop` 是基于 `pthread` 来管理的。
+
+## RunLoop 对外的接口
+
+在 `CoreFoundation` 里面关于 RunLoop 有5个类:
+
+- `CFRunLoopRef`
+- `CFRunLoopModeRef`
+- `CFRunLoopSourceRef`
+- `CFRunLoopTimerRef`
+- `CFRunLoopObserverRef`
+
+### CFRunLoopModeRef
+
+其中 `CFRunLoopModeRef` 类并没有对外暴露，只是通过 `CFRunLoopRef` 的接口进行了封装。他们的关系如下:
+
+![RunLoop_0.png](media/Digest/RunLoop-ibireme/RunLoop_0.png)
+
+用哪个？
+
+<img src="media/Digest/RunLoop-ibireme/RunLoop_0.png" width="400"/>
+
+一个 RunLoop 包含若干个 Mode，每个 Mode 又包含若干个 Source / Timer / Observer 。每次调用 RunLoop 的主函数时，只能指定其中一个 Mode ，这个Mode 被称作 `CurrentMode` 。如果需要切换 Mode ，只能退出 Loop ，再重新指定一个 Mode 进入。这样做主要是为了分隔开不同组的 Source / Timer / Observer ，让其互不影响。
