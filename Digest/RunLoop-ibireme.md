@@ -14,6 +14,7 @@
     - [CFRunLoopTimerRef](#cfrunlooptimerref)
     - [CFRunLoopObserverRef](#cfrunloopobserverref)
   - [RunLoop 的 Mode](#runloop-的-mode)
+  - [RunLoop 的内部逻辑](#runloop-的内部逻辑)
 
 ## RunLoop 的源码
 
@@ -57,14 +58,14 @@ CFRunLoopRef _CFRunLoopGet(pthread_t thread) {
         CFDictionarySetValue(loopsDic, pthread_main_thread_np(), mainLoop);
     }
     
-    /// 直接从 Dictionary 里获取。
+    // 直接从 Dictionary 里获取。
     CFRunLoopRef loop = CFDictionaryGetValue(loopsDic, thread));
     
     if (!loop) {
-        /// 取不到时，创建一个
+        // 取不到时，创建一个
         loop = _CFRunLoopCreate();
         CFDictionarySetValue(loopsDic, thread, loop);
-        /// 注册一个回调，当线程销毁时，顺便也销毁其对应的 RunLoop 。
+        // 注册一个回调，当线程销毁时，顺便也销毁其对应的 RunLoop 。
         _CFSetTSD(..., thread, loop, __CFFinalizeRunLoop);
     }
     
@@ -189,3 +190,118 @@ CFRunLoopRemoveTimer(CFRunLoopRef rl, CFRunLoopTimerRef timer, CFStringRef mode)
 苹果公开提供的 Mode 有两个：`kCFRunLoopDefaultMode` (`NSDefaultRunLoopMode`) 和 `UITrackingRunLoopMode`，你可以用这两个 Mode Name 来操作其对应的 Mode。
 
 同时苹果还提供了一个操作 common 标记的字符串：`kCFRunLoopCommonModes` (`NSRunLoopCommonModes`)，你可以用这个字符串来操作 Common Items，或标记一个 Mode 为 “Common” 。使用时注意区分这个字符串和其他 mode name。
+
+## RunLoop 的内部逻辑
+
+根据苹果在文档里的说明，RunLoop 内部的逻辑大致如下：
+
+<img src="../media/Digest/RunLoop-ibireme/RunLoop_1.png" width="500"/>
+
+RunLoop 内部是一个 `do...while` 循环。当你调用 `CFRunLoopRun()` 时，线程就会一直停留在这个循环里，直到超时或被手动停止，该函数才会返回：
+
+【代码需要更新？施工中 🚧】
+
+```c
+/// 用DefaultMode启动
+void CFRunLoopRun(void) {
+    CFRunLoopRunSpecific(CFRunLoopGetCurrent(), kCFRunLoopDefaultMode, 1.0e10, false);
+}
+ 
+/// 用指定的Mode启动，允许设置RunLoop超时时间
+int CFRunLoopRunInMode(CFStringRef modeName, CFTimeInterval seconds, Boolean stopAfterHandle) {
+    return CFRunLoopRunSpecific(CFRunLoopGetCurrent(), modeName, seconds, returnAfterSourceHandled);
+}
+ 
+/// RunLoop的实现
+int CFRunLoopRunSpecific(runloop, modeName, seconds, stopAfterHandle) {
+    // 首先根据 modeName 找到对应 mode
+    CFRunLoopModeRef currentMode = __CFRunLoopFindMode(runloop, modeName, false);
+    // 如果 mode 里没有 source/timer/observer , 直接返回。
+    if (__CFRunLoopModeIsEmpty(currentMode)) return;
+    
+    // 1. 通知 Observers: RunLoop 即将进入 loop。
+    __CFRunLoopDoObservers(runloop, currentMode, kCFRunLoopEntry);
+    
+    // 内部函数，进入 loop 
+    __CFRunLoopRun(runloop, currentMode, seconds, returnAfterSourceHandled) {        
+        Boolean sourceHandledThisLoop = NO;
+        int retVal = 0;
+        do {
+            // 2. 通知 Observers : RunLoop 即将触发 Timer 回调。
+            __CFRunLoopDoObservers(runloop, currentMode, kCFRunLoopBeforeTimers);
+            // 3. 通知 Observers : RunLoop 即将触发 Source0 (非 port ) 回调。
+            __CFRunLoopDoObservers(runloop, currentMode, kCFRunLoopBeforeSources);
+            // 执行被加入的block
+            __CFRunLoopDoBlocks(runloop, currentMode);
+            
+            // 4. RunLoop 触发 Source0 (非 port ) 回调。
+            sourceHandledThisLoop = __CFRunLoopDoSources0(runloop, currentMode, stopAfterHandle);
+            // 执行被加入的block
+            __CFRunLoopDoBlocks(runloop, currentMode);
+ 
+            // 5. 如果有 Source1 (基于 port ) 处于 ready 状态，直接处理这个 Source1 然后跳转去处理消息。
+            if (__Source0DidDispatchPortLastTime) {
+                Boolean hasMsg = __CFRunLoopServiceMachPort(dispatchPort, &msg)
+                if (hasMsg) goto handle_msg;
+            }
+            
+            // 通知 Observers : RunLoop 的线程即将进入休眠(sleep)。
+            if (!sourceHandledThisLoop) {
+                __CFRunLoopDoObservers(runloop, currentMode, kCFRunLoopBeforeWaiting);
+            }
+            
+            // 7. 调用 mach_msg 等待接受 mach_port 的消息。线程将进入休眠, 直到被下面某一个事件唤醒。
+            // • 一个基于 port 的 Source 的事件。
+            // • 一个 Timer 到时间了
+            // • RunLoop 自身的超时时间到了
+            // • 被其他什么调用者手动唤醒
+            __CFRunLoopServiceMachPort(waitSet, &msg, sizeof(msg_buffer), &livePort) {
+                mach_msg(msg, MACH_RCV_MSG, port); // thread wait for receive msg
+            }
+ 
+            // 8. 通知 Observers: RunLoop 的线程刚刚被唤醒了。
+            __CFRunLoopDoObservers(runloop, currentMode, kCFRunLoopAfterWaiting);
+            
+            // 收到消息，处理消息。
+            handle_msg:
+ 
+            if (msg_is_timer) {
+                // 9.1 如果一个 Timer 到时间了，触发这个 Timer 的回调。
+                __CFRunLoopDoTimers(runloop, currentMode, mach_absolute_time())
+            } else if (msg_is_dispatch) {
+                // 9.2 如果有 dispatch 到 main_queue 的 block ，执行 block 。
+                __CFRUNLOOP_IS_SERVICING_THE_MAIN_DISPATCH_QUEUE__(msg);
+            } else {
+                // 9.3 如果一个 Source1 (基于 port ) 发出事件了，处理这个事件
+                CFRunLoopSourceRef source1 = __CFRunLoopModeFindSourceForMachPort(runloop, currentMode, livePort);
+                sourceHandledThisLoop = __CFRunLoopDoSource1(runloop, currentMode, source1, msg);
+                if (sourceHandledThisLoop) {
+                    mach_msg(reply, MACH_SEND_MSG, reply);
+                }
+            }
+            
+            // 执行加入到 Loop 的 block
+            __CFRunLoopDoBlocks(runloop, currentMode);
+
+            if (sourceHandledThisLoop && stopAfterHandle) {
+                // 进入 loop 时参数说处理完事件就返回。
+                retVal = kCFRunLoopRunHandledSource;
+            } else if (timeout) {
+                // 超出传入参数标记的超时时间了
+                retVal = kCFRunLoopRunTimedOut;
+            } else if (__CFRunLoopIsStopped(runloop)) {
+                // 被外部调用者强制停止了
+                retVal = kCFRunLoopRunStopped;
+            } else if (__CFRunLoopModeIsEmpty(runloop, currentMode)) {
+                // source/timer/observer 一个都没有了
+                retVal = kCFRunLoopRunFinished;
+            }
+            
+            // 如果没超时，mode 里没空，loop 也没被停止，那继续 loop 。
+        } while (retVal == 0);
+    }
+    
+    // 10. 通知 Observers : RunLoop 即将退出。
+    __CFRunLoopDoObservers(rl, currentMode, kCFRunLoopExit);
+}
+```
