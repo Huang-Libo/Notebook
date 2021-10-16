@@ -7,7 +7,7 @@
 - [Block](iOS/Block.md)
 - [fishhook & PIC](iOS/fishhook.md)
 
-## 大佬文摘
+## Digest
 
 - [ibireme :《深入理解 RunLoop》](Digest/RunLoop-ibireme.md)
 
