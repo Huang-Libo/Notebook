@@ -25,6 +25,8 @@
   - [AsyncDisplayKit](#asyncdisplaykit)
     - [ASDK 的由来](#asdk-的由来)
     - [ASDK 的基本原理](#asdk-的基本原理)
+    - [ASDK 的图层预合成](#asdk-的图层预合成)
+    - [ASDK 异步并发操作](#asdk-异步并发操作)
 
 ## 演示项目
 
@@ -210,7 +212,7 @@ ASDK 尝试对 `UIKit` 组件进行封装：
 
 ASDK 为此创建了 `ASDisplayNode` 类，包装了常见的视图属性（比如 `frame` / `bounds` / `alpha` / `transform` / `backgroundColor` / `superNode` / `subNodes` 等），然后它用 `UIView` -> `CALayer` 相同的方式，实现了 `ASNode` -> `UIView` 这样一个关系。
 
-**2. view backed node：**
+**2. layer backed node：**
 
 <img src="../media/Digest/ibireme/smooth-user-interface/ASDK-layer-backed-node.png" width="50%"/>
 
@@ -225,3 +227,17 @@ ASDK 为此创建了 `ASDisplayNode` 类，包装了常见的视图属性（比�
 通过模拟和封装 `UIView` / `CALayer`，开发者可以把代码中的 `UIView` 替换为 `ASNode` ，很大的降低了开发和学习成本，同时能获得 ASDK 底层大量的性能优化。
 
 为了方便使用， ASDK 把大量常用控件都封装成了 `ASNode` 的子类，比如 `Button` 、`Control` 、`Cell` 、`Image` 、`ImageView` 、`Text` 、`TableView` 、`CollectionView` 等。利用这些控件，开发者可以尽量避免直接使用 `UIKit` 相关控件，以获得更完整的性能提升。
+
+### ASDK 的图层预合成
+
+<img src="../media/Digest/ibireme/smooth-user-interface/ASDK-compose.jpg" width="60%"/>
+
+有时一个 `layer` 会包含很多 sub-layer ，而**这些 sub-layer 并不需要响应触摸事件，也不需要进行动画和位置调整**。ASDK 为此实现了一个被称为 **pre-composing（预合成）** 的技术，可以**把这些 sub-layer 合成渲染为一张图片**。开发时，`ASNode` 已经替代了 `UIView` 和 `CALayer` ；直接使用各种 `Node` 控件并设置为 *layer backed* 后，`ASNode` 甚至可以通过预合成来避免创建内部的 `UIView` 和 `CALayer` 。
+
+通过这种方式，把一个大的层级，通过一个大的绘制方法绘制到一张图上，性能会获得很大提升。CPU 避免了创建 `UIKit` 对象的资源消耗，GPU 避免了多张 `texture` 合成和渲染的消耗，更少的 `bitmap` 也意味着更少的内存占用。
+
+### ASDK 异步并发操作
+
+自 iPhone 4S 起，iDevice 已经都是双核 CPU 了，现在的 iPad 甚至已经更新到 3 核了。充分利用多核的优势、并发执行任务对保持界面流畅有很大作用。
+
+ASDK 把布局计算、文本排版、图片/文本/图形渲染等操作都封装成较小的任务，并利用 GCD 异步并发执行。如果开发者使用了 `ASNode` 相关的控件，那么这些并发操作会自动在后台进行，无需进行过多配置。
