@@ -49,7 +49,7 @@ macOS/iOS 系统中，提供了两个这样的对象：`NSRunLoop` 和 `CFRunLoo
 
 ## RunLoop 与线程的关系
 
-**线程和 RunLoop 之间是一一对应的**，其关系是保存在一个全局的 Dictionary 里。线程刚创建时并没有 RunLoop，如果不主动获取，那它一直都不会有。RunLoop 的创建是发生在第一次获取时，RunLoop 的销毁是发生在线程结束时。你只能在一个线程的内部获取其 RunLoop（主线程除外）。
+**线程和 RunLoop 之间是一一对应的**，其关系是保存在一个全局的 Dictionary 里。线程刚创建时并没有 RunLoop ，如果不主动获取，那它一直都不会有。RunLoop 的创建是发生在第一次获取时，RunLoop 的销毁是发生在线程结束时。你只能在一个线程的内部获取其 RunLoop（主线程除外）。
 
 苹果不允许直接创建 RunLoop，它只提供了两个自动获取的函数：`CFRunLoopGetMain()` 和 `CFRunLoopGetCurrent()` ，这两个函数内部的逻辑大概是下面这样:
 
@@ -119,7 +119,7 @@ iOS 开发中能遇到两个线程对象: `pthread_t` 和 `NSThread` 。过去�
 
 其中 `CFRunLoopModeRef` 类并没有对外暴露，只是通过 `CFRunLoopRef` 的接口进行了封装。他们的关系如下:
 
-<img src="../media/Digest/RunLoop-ibireme/RunLoop_0.png" width="400"/>
+<img src="../media/Digest/RunLoop-ibireme/RunLoop-mode.png" width="400"/>
 
 一个 RunLoop 包含若干个 Mode，每个 Mode 又包含若干个 Source / Timer / Observer 。每次调用 RunLoop 的主函数时，只能指定其中一个 Mode ，这个Mode 被称作 `CurrentMode` 。如果需要切换 Mode ，只能退出 Loop ，再重新指定一个 Mode 进入。这样做主要是为了分隔开不同组的 Source / Timer / Observer ，让其互不影响。
 
@@ -209,7 +209,9 @@ CFRunLoopRemoveTimer(CFRunLoopRef rl, CFRunLoopTimerRef timer, CFStringRef mode)
 
 根据苹果在[文档](https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/Multithreading/RunLoopManagement/RunLoopManagement.html#//apple_ref/doc/uid/10000057i-CH16-SW23)里的说明，RunLoop 内部的逻辑大致如下：
 
-![RunLoop_1.png](../media/Digest/RunLoop-ibireme/RunLoop_1.png)
+【说明：原文的图有错误，唤醒 RunLoop 的应该是 Source1 ，此图已修正】
+
+![RunLoop-step.png](../media/Digest/RunLoop-ibireme/RunLoop-step.png)
 
 RunLoop 内部是一个 `do...while` 循环。当你调用 `CFRunLoopRun()` 时，线程就会一直停留在这个循环里，直到超时或被手动停止，该函数才会返回：
 
@@ -324,7 +326,7 @@ int CFRunLoopRunSpecific(runloop, modeName, seconds, stopAfterHandle) {
 
 从上面代码可以看到，RunLoop 的核心是基于 **mach port** 的，其进入休眠时调用的函数是 `mach_msg()` 。为了解释这个逻辑，下面稍微介绍一下 macOS / iOS 的系统架构。
 
-<img src="../media/Digest/RunLoop-ibireme/RunLoop_2.png" width="300"/>
+<img src="../media/Digest/RunLoop-ibireme/System-structure.png" width="300"/>
 
 苹果官方将整个系统大致划分为上述4个层次：
 
@@ -335,7 +337,7 @@ int CFRunLoopRunSpecific(runloop, modeName, seconds, stopAfterHandle) {
 
 我们在深入看一下 Darwin 这个核心的架构：
 
-<img src="../media/Digest/RunLoop-ibireme/RunLoop_3.png" width="300"/>
+<img src="../media/Digest/RunLoop-ibireme/Darwin-structure.png" width="300"/>
 
 其中，在硬件层上面的三个组成部分：`Mach` 、`BSD` 、`IOKit` (还包括一些上面没标注的内容)，共同组成了 **XNU 内核**。
 
@@ -379,7 +381,7 @@ mach_msg_return_t mach_msg(
 
 为了实现消息的发送和接收，`mach_msg()` 函数实际上是调用了一个 Mach 陷阱 (trap)，即函数 `mach_msg_trap()` ，**陷阱这个概念在 Mach 中等同于系统调用**。当你在**用户态**调用 `mach_msg_trap()` 时会触发陷阱机制，切换到**内核态**；内核态中内核实现的 `mach_msg()` 函数会完成实际的工作，如下图：
 
-<img src="../media/Digest/RunLoop-ibireme/RunLoop_4.png" width="400"/>
+<img src="../media/Digest/RunLoop-ibireme/mach_msg.png" width="400"/>
 
 RunLoop 的核心就是一个 `mach_msg()`（见上面代码的第7步），RunLoop 调用这个函数去接收消息，**如果没有别人发送 port 消息过来，内核会将线程置于等待状态**。例如你在模拟器里跑起一个 iOS 的 App，然后在 App 静止时点击暂停，你会看到主线程调用栈是停留在 `mach_msg_trap()` 这个地方。
 
@@ -665,7 +667,7 @@ NSURLSession    ->AFNetworking2+ , Alamofire
 - `CFSocket` 线程是处理底层 socket 连接的。
 - `NSURLConnectionLoader` 这个线程内部会使用 RunLoop 来接收底层 socket 的事件，并通过之前添加的 Source0 通知到上层的 `delegate` 。
 
-![RunLoop_network.png](../media/Digest/RunLoop-ibireme/RunLoop_network.png)
+![RunLoop-network.png](../media/Digest/RunLoop-ibireme/RunLoop-network.png)
 
 `NSURLConnectionLoader` 中的 RunLoop 通过一些基于 mach port 的 Source1 接收来自底层 `CFSocket` 的通知。当收到通知后，其会在合适的时机向 `CFMultiplexerSource` 等 Source0 发送通知，同时唤醒 `delegate` 线程的 RunLoop 来让其处理这些通知。`CFMultiplexerSource` 会在 `delegate` 线程的 RunLoop 对 `delegate` 执行实际的回调。
 
