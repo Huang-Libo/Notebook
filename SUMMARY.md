@@ -7,9 +7,10 @@
 - [Block](iOS/Block.md)
 - [fishhook & PIC](iOS/fishhook.md)
 
-## 📚 Digest
+## 📖 Digest
 
 - [ibireme《深入理解 RunLoop 》](Digest/RunLoop-ibireme.md)
+- [ibireme《iOS 保持界面流畅的技巧》](Digest/ibireme-smooth-user-interface.md)
 - [ibireme《不再安全的 OSSpinLock 》](Digest/spinlock_is_unsafe-ibireme.md)
 
 ## 🎱 Check List
