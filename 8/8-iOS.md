@@ -21,6 +21,15 @@
 
 ### UIView 和 CALayer 的区别
 
+`UIView` 和 `CALayer` 的关系：
+
+- `view` 持有 `layer` 用于显示，`view` 中大部分显示属性实际是从 `layer` 映射而来；
+- `layer` 的 `delegate` 在这里是 `view` ，当其属性改变、动画产生时，`view` 能够得到通知。
+
+`UIView` 和 `CALayer` 不是线程安全的，并且只能在主线程创建、访问和销毁。
+
+补充：
+
 - `UIView` 属于 `UIKit` 框架，用于 iOS 系统，它可以响应交互事件；而 `CALayer` 属于 `Core Animation` 框架，是 iOS 和 macOS 通用的，它只负责页面的绘制，无法响应交互事件。
 - 这样的设计遵守了单一职责的原则，使得 `CALayer` 在不同平台上可以被复用。
   - 在不同类型的设备上，交互逻辑是不一样的：
