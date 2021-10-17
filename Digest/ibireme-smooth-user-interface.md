@@ -27,7 +27,7 @@
 
 在开始技术讨论前，你可以先下载我写的 Demo 跑到真机上体验一下：<https://github.com/ibireme/YYKit> 。 Demo 里包含一个微博的 Feed 列表、发布视图，还包含一个 Twitter 的 Feed 列表。为了公平起见，所有界面和交互我都从官方应用原封不动的抄了过来，数据也都是从官方应用抓取的。你也可以自己抓取数据替换掉 Demo 中的数据，方便进行对比。尽管官方应用背后的功能更多更为复杂，但不至于会带来太大的交互性能差异。
 
-![YYKitDemo.jpg](../media/Digest/ibireme/YYKitDemo.jpg)
+![YYKitDemo.jpg](../media/Digest/ibireme/smooth-user-interface/YYKitDemo.jpg)
 
 这个 Demo 最低可以运行在 iOS 6 上，所以你可以把它跑到老设备上体验一下。在我的测试中，即使在 iPhone 4S 或者 iPad 3 上，Demo 列表在快速滑动时仍然能保持 50~60 FPS 的流畅交互，而其他诸如微博、朋友圈等 App 的列表视图在滑动时已经有很严重的卡顿了。
 
