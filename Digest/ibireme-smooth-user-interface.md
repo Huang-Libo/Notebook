@@ -187,13 +187,13 @@ ASDK 的作者是 Scott Goodson ，他曾经在苹果工作，负责 iOS 的一�
 
 ### ASDK 的基本原理
 
-<img src="../media/Digest/ibireme/smooth-user-interface/ASDK-design.png" width="70%"/>
+<img src="../media/Digest/ibireme/smooth-user-interface/ASDK-design.png" width="60%"/>
 
 ASDK 认为，阻塞主线程的任务，主要分为上面这三大类（布局、渲染、操作 UI 对象）。文本和布局的计算、渲染、解码、绘制都可以通过各种方式异步执行，但 `UIKit` 和 `Core Animation` 相关操作必需在主线程进行。ASDK 的目标，就是尽量把这些任务从主线程挪走，而挪不走的，就尽量优化性能。
 
 先看 `UIView` 和 `CALayer` 的关系：
 
-<img src="../media/Digest/ibireme/smooth-user-interface/ASDK-layer-backed-view.png" width="60%"/>
+<img src="../media/Digest/ibireme/smooth-user-interface/ASDK-layer-backed-view.png" width="50%"/>
 
 可看出：
 
@@ -206,13 +206,13 @@ ASDK 尝试对 `UIKit` 组件进行封装：
 
 **1. view backed node：**
 
-![ASDK-view-backed-node.png](../media/Digest/ibireme/smooth-user-interface/ASDK-view-backed-node.png)
+<img src="../media/Digest/ibireme/smooth-user-interface/ASDK-view-backed-node.png" width="80%"/>
 
 ASDK 为此创建了 `ASDisplayNode` 类，包装了常见的视图属性（比如 `frame` / `bounds` / `alpha` / `transform` / `backgroundColor` / `superNode` / `subNodes` 等），然后它用 `UIView` -> `CALayer` 相同的方式，实现了 `ASNode` -> `UIView` 这样一个关系。
 
 **2. view backed node：**
 
-<img src="../media/Digest/ibireme/smooth-user-interface/ASDK-layer-backed-node.png" width="60%"/>
+<img src="../media/Digest/ibireme/smooth-user-interface/ASDK-layer-backed-node.png" width="50%"/>
 
 当不需要响应触摸事件时，`ASDisplayNode` 可以被设置为 *layer backed* ，即 `ASDisplayNode` 充当了原来 `UIView` 的功能，节省了更多资源。
 
