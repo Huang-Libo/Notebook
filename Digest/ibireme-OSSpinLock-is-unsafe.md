@@ -12,6 +12,8 @@
   - [社区反应](#社区反应)
     - [苹果](#苹果)
     - [Google](#google)
+  - [精选评论](#精选评论)
+    - [dispatch_semaphore 会引起优先级反转吗？](#dispatch_semaphore-会引起优先级反转吗)
 
 ## OSSpinLock 的问题
 
@@ -57,3 +59,25 @@
 ### Google
 
 [google/protobuf](https://github.com/google/protobuf) 内部的 `spinlock` 被全部替换为 `dispatch_semaphore` ，详情可以看这个提交：<https://github.com/google/protobuf/pull/1060> 。用 `dispatch_semaphore` 而不用 `pthread_mutex` 应该是出于性能考虑。
+
+## 精选评论
+
+### dispatch_semaphore 会引起优先级反转吗？
+
+> 笔者注：之前有在 Twitter 上看到有人说使用 dispatch_semaphore 当锁使用可能会引起优先级反转，当时也没看太明白。这篇文章的评论下有人和本文作者 ibireme 也讨论了这个问题，但也没有明确的结论。
+
+**Boolean93 留言：**
+
+Google 在 `Protobuf` 项目中因为 `OSSpinLock` 可能会导致 *Priority Inversion* ，故将 `OSSpinLock` 替换成了 `dispatch_semaphore` 相关的 API 。那么 `dispatch_semaphore` 为何不会引起 *Priority Inversion* 呢？
+
+**ibireme 回复：**
+
+苹果员工说 `libobjc` 里 `spinlock` 是用了一些私有方法 (`mach_thread_switch`) ，让高优先级的线程会临时贡献出它的优先级，以避免优先级反转的问题。
+
+但是我翻了下 `libdispatch` 的源码倒是没发现相关逻辑，也可能是我忽略了什么。。在我的一些测试中，`OSSpinLock` 和 `dispatch_semaphore` 都不会产生特别明显的死锁，所以我也无法确定用 `dispatch_semaphore` 代替 `OSSpinLock` 是否正确。能够肯定的是，用 `pthread_mutex` 是安全的。
+
+**yb坏蛋biubiu～ 回复：**
+
+`OSSpinLock` 自旋锁会出现 busy-wait 状态，不会让出时间片从而一直占用 CPU 资源。另外 `pthread_mutex` 苹果已经作出了优化，性能不一定比 `dispatch_semaphore` 差，而且肯定是安全的。
+
+如果是 **iOS 10** 以上的，完全可以用 `os_unfair_lock` 取代 `OSSpinLock` ，**等待 `os_unfair_lock` 锁的线程会处于休眠状态，从用户态切换到内核态**，而并非忙等。
