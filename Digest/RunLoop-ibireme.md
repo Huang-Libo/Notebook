@@ -51,7 +51,7 @@ macOS/iOS 系统中，提供了两个这样的对象：`NSRunLoop` 和 `CFRunLoo
 
 **线程和 RunLoop 之间是一一对应的**，其关系是保存在一个全局的 Dictionary 里。线程刚创建时并没有 RunLoop ，如果不主动获取，那它一直都不会有。RunLoop 的创建是发生在第一次获取时，RunLoop 的销毁是发生在线程结束时。你只能在一个线程的内部获取其 RunLoop（主线程除外）。
 
-苹果不允许直接创建 RunLoop，它只提供了两个自动获取的函数：`CFRunLoopGetMain()` 和 `CFRunLoopGetCurrent()` ，这两个函数内部的逻辑大概是下面这样:
+苹果不允许直接创建 RunLoop ，它只提供了两个自动获取的函数：`CFRunLoopGetMain()` 和 `CFRunLoopGetCurrent()` ，这两个函数内部的逻辑大概是下面这样:
 
 【代码说明：或许需要更新一下？ 施工中 🚧】
 
@@ -121,13 +121,13 @@ iOS 开发中能遇到两个线程对象: `pthread_t` 和 `NSThread` 。过去�
 
 <img src="../media/Digest/RunLoop-ibireme/RunLoop-mode.png" width="400"/>
 
-一个 RunLoop 包含若干个 Mode，每个 Mode 又包含若干个 Source / Timer / Observer 。每次调用 RunLoop 的主函数时，只能指定其中一个 Mode ，这个Mode 被称作 `CurrentMode` 。如果需要切换 Mode ，只能退出 Loop ，再重新指定一个 Mode 进入。这样做主要是为了分隔开不同组的 Source / Timer / Observer ，让其互不影响。
+一个 RunLoop 包含若干个 Mode，每个 Mode 又包含若干个 Source / Timer / Observer 。每次调用 RunLoop 的主函数时，只能指定其中一个 Mode ，这个Mode 被称作 `currentMode` 。如果需要切换 Mode ，只能退出 Loop ，再重新指定一个 Mode 进入。这样做主要是为了分隔开不同组的 Source / Timer / Observer ，让其互不影响。
 
 ### 1. CFRunLoopSourceRef
 
 `CFRunLoopSourceRef` 是事件产生的地方。Source 有两个版本：`Source0` 和 `Source1` ：
 
-- `Source0` 只包含了一个回调（名为 `perform` 的函数指针），**它不能主动触发事件**。使用时，需要先调用 `CFRunLoopSourceSignal(source)` ，将这个 Source 标记为待处理，然后手动调用 `CFRunLoopWakeUp(runloop)` 来唤醒 RunLoop，让其处理这个事件。
+- `Source0` 只包含了一个回调（名为 `perform` 的函数指针），**它不能主动触发事件**。使用时，需要先调用 `CFRunLoopSourceSignal(source)` ，将这个 Source 标记为待处理，然后手动调用 `CFRunLoopWakeUp(runloop)` 来唤醒 RunLoop ，让其处理这个事件。
 - `Source1` 除了包含了一个回调（名为 `perform` 的函数指针），还包含一个名为 `getPort` 的函数指针，其返回值是 `mach_port_t` 类型的。因此 **source1 可被用于通过内核和其他进程相互发送消息，这种 Source 能主动唤醒 RunLoop 的线程**，其原理在下面会讲到。
 
 ### 2. CFRunLoopTimerRef
@@ -153,9 +153,17 @@ typedef CF_OPTIONS(CFOptionFlags, CFRunLoopActivity) {
 
 ## RunLoop 的 Mode
 
-`CFRunLoopMode` 和 `CFRunLoop` 的结构大致如下：
+`CFRunLoop` 和 `CFRunLoopMode` 的结构大致如下：
 
-```c
+```c 
+struct __CFRunLoop {
+    CFMutableSetRef _commonModes;     // Set
+    CFMutableSetRef _commonModeItems; // Set<Source/Observer/Timer>
+    CFRunLoopModeRef _currentMode;    // Current Runloop Mode
+    CFMutableSetRef _modes;           // Set
+    ...
+};
+
 struct __CFRunLoopMode {
     CFStringRef _name;            // Mode Name, 例如 @"kCFRunLoopDefaultMode"
     CFMutableSetRef _sources0;    // Set
@@ -164,21 +172,23 @@ struct __CFRunLoopMode {
     CFMutableArrayRef _timers;    // Array
     ...
 };
- 
-struct __CFRunLoop {
-    CFMutableSetRef _commonModes;     // Set
-    CFMutableSetRef _commonModeItems; // Set<Source/Observer/Timer>
-    CFRunLoopModeRef _currentMode;    // Current Runloop Mode
-    CFMutableSetRef _modes;           // Set
-    ...
-};
 ```
 
-这里有个概念叫 “commonModes” ：一个 Mode 可以将自己标记为 ”common” 属性（通过将其 ModeName 添加到 RunLoop 的 “commonModes” 中）。每当 RunLoop 的内容发生变化时，RunLoop 都会自动将 `_commonModeItems` 里的 Source / Observer / Timer 同步到具有 “common” 标记的所有 Mode 里。
+这里有个概念叫 `commonModes` ：一个 Mode 可以将自己标记为 ”common” 属性（通过将其 `_name` 添加到 RunLoop 的 `commonModes` 中）。**每当 RunLoop 的内容发生变化时，RunLoop 都会自动将 `_commonModeItems` 里的 Source / Observer / Timer 同步到具有 “common” 标记的所有 Mode 里。**
 
-应用场景举例：主线程的 RunLoop 里有两个预置的 Mode：`kCFRunLoopDefaultMode` 和 `UITrackingRunLoopMode` 。这两个 Mode 都已经被标记为 ”Common” 属性。DefaultMode 是 App 平时所处的状态，TrackingRunLoopMode 是追踪 ScrollView 滑动时的状态。当你创建一个 Timer 并加到 DefaultMode 时，Timer 会得到重复回调，但此时滑动一个TableView时，RunLoop 会将 mode 切换为 TrackingRunLoopMode，这时 Timer 就不会被回调，并且也不会影响到滑动操作。
+应用场景举例：
 
-有时你需要一个 Timer，在两个 Mode 中都能得到回调，一种办法就是将这个 Timer 分别加入这两个 Mode 。还有一种方式，就是将 Timer 加入到顶层的 RunLoop 的 “commonModeItems” 中。”commonModeItems” 被 RunLoop 自动更新到所有具有 ”common” 属性的 Mode 里去。
+**主线程的 RunLoop 里有两个预置的 Mode ，`kCFRunLoopDefaultMode` 和 `UITrackingRunLoopMode` 。这两个 Mode 都已经被标记为 “common” 属性。**
+
+- `DefaultMode` 是 App 平时所处的状态；
+- `TrackingRunLoopMode` 是追踪 `ScrollView` 滑动时的状态。
+
+当你创建一个 Timer 并加到 `DefaultMode` 时，Timer 会得到重复回调，但此时滑动一个 `UITableView` 时，RunLoop 会将 Mode 切换为 `TrackingRunLoopMode` ，这时 Timer 就不会被回调，并且也不会影响到滑动操作。
+
+有时你需要一个 Timer ，在两个 Mode 中都能得到回调，
+
+- 一种办法就是将这个 Timer 分别加入这两个 Mode ；
+- 还有一种方式，就是将 Timer 加入到顶层的 RunLoop 的 `commonModeItems` 中。`commonModeItems` 被 RunLoop 自动更新到所有具有 ”common” 属性的 Mode 里去。
 
 CFRunLoop对外暴露的管理 Mode 接口只有下面2个:
 
@@ -203,13 +213,13 @@ CFRunLoopRemoveTimer(CFRunLoopRef rl, CFRunLoopTimerRef timer, CFStringRef mode)
 
 苹果公开提供的 Mode 有两个：`kCFRunLoopDefaultMode` (`NSDefaultRunLoopMode`) 和 `UITrackingRunLoopMode`，你可以用这两个 Mode Name 来操作其对应的 Mode。
 
-同时苹果还提供了一个操作 common 标记的字符串：`kCFRunLoopCommonModes` (`NSRunLoopCommonModes`)，你可以用这个字符串来操作 Common Items，或标记一个 Mode 为 “Common” 。使用时注意区分这个字符串和其他 mode name。
+同时苹果还提供了一个操作 common 标记的字符串：`kCFRunLoopCommonModes` (`NSRunLoopCommonModes`)，你可以用这个字符串来操作 Common Items，或标记一个 Mode 为 “common” 。使用时注意区分这个字符串和其他 mode name。
 
 ## RunLoop 的内部逻辑
 
 根据苹果在[文档](https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/Multithreading/RunLoopManagement/RunLoopManagement.html#//apple_ref/doc/uid/10000057i-CH16-SW23)里的说明，RunLoop 内部的逻辑大致如下：
 
-【说明：原文的图有错误，唤醒 RunLoop 的应该是 Source1 ，此图已修正】
+> 说明：原文的图有错误，唤醒 RunLoop 的应该是 **Source1** ，此图已修正。
 
 ![RunLoop-step.png](../media/Digest/RunLoop-ibireme/RunLoop-step.png)
 
@@ -258,7 +268,7 @@ int CFRunLoopRunSpecific(runloop, modeName, seconds, stopAfterHandle) {
             // 5. 如果有 Source1 (基于 port ) 处于 ready 状态，直接处理这个 Source1 然后跳转去处理消息。
             if (__Source0DidDispatchPortLastTime) {
                 Boolean hasMsg = __CFRunLoopServiceMachPort(dispatchPort, &msg)
-                if (hasMsg) goto handle_msg;
+                if (hasMsg) goto handle_msg; // 跳转到第 9 步
             }
             
             // 通知 Observers : RunLoop 的线程即将进入休眠(sleep)。
@@ -272,13 +282,14 @@ int CFRunLoopRunSpecific(runloop, modeName, seconds, stopAfterHandle) {
             // • RunLoop 自身的超时时间到了
             // • 被其他什么调用者手动唤醒
             __CFRunLoopServiceMachPort(waitSet, &msg, sizeof(msg_buffer), &livePort) {
-                mach_msg(msg, MACH_RCV_MSG, port); // thread wait for receive msg
+                // 线程休眠：thread wait for receive msg
+                mach_msg(msg, MACH_RCV_MSG, port); 
             }
  
             // 8. 通知 Observers: RunLoop 的线程刚刚被唤醒了。
             __CFRunLoopDoObservers(runloop, currentMode, kCFRunLoopAfterWaiting);
             
-            // 收到消息，处理消息。
+            // 9. 收到消息，处理消息。
             handle_msg:
  
             if (msg_is_timer) {
@@ -383,7 +394,7 @@ mach_msg_return_t mach_msg(
 
 <img src="../media/Digest/RunLoop-ibireme/mach_msg.png" width="400"/>
 
-RunLoop 的核心就是一个 `mach_msg()`（见上面代码的第7步），RunLoop 调用这个函数去接收消息，**如果没有别人发送 port 消息过来，内核会将线程置于等待状态**。例如你在模拟器里跑起一个 iOS 的 App，然后在 App 静止时点击暂停，你会看到主线程调用栈是停留在 `mach_msg_trap()` 这个地方。
+RunLoop 的核心就是一个 `mach_msg()`（见上面代码的第 7 步），RunLoop 调用这个函数去接收消息，**如果没有别人发送 port 消息过来，内核会将线程置于等待状态**。例如你在模拟器里跑起一个 iOS 的 App ，然后在 App 静止时点击暂停，你会看到主线程调用栈是停留在 `mach_msg_trap()` 这个地方。
 
 关于具体的如何利用 mach port 发送信息，可以看看 [NSHipster 这一篇文章](https://nshipster.com/inter-process-communication/)，或者[这里](https://segmentfault.com/a/1190000002400329)的中文翻译 。
 
@@ -404,7 +415,6 @@ CFRunLoop {
     }
  
     common mode items = {
- 
         // source0 (manual)
         CFRunLoopSource {order =-1, {
             callout = _UIApplicationHandleEventQueue}}
@@ -503,9 +513,9 @@ CFRunLoop {
 2. `UITrackingRunLoopMode` : 界面跟踪 Mode ，用于 `ScrollView` 追踪触摸滑动，保证界面滑动时不受其他 Mode 影响。
 3. `UIInitializationRunLoopMode` : 在刚启动 App 时第进入的第一个 Mode ，启动完成后就不再使用。
 4. `GSEventReceiveRunLoopMode` : 接受系统事件的内部 Mode，通常用不到。
-5. `kCFRunLoopCommonModes` : 这是一个占位的 Mode ，没有实际作用。
+5. `kCFRunLoopCommonModes` : ~~这是一个占位的 Mode ，没有实际作用~~。【待更新。施工中 🚧】
 
-你可以在[这里](http://iphonedevwiki.net/index.php/CFRunLoop)看到更多的苹果内部的 Mode，但那些 Mode 在开发中就很难遇到了。
+你可以在[这里](http://iphonedevwiki.net/index.php/CFRunLoop)看到更多的苹果内部的 Mode ，但那些 Mode 在开发中就很难遇到了。
 
 **当 RunLoop 进行回调时，一般都是通过一个很长的函数调用出去 (call out)**, 当你在你的代码中下断点调试时，通常能在调用栈上看到这些函数。下面是这几个函数的整理版本，如果你在调用栈中看到这些长函数名，在这里查找一下就能定位到具体的调用地点了：
 
@@ -578,11 +588,11 @@ static void __CFRUNLOOP_IS_CALLING_OUT_TO_AN_OBSERVER_CALLBACK_FUNCTION__();
 
 ### 2. 事件响应
 
-苹果注册了一个 `source1` (是基于 mach port 的) 用来（在 App 中）接收系统事件，其回调函数为 `__IOHIDEventSystemClientQueueCallback()` 。
+App 启动时， 系统库为 App 注册了一个 `source1` (是基于 mach port 的) 用来（在 App 中）接收系统事件，其回调函数为 `__IOHIDEventSystemClientQueueCallback()` 。
 
 当一个硬件事件（触摸/锁屏/摇晃/远程控制【比如耳机线控】等）发生后，首先由 `IOKit.framework` 生成一个 `IOHIDEvent` 事件并由 SpringBoard 接收。这个过程的详细情况可以参考[这里](https://iphonedev.wiki/index.php/IOHIDFamily)。
 
-SpringBoard 只接收按键（锁屏/静音等）、触摸、加速、接近传感器等几种 Event，随后**用 mach port 转发给需要的 App 进程**。随后苹果注册的那个 `source1` 就会触发回调，并调用 `_UIApplicationHandleEventQueue()` 进行 App 内部的分发。
+SpringBoard 只接收按键（锁屏/静音等）、触摸、加速、接近传感器等几种 Event，随后**用 mach port 转发给需要的 App 进程**。随后，系统库为 App 注册的那个 `source1` 就会触发回调，并调用 `_UIApplicationHandleEventQueue()` 进行 App 内部的分发。
 
 `_UIApplicationHandleEventQueue()` 会把 `IOHIDEvent` 处理并包装成 `UIEvent` 进行处理或分发，其中包括识别手势、处理屏幕旋转、发送给 `UIWindow` 等。通常事件比如 `UIButton` 点击、touchesBegin / Move / End / Cancel 事件都是在这个回调中完成的。
 
@@ -638,7 +648,7 @@ _ZN2CA11Transaction17observer_callbackEP19__CFRunLoopObservermPv()
 
 ### 7. 关于 GCD
 
-`NSTimer` 是用了 XNU 内核的 `mk_timer` ，而非 GCD 的 `dispatch_source_t` 驱动的）。但 GCD 提供的某些接口也用到了 RunLoop ， 例如 `dispatch_async()` 。
+`NSTimer` 是用了 XNU 内核的 `mk_timer` ，而非 GCD 的 `dispatch_source_t` 驱动的。但 GCD 提供的某些接口也用到了 RunLoop ， 例如 `dispatch_async()` 。
 
 当调用 `dispatch_async(dispatch_get_main_queue(), block)` 时，`libDispatch` 会向主线程的 RunLoop 发送消息，RunLoop 会被唤醒，并从消息中取得这个 block ，并在回调 `__CFRUNLOOP_IS_SERVICING_THE_MAIN_DISPATCH_QUEUE__()` 里执行这个 block 。但**这个逻辑仅限于 dispatch 到主线程，dispatch 到其他线程仍然是由 libDispatch 处理的**。
 
@@ -725,7 +735,7 @@ RunLoop 启动前内部必须要有至少一个 Timer / Observer / Source ，所
 UI 线程中一旦出现繁重的任务就会导致界面卡顿，这类任务通常分为 3 类：**排版、绘制、UI 对象操作**。
 
 - **排版**通常包括计算视图大小、计算文本高度、重新计算子视图的排版等操作。
-- **绘制**一般有文本绘制 (例如 `CoreText` )、图片绘制（例如预先解压）、元素绘制 (`Quartz`) 等操作。
+- **绘制**一般有文本绘制 (例如 `CoreText` )、图片绘制（例如预先解码）、元素绘制 (`Quartz`) 等操作。
 - **UI 对象操作**通常包括 `UIView` / `CALayer` 等 UI 对象的创建、设置属性和销毁。
 
 其中**前两类操作可以通过各种方法扔到子线程执行，而最后一类操作只能在主线程完成**，并且有时后面的操作需要依赖前面操作的结果（例如 `TextView` 创建时可能需要提前计算出文本的大小）。
