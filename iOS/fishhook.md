@@ -1,4 +1,4 @@
-# fishhook & PIC
+# 探索 fishhook 的实现原理 & 位置无关代码
 
 ## 资料说明
 
@@ -674,8 +674,227 @@ Xcode GUI 操作起来比较直观，界面的可读性更强，也能跟踪断�
   - 因为内部符号的地址偏移量在编译时就确定了，存储在 Mach-O 文件的 `__TEXT` 段。由于 `__TEXT` 段是只读的，且会进行代码签名验证，因此是不能修改的。
   - （启动阶段 dyld 执行 rebase 的时候，dyld 给指针地址加上偏移量就是指针的真实地址。这个过程是在 pre-main 阶段由 dyld 执行的，我们无法干预。）
 - **外部符号可以被 hook** ，比如系统动态库的 C 函数。
-  - 如果代码中使用了外部符号，由于编译器在生成 Mach-O 可执行文件时无法知道该函数的实际地址，因此会插入一个 **stub**（符号桩）。**stub** 存储在 Mach-O 文件的 `(__DATA,__la_symbol_ptr)` 或 `(__DATA_CONST,__got)` 中。 `__la_symbol_ptr` 在第一次调用符号时，会通过 `dyld_stub_binder` 去查找符号的真实地址并完成**符号绑定 (symbol bind)**。
+  - 如果代码中有外部符号，由于编译器在生成 Mach-O 可执行文件时无法知道该函数的实际地址，因此会插入一个 **stub**（符号桩）。**stub** 存储在 Mach-O 文件的 `(__DATA,__la_symbol_ptr)` 或 `(__DATA_CONST,__got)` 中。其中， `__la_symbol_ptr` 在第一次调用符号时，会通过 `dyld_stub_binder` 去查找符号的真实地址并完成**符号绑定 (symbol bind)**。
 
+## fishhook 源码分析
+
+> 在[我 Fork 的项目](https://github.com/Huang-Libo/fishhook/blob/main/fishhook.c)中可以查看带注释的源码。
+
+基于前面的分析，我们来看看 fishhook 是如何替换 `(__DATA_CONST,__got)` 或 `(__DATA,__la_symbol_ptr)` 中的外部符号的地址的。
+
+### 公开接口：`rebind_symbols()`
+
+常用的入口函数是：
+
+```c
+/// 说明: 这个方法会对当前进程中所有的 image 执行指定符号重绑定
+/// @param rebindings 结构体数组, 存储的元素是 `struct rebinding`
+/// @param rebindings_nel 结构体数组的元素个数
+int rebind_symbols(struct rebinding rebindings[], size_t rebindings_nel)  ;
+```
+
+其中 `struct rebinding` 结构体的声明是：
+
+```c
+struct rebinding { // 这个结构体存储着重绑定一个符号需要的所有信息
+  const char *name; // 需要被 hook 的函数名
+  void *replacement; // 自定义的函数, 用于替换原函数
+  void **replaced; // 用于存储`原始的`函数指针, 因此需使用二级指针
+};
+```
+
+### 单链表：`rebindings_entry`
+
+在 fishhook 内部维护了一个单链表，链表节点的声明是：
+
+```c
+// 单链表的节点
+struct rebindings_entry {
+  struct rebinding *rebindings; // struct rebinding 数组
+  size_t rebindings_nel; // struct rebinding 数组的长度
+  struct rebindings_entry *next; // 下一个节点的地址
+};
+```
+
+并声明了链表的头结点 `_rebindings_head` ：
+
+```c
+// 单链表的头结点
+static struct rebindings_entry *_rebindings_head;
+```
+
+fishhook 内部维护一个单链表的原因：
+
+- 如果不保存重绑定信息，当新的 image 载入时，之前的设置的符号重绑定就对新载入的 image 不起作用了。  
+- 因此每次调用 `rebind_symbols()` 时，都需要把传入的重绑定信息（也就是 `struct rebinding` 数组） 存在链表中，当有新的 image 载入时，就能遍历链表对新载入的 image 进行 hook 。
+
+### 构建单链表：`prepend_rebindings()`
+
+每次调用 `rebind_symbols()` 时，会先调用 `prepend_rebindings()` 来创建链表节点，且新节点添加到链表的前面：
+
+```c
+/// 创建新节点, 并加入到单链表中
+/// @param rebindings_head 单链表的头结点
+/// @param rebindings 是 struct rebinding 数组
+/// @param nel struct 是 rebinding 数组 的长度
+static int prepend_rebindings(struct rebindings_entry **rebindings_head,
+                              struct rebinding rebindings[],
+                              size_t nel) {
+  // 构建新的链表节点
+  struct rebindings_entry *new_entry = (struct rebindings_entry *) malloc(sizeof(struct rebindings_entry));
+  if (!new_entry) {
+      return -1;
+  }
+  // 构建新的 struct rebinding 数组
+  new_entry->rebindings = (struct rebinding *) malloc(sizeof(struct rebinding) * nel);
+  if (!new_entry->rebindings) {
+    free(new_entry);
+    return -1;
+  }
+  // struct rebinding 数组
+  memcpy(new_entry->rebindings, rebindings, sizeof(struct rebinding) * nel);
+  new_entry->rebindings_nel = nel;
+  // 新的节点放在链表的前面
+  new_entry->next = *rebindings_head;
+  // 头结点指向新加入的节点
+  *rebindings_head = new_entry;
+  return 0;
+}
+```
+
+### `rebind_symbols()` 的实现
+
+再看 `rebind_symbols()` 的具体实现。
+
+- 链表中只有一个节点，说明是第一次进行重绑定，因此需要对已加载的
+- 链表中有多个节点，说明是
+
+- `_dyld_register_func_for_add_image()` ：为每个现有的 image 调用回调函数。此后，在加载和绑定每个新 image 时调用该回调函数。这里给传入的回调函数是 `_rebind_symbols_for_image()` 。
+- `_rebind_symbols_for_image()` ：
+
+```c
+// 这个函数最终会调用 `rebind_symbols_for_image()` 函数
+int rebind_symbols(struct rebinding rebindings[], size_t rebindings_nel) {
+  // 调用 `prepend_rebindings()` 来构建单链表,
+  // 如果是第一次调用 `rebind_symbols()` , 则构建的单链表中只有一个节点
+  int retval = prepend_rebindings(&_rebindings_head, rebindings, rebindings_nel);
+  if (retval < 0) {
+    return retval;
+  }
+  // If this was the first call, register callback for image additions
+  // (which is also invoked for existing images,
+  //  otherwise, just run on existing images)
+  if (!_rebindings_head->next) {
+    // 1. 单链表中只有一个节点时, 说明是第一次调用 `rebind_symbols()` ,
+    //    因此需要调用 `_dyld_register_func_for_add_image()` 注册回调函数
+    // 文档: During a call to `_dyld_register_func_for_add_image()` ,
+    //      the callback func is called for every existing image.
+    //      Later, it is called as each new image is loaded and bound
+    // 解读: 在调用 `_dyld_register_func_for_add_image()` 期间，
+    //      会为每个现有的 image 调用回调函数。
+    //      此后, 在加载和绑定每个新 image 时调用该回调函数.
+    // 问题: dyld 怎么给这个回调函数传参的?
+    _dyld_register_func_for_add_image(_rebind_symbols_for_image);
+  } else {
+    // 2. 单链表中有多个元素, 说明不是第一次调用 `rebind_symbols()` ,
+    //    此时需要对已加载的 image 执行符号的重绑定
+    uint32_t c = _dyld_image_count();
+    for (uint32_t i = 0; i < c; i++) {
+      _rebind_symbols_for_image(_dyld_get_image_header(i), _dyld_get_image_vmaddr_slide(i));
+    }
+  }
+  return retval;
+}
+```
+
+### `rebind_symbols_for_image`
+
+`rebind_symbols` 最终会调用 `_rebind_symbols_for_image` 函数，而它又调用了 `rebind_symbols_for_image` 函数：
+
+### Mach-O 中的数据结构
+
+xnu 的 
+
+以 64-bit 为例。
+
+`mach_header_64` 结构体：
+
+```c
+/*
+ * The 64-bit mach header appears at the very beginning of object files for
+ * 64-bit architectures.
+ */
+struct mach_header_64 {
+	uint32_t	magic;		/* mach magic number identifier */
+	cpu_type_t	cputype;	/* cpu specifier */
+	cpu_subtype_t	cpusubtype;	/* machine specifier */
+	uint32_t	filetype;	/* type of file */
+	uint32_t	ncmds;		/* number of load commands */
+	uint32_t	sizeofcmds;	/* the size of all the load commands */
+	uint32_t	flags;		/* flags */
+	uint32_t	reserved;	/* reserved */
+};
+```
+
+`segment_command_64` 结构体：
+
+```c
+/*
+ * The 64-bit segment load command indicates that a part of this file is to be
+ * mapped into a 64-bit task's address space.  If the 64-bit segment has
+ * sections then section_64 structures directly follow the 64-bit segment
+ * command and their size is reflected in cmdsize.
+ */
+struct segment_command_64 { /* for 64-bit architectures */
+	uint32_t	cmd;		/* LC_SEGMENT_64 */
+	uint32_t	cmdsize;	/* includes sizeof section_64 structs */
+	char		segname[16];	/* segment name */
+	uint64_t	vmaddr;		/* memory address of this segment */
+	uint64_t	vmsize;		/* memory size of this segment */
+	uint64_t	fileoff;	/* file offset of this segment */
+	uint64_t	filesize;	/* amount to map from the file */
+	vm_prot_t	maxprot;	/* maximum VM protection */
+	vm_prot_t	initprot;	/* initial VM protection */
+	uint32_t	nsects;		/* number of sections in segment */
+	uint32_t	flags;		/* flags */
+};
+```
+
+`section_64` 结构体：
+
+```c
+struct section_64 { /* for 64-bit architectures */
+	char		sectname[16];	/* name of this section */
+	char		segname[16];	/* segment this section goes in */
+	uint64_t	addr;		/* memory address of this section */
+	uint64_t	size;		/* size in bytes of this section */
+	uint32_t	offset;		/* file offset of this section */
+	uint32_t	align;		/* section alignment (power of 2) */
+	uint32_t	reloff;		/* file offset of relocation entries */
+	uint32_t	nreloc;		/* number of relocation entries */
+	uint32_t	flags;		/* flags (section type and attributes)*/
+	uint32_t	reserved1;	/* reserved (for offset or index) */
+	uint32_t	reserved2;	/* reserved (for count or sizeof) */
+	uint32_t	reserved3;	/* reserved */
+};
+```
+
+`nlist_64` 结构体：
+
+```c
+/*
+ * This is the symbol table entry structure for 64-bit architectures.
+ */
+struct nlist_64 {
+    union {
+        uint32_t  n_strx; /* index into the string table */
+    } n_un;
+    uint8_t n_type;        /* type flag, see below */
+    uint8_t n_sect;        /* section number or NO_SECT */
+    uint16_t n_desc;       /* see <mach-o/stab.h> */
+    uint64_t n_value;      /* value of this symbol (or stab offset) */
+};
+```
 
 ## 参考资料
 
