@@ -22,6 +22,9 @@
     - [1. 纹理的渲染](#1-纹理的渲染)
     - [2. 视图的混合 (Composing)](#2-视图的混合-composing)
     - [3. 图形的生成](#3-图形的生成)
+  - [AsyncDisplayKit](#asyncdisplaykit)
+    - [ASDK 的由来](#asdk-的由来)
+    - [ASDK 的基本原理](#asdk-的基本原理)
 
 ## 演示项目
 
@@ -173,3 +176,52 @@ dispatch_async(queue, ^{
 为了避免这种情况，可以尝试开启 `CALayer.shouldRasterize` 属性，但这会把原本离屏渲染的操作转嫁到 CPU 上去。对于只需要圆角的某些场合，也可以用一张已经绘制好的圆角图片覆盖到原本视图上面来模拟相同的视觉效果。
 
 **最彻底的解决办法，就是把需要显示的图形在子线程绘制为图片，避免使用圆角、阴影、遮罩等属性。**
+
+## AsyncDisplayKit
+
+### ASDK 的由来
+
+ASDK 的作者是 Scott Goodson ，他曾经在苹果工作，负责 iOS 的一些内置应用的开发，比如股票、计算器、地图、钟表、设置、Safari 等，当然他也参与了 `UIKit` framework 的开发。
+
+后来他加入 Facebook 后，负责 Paper 的开发，创建并开源了 `AsyncDisplayKit` 。目前他在 Pinterest 和 Instagram 负责 iOS 开发和用户体验的提升等工作。
+
+### ASDK 的基本原理
+
+<img src="../media/Digest/ibireme/smooth-user-interface/ASDK-design.png" width="70%"/>
+
+ASDK 认为，阻塞主线程的任务，主要分为上面这三大类（布局、渲染、操作 UI 对象）。文本和布局的计算、渲染、解码、绘制都可以通过各种方式异步执行，但 `UIKit` 和 `Core Animation` 相关操作必需在主线程进行。ASDK 的目标，就是尽量把这些任务从主线程挪走，而挪不走的，就尽量优化性能。
+
+先看 `UIView` 和 `CALayer` 的关系：
+
+<img src="../media/Digest/ibireme/smooth-user-interface/ASDK-layer-backed-view.png" width="60%"/>
+
+可看出：
+
+- `view` 持有 `layer` 用于显示，`view` 中大部分显示属性实际是从 `layer` 映射而来；
+- `layer` 的 `delegate` 在这里是 `view` ，当其属性改变、动画产生时，`view` 能够得到通知。
+
+`UIView` 和 `CALayer` 不是线程安全的，并且只能在**主线程**创建、访问和销毁。
+
+ASDK 尝试对 `UIKit` 组件进行封装：
+
+**1. view backed node：**
+
+![ASDK-view-backed-node.png](../media/Digest/ibireme/smooth-user-interface/ASDK-view-backed-node.png)
+
+ASDK 为此创建了 `ASDisplayNode` 类，包装了常见的视图属性（比如 `frame` / `bounds` / `alpha` / `transform` / `backgroundColor` / `superNode` / `subNodes` 等），然后它用 `UIView` -> `CALayer` 相同的方式，实现了 `ASNode` -> `UIView` 这样一个关系。
+
+**2. view backed node：**
+
+<img src="../media/Digest/ibireme/smooth-user-interface/ASDK-layer-backed-node.png" width="60%"/>
+
+当不需要响应触摸事件时，`ASDisplayNode` 可以被设置为 *layer backed* ，即 `ASDisplayNode` 充当了原来 `UIView` 的功能，节省了更多资源。
+
+**`ASDisplayNode` 的特点**：
+
+- 与 `UIView` 和 `CALayer` 不同，`ASDisplayNode` 是线程安全的，它可以在子线程创建和修改。
+- `Node` 刚创建时，并不会在内部新建 `UIView` 和 `CALayer` ，直到第一次在主线程访问 `view` 或 `layer` 属性时，它才会在内部生成对应的对象。
+- 当它的属性（比如 `frame` / `transform` ）改变后，它并不会立刻同步到其持有的 `view` 或 `layer` 去，而是把被改变的属性保存到内部的一个中间变量，稍后在需要时，再通过某个机制一次性设置到内部的 `view` 或 `layer` 。
+
+通过模拟和封装 `UIView` / `CALayer`，开发者可以把代码中的 `UIView` 替换为 `ASNode` ，很大的降低了开发和学习成本，同时能获得 ASDK 底层大量的性能优化。
+
+为了方便使用， ASDK 把大量常用控件都封装成了 `ASNode` 的子类，比如 `Button` 、`Control` 、`Cell` 、`Image` 、`ImageView` 、`Text` 、`TableView` 、`CollectionView` 等。利用这些控件，开发者可以尽量避免直接使用 `UIKit` 相关控件，以获得更完整的性能提升。
