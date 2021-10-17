@@ -9,26 +9,26 @@
   - [RunLoop 的概念](#runloop-的概念)
   - [RunLoop 与线程的关系](#runloop-与线程的关系)
   - [RunLoop 对外的接口](#runloop-对外的接口)
-    - [CFRunLoopModeRef](#cfrunloopmoderef)
-    - [CFRunLoopSourceRef](#cfrunloopsourceref)
-    - [CFRunLoopTimerRef](#cfrunlooptimerref)
-    - [CFRunLoopObserverRef](#cfrunloopobserverref)
+    - [0. CFRunLoopModeRef](#0-cfrunloopmoderef)
+    - [1. CFRunLoopSourceRef](#1-cfrunloopsourceref)
+    - [2. CFRunLoopTimerRef](#2-cfrunlooptimerref)
+    - [3. CFRunLoopObserverRef](#3-cfrunloopobserverref)
   - [RunLoop 的 Mode](#runloop-的-mode)
   - [RunLoop 的内部逻辑](#runloop-的内部逻辑)
   - [RunLoop 的底层实现](#runloop-的底层实现)
   - [苹果用 RunLoop 实现的功能](#苹果用-runloop-实现的功能)
-    - [App 启动后 RunLoop 的状态](#app-启动后-runloop-的状态)
-    - [AutoreleasePool](#autoreleasepool)
-    - [事件响应](#事件响应)
-    - [手势识别](#手势识别)
-    - [界面更新](#界面更新)
-    - [定时器](#定时器)
-    - [PerformSelecter](#performselecter)
-    - [关于 GCD](#关于-gcd)
-    - [关于网络请求](#关于网络请求)
+    - [0. App 启动后 RunLoop 的状态](#0-app-启动后-runloop-的状态)
+    - [1. AutoreleasePool](#1-autoreleasepool)
+    - [2. 事件响应](#2-事件响应)
+    - [3.手势识别](#3手势识别)
+    - [4. 界面更新](#4-界面更新)
+    - [5. 定时器](#5-定时器)
+    - [6. PerformSelecter](#6-performselecter)
+    - [7. 关于 GCD](#7-关于-gcd)
+    - [8. 关于网络请求](#8-关于网络请求)
   - [RunLoop 的实际应用举例](#runloop-的实际应用举例)
-    - [AFNetworking 2.x](#afnetworking-2x)
-    - [AsyncDisplayKit](#asyncdisplaykit)
+    - [1. AFNetworking 2.x](#1-afnetworking-2x)
+    - [2. AsyncDisplayKit](#2-asyncdisplaykit)
 
 ## RunLoop 的源码
 
@@ -115,7 +115,7 @@ iOS 开发中能遇到两个线程对象: `pthread_t` 和 `NSThread` 。过去�
 - `CFRunLoopTimerRef`
 - `CFRunLoopObserverRef`
 
-### CFRunLoopModeRef
+### 0. CFRunLoopModeRef
 
 其中 `CFRunLoopModeRef` 类并没有对外暴露，只是通过 `CFRunLoopRef` 的接口进行了封装。他们的关系如下:
 
@@ -123,18 +123,18 @@ iOS 开发中能遇到两个线程对象: `pthread_t` 和 `NSThread` 。过去�
 
 一个 RunLoop 包含若干个 Mode，每个 Mode 又包含若干个 Source / Timer / Observer 。每次调用 RunLoop 的主函数时，只能指定其中一个 Mode ，这个Mode 被称作 `CurrentMode` 。如果需要切换 Mode ，只能退出 Loop ，再重新指定一个 Mode 进入。这样做主要是为了分隔开不同组的 Source / Timer / Observer ，让其互不影响。
 
-### CFRunLoopSourceRef
+### 1. CFRunLoopSourceRef
 
 `CFRunLoopSourceRef` 是事件产生的地方。Source 有两个版本：`Source0` 和 `Source1` ：
 
 - `Source0` 只包含了一个回调（名为 `perform` 的函数指针），**它不能主动触发事件**。使用时，需要先调用 `CFRunLoopSourceSignal(source)` ，将这个 Source 标记为待处理，然后手动调用 `CFRunLoopWakeUp(runloop)` 来唤醒 RunLoop，让其处理这个事件。
 - `Source1` 除了包含了一个回调（名为 `perform` 的函数指针），还包含一个名为 `getPort` 的函数指针，其返回值是 `mach_port_t` 类型的。因此 **source1 可被用于通过内核和其他进程相互发送消息，这种 Source 能主动唤醒 RunLoop 的线程**，其原理在下面会讲到。
 
-### CFRunLoopTimerRef
+### 2. CFRunLoopTimerRef
 
 `CFRunLoopTimerRef` 是基于时间的触发器，它和 `NSTimer` 是 *toll-free bridged* 的，可以混用。其包含一个时间长度和一个回调（函数指针）。当其加入到 RunLoop 时，RunLoop 会注册对应的时间点，当时间点到时，RunLoop 会被唤醒以执行那个回调。
 
-### CFRunLoopObserverRef
+### 3. CFRunLoopObserverRef
 
 `CFRunLoopObserverRef` 是观察者，每个 Observer 都包含了一个回调（函数指针），当 RunLoop 的状态发生变化时，观察者就能通过回调接受到这个变化。可以观测的时间点有以下几个：
 
@@ -387,7 +387,7 @@ RunLoop 的核心就是一个 `mach_msg()`（见上面代码的第7步），RunL
 
 ## 苹果用 RunLoop 实现的功能
 
-### App 启动后 RunLoop 的状态
+### 0. App 启动后 RunLoop 的状态
 
 首先我们可以看一下 App 启动后 RunLoop 的状态：
 
@@ -563,7 +563,7 @@ static void __CFRUNLOOP_IS_CALLING_OUT_TO_A_SOURCE1_PERFORM_FUNCTION__();
 static void __CFRUNLOOP_IS_CALLING_OUT_TO_AN_OBSERVER_CALLBACK_FUNCTION__();
 ```
 
-### AutoreleasePool
+### 1. AutoreleasePool
 
 **App 启动后，苹果在主线程 RunLoop 里注册了两个 Observer**，其回调都是 `_wrapRunLoopWithAutoreleasePoolHandler()` 。
 
@@ -574,7 +574,7 @@ static void __CFRUNLOOP_IS_CALLING_OUT_TO_AN_OBSERVER_CALLBACK_FUNCTION__();
 
 在**主线程**执行的代码，通常是写在诸如事件回调、Timer 回调内的。这些回调会被 RunLoop 创建好的 `AutoreleasePool` 环绕着，所以不会出现内存泄漏，开发者也不必显示创建 Pool 了。
 
-### 事件响应
+### 2. 事件响应
 
 苹果注册了一个 `source1` (是基于 mach port 的) 用来（在 App 中）接收系统事件，其回调函数为 `__IOHIDEventSystemClientQueueCallback()` 。
 
@@ -584,7 +584,7 @@ SpringBoard 只接收按键（锁屏/静音等）、触摸、加速、接近传�
 
 `_UIApplicationHandleEventQueue()` 会把 `IOHIDEvent` 处理并包装成 `UIEvent` 进行处理或分发，其中包括识别手势、处理屏幕旋转、发送给 `UIWindow` 等。通常事件比如 `UIButton` 点击、touchesBegin / Move / End / Cancel 事件都是在这个回调中完成的。
 
-### 手势识别
+### 3.手势识别
 
 当上面的 `_UIApplicationHandleEventQueue()` 识别了一个手势时，其首先会**调用 Cancel 将当前的 touchesBegin / Move / End 系列回调打断**。随后系统将对应的 `UIGestureRecognizer` 标记为待处理。
 
@@ -592,7 +592,7 @@ SpringBoard 只接收按键（锁屏/静音等）、触摸、加速、接近传�
 
 当有 `UIGestureRecognizer` 的变化（创建/销毁/状态改变）时，这个回调都会进行相应处理。
 
-### 界面更新
+### 4. 界面更新
 
 当在操作 UI 时，比如改变了 frame 、更新了 `UIView` / `CALayer` 的层次时，或者手动调用了 `UIView` / `CALayer` 的 `setNeedsLayout` / `setNeedsDisplay` 方法后，这个 `UIView` / `CALayer` 就被标记为**待处理**，并被提交到一个全局的容器去。
 
@@ -620,7 +620,7 @@ _ZN2CA11Transaction17observer_callbackEP19__CFRunLoopObservermPv()
                             [UIView drawRect];
 ```
 
-### 定时器
+### 5. 定时器
 
 `NSTimer` 其实就是 `CFRunLoopTimerRef` ，他们之间是 *toll-free bridged* 的。一个 `NSTimer` 注册到 RunLoop 后，RunLoop 会为其重复的时间点注册好事件。例如 10:00 、10:10 、10:20 这几个时间点。**RunLoop 为了节省资源，并不会在非常准确的时间点回调这个 Timer** 。Timer 有个属性叫做 `tolerance` (宽容度)，标示了当时间点到后，容许有多少最大误差。
 
@@ -628,19 +628,19 @@ _ZN2CA11Transaction17observer_callbackEP19__CFRunLoopObservermPv()
 
 `CADisplayLink` 是一个和屏幕刷新率一致的定时器（但实际实现原理更复杂，和 `NSTimer` 并不一样，其内部实际是操作了一个 Source ）。如果在两次屏幕刷新之间执行了一个长任务，那其中就会有一帧被跳过去（和 `NSTimer` 相似），造成界面卡顿的感觉。在快速滑动 TableView 时，即使一帧的卡顿也会让用户有所察觉。Facebook 开源的 `AsyncDisplayLink` 就是为了解决界面卡顿的问题，其内部也用到了 RunLoop ，这个稍后我会再单独写一页博客来分析。
 
-### PerformSelecter
+### 6. PerformSelecter
 
 当调用 `NSObject` 的 `performSelecter:afterDelay:` 后，实际上其内部会创建一个 Timer 并添加到当前线程的 RunLoop 中。所以**如果当前线程没有 RunLoop ，则这个方法会失效**。
 
 当调用 `performSelector:onThread:` 时，实际上其会创建一个 Timer 加到对应的线程去，**同样的，如果对应线程没有 RunLoop 该方法也会失效**。
 
-### 关于 GCD
+### 7. 关于 GCD
 
 `NSTimer` 是用了 XNU 内核的 `mk_timer` ，而非 GCD 的 `dispatch_source_t` 驱动的）。但 GCD 提供的某些接口也用到了 RunLoop ， 例如 `dispatch_async()` 。
 
 当调用 `dispatch_async(dispatch_get_main_queue(), block)` 时，`libDispatch` 会向主线程的 RunLoop 发送消息，RunLoop 会被唤醒，并从消息中取得这个 block ，并在回调 `__CFRUNLOOP_IS_SERVICING_THE_MAIN_DISPATCH_QUEUE__()` 里执行这个 block 。但**这个逻辑仅限于 dispatch 到主线程，dispatch 到其他线程仍然是由 libDispatch 处理的**。
 
-### 关于网络请求
+### 8. 关于网络请求
 
 iOS 中，关于网络请求的接口自下至上有如下几层：
 
@@ -671,7 +671,7 @@ NSURLSession    ->AFNetworking2+ , Alamofire
 
 ## RunLoop 的实际应用举例
 
-### AFNetworking 2.x
+### 1. AFNetworking 2.x
 
 `AFURLConnectionOperation` 这个类是基于 `NSURLConnection` 构建的，其希望能在**子线程**接收 `delegate` 回调。为此 AFNetworking 单独创建了一个子线程，并在这个线程中启动了一个 RunLoop ：
 
@@ -714,7 +714,7 @@ RunLoop 启动前内部必须要有至少一个 Timer / Observer / Source ，所
 
 当需要这个子线程执行任务时，AFNetworking 通过调用 `[NSObject performSelector:onThread:..]` 将这个任务扔到了子线程的 RunLoop 中。
 
-### AsyncDisplayKit
+### 2. AsyncDisplayKit
 
 > AsyncDisplayKit 已改名为 texture ，且换了个[仓库](https://github.com/texturegroup/texture/)。
 
