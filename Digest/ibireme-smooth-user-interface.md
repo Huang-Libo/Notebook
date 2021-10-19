@@ -40,9 +40,12 @@
 
 ## 屏幕显示图像的原理
 
-<img src="../media/Digest/ibireme/smooth-user-interface/ios_screen_scan.png" width="400"/>
-
 > CRT 显示器是一种使用阴极射线管 (Cathode Ray Tube) 的显示器
+
+<figure>
+    <img src="../media/Digest/ibireme/smooth-user-interface/ios_screen_scan.png" width="400"/>
+    <figcaption>蓝色的虚线表示水平同步信号；黄色的虚线表示垂直同步信号</figcaption>
+</figure>
 
 首先从过去的 CRT 显示器原理说起。CRT 的电子枪按照上面方式，从上到下一行行扫描，扫描完成后显示器就呈现一帧画面，随后电子枪回到初始位置继续下一次扫描。为了把显示器的显示过程和系统的`视频控制器`进行同步，显示器（或者其他硬件）会用硬件时钟产生一系列的定时信号。
 
