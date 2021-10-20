@@ -27,6 +27,7 @@
     - [ASDK 的基本原理](#asdk-的基本原理)
     - [ASDK 的图层预合成](#asdk-的图层预合成)
     - [ASDK 异步并发操作](#asdk-异步并发操作)
+    - [Runloop 任务分发](#runloop-任务分发)
 
 ## 演示项目
 
@@ -60,7 +61,7 @@
 
 通常来说，计算机系统中 CPU 、GPU 、显示器是以上面这种方式协同工作的。CPU 计算好显示内容提交到 GPU ，GPU 渲染完成后将渲染结果放入 **FrameBuffer（帧缓冲区）**，随后`视频控制器`会按照 `VSync` 信号逐行读取 `FrameBuffer` 的数据，经过可能的*数模转换*传递给显示器显示。
 
-在最简单的情况下， `FrameBuffer` 只有一个，这时 `FrameBuffer` 的读取和刷新都都会有比较大的效率问题。为了解决效率问题，显示系统通常会引入两个缓冲区，即**双缓冲机制**。在这种情况下，GPU 会预先渲染好一帧放入一个缓冲区内，让`视频控制器`读取，当下一帧渲染好后，GPU 会直接把`视频控制器`的指针指向第二个缓冲器。如此一来效率会有很大的提升。
+在最简单的情况下， `FrameBuffer` 只有一个，这时 `FrameBuffer` 的读取和刷新都都会有比较大的效率问题。为了解决效率问题，显示系统通常会引入两个缓冲区，即**双缓冲机制**。在这种情况下，GPU 会预先渲染好一帧放入一个缓冲器内，让`视频控制器`读取，当下一帧渲染好后，GPU 会直接把`视频控制器`的指针指向第二个缓冲器。如此一来效率会有很大的提升。
 
 双缓冲虽然能解决效率问题，但会引入一个新的问题。当`视频控制器`还未读取完成时，即屏幕内容刚显示一半时，GPU 将新的一帧内容提交到 `FrameBuffer` 并把两个缓冲区进行交换后，`视频控制器`就会把新的一帧数据的下半段显示到屏幕上，造成画面撕裂现象，如下图：
 
@@ -79,8 +80,8 @@
 
 **垂直同步 (VSync) 将游戏或应用程序的图像帧速率与显示器的刷新速率进行同步**，有助于建立稳定性。如果不同步，则可能会导致画面撕裂，即图像看起来在整个屏幕上呈现水平方向毛刺或重影的效果。
 
-- 启用 VSync 后，便会获得完美对齐的画面而不会出现毛刺。
-- 关闭 VSync 后，便获得几乎没有限制的每秒帧数 (FPS)，但是更有可能出现画面撕裂、抖动或卡顿，具体依配置而定。
+- 启用 `VSync` 后，便会获得完美对齐的画面而不会出现毛刺。
+- 关闭 `VSync` 后，便获得几乎没有限制的每秒帧数 (FPS)，但是更有可能出现画面撕裂、抖动或卡顿，具体依配置而定。
 
 ---
 
@@ -116,9 +117,9 @@ buffer* 。显示器则负责读取 *color buffer* 中的信息，然后在面�
 
 ![ios_frame_drop.png](../media/Digest/ibireme/smooth-user-interface/ios_frame_drop.png)
 
-在 `VSync` 信号到来后，系统图形服务会通过 `CADisplayLink` 等机制通知 App ，App 主线程开始在 CPU 中计算显示内容，比如视图的创建、布局计算、图片解码、文本绘制等。随后 CPU 会将计算好的内容提交到 GPU 去，由 GPU 进行变换、合成、渲染。随后 GPU 会把渲染结果提交到 `FrameBuffer` 去，等待下一次 VSync 信号到来时显示到屏幕上。
+在 `VSync` 信号到来后，系统图形服务会通过 `CADisplayLink` 等机制通知 App ，App 主线程开始在 CPU 中计算显示内容，比如视图的创建、布局计算、图片解码、文本绘制等。随后 CPU 会将计算好的内容提交到 GPU 去，由 GPU 进行变换、合成、渲染。随后 GPU 会把渲染结果提交到 `FrameBuffer` 去，等待下一次 `VSync` 信号到来时显示到屏幕上。
 
-依据垂直同步的机制，如果在一个 VSync 时间内，CPU 或者 GPU 没有完成内容提交，则那一帧就会被丢弃，等待下一次收到 VSync 信号时再显示，而这时显示屏会保留之前的内容不变。这就是界面卡顿的原因。
+依据垂直同步的机制，如果在一个 `VSync` 时间内，CPU 或者 GPU 没有完成内容提交，则那一帧就会被丢弃，等待下一次收到 `VSync` 信号时再显示，而这时显示屏会保留之前的内容不变。这就是界面卡顿的原因。
 
 从上面的图中可以看到，CPU 和 GPU 不论哪个阻碍了显示流程，都会造成掉帧的现象。所以开发时，也需要分别对 CPU 和 GPU 压力进行评估和优化。
 
@@ -229,6 +230,8 @@ dispatch_async(queue, ^{
 
 ## AsyncDisplayKit
 
+> 说明：AsyncDisplayKit 已改名为 texture ，且换了个[仓库](https://github.com/texturegroup/texture/)。
+
 ### ASDK 的由来
 
 ASDK 的作者是 Scott Goodson ，他曾经在苹果工作，负责 iOS 的一些内置应用的开发，比如股票、计算器、地图、钟表、设置、Safari 等，当然他也参与了 `UIKit` framework 的开发。
@@ -289,3 +292,17 @@ ASDK 为此创建了 `ASDisplayNode` 类，包装了常见的视图属性（比�
 自 iPhone 4S 起，iDevice 已经都是双核 CPU 了，现在的 iPad 甚至已经更新到 3 核了。充分利用多核的优势、并发执行任务对保持界面流畅有很大作用。
 
 ASDK 把布局计算、文本排版、图片/文本/图形渲染等操作都封装成较小的任务，并利用 GCD 异步并发执行。如果开发者使用了 `ASNode` 相关的控件，那么这些并发操作会自动在后台进行，无需进行过多配置。
+
+### Runloop 任务分发
+
+*Runloop work distribution* 是 ASDK 比较核心的一个技术，ASDK 的介绍视频和文档中都没有详细展开介绍，所以这里我会多做一些分析。如果你对 Runloop 还不太了解，可以看一下我之前的文章 [深入理解 RunLoop](https://blog.ibireme.com/2015/05/18/runloop/) ，里面对 ASDK 也有所提及。
+
+<img src="../media/Digest/ibireme/smooth-user-interface/iOS-VSync-Runloop.png" width="80%"/>
+
+iOS 的显示系统是由 `VSync` 信号驱动的，`VSync` 信号由硬件时钟生成，每秒钟发出 60 次（这个值取决设备硬件，比如 iPhone 真机上通常是 59.97）。iOS 图形服务接收到 `VSync` 信号后，会通过 **IPC**（进程间通信）通知到 App 内。App 的 Runloop 在启动后会注册对应的 `CFRunLoopSource` (Source1) 通过 `mach_port` 接收传过来的时钟信号通知，随后 Source1 的回调会驱动整个 App 的动画与显示。
+
+*Core Animation* 在 RunLoop 中注册了一个 Observer ，监听了 `BeforeWaiting` 和 `Exit` 事件。这个 Observer 的优先级是 `2000000` ，低于常见的其他 Observer 。当一个**触摸事件**到来时，RunLoop 被唤醒，App 中的代码会执行一些操作，比如创建和调整视图层级、设置 `UIView` 的 `frame` 、修改 `CALayer` 的透明度、为视图添加一个动画；这些操作最终都会被 `CALayer` 捕获，并通过 `CATransaction` 提交到一个中间状态去（ `CATransaction` 的文档略有提到这些内容，但并不完整）。当上面所有操作结束后，`RunLoop` 即将进入休眠（或者退出）时，关注该事件的 Observer 都会得到通知。这时 CA 注册的那个 Observer 就会在回调中，**把所有的中间状态合并提交到 GPU 去显示**；如果此处有动画，CA 会通过 `DisplayLink` 等机制多次触发相关流程。
+
+ASDK 在此处**模拟**了 *Core Animation* 的这个机制：所有针对 `ASNode` 的修改和提交，总有些任务是必需放入主线程执行的。当出现这种任务时，ASNode 会把任务用 `ASAsyncTransaction`(Group) 封装并提交到一个全局的容器去。ASDK 也在 RunLoop 中注册了一个 Observer ，监视的事件和 CA 一样，但优先级比 CA 要低。当 RunLoop 进入休眠前、CA 处理完事件后，ASDK 就会执行该 loop 内提交的所有任务。具体代码见这个文件：`ASAsyncTransactionGroup` 。
+
+通过这种机制，ASDK 可以在合适的机会把异步、并发的操作同步到主线程去，并且能获得不错的性能。

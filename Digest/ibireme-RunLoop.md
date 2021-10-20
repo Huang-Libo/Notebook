@@ -728,7 +728,7 @@ RunLoop 启动前内部必须要有至少一个 Timer / Observer / Source ，所
 
 ### 2. AsyncDisplayKit
 
-> AsyncDisplayKit 已改名为 texture ，且换了个[仓库](https://github.com/texturegroup/texture/)。
+> 说明：AsyncDisplayKit 已改名为 texture ，且换了个[仓库](https://github.com/texturegroup/texture/)。
 
 `AsyncDisplayKit` 是 Facebook 推出的用于保持界面流畅性的框架，其原理大致如下：
 
