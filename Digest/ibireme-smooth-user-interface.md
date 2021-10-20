@@ -364,7 +364,7 @@ CPU 是用**时间片轮转**来实现线程并发的，尽管 *Concurrent Queue
 
 ASDK 有个 Feed 列表的 Demo ：`SocialAppLayout` ，当列表内 Cell 过多，并且非常快速的滑动时，界面仍然会出现少量卡顿，我谨慎的猜测可能与这个问题有关。
 
-使用 *Concurrent Queue* 时不可避免会遇到这种问题，但使用 *Serial Queue* 又不能充分利用多核 CPU 的资源。我写了一个简单的工具 `YYDispatchQueuePool` ，为不同优先级创建和 CPU 数量相同的 *Serial Queue* ，每次从 pool 中获取 queue 时，会轮询返回其中一个 queue 。我把 App 内所有异步操作，包括图像解码、对象释放、异步绘制等，都按各自的优先级放入了全局的 *Serial Queue* 中执行，这样尽量避免了过多线程导致的性能问题。
+使用 *Concurrent Queue* 时不可避免会遇到这种问题，但使用 *Serial Queue* 又不能充分利用多核 CPU 的资源。我写了一个简单的工具 [YYDispatchQueuePool](https://github.com/ibireme/YYDispatchQueuePool) ，为不同优先级创建和 CPU 数量相同的 *Serial Queue* ，每次从 pool 中获取 queue 时，会轮询返回其中一个 queue 。我把 App 内所有异步操作，包括图像解码、对象释放、异步绘制等，都按各自的优先级放入了全局的 *Serial Queue* 中执行，这样尽量避免了过多线程导致的性能问题。
 
 ### 更高效的异步图片加载
 
