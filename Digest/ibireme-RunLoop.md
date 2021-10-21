@@ -20,7 +20,7 @@
     - [0. App 启动后 RunLoop 的状态](#0-app-启动后-runloop-的状态)
     - [1. AutoreleasePool](#1-autoreleasepool)
     - [2. 事件响应](#2-事件响应)
-    - [3.手势识别](#3手势识别)
+    - [3. 手势识别](#3-手势识别)
     - [4. 界面更新](#4-界面更新)
     - [5. 定时器](#5-定时器)
     - [6. PerformSelecter](#6-performselecter)
@@ -222,6 +222,8 @@ CFRunLoopRemoveTimer(CFRunLoopRef rl, CFRunLoopTimerRef timer, CFStringRef mode)
 > 说明：原文的图有错误，唤醒 RunLoop 的应该是 **Source1** ，此图已修正。
 
 ![RunLoop-step.png](../media/Digest/ibireme/RunLoop/RunLoop-step.png)
+
+【编者注：上图中的「外部手动唤醒」，说的不是用手触摸手机屏幕唤醒 RunLoop ，触摸事件是由 `Source1` 接收并处理的。这里的「外部手动唤醒」是指在代码中手动调用 RunLoop 的相关 API ，比如 `Source0` 本身不能唤醒 RunLoop ，但可以通过手动调用相关 API 来使用 Source0 唤醒 RunLoop，步骤是 ：先调用 `CFRunLoopSourceSignal(rls)` 将一个 `Source0` 标记为待处理，然后手动调用 `CFRunLoopWakeUp(rl)` 来唤醒 RunLoop ( `CFRunLoopWakeUp()` 函数内部是通过 RunLoop 实例的 `_wakeUpPort` 成员变量来唤醒 RunLoop 的）。】
 
 RunLoop 内部是一个 `do...while` 循环。当你调用 `CFRunLoopRun()` 时，线程就会一直停留在这个循环里，直到超时或被手动停止，该函数才会返回：
 
@@ -588,19 +590,19 @@ static void __CFRUNLOOP_IS_CALLING_OUT_TO_AN_OBSERVER_CALLBACK_FUNCTION__();
 
 ### 2. 事件响应
 
-App 启动时， 系统库为 App 注册了一个 `source1` (是基于 mach port 的) 用来（在 App 中）接收系统事件，其回调函数为 `__IOHIDEventSystemClientQueueCallback()` 。
+App 启动时， 系统会给 App 注册了一个 `source1` (是基于 mach port 的) 用来接收系统事件，其回调函数为 `__IOHIDEventSystemClientQueueCallback()` 。
 
 当一个硬件事件（触摸/锁屏/摇晃/远程控制【比如耳机线控】等）发生后，首先由 `IOKit.framework` 生成一个 `IOHIDEvent` 事件并由 SpringBoard 接收。这个过程的详细情况可以参考[这里](https://iphonedev.wiki/index.php/IOHIDFamily)。
 
-SpringBoard 只接收按键（锁屏/静音等）、触摸、加速、接近传感器等几种 Event，随后**用 mach port 转发给需要的 App 进程**。随后，系统库为 App 注册的那个 `source1` 就会触发回调，并调用 `_UIApplicationHandleEventQueue()` 进行 App 内部的分发。
+SpringBoard 只接收按键（锁屏/静音等）、触摸、加速、接近传感器等几种 Event，随后**用 mach port 转发给需要的 App 进程**。随后，系统为 App 注册的那个 `source1` 就会触发回调，并调用 `_UIApplicationHandleEventQueue()` 进行 App 内部的分发。
 
 `_UIApplicationHandleEventQueue()` 会把 `IOHIDEvent` 处理并包装成 `UIEvent` 进行处理或分发，其中包括识别手势、处理屏幕旋转、发送给 `UIWindow` 等。通常事件比如 `UIButton` 点击、touchesBegin / Move / End / Cancel 事件都是在这个回调中完成的。
 
-### 3.手势识别
+### 3. 手势识别
 
-当上面的 `_UIApplicationHandleEventQueue()` 识别了一个手势时，其首先会**调用 Cancel 将当前的 touchesBegin / Move / End 系列回调打断**。随后系统将对应的 `UIGestureRecognizer` 标记为待处理。
+当上面的 `_UIApplicationHandleEventQueue()` 识别了一个手势时，其首先会**调用 Cancel 将当前的 touchesBegin / Move / End 系列回调打断**。随后系统将对应的`手势`标记为待处理。
 
-苹果注册了一个 Observer 监测 **BeforeWaiting**（ Loop 即将进入休眠）事件，这个 Observer 的回调函数是 `_UIGestureRecognizerUpdateObserver()` ，其内部会获取所有刚被标记为待处理的 `GestureRecognizer` ，并执行 `GestureRecognizer` 的回调。
+系统为 App 注册了一个 Observer 监测 **BeforeWaiting**（ Loop 即将进入休眠）事件，这个 Observer 的回调函数是 `_UIGestureRecognizerUpdateObserver()` ，其内部会获取所有刚被标记为待处理的 `GestureRecognizer` ，并执行 `GestureRecognizer` 的回调。
 
 当有 `UIGestureRecognizer` 的变化（创建/销毁/状态改变）时，这个回调都会进行相应处理。
 
