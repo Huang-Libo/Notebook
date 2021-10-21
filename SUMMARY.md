@@ -9,9 +9,9 @@
 
 ## 📖 Digest
 
-- [ibireme《深入理解 RunLoop 》](Digest/RunLoop-ibireme.md)
+- [ibireme《深入理解 RunLoop 》](Digest/ibireme-RunLoop.md)
 - [ibireme《iOS 保持界面流畅的技巧》](Digest/ibireme-smooth-user-interface.md)
-- [ibireme《不再安全的 OSSpinLock 》](Digest/spinlock_is_unsafe-ibireme.md)
+- [ibireme《不再安全的 OSSpinLock 》](Digest/ibireme-OSSpinLock-is-unsafe.md)
 
 ## 🎱 Check List
 
