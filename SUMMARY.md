@@ -11,6 +11,7 @@
 
 - [ibireme《深入理解 RunLoop 》](Digest/ibireme-RunLoop.md)
 - [ibireme《iOS 保持界面流畅的技巧》](Digest/ibireme-smooth-user-interface.md)
+- [ibireme《YYCache 的设计思路》](Digest/ibireme-YYCache.md)
 - [ibireme《不再安全的 OSSpinLock 》](Digest/ibireme-OSSpinLock-is-unsafe.md)
 
 ## 🎱 Check List
