@@ -15,7 +15,7 @@ iOS 开发中总会用到各种缓存，最初我是用的一些开源的缓存�
 
 ## 内存缓存
 
-通常一个缓存是由*内存缓存*和*磁盘缓存*组成，
+通常一个缓存是由*内存缓存*和*磁盘缓存*组成：
 
 - 内存缓存提供容量小但高速的存取功能；
 - 磁盘缓存提供大容量但低速的持久化存储。
@@ -28,7 +28,7 @@ iOS 开发中总会用到各种缓存，最初我是用的一些开源的缓存�
 
 [PINMemoryCache](https://github.com/pinterest/PINCache) 是 Tumblr 宣布不在维护 `TMCache` 后，由 Pinterest 维护和改进的一个内存缓存。它的功能和接口基本和 `TMMemoryCache` 一样，但修复了性能和死锁的问题。它同样也用 `dispatch_semaphore` 来保证线程安全，但去掉了 `dispatch_barrier_async` ，避免了线程切换带来的巨大开销，也避免了可能的死锁。
 
-[YYMemoryCache](https://github.com/ibireme/YYCache) 是我开发的一个内存缓存，相对于 `PINMemoryCache` 来说，我去掉了异步访问的接口，尽量优化了同步访问的性能，用 `OSSpinLock` 来保证线程安全。另外，缓存内部用双向链表和 `NSDictionary` 实现了 **LRU** 淘汰算法，相对于上面几个算是一点进步吧。
+[YYMemoryCache](https://github.com/ibireme/YYCache) 是我开发的一个内存缓存，相对于 `PINMemoryCache` 来说，我去掉了异步访问的接口，尽量优化了同步访问的性能，~~用 `OSSpinLock` 来保证线程安全~~（`YYMemoryCache` 已改用 `pthread_mutex_t` ；`YYDiskCache` 是用的 `dispatch_semaphore_t` 当锁）。另外，缓存内部用双向链表和 `NSDictionary` 实现了 **LRU** 淘汰算法，相对于上面几个算是一点进步吧。
 
 下面的单线程的 Memory Cache 性能基准测试：
 
@@ -61,7 +61,7 @@ iOS 开发中总会用到各种缓存，最初我是用的一些开源的缓存�
   - 当单条数据小于 `20K` 时，数据越小 SQLite 读取性能越高；
   - 单条数据大于 `20K` 时，直接写为文件速度会更快一些。
 
-这和 SQLite 官网的描述基本一致。另外，直接从官网下载最新的 SQLite 源码编译，会比 iOS 系统自带的 sqlite3.dylib 性能要高很多。
+这和 [SQLite 官网的描述](https://www.sqlite.org/intern-v-extern-blob.html)基本一致。另外，直接从官网下载最新的 SQLite 源码编译，会比 iOS 系统自带的 sqlite3.dylib 性能要高很多。
 
 基于 SQLite 的这种表现，**磁盘缓存最好是把 SQLite 和文件存储结合起来**：`key-value` 元数据保存在 SQLite 中，而 `value` 数据则根据大小不同选择 SQLite 或文件存储。`NSURLCache` 选定的数据大小的阈值是 `16K` ；`FBDiskCache` 则把所有 `value` 数据都保存成了文件。
 
