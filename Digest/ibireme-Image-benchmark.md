@@ -16,11 +16,21 @@
     - [WebP](#webp)
     - [BPG](#bpg)
   - [移动端图片类型的支持情况](#移动端图片类型的支持情况)
+    - [Android](#android)
+    - [iOS](#ios)
+    - [说明](#说明)
   - [静态图片的编码与解码](#静态图片的编码与解码)
     - [JPEG](#jpeg-1)
     - [PNG](#png-1)
     - [WebP](#webp-1)
     - [BPG](#bpg-1)
+  - [动态图片的编码与解码](#动态图片的编码与解码)
+    - [GIF](#gif-1)
+    - [APNG](#apng-1)
+    - [WebP](#webp-2)
+    - [BPG](#bpg-2)
+    - [动图性能对比](#动图性能对比)
+  - [评测数据](#评测数据)
 
 ## 老牌的图片格式
 
@@ -69,7 +79,7 @@ WebP 是 Google 在 **2010** 年发布的图片格式，**希望以更高的压�
 
 ### BPG
 
-BPG 是著名程序员 Fabrice Bellard 在去年 ( **2014** 年) 发布的一款超高压缩比的图片格式。这个程序员有些人可能感觉面生，但说起他的作品 FFmpeg 、QEMU 大家想必是都知道的。BPG 使用 `HEVC` (即 `H.265` ) 帧内编码作为其算法基础，就这点而言，它毋庸置疑是当下最为先进的图片压缩格式。相对于 JP2、JPEG-XR、WebP 来说，同等体积下 BPG 能提供更高的图像质量。
+BPG 是著名程序员 Fabrice Bellard 在去年 ( **2014** 年) 发布的一款超高压缩比的图片格式。这个程序员有些人可能感觉面生，但说起他的作品 FFmpeg 、QEMU 大家想必是都知道的。BPG 使用 `HEVC (即 H.265 )` 帧内编码作为其算法基础，就这点而言，它毋庸置疑是当下最为先进的图片压缩格式。相对于 JP2、JPEG-XR、WebP 来说，同等体积下 BPG 能提供更高的图像质量。
 
 另外，得益于它本身基于视频编码算法的特性，它能以非常小的文件体积保存多帧动画。 Fabrice Bellard 聪明的地方在于，他知道自己一个人无法得到各大浏览器厂商的支持，所以他还特地开发了 Javascript 版的解码器，任何浏览器只要加载了这个 76KB 大小的 JS 文件，就可以直接显示 BPG 格式的图片了。
 
@@ -81,9 +91,15 @@ BPG 是著名程序员 Fabrice Bellard 在去年 ( **2014** 年) 发布的一款
 
 <img src="../media/Digest/ibireme/Image-benchmark/mobile-image-arch.png" width="80%"/>
 
+### Android
+
 Android 的图片编码解码是由 Skia 图形库负责的，Skia 通过挂接第三方开源库实现了常见的图片格式的编解码支持。目前来说，Android 原生支持的格式只有 JPEG 、PNG 、GIF 、BMP 和 WebP（ *Android 4.0* 加入），在上层能直接调用的编码方式也只有 JPEG 、PNG 、WebP 这三种。目前来说 Android 还不支持直接的动图编解码。
 
+### iOS
+
 iOS 底层是用 `ImageIO.framework` 实现的图片编解码。目前 iOS 原生支持的格式有：JPEG 、JPEG2000 、PNG 、GIF 、BMP 、ICO 、TIFF 、PICT，自 *iOS 8.0* 起，`ImageIO` 又加入了 APNG 、SVG 、RAW 格式的支持。在上层，开发者可以直接调用 `ImageIO` 对上面这些图片格式进行编码和解码。对于动图来说，开发者可以解码动画 GIF 和 APNG、可以编码动画 GIF。
+
+### 说明
 
 两个平台在导入第三方编解码库时，都多少对他们进行了一些修改，比如 Android 对 libjpeg 等进行的调整以更好的控制内存，iOS 对 libpng 进行了修改以支持 APNG，并增加了多线程编解码的特性。除此之外，iOS 专门针对 JPEG 的编解码开发了 `AppleJPEG.framework` ，实现了性能更高的硬编码和硬解码，只有当硬编码解码失败时，libjpeg 才会被用到。
 
@@ -187,7 +203,7 @@ WebP 标准是 Google 定制的，迄今为止也只有 Google 发布的 [libweb
 
 BPG 是目前已知最优秀的有损压缩格式了，它能在相同质量下比 JPEG 减少 50% 的体积。下面是经典的 Lena 图的对比，你也可以在[这里](http://xooyoozoo.github.io/yolo-octo-bugfixes/#cologne-cathedral&webp=s&bpg=s)看到大量其他图片的 BPG 、JPEG 、JPEG2000 、JPEG-XR 、WebP 压缩效果的在线对比，效果非常明显。
 
-<img alt="bpg-demo.png" src="../media/Digest/ibireme/Image-benchmark/bpg-demo.png" width="70%"/>
+<img alt="bpg-demo.png" src="https://raw.githubusercontent.com/Huang-Libo/image-hosting/master/Default/bpg-demo.png" width="70%"/>
 
 BPG 目前只有作者发布的 [libbpg](http://bellard.org/bpg/) 可用。但作者基于 `libbpg` 编译出了一个 Javascript 解码器，很大的扩展了可用范围。bpg 可以以无损和有损压缩两种方式进行编码，有损压缩时可以用 `quality` 参数控制压缩比，可选范围为 `0 ～ 51` ，数值越大压缩比越高。通常来说，`25` 附近是一个不错的选择，BPG 官方工具默认值是 `28` 。
 
@@ -196,3 +212,117 @@ BPG 目前只有作者发布的 [libbpg](http://bellard.org/bpg/) 可用。但�
 ![bpg-bench.png](../media/Digest/ibireme/Image-benchmark/bpg-bench.png)
 
 由于 bpg 编码时间太长，我并没有将数据放到表格里。可以看到相同质量下，BPG 的解码速度还是差 JPEG 太多，大约慢了 `3 ～ 5` 倍。目前来说，BPG 适用于那些对流量非常敏感，但对解码时间不敏感的地方。从网上的新闻来看，手机淘宝和手机 QQ 都已经有所尝试，但不清楚他们是否对 BPG 解码进行了优化。
+
+## 动态图片的编码与解码
+
+动图在网络上非常受欢迎，它近似视频，但通常实现简单、文件体积小，应用范围非常广泛。动图的始祖是 GIF ，它自 *Windows 1.0* 时代就在互联网上流行开来，直到今天仍然难以被其他格式取代。尽管它非常古老，但其所用的原理和今天几种新兴格式几乎一样。
+
+下面是一张 GIF 格式的 QQ 大表情：
+
+<img alt="bench-gif-demo.gif" src="../media/Digest/ibireme/Image-benchmark/bench-gif-demo.gif" width="120"/>
+
+这张表情由 6 幅静态图构成，每幅图片有一定的存活时间，连贯播放就形成了动画：
+
+![bench-gif-demo-1.png](../media/Digest/ibireme/Image-benchmark/bench-gif-demo-1.png)
+
+这几张图中，大部分内容是相近的，为了压缩文件体积，通常动图格式都支持一些特殊的方式对相似图片进行裁剪，只保留前后帧不同的部分：
+
+![bench-gif-demo-2.png](../media/Digest/ibireme/Image-benchmark/bench-gif-demo-2.png)
+
+在解码动图时，解码器通常采用所谓“**画布模式**”进行渲染。想象一下，播放的区域是一张画布：
+
+- 播放第一帧前，先把画布清空，然后完整的绘制上第一帧图；
+- 播放第二帧时，不再清空画布，而是**只把和第一帧不同的区域覆盖到画布上**，就像油画的创作那样。
+
+像这样的第一帧就被称为**关键帧**（即 `I` 帧，帧内编码帧），而后续的那些通过补偿计算得到的帧被称为**预测编码帧**（ `P` 帧）。一个压缩的比较好的动图内，通常只有少量的关键帧，而其余都是预测编码帧；一个较差的压缩工具制作的动图内，则基本都是关键帧。不同的动图压缩工具通常能得到不同的结果。
+
+除此之外，动图格式通常有更为详细的参数控制每一帧的绘制过程，下面是 GIF / APNG / WebP 通用的几个参数：
+
+- `Disposal Method` (清除方式)
+  - `Do Not Dispose` ：把当前帧增量绘制到画布上，不清空画布。
+  - `Restore to Background` ：绘制当前帧之前，先把画布清空为默认背景色。
+  - `Restore to Previous` ：绘制下一帧前，把先把画布恢复为当前帧的前一帧
+- `Blend Mode` (混合模式)
+  - `Blend None` ：绘制时，全部通道（包含 Alpha 通道）都会覆盖到画布，相当于绘制前先清空画布的指定区域。
+  - `Blend over`：绘制时，Alpha 通道会被合成到画布，即通常情况下两张图片重叠的效果。
+
+上面这些技术，就是常见动图格式的基础了，下面分别介绍一下不同动图格式的特点。
+
+### GIF
+
+GIF 缺陷非常明显：它通常只支持 `256` 色索引颜色，这导致它只能通过抖动、差值等方式模拟较多丰富的颜色；它的 Alpha 通道只有 `1 bit` ，这意味着一个像素只能是完全透明或者完全不透明。
+
+<img alt="gif-apng-demo.gif" src="https://raw.githubusercontent.com/Huang-Libo/image-hosting/master/Default/gif-apng-demo.gif" width="60%"/>
+
+上面这是腾讯博客里的一张演示图，可以看到 GIF 由于 Alpha 通道的问题，产生了严重的“毛边”现象。目前通常的解决方案是在图片的边缘加一圈白边，以减轻这种视觉效果：
+
+![gif-wrong-demo.png](../media/Digest/ibireme/Image-benchmark/gif-wrong-demo.png)
+
+可以仔细观察一下 QQ 、微信等 App 里面的动画表情，几乎每个表情都被一圈白边所环绕，不得不说是一种很无奈的解决方案。
+
+GIF 的制作工具有很多，但效果好、压缩比高的工具非常少。
+
+- 对于已经制作好的 GIF 来说，用 [imagemagick](http://www.imagemagick.org/script/index.php) 处理一下可以把文件体积压缩不少。
+- 如果需要将视频转为 GIF，[Cinemagraph Pro](https://flixel.com/products/mac/cinemagraph-pro/) 是个不错的傻瓜化工具。
+
+[这里](https://www.oschina.net/translate/high-quality-gif-with-ffmpeg)有一篇文章介绍如何用 ffmpeg 压缩 GIF，虽然参数调节有点麻烦，但效果非常理想。
+
+下面是没有经过优化的 GIF 和经过 `ffmpeg` 优化编码的 GIF，可以看到差距非常大。
+
+<img alt="bbb-nodither-1.gif" src="https://raw.githubusercontent.com/Huang-Libo/image-hosting/master/Default/bbb-nodither-1.gif" width="300"/>
+
+<img alt="bbb-nodither-2.gif" src="https://raw.githubusercontent.com/Huang-Libo/image-hosting/master/Default/bbb-nodither-2.gif" width="300"/>
+
+### APNG
+
+APNG 目前并没有被 PNG 官方所接受，所以 `libpng` 并不能直接解码 APNG 。但由于 APNG 只是基于 PNG 的一个简单扩展，所以在已经支持 PNG 的平台上，可以很轻松的用少量代码实现 APNG 的编解码。
+
+Chromium 为了支持 APNG 播放，只增加了[不到 600 行代码](https://codereview.chromium.org/1312843006/)，我自己也用[大概 500 行 C 代码](https://github.com/ibireme/YYWebImage/blob/master/YYWebImage/Image/YYImageCoder.m#L149-L628)实现了一个简单的 APNG 编解码工具。
+
+另外，
+
+- 在支持 `canvas` 的浏览器上，可以用 [apng-canvas](https://github.com/davidmz/apng-canvas) 直接显示 APNG 动画。
+- APNG 压缩最好的工具目前是 [apngasm](http://sourceforge.net/projects/apngasm/) ，大部分图形化工具比如腾讯的 [iSparta](https://github.com/iSparta/iSparta) 都是基于这个工具开发的（ iSparta 是一款 APNG 和 Webp 转换工具，`Sep 3, 2019` 停更）。
+
+就目前而言， APNG 是 GIF 最好的替代了：实现简单，可用范围广，压缩比不错，显示效果好。
+
+### WebP
+
+WebP 在 2010 年 发布时并没有支持动图。2012 年 `libwebp v0.2` 的时候，Google 才开始尝试支持动画，但其实现有很多问题，性能也非常差，以至于 Chrome 团队一直都没有接受。直到 2013 年，`libwebp v0.4` 时，动画格式才稳定下来才被 Chrome 所接受。
+
+**WebP 动图实际上是把多个单帧 WebP 数据简单打包到一个文件内，而并不是由单帧 WebP 扩展而来，以至于动图格式并不能向上兼容静态图**。
+
+如果要支持动图，首先在**编译** `libwebp` 时需要加上 `demux` 模块。**解码** WebP 时需要先用 `WebPDemuxer` 尝试拆包，之后再把拆出来的单帧用 `WebPDecode` 解码。
+
+为了方便编译，我写了个[脚本](https://github.com/ibireme/YYWebImage/blob/master/Vendor/WebP.sh)用于打包 iOS 的静态库，加入了 mux 和 demux 模块。
+
+Google 提供了两个简单的命令行工具用于制作动图：
+
+- ~~`gif2webp` 能把 GIF 转换为 WebP，~~
+- ~~`webpmux` 能把多个 WebP 图片打包为动态图，并且有着很多参数可以调节。~~
+
+这两个工具对相近帧的压缩并不太理想，以至于有的情况下压缩比还不如 APNG ，但除此以外也没有其他什么更好的工具可以用了（ **Update**: 在最近的 `libwebp v0.6.0` 中， Google 新提供了一个 **img2webp** 命令专门用于制作动图的，效果不错）。
+
+### BPG
+
+BPG 本身是基于 `HEVC (H.265)` 视频编码的，其最开始设计时就考虑到了动图的实现。由于它充分利用了 HEVC 的高压缩比和视频编码的特性，其动图压缩比远超其他格式。[这里](https://bellard.org/bpg/animation.html)和[这里](http://kippler.com/bpg/test.html)有几张 BPG 动图示例，可以看到**相同质量下 BPG 动图只有 APNG / WebP / GIF 几十分之一的大小**。
+
+我在 [YYWebImageDemo](https://github.com/ibireme/YYWebImage/blob/master/Demo%2FYYWebImageDemo%2FYYBPGCoder.m#L188-L264) 里写了个简单的利用 `libbpg` 解码动图的方法，如有需要可以参考下。
+
+### 动图性能对比
+
+我把下面这张 GIF 分别转为 WebP、APNG、BPG 动图，并在 iPhone 6 上对其所有帧进行解码。
+
+<img alt="gif-ermilio.gif" src="https://raw.githubusercontent.com/Huang-Libo/image-hosting/master/Default/gif-ermilio.gif" width="60%"/>
+
+评测结果如下：
+
+![animate-bench.png](../media/Digest/ibireme/Image-benchmark/animate-bench.png)
+
+APNG 在文件体积上比 GIF 略有优势，解码时间相差不多。WebP 在体积和解码时间上都具有较大的优势。BPG 在体积上优势最大，但解码时间也最长。这么看来，APNG 和 WebP 都是不错的选择，而 BPG 还有待性能优化。
+
+最后做一个小广告：如果你是 iOS 平台的开发者，可以试试我开发的 [YYWebImage](https://github.com/ibireme/YYWebImage) ，它支持 APNG 、WebP 、GIF 动图的异步加载与播放、编码与解码，**支持渐进式图像加载**，可以替代 `SDWebImage` 、`PINRemoteImage` 、`FLAnimatedImage` 等开源库。
+
+## 评测数据
+
+上面提到的所有评测数据表格：[image_benchmark.xlsx](https://github.com/Huang-Libo/image-hosting/blob/master/Files/image_benchmark.xlsx?raw=true) 推荐用 Excel 打开查看（ WPS 也可以）。
