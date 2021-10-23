@@ -11,7 +11,7 @@
   - [CPU 资源消耗原因和解决方案](#cpu-资源消耗原因和解决方案)
     - [1. 对象创建](#1-对象创建)
     - [2. 对象调整](#2-对象调整)
-    - [3. 对象销毁](#3-对象销毁)
+    - [3. 对象销毁、](#3-对象销毁)
     - [4. 布局计算](#4-布局计算)
     - [5. Autolayout](#5-autolayout)
     - [6. 文本计算](#6-文本计算)
@@ -159,6 +159,18 @@ self.array = nil;
 dispatch_async(queue, ^{
     [tmp class];
 });
+```
+
+在 [YYMemoryCache 的 _trimToCost 方法](https://github.com/ibireme/YYCache/blob/0aac6e84f10b2996ef2ce906db0be1ea6ec24e83/YYCache/YYMemoryCache.m#L199-L231)中有用到这个技巧（`_trimToCount` 、`_trimToAge` 也用了）：
+
+```objectivec
+...
+if (holder.count) {
+    dispatch_queue_t queue = _lru->_releaseOnMainThread ? dispatch_get_main_queue() : YYMemoryCacheGetReleaseQueue();
+    dispatch_async(queue, ^{
+        [holder count]; // release in queue
+    });
+}
 ```
 
 ### 4. 布局计算
