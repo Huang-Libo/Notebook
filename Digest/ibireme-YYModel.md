@@ -10,14 +10,28 @@ iOS 开发中总会用到各种 JSON 模型转换库，这篇文章将会对常�
   - [评测的对象](#评测的对象)
     - [Manually](#manually)
     - [YYModel](#yymodel)
-    - [FastEasyMapping](#fasteasymapping)
+    - [Mantle](#mantle)
+    - [MJExtension](#mjextension)
     - [JSONModel](#jsonmodel)
-    - [Mantle（活跃中）](#mantle活跃中)
-    - [MJExtension（活跃中）](#mjextension活跃中)
+    - [FastEasyMapping](#fasteasymapping)
   - [性能评测](#性能评测)
     - [用例1：GithubUser](#用例1githubuser)
-    - [用例2: WeiboStatus](#用例2-weibostatus)
+    - [用例2：WeiboStatus](#用例2weibostatus)
     - [测试结果分析](#测试结果分析)
+  - [横向比较](#横向比较)
+    - [容错性](#容错性)
+    - [功能](#功能)
+    - [侵入性](#侵入性)
+    - [结论](#结论)
+  - [附: YYModel 性能优化的几个 Tip](#附-yymodel-性能优化的几个-tip)
+    - [1. 缓存](#1-缓存)
+    - [2. 查表](#2-查表)
+    - [3. 避免 KVC](#3-避免-kvc)
+    - [4. 避免 Getter / Setter 调用](#4-避免-getter--setter-调用)
+    - [5. 避免多余的内存管理方法](#5-避免多余的内存管理方法)
+    - [6. 遍历容器类时，选择更高效的方法](#6-遍历容器类时选择更高效的方法)
+    - [7. 尽量用纯 C 函数、内联函数](#7-尽量用纯-c-函数内联函数)
+    - [8. 减少遍历的循环次数](#8-减少遍历的循环次数)
 
 ## 评测的对象
 
@@ -25,31 +39,38 @@ iOS 开发中总会用到各种 JSON 模型转换库，这篇文章将会对常�
 
 手动进行 JSON / Model 转换，不用任何开源库，可以进行高效、自由的转换，但手写代码非常繁琐，而且容易出错。
 
-### [YYModel](https://github.com/ibireme/YYModel)
+### YYModel
 
 > Aug 7, 2017 停更。
+> <https://github.com/ibireme/YYModel>
 
 我造的一个新轮子，比较轻量（算上 `.h` 只有 5 个文件），支持自动的 JSON / Model 转换，支持定义映射过程。API 简洁，功能也比较简单。
 
-### [FastEasyMapping](https://github.com/Yalantis/FastEasyMapping)
+### Mantle
 
-> Dec 8, 2019 停更。
-
-Yalantis 开发的一个 JSON 模型转换库，可以自定义详细的 Model 映射过程，支持 CoreData 。使用者较少。
-
-### [JSONModel](https://github.com/jsonmodel/jsonmodel)
-
-> Sep 19, 2018 停更。
-
-一个 JSON 模型转换库，有着比较简洁的接口。Model 需要继承自 `JSONModel` 。
-
-### [Mantle](https://github.com/Mantle/Mantle)（活跃中）
+> 活跃中，<https://github.com/Mantle/Mantle>
 
 Github 官方团队开发的 JSON 模型转换库，Model 需要继承自 `MTLModel` 。功能丰富，文档完善，使用广泛。
 
-### [MJExtension](https://github.com/CoderMJLee/MJExtension)（活跃中）
+### MJExtension
+
+> 活跃中，<https://github.com/CoderMJLee/MJExtension>
 
 国内开发者”小码哥”开发的 JSON 模型库，号称性能超过 `JSONModel` 和 `Mantle` ，使用简单无侵入。国内有大量使用者。
+
+### JSONModel
+
+> Sep 19, 2018 停更。
+> <https://github.com/jsonmodel/jsonmodel>
+
+一个 JSON 模型转换库，有着比较简洁的接口。Model 需要继承自 `JSONModel` 。
+
+### FastEasyMapping
+
+> Dec 8, 2019 停更。
+> <https://github.com/Yalantis/FastEasyMapping>
+
+Yalantis 开发的一个 JSON 模型转换库，可以自定义详细的 Model 映射过程，支持 CoreData 。使用者较少。
 
 ## 性能评测
 
@@ -65,7 +86,7 @@ Github 官方团队开发的 JSON 模型转换库，Model 需要继承自 `MTLMo
 
 ![YYModel-benchmark-1.png](../media/Digest/ibireme/YYModel/YYModel-benchmark-1.png)
 
-### 用例2: WeiboStatus
+### 用例2：WeiboStatus
 
 从官方微博 App 抓取一条内容完整的微博数据，JSON 总共有 580 行（是的，一条微博需要这么大数据量），包含大量嵌套对象、容器对象、类型转换、日期解析等。这个用例主要是测试在复杂的情况下不同库的性能。
 每次测试执行 `1000` 次，统计耗时毫秒数。
@@ -82,3 +103,79 @@ Github 官方团队开发的 JSON 模型转换库，Model 需要继承自 `MTLMo
 - `MJExtension` 在处理复杂对象转为 JSON 时，存在错误。
 
 (此处我也测试了一些 Swift 的项目，例如 ObjectMapper 、JSONHelper 、ModelRocket ，性能比 Mantle 还差很多，这里就不进行对比了。)
+
+## 横向比较
+
+### 容错性
+
+容错性主要是测试在默认情况下，当 JSON 格式错误时，Model 框架是否会产生错误结果或造成 Crash ：
+
+![Fault-Tolerance.jpg](../media/Digest/ibireme/YYModel/Fault-Tolerance.jpg)
+
+- `YYModel` 和 `Mantle` 都会进行对象类型检查，避免将错误的对象类型赋值到属性，以避免潜在的 Crash 问题。
+  - 不同的是 `YYModel` 会尝试自动转换，转换失败时留空；
+  - 而 `Mantle` 遇到类型不匹配时，直接把错误向上返回，从而终止了整个转换过程，但这么做更方便调试。
+- `MJExtension` 会对部分对象进行自动转换（比如 `NSString` 和 `NSNumber` 之间的转换），但当自动转换不能完成时，它会直接把 JSON 对象赋值给类型不匹配的 Model 属性。这样的结果会导致稍后 Model 在使用时，造成潜在的 Crash 风险。
+- `JSONModel` 并没有对错误类型的检测，并且没有对 App 的保护，当出现异常时，会导致整个 App Crash，非常危险。
+- `FastEasyMapping` 表现则是最差的，它没有自动转换的机制，当遇到类型不匹配时，会导致错误的类型赋值，甚至直接 Crash。
+
+### 功能
+
+![Function.jpg](../media/Digest/ibireme/YYModel/Function.jpg)
+
+- 就功能来说，`Mantle` 的可定制性最高，功能相对比较丰富。
+- `YYModel` 、`JSONModel` 、`MJExtension` 使用比较简单，但功能相对 `Mantle` 稍弱。
+- `FastEasyMapping` 功能最少，使用也不算方便。
+
+### 侵入性
+
+- `Mantle` 和 `JSONModel` 都需要 Model 继承自某个基类，灵活性稍差，但功能丰富。
+- `YYModel` 、`MJExtension` 都是采用 Category 方式来实现功能，比较灵活，无侵入。
+- ~~但注意 `MJExtension` 为 NSObject / NSString 添加了一些没有前缀的方法，且方法命名比较通用，可能会和一个工程内的其他类有冲突。~~（后来 `MJExtension` 已给分类的方法名加上了前缀）
+- `FastEasyMapping` 采用工具类来实现 Model 转换的功能，最为灵活，但使用很不方便。
+
+### 结论
+
+- 如果需要一个稳定、功能强大的 Model 框架，`Mantle` 是最佳选择，它唯一的缺点就是性能比较差。
+- 如果对功能要求并不多，但对性能有更高要求时，可以试试我的 `YYModel` 。
+- Swift 相关的几个库性能都比较差，非 Swift 项目不推荐使用。
+
+最后提一句，如果对性能、网络流量等有更高的要求，就不要再用 JSON 了，建议改用 **protobuf** / FlatBuffers 这样的方案。**JSON 转换再怎么优化，在性能和流量方面还是远差于二进制格式的。**
+
+## 附: YYModel 性能优化的几个 Tip
+
+### 1. 缓存
+
+Model JSON 转换过程中需要很多类的元数据，如果数据足够小，则全部缓存到内存中。
+
+### 2. 查表
+
+当遇到多项选择的条件时，要尽量使用查表法实现，比如 `switch...case` ，`C Array` ，如果查表条件是对象，则可以用 `NSDictionary` 来实现。
+
+### 3. 避免 KVC
+
+*Key-Value Coding* 使用起来非常方便，但性能上要差于直接调用 Getter /Setter ，所以如果能避免 KVC 而用 Getter / Setter 代替，性能会有较大提升。
+
+### 4. 避免 Getter / Setter 调用
+
+如果能直接访问 ivar，则尽量使用 ivar 而不要使用 Getter/Setter 这样也能节省一部分开销。
+
+### 5. 避免多余的内存管理方法
+
+在 ARC 条件下，默认声明的对象是 `__strong` 类型的，赋值时有可能会产生 `retain` / `release` 调用，如果一个变量在其生命周期内不会被释放，则使用 `__unsafe_unretained` 会节省很大的开销。
+
+访问具有 `__weak` 属性的变量时，实际上会调用 `objc_loadWeak()` 和 `objc_storeWeak()` 来完成，这也会带来很大的开销，所以要避免使用 `__weak` 属性。
+
+创建和使用对象时，要尽量避免对象进入 `autoreleasepool` ，以避免额外的资源开销。
+
+### 6. 遍历容器类时，选择更高效的方法
+
+相对于 `Foundation` 的方法来说，`CoreFoundation` 的方法有更高的性能，用 `CFArrayApplyFunction()` 和 `CFDictionaryApplyFunction()` 方法来遍历容器类能带来不少性能提升，但代码写起来会非常麻烦。
+
+### 7. 尽量用纯 C 函数、内联函数
+
+使用纯 C 函数可以避免 ObjC 的消息发送带来的开销。如果 C 函数比较小，使用 `inline` 可以避免一部分压栈弹栈等函数调用的开销。
+
+### 8. 减少遍历的循环次数
+
+在 JSON 和 Model 转换前，Model 的属性个数和 JSON 的属性个数都是已知的，这时**选择数量较少的那一方进行遍历**，会节省很多时间。
