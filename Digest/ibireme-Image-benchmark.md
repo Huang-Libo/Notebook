@@ -107,9 +107,10 @@ iOS 底层是用 `ImageIO.framework` 实现的图片编解码。目前 iOS 原�
 
 由于我目前主要是做 iOS 开发，所以下面的性能评测都是基于 iPhone 的，主要测试代码可以在[这里](https://github.com/ibireme/YYWebImage/blob/master/Demo/YYWebImageDemo/YYImageBenchmark.m)看到。测试素材很少，只有两个：
 
+<p>
 <img src="../media/Digest/ibireme/Image-benchmark/dribbble-512.png" width="200"/>
-
 <img src="../media/Digest/ibireme/Image-benchmark/lena-512.jpg" width="200"/>
+</p>
 
 - 第一张是 Dribbble 的 Logo，包含 Alpha 通道，用于测试简单的、图形类的图像；
 - 第二张经典的 Lena 图，用于测试照片类的、具有丰富细节的图像。
@@ -269,9 +270,10 @@ GIF 的制作工具有很多，但效果好、压缩比高的工具非常少。
 
 下面是没有经过优化的 GIF 和经过 `ffmpeg` 优化编码的 GIF，可以看到差距非常大。
 
+<p>
 <img alt="bbb-nodither-1.gif" src="https://raw.githubusercontent.com/Huang-Libo/image-hosting/master/Default/bbb-nodither-1.gif" width="300"/>
-
 <img alt="bbb-nodither-2.gif" src="https://raw.githubusercontent.com/Huang-Libo/image-hosting/master/Default/bbb-nodither-2.gif" width="300"/>
+</p>
 
 ### APNG
 
