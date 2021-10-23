@@ -10,9 +10,9 @@
 ## 📖 Digest
 
 - [ibireme《深入理解 RunLoop 》](Digest/ibireme-RunLoop.md)
-- [ibireme《iOS 保持界面流畅的技巧》](Digest/ibireme-smooth-user-interface.md)
+- [ibireme《保持界面流畅的技巧》](Digest/ibireme-smooth-user-interface.md)
 - [ibireme《YYCache 的设计思路》](Digest/ibireme-YYCache.md)
-- [ibireme《iOS JSON 模型转换库评测》](Digest/ibireme-YYModel.md)
+- [ibireme《JSON 模型转换库评测》](Digest/ibireme-YYModel.md)
 - [ibireme《不再安全的 OSSpinLock 》](Digest/ibireme-OSSpinLock-is-unsafe.md)
 
 ## 🎱 Check List
