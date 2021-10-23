@@ -41,17 +41,17 @@ iOS 开发中总会用到各种缓存，最初我是用的一些开源的缓存�
 
 ## 磁盘缓存
 
-为了设计一个比较好的磁盘缓存，我调查了大量的开源库，包括 `TMDiskCache` 、`PINDiskCache` 、`SDWebImage` 、`FastImageCache` 等，也调查了一些闭源的实现，包括 `NSURLCache` 、Facebook 的 `FBDiskCache` 等。他们的实现技术大致分为三类：
+为了设计一个比较好的磁盘缓存，我调查了大量的开源库，包括 `TMDiskCache`（已停更）、`PINDiskCache` 、`SDWebImage` 、`FastImageCache`（已停更）等，也调查了一些闭源的实现，包括 `NSURLCache` 、Facebook 的 `FBDiskCache` 等。他们的实现技术大致分为三类：
 
 - 基于文件读写、
 - 基于 mmap 文件内存映射、
 - 基于数据库。
 
-`TMDiskCache` , `PINDiskCache` , `SDWebImage` 等缓存，都是基于文件系统的，即一个 Value 对应一个文件，通过文件读写来缓存数据。他们的实现都比较简单，性能也都相近，缺点也是同样的：不方便扩展、没有元数据、难以实现较好的淘汰算法、数据统计缓慢。
+`TMDiskCache`（已停更）、`PINDiskCache` 、`SDWebImage` 等缓存，都是基于文件系统的，即一个 `value` 对应一个文件，通过文件读写来缓存数据。他们的实现都比较简单，性能也都相近，缺点也是同样的：不方便扩展、没有元数据、难以实现较好的淘汰算法、数据统计缓慢。
 
-`FastImageCache` 采用的是 `mmap` 将文件映射到内存。用过 MongoDB 的人应该很熟悉 mmap 的缺陷：
+`FastImageCache` 采用的是 `mmap` 将文件映射到内存。用过 `MongoDB` 的人应该很熟悉 `mmap` 的缺陷：
 
-- 热数据的文件不要超过物理内存大小，不然 mmap 会导致内存交换严重降低性能；
+- 热数据的文件不要超过物理内存大小，不然 `mmap` 会导致内存交换严重降低性能；
 - 另外内存中的数据是定时 `flush` 到文件的，如果数据还未同步时程序挂掉，就会导致数据错误。抛开这些缺陷来说，`mmap` 性能非常高。
 
 `NSURLCache` 、`FBDiskCache` 都是基于 SQLite 数据库的。基于数据库的缓存可以很好的支持元数据、扩展方便、数据统计速度快，也很容易实现 **LRU** 或其他淘汰算法，唯一不确定的就是数据库读写的性能，为此我评测了一下 SQLite 在真机上的表现。在 *iPhone 6 (64GB)* 下，
@@ -61,7 +61,7 @@ iOS 开发中总会用到各种缓存，最初我是用的一些开源的缓存�
   - 当单条数据小于 `20K` 时，数据越小 SQLite 读取性能越高；
   - 单条数据大于 `20K` 时，直接写为文件速度会更快一些。
 
-这和 [SQLite 官网的描述](https://www.sqlite.org/intern-v-extern-blob.html)基本一致。另外，直接从官网下载最新的 SQLite 源码编译，会比 iOS 系统自带的 sqlite3.dylib 性能要高很多。
+这和 [SQLite 官网的描述](https://www.sqlite.org/intern-v-extern-blob.html)基本一致。另外，直接从官网下载最新的 SQLite 源码编译，会比 iOS 系统自带的 `sqlite3.dylib` 性能要高很多。
 
 基于 SQLite 的这种表现，**磁盘缓存最好是把 SQLite 和文件存储结合起来**：`key-value` 元数据保存在 SQLite 中，而 `value` 数据则根据大小不同选择 SQLite 或文件存储。`NSURLCache` 选定的数据大小的阈值是 `16K` ；`FBDiskCache` 则把所有 `value` 数据都保存成了文件。
 
@@ -69,13 +69,13 @@ iOS 开发中总会用到各种缓存，最初我是用的一些开源的缓存�
 
 ![disk_cache_bench_result.png](../media/Digest/ibireme/disk_cache_bench_result.png)
 
-在存取小数据 (`NSNumber`) 时，`YYDiskCache` 的性能远远高出基于文件存储的库；而较大数据的存取性能则比较接近了。但得益于 SQLite 存储的元数据，`YYDiskCache` 实现了 LRU 淘汰算法、更快的数据统计，更多的容量控制选项。
+在存取小数据 (`NSNumber`) 时，`YYDiskCache` 的性能远远高出基于文件存储的库；而较大数据的存取性能则比较接近了。但得益于 SQLite 存储的元数据，`YYDiskCache` 实现了 **LRU** 淘汰算法、更快的数据统计，更多的容量控制选项。
 
 ## 备注
 
 ### 关于锁
 
-`OSSpinLock` 自旋锁，性能最高的锁。原理很简单，就是一直 `do...while` 忙等。它的缺点是当等待时会消耗大量 CPU 资源，所以它不适用于较长时间的任务。对于内存缓存的存取来说，它非常合适。
+`OSSpinLock` 自旋锁，性能最高的锁。原理很简单，就是一直 `do...while` 忙等。它的缺点是当等待时会消耗大量 CPU 资源，所以它不适用于较长时间的任务。~~对于内存缓存的存取来说，它非常合适。~~（`YYMemoryCache` 已改用 `pthread_mutex_t` ）
 
 `dispatch_semaphore` 是信号量，但当信号总量设为 `1` 时也可以当作锁来。在没有等待情况出现时，它的性能比 `pthread_mutex` 还要高，但一旦有等待情况出现时，性能就会下降许多。相对于 `OSSpinLock` 来说，它的优势在于等待时不会消耗 CPU 资源。对磁盘缓存来说，它比较合适。
 
@@ -83,6 +83,6 @@ iOS 开发中总会用到各种缓存，最初我是用的一些开源的缓存�
 
 Realm 是一个比较新的数据库，针对移动应用所设计。它的 API 对于开发者来说非常友好，比 SQLite 、CoreData 要易用很多，但相对的坑也有不少。我在测试 SQLite 性能时，也尝试对它做了些简单的评测。我从 Realm 官网下载了它提供的 benchmark 项目，更新 SQLite 到官网最新的版本，并启用了 SQLite 的 `sqlite3_stmt` 缓存。我的评测结果显示 Realm 在写入性能上差于 SQLite ，读取小数据时也差 SQLite 不少，读取较大数据时 Realm 有很大的优势。当然这只是我个人的评测，可能并不能反映真实项目中具体的使用情况。
 
-我想看看它的实现原理，但发现 Realm 的核心 `realm-core` 是闭源的（评论里 Realm 员工提到目前有在 Apache 2.0 授权下的开源计划），能知道的是 Realm 应该用了 `mmap` 把文件映射到内存，所以才在较大数据读取时获得很高的性能。
+我想看看它的实现原理，但发现 Realm 的核心 `realm-core` 是闭源的（评论里 Realm 员工提到目前有在 Apache 2.0 授权下的开源计划），能知道的是 **Realm 应该用了 `mmap` 把文件映射到内存，所以才在较大数据读取时获得很高的性能**。
 
 另外我注意到添加了 Realm 的 App 会在启动时向某几个 IP 发送数据，评论中有 Realm 员工反馈这是发送匿名统计数据，并且只针对模拟器和 Debug 模式。这部分代码目前是开源的，并且可以通过环境变量 `REALM_DISABLE_ANALYTICS` 来关闭，如果有使用 Realm 的可以注意一下。
