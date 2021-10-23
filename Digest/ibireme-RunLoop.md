@@ -2,6 +2,8 @@
 
 > 文摘来源：[ibireme 的博客：《深入理解 RunLoop 》](https://blog.ibireme.com/2015/05/18/runloop/)，有增删。
 
+RunLoop 是 iOS 和 macOS 开发中非常基础的一个概念，这篇文章将从 `CFRunLoop` 的源码入手，介绍 RunLoop 的概念以及底层实现原理。之后会介绍一下在 iOS 中，苹果是如何利用 RunLoop 实现自动释放池、延迟回调、触摸事件、屏幕刷新等功能的。
+
 <h2>目录</h2>
 
 - [ibireme :《深入理解 RunLoop》](#ibireme-深入理解-runloop)
