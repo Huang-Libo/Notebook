@@ -11,6 +11,7 @@
 
 - [ibireme《深入理解 RunLoop 》](Digest/ibireme-RunLoop.md)
 - [ibireme《保持界面流畅的技巧》](Digest/ibireme-smooth-user-interface.md)
+- [ibireme《移动端图片格式调研》](Digest/ibireme-Image-benchmark.md)
 - [ibireme《处理图片的 Tips 》](Digest/ibireme-Image-Tips.md)
 - [ibireme《YYCache 的设计思路》](Digest/ibireme-YYCache.md)
 - [ibireme《JSON 模型转换库评测》](Digest/ibireme-YYModel.md)
