@@ -18,8 +18,9 @@ Autorelease 机制是 iOS 开发者管理对象内存的好伙伴，
     - [小实验](#小实验)
   - [Autorelease 原理](#autorelease-原理)
     - [AutoreleasePoolPage](#autoreleasepoolpage)
-    - [释放时刻](#释放时刻)
-    - [嵌套的AutoreleasePool](#嵌套的autoreleasepool)
+    - [objc_autoreleasePoolPush](#objc_autoreleasepoolpush)
+    - [objc_autoreleasePoolPop](#objc_autoreleasepoolpop)
+    - [嵌套的 AutoreleasePool](#嵌套的-autoreleasepool)
 
 ## Autorelease 对象什么时候释放？
 
@@ -100,21 +101,23 @@ objc_autoreleasePoolPop(context);
 
 所以，向一个对象发送 `-autorelease` 消息，就是将这个对象加入到当前 `AutoreleasePoolPage` 的 `next` 指针指向的位置。
 
-### 释放时刻
+### objc_autoreleasePoolPush
 
 每当进行一次 `objc_autoreleasePoolPush` 调用时，Runtime 向当前的 `AutoreleasePoolPage` 中添加一个**哨兵对象**（值为 `nil` ），那么这一个 page 就变成了下面的样子：
 
 ![AutoreleasePoolPage-3](../media/Digest/sunnyxx/AutoreleasePoolPage-3.jpg)
 
-`objc_autoreleasePoolPush` 的返回值正是这个哨兵对象的地址，被 `objc_autoreleasePoolPop(哨兵对象)` 作为入参，于是：
+### objc_autoreleasePoolPop
+
+`objc_autoreleasePoolPush` 方法的返回值正是这个哨兵对象的地址，被 `objc_autoreleasePoolPop(哨兵对象)` 作为入参，于是，在执行 `pop` 时：
 
 - 根据传入的哨兵对象的地址找到哨兵对象所处的 page ；
-- 在当前的 page 中，向所有的晚于哨兵对象插入的 autorelease 对象发送 `-release` 消息，并向回移动 `next` 指针到正确位置；从最新加入的对象一直向前清理，可能会向前跨越若干个 page ，直到哨兵所在的 page 。
+- 在当前的 page 中，向所有的晚于哨兵对象插入的 autorelease 对象发送 `-release` 消息，并向回移动 `next` 指针到正确的位置；从最新加入的对象一直向前清理，这个过程可能会向前跨越若干个 page ，直到哨兵对象所在的 page 。
 
 刚才的 `objc_autoreleasePoolPop` 执行后，最终变成了下面的样子：
 
 ![AutoreleasePoolPage-4](../media/Digest/sunnyxx/AutoreleasePoolPage-4.jpg)
 
-### 嵌套的AutoreleasePool
+### 嵌套的 AutoreleasePool
 
-知道了上面的原理，嵌套的 AutoreleasePool 就非常简单了，`pop` 的时候总会释放到上次 `push` 的位置为止，多层的 pool 就是多个哨兵对象而已，就像剥洋葱一样，每次一层，互不影响。
+知道了上面的原理，嵌套的 Autorelease Pool 就非常简单了，`pop` 的时候总会释放到上次 `push` 的位置为止，多层的 Pool 就是多个哨兵对象而已，就像剥洋葱一样，每次一层，互不影响。
