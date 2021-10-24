@@ -17,6 +17,7 @@
 - [ibireme《YYCache 的设计思路》](Digest/ibireme-YYCache.md)
 - [ibireme《JSON 模型转换库评测》](Digest/ibireme-YYModel.md)
 - [ibireme《不再安全的 OSSpinLock 》](Digest/ibireme-OSSpinLock-is-unsafe.md)
+- [sunnyxx《黑幕背后的 Autorelease》](Digest/-Autorelease.md)
 
 ## 🎱 Check List
 
