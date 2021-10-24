@@ -313,7 +313,7 @@ BPG 本身是基于 `HEVC (H.265)` 视频编码的，其最开始设计时就考
 
 ### 动图性能对比
 
-我把下面这张 GIF 分别转为 WebP、APNG、BPG 动图，并在 iPhone 6 上对其所有帧进行解码。
+我把下面这张 GIF 分别转为 WebP、APNG、BPG 动图，并在 *iPhone 6* 上对其所有帧进行解码。
 
 <img alt="gif-ermilio.gif" src="https://raw.githubusercontent.com/Huang-Libo/image-hosting/master/Default/gif-ermilio.gif" width="60%"/>
 
