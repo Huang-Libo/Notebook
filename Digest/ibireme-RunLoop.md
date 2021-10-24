@@ -2,7 +2,7 @@
 
 > 文摘来源：[ibireme 的博客：《深入理解 RunLoop 》](https://blog.ibireme.com/2015/05/18/runloop/)，有增删。
 
-RunLoop 是 iOS 和 macOS 开发中非常基础的一个概念，这篇文章将从 `CFRunLoop` 的源码入手，介绍 RunLoop 的概念以及底层实现原理。之后会介绍一下在 iOS 中，苹果是如何利用 RunLoop 实现自动释放池、延迟回调、触摸事件、屏幕刷新等功能的。
+RunLoop 是 iOS 和 macOS 开发中非常基础的一个概念，这篇文章将从 `CFRunLoop` 的源码入手，介绍 RunLoop 的概念以及底层实现原理。之后会介绍一下在 iOS 中，系统是如何利用 RunLoop 实现自动释放池、延迟回调、触摸事件、屏幕刷新等功能的。
 
 <h2>目录</h2>
 
@@ -18,7 +18,7 @@ RunLoop 是 iOS 和 macOS 开发中非常基础的一个概念，这篇文章将
   - [RunLoop 的 Mode](#runloop-的-mode)
   - [RunLoop 的内部逻辑](#runloop-的内部逻辑)
   - [RunLoop 的底层实现](#runloop-的底层实现)
-  - [苹果用 RunLoop 实现的功能](#苹果用-runloop-实现的功能)
+  - [系统用 RunLoop 实现的功能](#系统用-runloop-实现的功能)
     - [0. App 启动后 RunLoop 的状态](#0-app-启动后-runloop-的状态)
     - [1. AutoreleasePool](#1-autoreleasepool)
     - [2. 事件响应](#2-事件响应)
@@ -36,7 +36,7 @@ RunLoop 是 iOS 和 macOS 开发中非常基础的一个概念，这篇文章将
 
 `CFRunLoopRef` 的代码 `CFRunLoop.c` 是开源的，可以在这里 <http://opensource.apple.com/tarballs/CF/> 下载到整个 `CoreFoundation` 的源码。
 
-Swift 开源后，苹果又维护了一个跨平台的 `CoreFoundation` 版本：<https://github.com/apple/swift-corelibs-foundation/> ，这个版本的源码可能和现有 iOS 系统中的实现略不一样，但更容易编译，而且已经适配了 Linux / Windows 。
+Swift 开源后，Apple 又维护了一个跨平台的 `CoreFoundation` 版本：<https://github.com/apple/swift-corelibs-foundation/> ，这个版本的源码可能和现有 iOS 系统中的实现略不一样，但更容易编译，而且已经适配了 Linux / Windows 。
 
 ## RunLoop 的概念
 
@@ -53,7 +53,7 @@ macOS/iOS 系统中，提供了两个这样的对象：`NSRunLoop` 和 `CFRunLoo
 
 **线程和 RunLoop 之间是一一对应的**，其关系是保存在一个全局的 Dictionary 里。线程刚创建时并没有 RunLoop ，如果不主动获取，那它一直都不会有。RunLoop 的创建是发生在第一次获取时，RunLoop 的销毁是发生在线程结束时。你只能在一个线程的内部获取其 RunLoop（主线程除外）。
 
-苹果不允许直接创建 RunLoop ，它只提供了两个自动获取的函数：`CFRunLoopGetMain()` 和 `CFRunLoopGetCurrent()` ，这两个函数内部的逻辑大概是下面这样:
+iOS/macOS 系统不允许直接创建 RunLoop ，它只提供了两个自动获取的函数：`CFRunLoopGetMain()` 和 `CFRunLoopGetCurrent()` ，这两个函数内部的逻辑大概是下面这样:
 
 【代码说明：或许需要更新一下？ 施工中 🚧】
 
@@ -100,7 +100,7 @@ CFRunLoopRef CFRunLoopGetCurrent() {
 
 **关于 iOS 中的线程**：
 
-iOS 开发中能遇到两个线程对象: `pthread_t` 和 `NSThread` 。过去苹果有份文档标明了 `NSThread` 只是 `pthread_t` 的封装，但那份文档已经失效了，现在它们也有可能都是直接包装自最底层的 `mach thread`。苹果并没有提供这两个类型相互转换的接口，但不管怎么样，可以肯定的是 `pthread_t` 和 `NSThread` 是一一对应的。比如：
+iOS 开发中能遇到两个线程对象: `pthread_t` 和 `NSThread` 。过去 Apple 有份文档标明了 `NSThread` 只是 `pthread_t` 的封装，但那份文档已经失效了，现在它们也有可能都是直接包装自最底层的 `mach thread`。系统并没有提供这两个类型相互转换的接口，但不管怎么样，可以肯定的是 `pthread_t` 和 `NSThread` 是一一对应的。比如：
 
 - 可以通过 `pthread_main_thread_np()` 或 `[NSThread mainThread]` 来获取主线程；
 - 也可以通过 `pthread_self()` 或 `[NSThread currentThread]` 来获取当前线程。
@@ -213,13 +213,13 @@ CFRunLoopRemoveTimer(CFRunLoopRef rl, CFRunLoopTimerRef timer, CFStringRef mode)
 
 你只能通过 mode name 来操作内部的 mode，当你传入一个新的 mode name 但 RunLoop 内部没有对应 mode 时，RunLoop 会自动帮你创建对应的 `CFRunLoopModeRef` 。对于一个 RunLoop 来说，其内部的 mode 只能增加不能删除。
 
-苹果公开提供的 Mode 有两个：`kCFRunLoopDefaultMode` (`NSDefaultRunLoopMode`) 和 `UITrackingRunLoopMode`，你可以用这两个 Mode Name 来操作其对应的 Mode。
+系统公开提供的 Mode 有两个：`kCFRunLoopDefaultMode` (`NSDefaultRunLoopMode`) 和 `UITrackingRunLoopMode`，你可以用这两个 Mode Name 来操作其对应的 Mode。
 
-同时苹果还提供了一个操作 common 标记的字符串：`kCFRunLoopCommonModes` (`NSRunLoopCommonModes`)，你可以用这个字符串来操作 Common Items，或标记一个 Mode 为 “common” 。使用时注意区分这个字符串和其他 mode name。
+同时系统还提供了一个操作 common 标记的字符串：`kCFRunLoopCommonModes` (`NSRunLoopCommonModes`)，你可以用这个字符串来操作 Common Items，或标记一个 Mode 为 “common” 。使用时注意区分这个字符串和其他 mode name。
 
 ## RunLoop 的内部逻辑
 
-根据苹果在[文档](https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/Multithreading/RunLoopManagement/RunLoopManagement.html#//apple_ref/doc/uid/10000057i-CH16-SW23)里的说明，RunLoop 内部的逻辑大致如下：
+根据 Apple 在[文档](https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/Multithreading/RunLoopManagement/RunLoopManagement.html#//apple_ref/doc/uid/10000057i-CH16-SW23)里的说明，RunLoop 内部的逻辑大致如下：
 
 > 说明：原文的图有错误，唤醒 RunLoop 的应该是 **Source1** ，此图已修正。
 
@@ -343,7 +343,7 @@ int CFRunLoopRunSpecific(runloop, modeName, seconds, stopAfterHandle) {
 
 <img src="../media/Digest/ibireme/RunLoop/System-structure.png" width="300"/>
 
-苹果官方将整个系统大致划分为上述4个层次：
+Apple 官方将整个系统大致划分为上述4个层次：
 
 - **应用层**包括用户能接触到的图形应用，例如 Spotlight 、SpringBoard 等。
 - **应用框架层**即开发人员接触到的 `Cocoa` 等框架。
@@ -360,7 +360,7 @@ int CFRunLoopRunSpecific(runloop, modeName, seconds, stopAfterHandle) {
 - **BSD** 层可以看作围绕 Mach 层的一个外环，其提供了诸如进程管理、文件系统和网络等功能。
 - **IOKit** 层是为设备驱动提供了一个面向对象(C++)的一个框架。
 
-**Mach** 本身提供的 API 非常有限，而且苹果也不鼓励使用 Mach 的 API，但是这些 API 非常基础，如果没有这些 API 的话，其他任何工作都无法实施。**在 Mach 中，所有的东西都是通过自己的对象实现的，进程、线程和虚拟内存都被称为”对象”**。和其他架构不同， **Mach 的对象间不能直接调用，只能通过消息传递的方式实现对象间的通信。”消息”是 Mach 中最基础的概念，消息在两个端口 (port) 之间传递，这就是 Mach 的 IPC (进程间通信) 的核心。**
+**Mach** 本身提供的 API 非常有限，而且 Apple 也不鼓励使用 Mach 的 API，但是这些 API 非常基础，如果没有这些 API 的话，其他任何工作都无法实施。**在 Mach 中，所有的东西都是通过自己的对象实现的，进程、线程和虚拟内存都被称为”对象”**。和其他架构不同， **Mach 的对象间不能直接调用，只能通过消息传递的方式实现对象间的通信。”消息”是 Mach 中最基础的概念，消息在两个端口 (port) 之间传递，这就是 Mach 的 IPC (进程间通信) 的核心。**
 
 Mach 的消息定义是在 `<mach/message.h>` 头文件的，很简单：
 
@@ -402,7 +402,7 @@ RunLoop 的核心就是一个 `mach_msg()`（见上面代码的第 7 步），Ru
 
 关于具体的如何利用 mach port 发送信息，可以看看 [NSHipster 这一篇文章](https://nshipster.com/inter-process-communication/)，或者[这里](https://segmentfault.com/a/1190000002400329)的中文翻译 。
 
-## 苹果用 RunLoop 实现的功能
+## 系统用 RunLoop 实现的功能
 
 ### 0. App 启动后 RunLoop 的状态
 
@@ -519,7 +519,7 @@ CFRunLoop {
 4. `GSEventReceiveRunLoopMode` : 接受系统事件的内部 Mode，通常用不到。
 5. `kCFRunLoopCommonModes` : ~~这是一个占位的 Mode ，没有实际作用~~。【待更新。施工中 🚧】
 
-你可以在[这里](http://iphonedevwiki.net/index.php/CFRunLoop)看到更多的苹果内部的 Mode ，但那些 Mode 在开发中就很难遇到了。
+你可以在[这里](http://iphonedevwiki.net/index.php/CFRunLoop)看到更多的系统内部的 Mode ，但那些 Mode 在开发中就很难遇到了。
 
 **当 RunLoop 进行回调时，一般都是通过一个很长的函数调用出去 (call out)**, 当你在你的代码中下断点调试时，通常能在调用栈上看到这些函数。下面是这几个函数的整理版本，如果你在调用栈中看到这些长函数名，在这里查找一下就能定位到具体的调用地点了：
 
@@ -581,7 +581,7 @@ static void __CFRUNLOOP_IS_CALLING_OUT_TO_AN_OBSERVER_CALLBACK_FUNCTION__();
 
 ### 1. AutoreleasePool
 
-**App 启动后，苹果在主线程 RunLoop 里注册了两个 Observer**，其回调都是 `_wrapRunLoopWithAutoreleasePoolHandler()` 。
+**App 启动后，系统在 App 的主线程 RunLoop 里注册了两个 Observer**，其回调都是 `_wrapRunLoopWithAutoreleasePoolHandler()` 。
 
 - 第一个 Observer 监视的事件是 **Entry**（即将进入 Loop ），其回调内会调用 `_objc_autoreleasePoolPush()` 创建自动释放池。其 order 是-2147483647 ，**优先级最高**，保证创建释放池发生在其他所有回调之前。
 - 第二个 Observer 监视了两个事件：
@@ -612,7 +612,7 @@ SpringBoard 只接收按键（锁屏/静音等）、触摸、加速、接近传�
 
 当在操作 UI 时，比如改变了 frame 、更新了 `UIView` / `CALayer` 的层次时，或者手动调用了 `UIView` / `CALayer` 的 `setNeedsLayout` / `setNeedsDisplay` 方法后，这个 `UIView` / `CALayer` 就被标记为**待处理**，并被提交到一个全局的容器去。
 
-苹果注册了一个 Observer 监听 **BeforeWaiting**（即将进入休眠）和 **Exit**（即将退出Loop）事件，回调去执行一个很长的函数：
+系统为 App 注册了一个 Observer 监听 **BeforeWaiting**（即将进入休眠）和 **Exit**（即将退出Loop）事件，回调去执行一个很长的函数：
 
 `_ZN2CA11Transaction17observer_callbackEP19__CFRunLoopObservermPv()`
 
