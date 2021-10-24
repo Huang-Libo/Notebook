@@ -9,7 +9,7 @@
 
 ## 📖 Digest
 
-- [ibireme - YY 系列简介](Digest/ibireme-repo-introduction.md)
+- [ibireme - YY 系列简介](Digest/ibireme-AAA-repo-introduction.md)
 - [ibireme《深入理解 RunLoop 》](Digest/ibireme-RunLoop.md)
 - [ibireme《保持界面流畅的技巧》](Digest/ibireme-smooth-user-interface.md)
 - [ibireme《移动端图片格式调研》](Digest/ibireme-Image-benchmark.md)
