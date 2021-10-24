@@ -222,7 +222,9 @@ int ret = [sark foo];
 而这些汇编指令在内存中的值是固定的，比如 `movq` 对应着 `0x48` 。
 于是乎，就有了下面的这个函数，入参是调用方 `__builtin_return_address` 传入值。
 
-> 说明：原文中附的 `callerAcceptsFastAutorelease()` 方法已在新版 Runtime 中被改名为 `callerAcceptsOptimizedReturn()` ，且不同架构的实现不一样
+> 说明：原文中附的 `callerAcceptsFastAutorelease()` 方法已在新版 Runtime 中被改名为 `callerAcceptsOptimizedReturn()` ，且不同架构的实现不一样。
+
+`callerAcceptsOptimizedReturn()` 检验了主调方在返回值之后是否紧接着调用了 `objc_retainAutoreleasedReturnValue()` ，如果是，就知道了外部是 ARC 环境，反之就走没被优化的老逻辑。
 
 1、`callerAcceptsOptimizedReturn()` 在 `__arm64__` 架构的实现：
 
@@ -273,5 +275,3 @@ callerAcceptsOptimizedReturn(const void * const ra0)
     return true;
 }
 ```
-
-它检验了主调方在返回值之后是否紧接着调用了 `objc_retainAutoreleasedReturnValue()` ，如果是，就知道了外部是 ARC 环境，反之就走没被优化的老逻辑。
