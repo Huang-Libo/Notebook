@@ -20,7 +20,7 @@ Autorelease 机制是 iOS 开发者管理对象内存的好伙伴，
     - [AutoreleasePoolPage](#autoreleasepoolpage)
     - [objc_autoreleasePoolPush](#objc_autoreleasepoolpush)
     - [objc_autoreleasePoolPop](#objc_autoreleasepoolpop)
-    - [嵌套的 AutoreleasePool](#嵌套的-autoreleasepool)
+    - [嵌套的 Autorelease Pool](#嵌套的-autorelease-pool)
 
 ## Autorelease 对象什么时候释放？
 
@@ -69,7 +69,7 @@ __weak id reference = nil;
 
 ### AutoreleasePoolPage
 
-在 ARC 中，我们使用 `@autoreleasepool{}` 来使用一个 `AutoreleasePool` ，随后编译器将其改写成下面的样子：
+在 ARC 中，我们使用 `@autoreleasepool{}` 来使用一个 Autorelease Pool ，随后编译器将其改写成下面的样子：
 
 ```objectivec
 void *context = objc_autoreleasePoolPush();
@@ -81,14 +81,14 @@ objc_autoreleasePoolPop(context);
 
 而这两个函数都是对 `AutoreleasePoolPage` 的简单封装，所以自动释放机制的核心就在于这个类。
 
-`AutoreleasePoolPage` 是一个 C++ 实现的类，它有这些属性（这些属性继承自私有的 `AutoreleasePoolPageData` ）：
+`AutoreleasePoolPage` 是一个 C++ 实现的类，它有这些属性（这些属性继承自 Runtime 中私有的 `AutoreleasePoolPageData` 结构体）：
 
 ![AutoreleasePoolPage-1](../media/Digest/sunnyxx/AutoreleasePoolPage-1.jpg)
 
 `AutoreleasePoolPage` 的特性：
 
-- AutoreleasePool 并没有单独的结构，而是由若干个 `AutoreleasePoolPage` 以**双向链表**的形式组合而成，其中 `parent` 指针指向上一个 page ，`child` 指针指向下一个 page ）；
-- **AutoreleasePool 与线程是一一对应的**（结构中的 `thread` 指针指向其对应的线程）
+- Autorelease Pool 并没有单独的结构，而是由若干个 `AutoreleasePoolPage` 以**双向链表**的形式组合而成，其中 `parent` 指针指向上一个 page ，`child` 指针指向下一个 page ）；
+- **Autorelease Pool 与线程是一一对应的**（结构中的 `thread` 指针指向其对应的线程）
 - `AutoreleasePoolPage` 每个对象会开辟 4096 字节内存（也就是**虚拟内存一页的大小**）【编者疑问：ARM64 架构上是 16KB ，其他架构上是 4KB ？】，除了自身实例变量所占的空间，剩下的空间全部用来储存 autorelease 对象的地址；
 - 上面的 `next` 指针作为**游标**指向栈顶最后 push 进来的 autorelease 对象的下一个位置；
 - 一个 `AutoreleasePoolPage` 的空间被占满时，会新建一个 `AutoreleasePoolPage` 对象，通过 `parent` 和 `child` 指针连接链表，之后的 autorelease 对象在新的 page 加入。
@@ -118,6 +118,6 @@ objc_autoreleasePoolPop(context);
 
 ![AutoreleasePoolPage-4](../media/Digest/sunnyxx/AutoreleasePoolPage-4.jpg)
 
-### 嵌套的 AutoreleasePool
+### 嵌套的 Autorelease Pool
 
 知道了上面的原理，嵌套的 Autorelease Pool 就非常简单了，`pop` 的时候总会释放到上次 `push` 的位置为止，多层的 Pool 就是多个哨兵对象而已，就像剥洋葱一样，每次一层，互不影响。
