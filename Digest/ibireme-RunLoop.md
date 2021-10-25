@@ -596,7 +596,7 @@ App 启动时， 系统会给 App 注册了一个 `source1` (是基于 mach port
 
 当一个硬件事件（触摸/锁屏/摇晃/远程控制【比如耳机线控】等）发生后，首先由 `IOKit.framework` 生成一个 `IOHIDEvent` 事件并由 SpringBoard 接收。这个过程的详细情况可以参考[这里](https://iphonedev.wiki/index.php/IOHIDFamily)。
 
-SpringBoard 只接收按键（锁屏/静音等）、触摸、加速、接近传感器等几种 Event，随后**用 mach port 转发给需要的 App 进程**。随后，系统为 App 注册的那个 `source1` 就会触发回调，并调用 `_UIApplicationHandleEventQueue()` 进行 App 内部的分发。
+SpringBoard 只接收按键（锁屏/静音等）、触摸、加速、接近传感器等几种 Event。接收到 Event 后，SpringBoard 先判断这个 Event 是由自己处理还是需要转发给某个 App ，因为用户可能是在滑动桌面，也可能在是使用某个 App 。如果是后者，则**用 mach port 转发给相应的 App 进程**。随后，系统为 App 注册的那个 `source1` 就会触发回调，并调用 `_UIApplicationHandleEventQueue()` 进行 App 内部的分发。
 
 `_UIApplicationHandleEventQueue()` 会把 `IOHIDEvent` 处理并包装成 `UIEvent` 进行处理或分发，其中包括识别手势、处理屏幕旋转、发送给 `UIWindow` 等。通常事件比如 `UIButton` 点击、touchesBegin / Move / End / Cancel 事件都是在这个回调中完成的。
 
