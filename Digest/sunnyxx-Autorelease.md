@@ -2,7 +2,7 @@
 
 > 文摘来源：[sunnyxx 的博客：《黑幕背后的 Autorelease》](http://blog.sunnyxx.com/2014/10/15/behind-autorelease/)，有增删。
 >  
-> 说明：该博客的图片外链已失效（用的微博图床，第三方图床果然靠不住。。），不过可在 [Internet Archive](https://web.archive.org/web/20180727060528/http://blog.sunnyxx.com/2014/10/15/behind-autorelease/) 中找到原图。
+> 说明：原博客的图片外链已失效（用的微博图床，第三方图床还是靠不住啊。。），不过可在 [Internet Archive](https://web.archive.org/web/20180727060528/http://blog.sunnyxx.com/2014/10/15/behind-autorelease/) 中找到原图。
 
 Autorelease 机制是 iOS 开发者管理对象内存的好伙伴，
 
@@ -20,11 +20,12 @@ Autorelease 机制是 iOS 开发者管理对象内存的好伙伴，
     - [AutoreleasePoolPage](#autoreleasepoolpage)
     - [objc_autoreleasePoolPush](#objc_autoreleasepoolpush)
     - [objc_autoreleasePoolPop](#objc_autoreleasepoolpop)
+  - [Autorelease 应用](#autorelease-应用)
     - [嵌套的 Autorelease Pool](#嵌套的-autorelease-pool)
-    - [其他 Autorelease 相关知识点](#其他-autorelease-相关知识点)
-  - [Autorelease 返回值的快速释放机制](#autorelease-返回值的快速释放机制)
+    - [执行 for 循环时的内存优化](#执行-for-循环时的内存优化)
+  - [Runtime 对 Autorelease 返回值的优化](#runtime-对-autorelease-返回值的优化)
     - [黑魔法之 Thread Local Storage](#黑魔法之-thread-local-storage)
-    - [黑魔法之 `__builtin_return_address`](#黑魔法之-__builtin_return_address)
+    - [黑魔法之 `__builtin_return_address()`](#黑魔法之-__builtin_return_address)
     - [黑魔法之反查汇编指令](#黑魔法之反查汇编指令)
 
 ## Autorelease 对象什么时候释放？
@@ -86,7 +87,9 @@ objc_autoreleasePoolPop(context);
 
 而这两个函数都是对 `AutoreleasePoolPage` 的简单封装，所以自动释放机制的核心就在于这个类。
 
-`AutoreleasePoolPage` 是一个 C++ 实现的类，它有这些属性（这些属性继承自 Runtime 中私有的 `AutoreleasePoolPageData` 结构体）：
+`AutoreleasePoolPage` 是一个 C++ 实现的类，它有这些属性：
+
+> 这些属性继承自 Runtime 中私有的 `AutoreleasePoolPageData` 结构体。
 
 ![AutoreleasePoolPage-1](../media/Digest/sunnyxx/AutoreleasePoolPage-1.jpg)
 
@@ -117,17 +120,19 @@ objc_autoreleasePoolPop(context);
 `objc_autoreleasePoolPush` 方法的返回值正是这个哨兵对象的地址，被 `objc_autoreleasePoolPop(哨兵对象)` 作为入参，于是，在执行 `pop` 时：
 
 - 根据传入的哨兵对象的地址找到哨兵对象所处的 page ；
-- 在当前的 page 中，向所有的晚于哨兵对象插入的 autorelease 对象发送 `-release` 消息，并向回移动 `next` 指针到正确的位置；从最新加入的对象一直向前清理，这个过程可能会向前跨越若干个 page ，直到哨兵对象所在的 page 。
+- 在当前的 page 中，向所有的晚于哨兵对象插入的 autorelease 对象发送 `-release` 消息，并向回移动 `next` 指针到正确的位置；从最新加入的对象一直向前清理，这个过程可能会向前跨越若干个 page ，直到找到哨兵对象。
 
 刚才的 `objc_autoreleasePoolPop` 执行后，最终变成了下面的样子：
 
 ![AutoreleasePoolPage-4](../media/Digest/sunnyxx/AutoreleasePoolPage-4.jpg)
 
+## Autorelease 应用
+
 ### 嵌套的 Autorelease Pool
 
 知道了上面的原理，嵌套的 Autorelease Pool 就非常简单了，`pop` 的时候总会释放到上次 `push` 的位置为止，多层的 Pool 就是多个哨兵对象而已，就像剥洋葱一样，每次一层，互不影响。
 
-### 其他 Autorelease 相关知识点
+### 执行 for 循环时的内存优化
 
 使用容器的 block 版本的枚举器时，内部会自动添加一个 Autorelease Pool ：
 
@@ -139,7 +144,7 @@ objc_autoreleasePoolPop(context);
 
 而普通 `for` 循环和 `for in` 循环中没有这个特性，所以，还是新版的 block 版本枚举器更加方便。当 `for` 循环中遍历产生大量 autorelease 变量时，就需要手加局部 Autorelease Pool 。
 
-## Autorelease 返回值的快速释放机制
+## Runtime 对 Autorelease 返回值的优化
 
 值得一提的是，ARC 下，Runtime 有一套对 autorelease 返回值的优化策略。
 比如一个工厂方法：
@@ -180,7 +185,7 @@ void* pthread_getspecific(pthread_key_t);
 
 说它是黑魔法可能被懂 pthread 的笑话- -
 
-- 在返回值身上调用 `objc_autoreleaseReturnValue()` 方法时，Runtime 将这个返回值 object 储存在 `TLS` 中，然后直接返回这个 object（不调用 `-autorelease` ）；
+- 对返回值调用 `objc_autoreleaseReturnValue()` 方法时，Runtime 将这个返回值 object 储存在 `TLS` 中，然后直接返回这个 object（不调用 `-autorelease` ）；
 - 同时，在外部接收这个返回值的 `objc_retainAutoreleasedReturnValue()` 里，发现 `TLS` 中正好存了这个对象，那么直接返回这个 object（不调用 `-retain` ）。
 
 于是乎，调用方和被调方利用 `TLS` 做中转，很有默契的免去了对返回值的内存管理。
@@ -189,7 +194,7 @@ void* pthread_getspecific(pthread_key_t);
 
 只能动用更高级的黑魔法。
 
-### 黑魔法之 `__builtin_return_address`
+### 黑魔法之 `__builtin_return_address()`
 
 这个内建函数原型是 `char *__builtin_return_address(int level)` ，作用是得到函数的返回地址，参数表示层数，如 `__builtin_return_address(0)` 表示当前函数体返回地址，传 `1` 是调用这个函数的外层函数的返回值地址，以此类推。
 
@@ -210,7 +215,7 @@ int ret = [sark foo];
 
 ### 黑魔法之反查汇编指令
 
-通过上面的 `__builtin_return_address` 加某些偏移量，被调方可以定位到主调方在返回值后面的汇编指令：
+通过上面的 `__builtin_return_address()` 加某些偏移量，被调方可以定位到主调方在返回值后面的汇编指令：
 
 ```objectivec
 // caller
@@ -220,7 +225,7 @@ int ret = [sark foo];
 ```
 
 而这些汇编指令在内存中的值是固定的，比如 `movq` 对应着 `0x48` 。
-于是乎，就有了下面的这个函数，入参是调用方 `__builtin_return_address` 传入值。
+于是乎，就有了下面的 `callerAcceptsFastAutorelease()` 函数，入参是调用方 `__builtin_return_address` 传入值。
 
 > 说明：原文中附的 `callerAcceptsFastAutorelease()` 方法已在新版 Runtime 中被改名为 `callerAcceptsOptimizedReturn()` ，且不同架构的实现不一样。
 
