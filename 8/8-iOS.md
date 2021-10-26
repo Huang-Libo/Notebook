@@ -237,7 +237,7 @@ id obj2 = objc_msgSend(obj1, sel_registerName("init"));
 
 先说结论：
 
-- `source1` ：是基于 mach port 的，来自系统内核或者其他进程或线程的事件，可以**主动唤醒**休眠中的 RunLoop。mach port 是进程间通信的一种方式。
+- `source1` ：是基于 mach port 的，可接收来自系统内核或者其他进程或线程的事件，可以**主动唤醒**休眠中的 RunLoop 。（mach port 是进程间通信的一种方式。）
 - `source0` ：不是基于 port 的，无法主动唤醒 RunLoop 。（进入休眠的 RunLoop 仅能通过 mach port 和 mach_msg 来唤醒）。
 
 再看源码：
