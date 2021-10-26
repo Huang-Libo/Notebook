@@ -8,6 +8,7 @@
     - [iOS 系统响应触摸事件的机制](#ios-系统响应触摸事件的机制)
   - [Runtime](#runtime)
     - [「从历年 weak 看 iOS 面试】」](#从历年-weak-看-ios-面试)
+    - [消息转发流程](#消息转发流程)
     - [dealloc 的流程](#dealloc-的流程)
     - [添加 weak 变量](#添加-weak-变量)
     - [weak 指针置为 nil 的过程](#weak-指针置为-nil-的过程)
@@ -160,6 +161,10 @@
 我 ： 别说了，拿纸来，我动手实现一个。
 
 面试官：等写完后，面试官慢悠悠的说，小伙子不错，我考虑考虑，你先回去吧
+
+### 消息转发流程
+
+![Runtime-message-forward.jpg](../media/iOS/Runtime/Runtime-message-forward.jpg)
 
 ### dealloc 的流程
 
