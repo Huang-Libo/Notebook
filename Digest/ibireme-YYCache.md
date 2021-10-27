@@ -7,22 +7,30 @@ iOS 开发中总会用到各种缓存，最初我是用的一些开源的缓存�
 <h2>目录</h2>
 
 - [YYCache 的设计思路](#yycache-的设计思路)
+  - [概要](#概要)
   - [内存缓存](#内存缓存)
   - [磁盘缓存](#磁盘缓存)
+    - [不同方案的概览](#不同方案的概览)
+    - [基于文件的方案](#基于文件的方案)
+    - [基于 mmap 的方案](#基于-mmap-的方案)
+    - [基于 SQLite 的方案](#基于-sqlite-的方案)
+    - [SQLite ➕ 文件存储的方案](#sqlite--文件存储的方案)
   - [备注](#备注)
     - [关于锁](#关于锁)
     - [关于 Realm](#关于-realm)
 
-## 内存缓存
+## 概要
 
-通常一个缓存是由*内存缓存*和*磁盘缓存*组成：
+通常一个缓存组件是由*内存缓存*和*磁盘缓存*组成：
 
 - 内存缓存提供容量小但高速的存取功能；
 - 磁盘缓存提供大容量但低速的持久化存储。
 
+## 内存缓存
+
 相对于磁盘缓存来说，内存缓存的设计要更简单些，下面是我调查的一些常见的内存缓存。
 
-`NSCache` 是苹果提供的一个简单的内存缓存，它有着和 `NSDictionary` 类似的 API ，不同点是它是**线程安全**的，并且不会 retain key 。我在测试时发现了它的几个特点：`NSCache` 底层并没有用 `NSDictionary` 等已有的类，而是直接调用了 `libcache.dylib` ，其中线程安全是由 `pthread_mutex` 完成的。另外，它的性能和 `key` 的相似度有关，如果有大量相似的 `key` (比如 “1”, “2”, “3”, …)，`NSCache` 的存取性能会下降得非常厉害，大量的时间被消耗在 `CFStringEqual()` 上，不知这是不是 `NSCache` 本身设计的缺陷。
+[NSCache](https://developer.apple.com/documentation/foundation/nscache) 是苹果提供的一个简单的内存缓存，它有着和 `NSDictionary` 类似的 API ，不同点是它是**线程安全**的，并且不会 retain key 。我在测试时发现了它的几个特点：`NSCache` 底层并没有用 `NSDictionary` 等已有的类，而是直接调用了 `libcache.dylib` ，其中线程安全是由 `pthread_mutex` 完成的。另外，它的性能和 `key` 的相似度有关，如果有大量相似的 `key` (比如 “1”, “2”, “3”, …)，`NSCache` 的存取性能会下降得非常厉害【编者注：或许是哈希碰撞导致的？】，大量的时间被消耗在 `CFStringEqual()` 上，不知这是不是 `NSCache` 本身设计的缺陷。
 
 [TMMemoryCache](https://github.com/tumblr/TMCache) 是 `TMCache` 的内存缓存实现，最初由 Tumblr 开发，但现在已经不再维护了。`TMMemoryCache` 实现有很多 `NSCache` 并没有提供的功能，比如数量限制、总容量限制、存活时间限制、内存警告或应用退到后台时清空缓存等。`TMMemoryCache` 在设计时，主要目标是线程安全，它把所有读写操作都放到了同一个 Concurrent Queue 中，然后用 `dispatch_barrier_async` 来保证任务能顺序执行。它错误的用了大量异步 block 回调来实现存取功能，以至于产生了很大的性能和死锁问题。
 
@@ -41,20 +49,28 @@ iOS 开发中总会用到各种缓存，最初我是用的一些开源的缓存�
 
 ## 磁盘缓存
 
+### 不同方案的概览
+
 为了设计一个比较好的磁盘缓存，我调查了大量的开源库，包括 `TMDiskCache`（已停更）、`PINDiskCache` 、`SDWebImage` 、`FastImageCache`（已停更）等，也调查了一些闭源的实现，包括 `NSURLCache` 、Facebook 的 `FBDiskCache` 等。他们的实现技术大致分为三类：
 
-- 基于文件读写、
-- 基于 mmap 文件内存映射、
+- 基于文件读写；
+- 基于 `mmap` 文件内存映射；
 - 基于数据库。
 
+### 基于文件的方案
+
 `TMDiskCache`（已停更）、`PINDiskCache` 、`SDWebImage` 等缓存，都是基于文件系统的，即一个 `value` 对应一个文件，通过文件读写来缓存数据。他们的实现都比较简单，性能也都相近，缺点也是同样的：不方便扩展、没有元数据、难以实现较好的淘汰算法、数据统计缓慢。
+
+### 基于 mmap 的方案
 
 `FastImageCache` 采用的是 `mmap` 将文件映射到内存。用过 `MongoDB` 的人应该很熟悉 `mmap` 的缺陷：
 
 - 热数据的文件不要超过物理内存大小，不然 `mmap` 会导致内存交换严重降低性能；
 - 另外内存中的数据是定时 `flush` 到文件的，如果数据还未同步时程序挂掉，就会导致数据错误。抛开这些缺陷来说，`mmap` 性能非常高。
 
-`NSURLCache` 、`FBDiskCache` 都是基于 SQLite 数据库的。基于数据库的缓存可以很好的支持元数据、扩展方便、数据统计速度快，也很容易实现 **LRU** 或其他淘汰算法，唯一不确定的就是数据库读写的性能，为此我评测了一下 SQLite 在真机上的表现。在 *iPhone 6 (64GB)* 下，
+### 基于 SQLite 的方案
+
+`NSURLCache` 、`FBDiskCache` 都是基于 SQLite 数据库的。基于数据库的缓存可以很好的支持元数据、扩展方便、数据统计速度快，也很容易实现 **LRU** 或其他淘汰算法。我测评了一下 SQLite 在 *iPhone 6 (64GB)* 上的表现：
 
 - SQLite 写入性能比直接写文件要高，
 - 但读取性能取决于数据大小：
@@ -63,11 +79,21 @@ iOS 开发中总会用到各种缓存，最初我是用的一些开源的缓存�
 
 这和 [SQLite 官网的描述](https://www.sqlite.org/intern-v-extern-blob.html)基本一致。另外，直接从官网下载最新的 SQLite 源码编译，会比 iOS 系统自带的 `sqlite3.dylib` 性能要高很多。
 
-基于 SQLite 的这种表现，**磁盘缓存最好是把 SQLite 和文件存储结合起来**：`key-value` 元数据保存在 SQLite 中，而 `value` 数据则根据大小不同选择 SQLite 或文件存储。`NSURLCache` 选定的数据大小的阈值是 `16K` ；`FBDiskCache` 则把所有 `value` 数据都保存成了文件。
+### SQLite ➕ 文件存储的方案
 
-我的 `YYDiskCache` 也是采用的 SQLite 配合文件的存储方式，在 *iPhone 6 (64GB)* 上的性能基准测试结果见下图：
+基于 SQLite 的这种表现，**磁盘缓存最好是把 SQLite 和文件存储结合起来**：
+
+**把 `key-value` 元数据保存在 SQLite 中，而 `value` 数据则根据大小不同选择 SQLite 或文件存储**。
+
+- `NSURLCache` 选定的数据大小的阈值是 `16K` ；
+- `FBDiskCache` 则把所有 `value` 数据都保存成了文件。
+- `YYDiskCache` 采用了 SQLite 配合文件的存储方式。
+
+在 *iPhone 6 (64GB)* 上的性能基准测试结果见下图：
 
 ![disk_cache_bench_result.png](../media/Digest/ibireme/disk_cache_bench_result.png)
+
+结果分析：
 
 在存取小数据 (`NSNumber`) 时，`YYDiskCache` 的性能远远高出基于文件存储的库；而较大数据的存取性能则比较接近了。但得益于 SQLite 存储的元数据，`YYDiskCache` 实现了 **LRU** 淘汰算法、更快的数据统计，更多的容量控制选项。
 
