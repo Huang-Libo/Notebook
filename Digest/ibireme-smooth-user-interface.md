@@ -11,7 +11,7 @@
   - [CPU 资源消耗原因和解决方案](#cpu-资源消耗原因和解决方案)
     - [1. 对象创建](#1-对象创建)
     - [2. 对象调整](#2-对象调整)
-    - [3. 对象销毁、](#3-对象销毁)
+    - [3. 对象销毁](#3-对象销毁)
     - [4. 布局计算](#4-布局计算)
     - [5. Autolayout](#5-autolayout)
     - [6. 文本计算](#6-文本计算)
@@ -51,10 +51,12 @@
 
 > CRT 显示器是一种使用阴极射线管 (Cathode Ray Tube) 的显示器
 
-<figure>
-    <img src="../media/Digest/ibireme/smooth-user-interface/ios_screen_scan.png" width="400"/>
-    <figcaption>蓝色的虚线表示水平同步信号；黄色的虚线表示垂直同步信号</figcaption>
-</figure>
+<div style="text-align: center; width: 500px; ">
+    <img alt="ios_screen_scan.png" src="../media/Digest/ibireme/smooth-user-interface/ios_screen_scan.png" style="margin: 0 auto;" />
+    <figcaption style="color:#999; font-size:0.9em; padding: 0 1em 1em 0 ">
+      蓝色的虚线表示水平同步信号；黄色的虚线表示垂直同步信号
+    </figcaption>
+</div>
 
 首先从过去的 CRT 显示器原理说起。CRT 的电子枪按照上面方式，从上到下一行行扫描，扫描完成后显示器就呈现一帧画面，随后电子枪回到初始位置（从右下角回到左上角）继续下一次扫描。
 
