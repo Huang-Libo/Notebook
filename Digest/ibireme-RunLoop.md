@@ -406,9 +406,7 @@ RunLoop 的核心就是一个 `mach_msg()`（见上面代码的第 7 步），Ru
 
 ### 0. App 启动后 RunLoop 的状态
 
-首先我们可以看一下 App 启动后 RunLoop 的状态：
-
-【这个结果是怎么打印出来的？施工中 🚧】
+首先我们可以看一下 App 启动后 RunLoop 的状态，在 lldb 中执行 `po [NSRunloop currentRunloop]` ：
 
 ```c
 CFRunLoop {
@@ -689,7 +687,7 @@ NSURLSession    ->AFNetworking2+ , Alamofire
 
 ### 1. AFNetworking 2.x
 
-`AFURLConnectionOperation` 这个类是基于 `NSURLConnection` 构建的，其希望能在**子线程**接收 `delegate` 回调。为此 AFNetworking 单独创建了一个子线程，并在这个线程中启动了一个 RunLoop ：
+`AFURLConnectionOperation` 这个类继承自 `NSOperation` ，它是基于 `NSURLConnection` 构建的，其希望能在**子线程**接收 `delegate` 回调。为此 AFNetworking 单独创建了一个子线程，并在这个线程中启动了一个 RunLoop ：
 
 ```c
 + (NSThread *)networkRequestThread {
@@ -714,6 +712,8 @@ NSURLSession    ->AFNetworking2+ , Alamofire
 ```
 
 RunLoop 启动前内部必须要有至少一个 Timer / Observer / Source ，所以 AFNetworking 在 `[runLoop run]` 之前先创建了一个新的 `NSMachPort` 添加进去了。通常情况下，调用者需要持有这个 `NSMachPort` (`mach_port`) 并在外部线程通过这个 `port` 发送消息到 loop 内；但此处添加 `port` 只是为了让 RunLoop 不至于退出，并没有用于实际的发送消息。
+
+> 下面的 `start` 方法是重写的 `NSOperation` 的 `start` 。
 
 ```c
 - (void)start {
