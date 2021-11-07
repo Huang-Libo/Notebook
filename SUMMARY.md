@@ -6,6 +6,7 @@
 
 - [Block](iOS/Block.md)
 - [fishhook & PIC](iOS/fishhook.md)
+- [weak 源码分析](iOS/objc4-weak.md)
 - [AutoreleasePoolPage 源码分析](iOS/objc4-AutoreleasePool.md)
 
 ## 📖 Digest
