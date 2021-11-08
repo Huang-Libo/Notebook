@@ -261,12 +261,12 @@ int CFRunLoopRunSpecific(runloop, modeName, seconds, stopAfterHandle) {
             __CFRunLoopDoObservers(runloop, currentMode, kCFRunLoopBeforeTimers);
             // 3. 通知 Observers : RunLoop 即将触发 Source0 (非 port ) 回调。
             __CFRunLoopDoObservers(runloop, currentMode, kCFRunLoopBeforeSources);
-            // 执行被加入的block
+            // 执行被加入的 block
             __CFRunLoopDoBlocks(runloop, currentMode);
             
             // 4. RunLoop 触发 Source0 (非 port ) 回调。
             sourceHandledThisLoop = __CFRunLoopDoSources0(runloop, currentMode, stopAfterHandle);
-            // 执行被加入的block
+            // 执行被加入的 block
             __CFRunLoopDoBlocks(runloop, currentMode);
  
             // 5. 如果有 Source1 (基于 port ) 处于 ready 状态，直接处理这个 Source1 然后跳转去处理消息。
@@ -275,7 +275,7 @@ int CFRunLoopRunSpecific(runloop, modeName, seconds, stopAfterHandle) {
                 if (hasMsg) goto handle_msg; // 跳转到第 9 步
             }
             
-            // 通知 Observers : RunLoop 的线程即将进入休眠(sleep)。
+            // 通知 Observers : RunLoop 的线程即将进入休眠 (sleep) 。
             if (!sourceHandledThisLoop) {
                 __CFRunLoopDoObservers(runloop, currentMode, kCFRunLoopBeforeWaiting);
             }
@@ -300,7 +300,7 @@ int CFRunLoopRunSpecific(runloop, modeName, seconds, stopAfterHandle) {
                 // 9.1 如果一个 Timer 到时间了，触发这个 Timer 的回调。
                 __CFRunLoopDoTimers(runloop, currentMode, mach_absolute_time())
             } else if (msg_is_dispatch) {
-                // 9.2 如果有 dispatch 到 main_queue 的 block ，执行 block 。
+                // 9.2 如果有 dispatch 到 main queue 的 block ，执行 block 。
                 __CFRUNLOOP_IS_SERVICING_THE_MAIN_DISPATCH_QUEUE__(msg);
             } else {
                 // 9.3 如果一个 Source1 (基于 port ) 发出事件了，处理这个事件
@@ -358,7 +358,7 @@ Apple 官方将整个系统大致划分为上述4个层次：
 
 - **Mach** 是 XNU 内核的内环，Mach 作为一个**微内核**，仅提供了诸如处理器调度、**IPC (进程间通信)** 等非常少量的基础服务。
 - **BSD** 层可以看作围绕 Mach 层的一个外环，其提供了诸如进程管理、文件系统和网络等功能。
-- **IOKit** 层是为设备驱动提供了一个面向对象(C++)的一个框架。
+- **IOKit** 层是为设备驱动提供了一个面向对象 (C++) 的一个框架。
 
 **Mach** 本身提供的 API 非常有限，而且 Apple 也不鼓励使用 Mach 的 API，但是这些 API 非常基础，如果没有这些 API 的话，其他任何工作都无法实施。**在 Mach 中，所有的东西都是通过自己的对象实现的，进程、线程和虚拟内存都被称为”对象”**。和其他架构不同， **Mach 的对象间不能直接调用，只能通过消息传递的方式实现对象间的通信。”消息”是 Mach 中最基础的概念，消息在两个端口 (port) 之间传递，这就是 Mach 的 IPC (进程间通信) 的核心。**
 
@@ -394,7 +394,7 @@ mach_msg_return_t mach_msg(
 );
 ```
 
-为了实现消息的发送和接收，`mach_msg()` 函数实际上是调用了一个 Mach 陷阱 (trap)，即函数 `mach_msg_trap()` ，**陷阱这个概念在 Mach 中等同于系统调用**。当你在**用户态**调用 `mach_msg_trap()` 时会触发陷阱机制，切换到**内核态**；内核态中内核实现的 `mach_msg()` 函数会完成实际的工作，如下图：
+为了实现消息的发送和接收，`mach_msg()` 函数实际上是调用了一个 Mach 陷阱 (trap) ，即函数 `mach_msg_trap()` ，**陷阱这个概念在 Mach 中等同于系统调用**。当你在**用户态**调用 `mach_msg_trap()` 时会触发陷阱机制，切换到**内核态**；内核态中内核实现的 `mach_msg()` 函数会完成实际的工作，如下图：
 
 <img src="../media/Digest/ibireme/RunLoop/mach_msg.png" width="400"/>
 
@@ -586,7 +586,7 @@ static void __CFRUNLOOP_IS_CALLING_OUT_TO_AN_OBSERVER_CALLBACK_FUNCTION__();
   - 在 **BeforeWaiting**（准备进入休眠）时调用`_objc_autoreleasePoolPop()` 和 `_objc_autoreleasePoolPush()` 释放旧池并创建新池；
   - 在 **Exit**（即将退出 RunLoop ）时调用 `_objc_autoreleasePoolPop()` 来释放自动释放池。这个 Observer 的 order 是 `2147483647`，**优先级最低**，保证其发生在其他所有回调之后。
 
-在**主线程**执行的代码，通常是写在诸如事件回调、Timer 回调内的。这些回调会被 RunLoop 创建好的 `AutoreleasePool` 环绕着，所以不会出现内存泄漏，开发者也不必显示创建 `AutoreleasePool` 了。
+在**主线程**执行的代码，通常是写在诸如事件回调、Timer 回调内的。这些回调会被 RunLoop 创建好的 `AutoreleasePool` 环绕着，所以不会出现内存泄漏，开发者也不必显式地创建 `AutoreleasePool` 了。
 
 ### 2. 事件响应
 
@@ -594,7 +594,7 @@ App 启动时， 系统会给 App 注册了一个 `source1` (是基于 mach port
 
 当一个硬件事件（触摸/锁屏/摇晃/远程控制【比如耳机线控】等）发生后，首先由 `IOKit.framework` 生成一个 `IOHIDEvent` 事件并由 SpringBoard 接收。这个过程的详细情况可以参考[这里](https://iphonedev.wiki/index.php/IOHIDFamily)。
 
-SpringBoard 只接收按键（锁屏/静音等）、触摸、加速、接近传感器等几种 Event。接收到 Event 后，SpringBoard 先判断这个 Event 是由自己处理还是需要转发给某个 App ，因为用户可能是在滑动桌面，也可能在是使用某个 App 。如果是后者，则**用 mach port 转发给相应的 App 进程**。随后，系统为 App 注册的那个 `source1` 就会触发回调，并调用 `_UIApplicationHandleEventQueue()` 进行 App 内部的分发。
+SpringBoard 只接收按键（锁屏/静音等）、触摸、加速、接近传感器等几种 Event。接收到 Event 之后，SpringBoard 先判断这个 Event 是由自己处理还是需要转发给某个 App ，因为用户可能是在滑动桌面，也可能在是使用某个 App 。如果是后者，则**用 mach port 转发给相应的 App 进程**。随后，系统为 App 注册的那个 `source1` 就会触发回调，并调用 `_UIApplicationHandleEventQueue()` 进行 App 内部的分发。
 
 `_UIApplicationHandleEventQueue()` 会把 `IOHIDEvent` 处理并包装成 `UIEvent` 进行处理或分发，其中包括识别手势、处理屏幕旋转、发送给 `UIWindow` 等。通常事件比如 `UIButton` 点击、touchesBegin / Move / End / Cancel 事件都是在这个回调中完成的。
 
@@ -602,13 +602,13 @@ SpringBoard 只接收按键（锁屏/静音等）、触摸、加速、接近传�
 
 当上面的 `_UIApplicationHandleEventQueue()` 识别了一个手势时，其首先会**调用 Cancel 将当前的 touchesBegin / Move / End 系列回调打断**。随后系统将对应的`手势`标记为待处理。
 
-系统为 App 注册了一个 Observer 监测 **BeforeWaiting**（ Loop 即将进入休眠）事件，这个 Observer 的回调函数是 `_UIGestureRecognizerUpdateObserver()` ，其内部会获取所有刚被标记为待处理的 `GestureRecognizer` ，并执行 `GestureRecognizer` 的回调。
+系统为 App 注册了一个 Observer 监听 **BeforeWaiting**（ Loop 即将进入休眠）事件，这个 Observer 的回调函数是 `_UIGestureRecognizerUpdateObserver()` ，其内部会获取所有刚被标记为待处理的 `GestureRecognizer` ，并执行 `GestureRecognizer` 的回调。
 
 当有 `UIGestureRecognizer` 的变化（创建/销毁/状态改变）时，这个回调都会进行相应处理。
 
 ### 4. 界面更新
 
-当在操作 UI 时，比如改变了 frame 、更新了 `UIView` / `CALayer` 的层次时，或者手动调用了 `UIView` / `CALayer` 的 `setNeedsLayout` / `setNeedsDisplay` 方法后，这个 `UIView` / `CALayer` 就被标记为**待处理**，并被提交到一个全局的容器去。
+当在操作 UI 时，比如改变了 `frame` 、更新了 `UIView` / `CALayer` 的层次时，或者手动调用了 `UIView` / `CALayer` 的 `setNeedsLayout` / `setNeedsDisplay` 方法后，这个 `UIView` / `CALayer` 就被标记为**待处理**，并被提交到一个全局的容器去。
 
 系统为 App 注册了一个 Observer 监听 **BeforeWaiting**（即将进入休眠）和 **Exit**（即将退出Loop）事件，回调去执行一个很长的函数：
 
@@ -711,9 +711,9 @@ NSURLSession    ->AFNetworking2+ , Alamofire
 }
 ```
 
-RunLoop 启动前内部必须要有至少一个 Timer / Observer / Source ，所以 AFNetworking 在 `[runLoop run]` 之前先创建了一个新的 `NSMachPort` 添加进去了。通常情况下，调用者需要持有这个 `NSMachPort` (`mach_port`) 并在外部线程通过这个 `port` 发送消息到 loop 内；但此处添加 `port` 只是为了让 RunLoop 不至于退出，并没有用于实际的发送消息。
+RunLoop 启动前内部必须要有至少一个 Timer / Source / Observer ，所以 AFNetworking 在 `[runLoop run]` 之前先创建了一个新的 `NSMachPort` 添加进去了。通常情况下，调用者需要持有这个 `NSMachPort` (`mach_port`) 并在外部线程通过这个 `port` 发送消息到 loop 内；但此处添加 `port` 只是为了让 RunLoop 不至于退出，并没有用于实际的发送消息。
 
-> 下面的 `start` 方法是重写的 `NSOperation` 的 `start` 。
+> 下面是 `AFURLConnectionOperation` 重写的 `NSOperation` 的 `start` 。
 
 ```c
 - (void)start {
@@ -746,8 +746,8 @@ UI 线程中一旦出现繁重的任务就会导致界面卡顿，这类任务�
 
 ASDK 所做的，就是尽量将能放入子线程的任务挪到子线程，不能的则尽量推迟 (例如视图的创建、属性的调整)。
 
-为此，ASDK 创建了一个名为 `ASDisplayNode` 的对象，并在内部封装了 `UIView` / `CALayer`，它具有和 `UIView` / `CALayer` 相似的属性，例如 `frame` 、`backgroundColor` 等。**所有这些属性都可以在子线程更改，开发者可以只通过 Node 来操作其内部的 `UIView` / `CALayer`，这样就可以将排版和绘制放入了子线程。但是无论怎么操作，这些属性总需要在某个时刻同步到主线程的 UIView / CALayer 去。**
+为此，ASDK 创建了一个名为 `ASDisplayNode` 的对象，并在内部封装了 `UIView` / `CALayer`，它具有和 `UIView` / `CALayer` 相似的属性，例如 `frame` 、`backgroundColor` 等。**Node 对象的所有这些属性都可以在子线程更改，开发者可以只通过 Node 来操作其内部的 `UIView` / `CALayer`，这样就可以将排版和绘制放入子线程中执行。但是无论怎么操作，这些属性总需要在某个时刻同步到主线程的 UIView / CALayer 中去。**
 
 ASDK 仿照 `QuartzCore` / `UIKit` 框架的模式，实现了一套类似的界面更新的机制：即在主线程的 RunLoop 中添加一个 Observer，监听了 **kCFRunLoopBeforeWaiting** 和 **kCFRunLoopExit** 事件，**在收到回调时，遍历所有之前放入队列的待处理的任务，然后一一执行**。
 
-具体的代码可以看 `_ASAsyncTransactionGroup` 。
+具体的代码可以看 `_ASAsyncTransactionGroup`（注意 ⚠️ ：应该已改名了）。
