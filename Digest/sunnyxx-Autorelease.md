@@ -98,14 +98,14 @@ objc_autoreleasePoolPop(context);
 - Autorelease Pool 并没有单独的结构，而是由若干个 `AutoreleasePoolPage` 以**双向链表**的形式组合而成，其中 `parent` 指针指向上一个 page ，`child` 指针指向下一个 page ）；
 - **Autorelease Pool 与线程是一一对应的**（结构中的 `thread` 指针指向其对应的线程）
 - `AutoreleasePoolPage` 每个对象会开辟 4096 字节内存（也就是**虚拟内存一页的大小**）【编者疑问：ARM64 架构上是 16KB ，其他架构上是 4KB ？】，除了自身实例变量所占的空间，剩下的空间全部用来储存 autorelease 对象的地址；
-- 上面的 `next` 指针作为**游标**指向栈顶最后 push 进来的 autorelease 对象的下一个位置；
+- 上面的 `next` 指针作为**游标**指向最后 push 进来的 autorelease 对象的下一个位置；
 - 一个 `AutoreleasePoolPage` 的空间被占满时，会新建一个 `AutoreleasePoolPage` 对象，通过 `parent` 和 `child` 指针连接链表，之后的 autorelease 对象在新的 page 加入。
 
 所以，若当前线程中只有一个 `AutoreleasePoolPage` 对象，并记录了很多 autorelease 对象地址时，内存如下图：
 
 ![AutoreleasePoolPage-2](../media/Digest/sunnyxx/AutoreleasePoolPage-2.jpg)
 
-图中的情况，这一页再加入一个 autorelease 对象就要满了（也就是 `next` 指针马上指向栈顶），这时就要执行上面说的操作，建立下一页 page 对象，与这一页链表连接完成后，新 page 的 `next` 指针被初始化在栈底（ `begin` 的位置），然后继续向栈顶添加新对象。
+再看下图中的情况，这一页再加入一个 autorelease 对象就要满了（也就是 `next` 指针马上指向栈顶），这时就要执行上面说的操作，建立下一页 page 对象，与这一页链表连接完成后，新 page 的 `next` 指针被初始化在栈底（ `begin` 的位置），然后继续向栈顶添加新对象。
 
 所以，向一个对象发送 `-autorelease` 消息，就是将这个对象加入到当前 `AutoreleasePoolPage` 的 `next` 指针指向的位置。
 
@@ -142,7 +142,7 @@ objc_autoreleasePoolPop(context);
 }];
 ```
 
-而普通 `for` 循环和 `for in` 循环中没有这个特性，所以，还是新版的 block 版本枚举器更加方便。当 `for` 循环中遍历产生大量 autorelease 变量时，就需要手加局部 Autorelease Pool 。
+而普通 `for` 循环和 `for in` 循环中没有这个特性，所以，还是新版的 block 枚举器更加方便。当 `for` 循环中遍历产生大量 autorelease 变量时，就需要手动添加局部 `@autoreleasepool` 代码。
 
 ## Runtime 对 Autorelease 返回值的优化
 
@@ -157,7 +157,7 @@ objc_autoreleasePoolPop(context);
 Sark *sark = [Sark createSark];
 ```
 
-秉着谁创建谁释放的原则，返回值需要是一个 autorelease 对象才能配合调用方正确管理内存，于是乎编译器改写成了形如下面的代码：
+基于谁创建谁释放的原则，返回值需要是一个 autorelease 对象才能配合调用方正确管理内存，于是乎编译器改写成了形如下面的代码：
 
 ```objectivec
 + (instancetype)createSark {
