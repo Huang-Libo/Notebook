@@ -17,6 +17,8 @@ RunLoop 是 iOS 和 macOS 开发中非常基础的一个概念，这篇文章将
     - [3. CFRunLoopObserverRef](#3-cfrunloopobserverref)
   - [RunLoop 的 Mode](#runloop-的-mode)
   - [RunLoop 的内部逻辑](#runloop-的内部逻辑)
+    - [图片示例](#图片示例)
+    - [代码摘要](#代码摘要)
   - [RunLoop 的底层实现](#runloop-的底层实现)
   - [系统用 RunLoop 实现的功能](#系统用-runloop-实现的功能)
     - [0. App 启动后 RunLoop 的状态](#0-app-启动后-runloop-的状态)
@@ -219,13 +221,17 @@ CFRunLoopRemoveTimer(CFRunLoopRef rl, CFRunLoopTimerRef timer, CFStringRef mode)
 
 ## RunLoop 的内部逻辑
 
+### 图片示例
+
 根据 Apple 在[文档](https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/Multithreading/RunLoopManagement/RunLoopManagement.html#//apple_ref/doc/uid/10000057i-CH16-SW23)里的说明，RunLoop 内部的逻辑大致如下：
 
 > 说明：原文的图有错误，唤醒 RunLoop 的应该是 **Source1** ，此图已修正。
 
 ![RunLoop-step.png](../media/Digest/ibireme/RunLoop/RunLoop-step.png)
 
-【编者注：上图中的「外部手动唤醒」，说的不是用手触摸手机屏幕唤醒 RunLoop ，触摸事件是由 `Source1` 接收并处理的。这里的「外部手动唤醒」是指在代码中手动调用 RunLoop 的相关 API ，比如 `Source0` 本身不能唤醒 RunLoop ，但可以通过手动调用相关 API 来使用 Source0 唤醒 RunLoop，步骤是 ：先调用 `CFRunLoopSourceSignal(rls)` 将一个 `Source0` 标记为待处理，然后手动调用 `CFRunLoopWakeUp(rl)` 来唤醒 RunLoop ( `CFRunLoopWakeUp()` 函数内部是通过 RunLoop 实例的 `_wakeUpPort` 成员变量来唤醒 RunLoop 的）。】
+【编者注：上图中的「外部手动唤醒」，说的不是用手触摸手机屏幕唤醒 RunLoop ，触摸事件是由 `Source1` 接收并处理的。这里的「外部手动唤醒」是指在代码中手动调用 RunLoop 的相关 API ，比如 `Source0` 本身不能唤醒 RunLoop ，但可以通过手动调用相关 API 来使用 `Source0` 唤醒 RunLoop，步骤是 ：先调用 `CFRunLoopSourceSignal(rls)` 将一个 `Source0` 标记为待处理，然后手动调用 `CFRunLoopWakeUp(rl)` 来唤醒 RunLoop ( `CFRunLoopWakeUp()` 函数内部是通过 RunLoop 实例的 `_wakeUpPort` 成员变量来唤醒 RunLoop 的）。】
+
+### 代码摘要
 
 RunLoop 内部是一个 `do...while` 循环。当你调用 `CFRunLoopRun()` 时，线程就会一直停留在这个循环里，直到超时或被手动停止，该函数才会返回：
 
