@@ -243,7 +243,7 @@ static pthread_key_t const key = AUTORELEASE_POOL_KEY;
 
 **1、`key` 的类型：`pthread_key_t`**
 
-`pthread_key_t` 实际是一个 `unsigned long` 类型：
+`pthread_key_t` 实际是一个 `unsigned long` 类型，它在系统头文件中的定义是：
 
 ```cpp
 typedef __darwin_pthread_key_t pthread_key_t;
@@ -267,7 +267,7 @@ typedef unsigned long __darwin_pthread_key_t;
 
 说明：
 
-- 可以在 Xcode 中使用 <kbd>cmd</kbd> + <kbd>shift</kbd> + <kbd>o</kbd> 搜索 `__PTK_FRAMEWORK_OBJC_KEY3` 这个宏；
+- 可以在 Xcode 中使用 `cmd` + `shift` + `o` 搜索 `__PTK_FRAMEWORK_OBJC_KEY3` 这个宏；
 - `tsd` : *线程的私有数据 (thread specific data)* 。
 
 ### `SCRIBBLE`
@@ -580,7 +580,37 @@ void releaseUntil(id *stop)
 
 ### `kill()`
 
-删除所有的 `page` 【 `delete` 关键字】：
+从当前的 `page` 开始，一直根据 `child` 链向前走直到 `child` 为空，把经过的 `page` 全部执行 `delete` 操作（包括当前 `page` ）。
+
+`kill()` 被调用到的地方：
+
+**1）** `tls_dealloc(void *p)` 方法中：
+
+```cpp
+page->kill()
+```
+
+**2）** `popPage()` 方法中：
+
+```cpp
+...
+else if (page->child) {
+    // hysteresis: keep one empty child if page is more than half full
+    if (page->lessThanHalfFull()) {
+        page->child->kill();
+    }
+    else if (page->child->child) {
+        page->child->child->kill();
+    }
+}
+...
+```
+
+**`kill()` 方法说明**：
+
+- 删除 `page` 使用的是 `delete` 关键字；
+- 循环使用的是 `do...while` ，所以会至少进行一次 `delete` ；
+- `kill()` 方法中的`this` 是调用它的 `page` 。比如调用 `page->child->kill()` ，此时 `kill()` 方法中的 `this` 就是指代 `page->child` 。
 
 ```cpp
 void kill()
