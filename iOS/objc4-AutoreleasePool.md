@@ -636,6 +636,14 @@ void kill()
 
 ### `tls_dealloc(void *p)`
 
+`tls_dealloc(void *p)` 是*线程局部存储 (Thread Local Stroge, TLS)* 的析构函数，它是在 `AutoreleasePoolPage` 的 `init()` 方法中作为**函数指针**传入给 `pthread_key_init_np()` 函数的第二个参数的：
+
+```cpp
+pthread_key_init_np(AutoreleasePoolPage::key, AutoreleasePoolPage::tls_dealloc);
+```
+
+在 `tls_dealloc(void *p)` 中，要对自动释放池内的所有自动释放对象执行 `release()` 操作，然后调用 `kill()` 来释放所有的 `page` 。
+
 ```cpp
 static void tls_dealloc(void *p) 
 {
@@ -950,9 +958,11 @@ static inline void *push()
 
 可以看到返回值 `dest` 有两种类型：要么是 `EMPTY_POOL_PLACEHOLDER` ，要么是指向 `POOL_BOUNDARY` 的指针。
 
-其实 `dest` 的值就是后面执行 `pop(void *token)` 时需要的参数 `token` 。
+返回值 `dest` 就是哨兵指针，它也是后面执行 `pop(void *token)` 时需要的参数 `token` 。
 
 ### `pop(void *token)`
+
+先调用 `pageForPointer(token)` 找到 `token`（也就是哨兵指针）所在的 `page` ，再调用了 `popPage<false>(token, page, stop)` 。
 
 ```cpp
 static inline void
@@ -1000,7 +1010,11 @@ pop(void *token)
 
 `pop(void *token)` 会调用此方法，然后此方法会调用 `page->releaseUntil(stop)` ，最后会调用 `kill()` 方法来删除 `page` 。
 
-> 疑问❓：`page->child->kill()` 和 `page->child->child->kill()` 的区别是？`kill()` 方法最后都是删除所有 `page` 吧？
+`popPage()` 方法中对 `kill()` 方法调用的说明：
+
+- 如果 `page->child` 存在，则调用 `page->lessThanHalfFull()` 方法检测“当前 `page` 存储的内容是否超过一半”：
+  - 不超过一半，则删除 `page->child` 及之后的节点；
+  - 超过一半，则保留 `page->child` ，删除 `page->child->child` 及之后的节点。
 
 ```cpp
 template<bool allowDebug>
@@ -1097,11 +1111,14 @@ _objc_autoreleasePoolPush()
                 || autoreleaseNoPage(obj)
 ```
 
-注意：在 `push()` 内调用 `autoreleaseFast(id obj)` 传入的参数是 `POOL_BOUNDARY` 。
+注意：
+
+- 在 `push()` 内调用 `autoreleaseFast(id obj)` 传入的参数是 `POOL_BOUNDARY` ；
+- `autoreleaseFullPage(obj, page)` 和 `autoreleaseNoPage(obj)` 最终调会调用 `add(obj)` 方法。
 
 ### `objc_autoreleasePoolPop(void *ctxt)`
 
-实际上调用了 `AutoreleasePoolPage::pop(void *token)` 方法，这里传入的 `ctxt` 就是 `token` ：
+实际上调用了 `AutoreleasePoolPage::pop(void *token)` 方法，这里传入的 `ctxt` 就是 `token` ，也就是哨兵指针：
 
 ```cpp
 NEVER_INLINE
