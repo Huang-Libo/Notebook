@@ -2,6 +2,7 @@
 
 - [8-iOS](#8-ios)
   - [基础](#基础)
+    - [load 和 initialize](#load-和-initialize)
     - [UIView 和 CALayer 的区别](#uiview-和-calayer-的区别)
     - [寻找两个 UIView 的最近的公共 View](#寻找两个-uiview-的最近的公共-view)
   - [事件的传递和响应](#事件的传递和响应)
@@ -22,6 +23,35 @@
     - [fishhook 的原理 & 位置无关代码](#fishhook-的原理--位置无关代码)
 
 ## 基础
+
+### load 和 initialize
+
+> 参考：[掘金《 iOS 分类、+load、+initialize 方法》](https://juejin.cn/post/6894170694587056141#heading-10) ，有改动。
+
+使用 `load` 和 `initialize` 方法时，不要显式调用 `super` 。
+
+**`load` 方法的调用顺序**：
+
+`load` 是类或分类是在类加载（ runtime 初始化）时被调用的，在 `main()` 函数前，每个类的 `load` 方法只会自动调用一次。
+
+`load` 方法调用的特点：
+
+1. 若子类未实现 `load` 方法，则在加载该子类时，**不会**调用其父类 `load` 方法。
+2. 当父类和子类都实现 `load` 方法时，二者的 `load` 方法**都会**被调用，父类的 `load` 方法执行顺序要优先于子类。
+3. 类的 `load` 方法执行顺序要优先于分类，分类的 `load` 方法**不会**覆盖本类的 `load` 方法。
+4. 多个分类都实现了 `load` 方法， `load` 方法**都会**执行，执行顺序与编译顺序一致。
+5. 当有多个不同的类的时候（不是子类或分类的关系），则每个类的 `load` 方法的执行顺序与编译顺序一致。
+
+**`initialize` 方法的调用顺序**：
+
+`initialize` 是在类或其子类收到第一条消息时调用的，并且只调用一次。这里的消息包括实例方法或类方法的调用。也就是说 `initialize` 方法是以**懒加载**的方式被调用的，如果程序一直没有给某个类或它的子类发送消息，那么这个类的 `initialize` 方法是永远不会被调用的。
+
+- 父类的 `initialize` 方法会比子类先执行。
+- 子类的 `initialize` 方法调用分两种情况：
+  - 子类**未实现** `initialize` 方法，则在子类收到第一条消息时，调用父类 `initialize` 方法，因此父类的 `initialize` 方法可能会被调用多次；
+  - 子类**实现了** `initialize` 方法，如果父类也实现了 `initialize` 方法，则会先调用父类的 ，然后再调用子类的。
+- 如果分类实现了 `initialize` 方法，则不会调用本类的 `initialize` 方法。
+- 当有多个*分类*都实现了 `initialize` 方法，会执行最后被被编译的*分类*的 `initialize` 方法。
 
 ### UIView 和 CALayer 的区别
 
@@ -365,22 +395,20 @@ def referenced_selectors(path):
 
 启动时间需要包含 `pre-main` 所花费的时间，因此开始时间点要尽可能早。
 
-- 开始时间点：以 `exec()` 系统调用的时间作为冷启动的起始时间。因为系统允许我们通过 `sysctl()` 函数获得进程的有关信息，其中就包括进程创建的时间戳。
-- 结束时间点：结束时间比较好确定，我们可以将首页某些视图元素的展示作为首页加载完成的标志。
+- **开始时间点**：以进程创建的时间戳（即 `exec()` 系统调用的执行时间）作为冷启动的起始时间。系统允许我们通过 `sysctl()` 函数获得进程的有关信息，其中就包括进程创建的时间戳。
+- **结束时间点**：结束时间比较好确定，我们可以将首页某些视图元素的展示作为首页加载完成的标志。
 
 ```objectivec
 #import <sys/sysctl.h>
 #import <mach/mach.h>
 
-+ (BOOL)processInfoForPID:(int)pid procInfo:(struct kinfo_proc*)procInfo
-{
++ (BOOL)processInfoForPID:(int)pid procInfo:(struct kinfo_proc*)procInfo {
     int cmd[4] = {CTL_KERN, KERN_PROC, KERN_PROC_PID, pid};
     size_t size = sizeof(*procInfo);
     return sysctl(cmd, sizeof(cmd)/sizeof(*cmd), procInfo, &size, NULL, 0) == 0;
 }
 
-+ (NSTimeInterval)processStartTime
-{
++ (NSTimeInterval)processStartTime {
     struct kinfo_proc kProcInfo;
     if ([self processInfoForPID:[[NSProcessInfo processInfo] processIdentifier] procInfo:&kProcInfo]) {
         return kProcInfo.kp_proc.p_un.__p_starttime.tv_sec * 1000.0 + kProcInfo.kp_proc.p_un.__p_starttime.tv_usec / 1000.0;
