@@ -15,6 +15,8 @@
     - [Objective-C 方法调用的本质](#objective-c-方法调用的本质)
   - [RunLoop](#runloop)
     - [source0 和 source1 有什么区别](#source0-和-source1-有什么区别)
+  - [App 启动优化](#app-启动优化)
+    - [统计启动时间](#统计启动时间)
   - [开源库](#开源库)
     - [fishhook 的原理 & 位置无关代码](#fishhook-的原理--位置无关代码)
 
@@ -237,8 +239,10 @@ id obj2 = objc_msgSend(obj1, sel_registerName("init"));
 
 先说结论：
 
-- `source1` ：是基于 mach port 的，可接收来自系统内核或者其他进程或线程的事件，可以**主动唤醒**休眠中的 RunLoop 。（mach port 是进程间通信的一种方式。）
-- `source0` ：不是基于 port 的，无法主动唤醒 RunLoop 。（进入休眠的 RunLoop 仅能通过 mach port 和 mach_msg 来唤醒）。
+进入休眠的 RunLoop 仅能通过 `mach port` 和 `mach_msg` 来唤醒。
+
+- `source1` ：是基于 `mach port` 的，可接收来自系统内核或者其他进程或线程的事件，可以**主动唤醒**休眠中的 RunLoop 。（ `mach port` 是进程间通信的一种方式。）
+- `source0` ：不是基于 port 的，无法主动唤醒 RunLoop 。
 
 再看源码：
 
@@ -321,11 +325,45 @@ typedef struct {
 
 `source0` 不同于不重复执行的 timer 和 RunLoop 的 block 链表中的 block 节点，`source0` 执行过后不会自己主动移除，不重复执行的 timer 和 block 执行过后会自己主动移除，执行过后的 `source0` 可手动调用 `CFRunLoopRemoveSource(CFRunLoopGetCurrent(), rls, kCFRunLoopDefaultMode)` 来移除。
 
-source0 具体执行时的函数如下，info 做参数执行 perform 函数：
+`source0` 具体执行时的函数如下，`info` 做参数执行 `perform` 函数：
 
 ```c
 // perform(info)
 __CFRUNLOOP_IS_CALLING_OUT_TO_A_SOURCE0_PERFORM_FUNCTION__(rls->_context.version0.perform, rls->_context.version0.info); 
+```
+
+## App 启动优化
+
+### 统计启动时间
+
+> 参考：[美团外卖 iOS App 冷启动治理](https://tech.meituan.com/2018/12/06/waimai-ios-optimizing-startup.html)
+
+启动时间需要包含 `pre-main` 所花费的时间，因此开始时间点要尽可能早。
+
+- 开始时间点：以 `exec()` 系统调用的时间作为冷启动的起始时间。因为系统允许我们通过 `sysctl()` 函数获得进程的有关信息，其中就包括进程创建的时间戳。
+- 结束时间点：结束时间比较好确定，我们可以将首页某些视图元素的展示作为首页加载完成的标志。
+
+```objectivec
+#import <sys/sysctl.h>
+#import <mach/mach.h>
+
++ (BOOL)processInfoForPID:(int)pid procInfo:(struct kinfo_proc*)procInfo
+{
+    int cmd[4] = {CTL_KERN, KERN_PROC, KERN_PROC_PID, pid};
+    size_t size = sizeof(*procInfo);
+    return sysctl(cmd, sizeof(cmd)/sizeof(*cmd), procInfo, &size, NULL, 0) == 0;
+}
+
++ (NSTimeInterval)processStartTime
+{
+    struct kinfo_proc kProcInfo;
+    if ([self processInfoForPID:[[NSProcessInfo processInfo] processIdentifier] procInfo:&kProcInfo]) {
+        return kProcInfo.kp_proc.p_un.__p_starttime.tv_sec * 1000.0 + kProcInfo.kp_proc.p_un.__p_starttime.tv_usec / 1000.0;
+    } else {
+        NSAssert(NO, @"无法取得进程的信息");
+        return 0;
+    }
+}
 ```
 
 ## 开源库
