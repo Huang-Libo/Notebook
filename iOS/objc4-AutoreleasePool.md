@@ -580,6 +580,8 @@ void releaseUntil(id *stop)
 
 ### `kill()`
 
+将当前页面以及子页面全部删除。
+
 从当前的 `page` 开始，一直根据 `child` 链向前走直到 `child` 为空，把经过的 `page` 全部执行 `delete` 操作（包括当前 `page` ）。
 
 `kill()` 被调用到的地方：
@@ -671,7 +673,7 @@ static void tls_dealloc(void *p)
 
 ### `pageForPointer(const void *p)` & `pageForPointer(uintptr_t p)`
 
-找出指针 `p` 所在的 `AutoreleasePoolPage` ：
+通过内存地址的计算，获取 `p` 指针所在的 `page` 的首地址。将指针与 `page` 的大小，也就是 `4096` 取模，得到当前指针的 `offset` ，再通过 `(p - offset)` 就能获取到 `p` 所在的 `page` 的起始地址：
 
 ```cpp
 static AutoreleasePoolPage *pageForPointer(const void *p) 
@@ -692,6 +694,10 @@ static AutoreleasePoolPage *pageForPointer(uintptr_t p)
     return result;
 }
 ```
+
+而最后调用的方法 `fastCheck()` 用来检查当前的 `result` 是不是一个 `AutoreleasePoolPage` 。
+
+通过检查 magic_t 结构体中的某个成员是否为 0xA1A1A1A1。
 
 其中，`uintptr_t` 实际上就是 `unsigned long` ：
 
@@ -1264,6 +1270,28 @@ static inline id *autoreleaseFast(id obj)
 }
 ```
 
+`autorelease` 方法的调用栈：
+
+> 参考：[draveness《自动释放池的前世今生》](https://github.com/draveness/analyze/blob/master/contents/objc/自动释放池的前世今生.md#autorelease-方法)
+
+❓ 这种分支图是用什么工具画的？
+
+```objectivec
+- [NSObject autorelease]
+└── id objc_object::rootAutorelease()
+    └── id objc_object::rootAutorelease2()
+        └── static id AutoreleasePoolPage::autorelease(id obj)
+            └── static id AutoreleasePoolPage::autoreleaseFast(id obj)
+                ├── id *add(id obj)
+                ├── static id *autoreleaseFullPage(id obj, AutoreleasePoolPage *page)
+                │   ├── AutoreleasePoolPage(AutoreleasePoolPage *newParent)
+                │   └── id *add(id obj)
+                └── static id *autoreleaseNoPage(id obj)
+                    ├── AutoreleasePoolPage(AutoreleasePoolPage *newParent)
+                    └── id *add(id obj)
+
+```
+
 **引申问题**：
 
 因此可以得知，即使一个 `NSTread` 子线程没有使用 `@autoreleasepool` 包裹，对象在调用 `autorelease` 之后，最终会调用 `autoreleaseNoPage(obj)` 来创建一个自动释放池。
@@ -1272,7 +1300,7 @@ static inline id *autoreleaseFast(id obj)
 
 - 先调用 `coldPage()` 方法找到双链表中的第一个 `page` ；
 - 再调用 `objc_autoreleasePoolPop(page->begin())` 来释放所有 `autorelease` 对象；
-- 最后调用 `page->kill()` 来销毁所有的 page 。
+- 最后调用 `page->kill()` 来释放所有的 page 。
 
 `tls_dealloc(void *p)` 方法中的核心代码：
 
@@ -1292,9 +1320,9 @@ if (AutoreleasePoolPage *page = coldPage()) {
 **结论**：
 
 - 如果某个 `NSTread` 子线程只需要执行一次任务就销毁，则`autorelease` 对象会在线程销毁时释放，不会引起内存泄漏；
-- 如果某个 `NSTread` 子线程是常驻子线程，却没有使用 `@autoreleasepool` 包裹，那么 `autorelease` 对象会因为没有释放而占用大量的内存，造成内存泄漏。
+- ~~如果某个 `NSTread` 子线程是常驻子线程，却没有使用 `@autoreleasepool` 包裹，那么 `autorelease` 对象会因为没有释放而占用大量的内存，造成内存泄漏。~~（需要再研究一下 AFN2 的常驻线程）
 
-因此常驻子线程的回调方法一定要使用 `@autoreleasepool` 包裹，以保障每次执行完回调后，产生的 `autorelease` 对象能得到及时释放。
+因此常驻子线程的~~回调方法~~一定要使用 `@autoreleasepool` 包裹，以保障每次执行完回调后，产生的 `autorelease` 对象能得到及时释放。
 
 ## 参考
 
