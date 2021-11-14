@@ -1327,3 +1327,4 @@ if (AutoreleasePoolPage *page = coldPage()) {
 ## 参考
 
 - [iOS 从源码解析 Runtime (六) ：AutoreleasePool 实现原理解读](https://juejin.cn/post/6877085831647985677)
+- [draveness《自动释放池的前世今生》](https://github.com/draveness/analyze/blob/master/contents/objc/自动释放池的前世今生.md)
