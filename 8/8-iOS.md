@@ -16,6 +16,7 @@
   - [RunLoop](#runloop)
     - [source0 和 source1 有什么区别](#source0-和-source1-有什么区别)
   - [App 启动优化](#app-启动优化)
+    - [删除未使用的类和方法](#删除未使用的类和方法)
     - [统计启动时间](#统计启动时间)
   - [开源库](#开源库)
     - [fishhook 的原理 & 位置无关代码](#fishhook-的原理--位置无关代码)
@@ -334,9 +335,33 @@ __CFRUNLOOP_IS_CALLING_OUT_TO_A_SOURCE0_PERFORM_FUNCTION__(rls->_context.version
 
 ## App 启动优化
 
-### 统计启动时间
-
 > 参考：[美团外卖 iOS App 冷启动治理](https://tech.meituan.com/2018/12/06/waimai-ios-optimizing-startup.html)
+
+### 删除未使用的类和方法
+
+随着业务的迭代，不断有新的代码加入，同时也会废弃掉无用的代码和资源文件，但是工程中经常有无用的代码和文件被遗弃在角落里，没有及时被清理掉。这些无用的部分一方面增大了 App 的包体积，另一方便也拖慢了 App 的冷启动速度，所以及时清理掉这些无用的代码和资源十分有必要。
+
+通过对 Mach-O 文件的了解，可以知道：
+
+- `__TEXT` 段的 `__objc_methname` 节中包含了代码中的所有方法，
+- `__DATA` 段的 `__objc_selrefs` 节中则包含了所有被使用的方法的引用。
+
+通过取两个集合的**差集**就可以得到所有未被使用的代码。核心方法如下（参考：[objc_cover](https://github.com/nst/objc_cover) ）：
+
+```python
+def referenced_selectors(path):
+    re_sel = re.compile("__TEXT:__objc_methname:(.+)") //获取所有方法
+    refs = set()
+    lines = os.popen("/usr/bin/otool -v -s __DATA __objc_selrefs %s" % path).readlines() ## ios & mac //真正被使用的方法
+    for line in lines:
+        results = re_sel.findall(line)
+        if results:
+            refs.add(results[0])
+    return refs
+}
+```
+
+### 统计启动时间
 
 启动时间需要包含 `pre-main` 所花费的时间，因此开始时间点要尽可能早。
 
