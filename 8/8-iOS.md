@@ -7,6 +7,10 @@
     - [寻找两个 UIView 的最近的公共 View](#寻找两个-uiview-的最近的公共-view)
   - [事件的传递和响应](#事件的传递和响应)
     - [iOS 系统响应触摸事件的机制](#ios-系统响应触摸事件的机制)
+    - [在 UITabBar 中添加凸出的按钮](#在-uitabbar-中添加凸出的按钮)
+    - [扩大 UIButton 的点击范围](#扩大-uibutton-的点击范围)
+    - [扩大 UIButton 的点击范围（使用分类）](#扩大-uibutton-的点击范围使用分类)
+    - [扩大 UIButton 的点击范围（使用自定义的 Button ）](#扩大-uibutton-的点击范围使用自定义的-button-)
   - [Runtime](#runtime)
     - [「从历年 weak 看 iOS 面试】」](#从历年-weak-看-ios-面试)
     - [消息转发流程](#消息转发流程)
@@ -128,6 +132,163 @@
 
 - 若是前者（即前台无 APP 运行），则触发 `SpringBoard` 本身主线程 `RunLoop` 的 `source0` 事件源的回调，将事件交由桌面系统去消耗；
 - 若是后者（即有 APP 正在前台运行），则将触摸事件通过 `IPC`（进程间通信）传递给前台 APP 进程。
+
+### 在 UITabBar 中添加凸出的按钮
+
+自定义的 `MYTabBar` 继承自 `UITabBar` ，重写 `MYTabBar` 的 `-hitTest:withEvent:` 方法：
+
+```objectivec
+- (UIView *)hitTest:(CGPoint)point withEvent:(UIEvent *)event {
+    if (self.hidden || _anomalousImageView.hidden) {
+        // anomalousImageView 隐藏时, 走默认的 hitTest 逻辑
+        return [super hitTest:point withEvent:event];
+    } else {
+        // 转换坐标( point 是以 tabBar 为坐标系, tempPoint 是以 anomalousImageView 为坐标系)
+        CGPoint tempPoint = [_anomalousImageView convertPoint:point fromView:self];
+        // 判断 tempPoint 是否在 anomalousImageView 内部
+        if (CGRectContainsPoint(_anomalousImageView.bounds, tempPoint)) {
+            // 如果在 anomalousImageView 内部, 就返回 anomalousImageView, 让 anomalousImageView 来响应 event
+            return _anomalousImageView;
+        } else {
+            return [super hitTest:point withEvent:event];
+        }
+    }
+}
+```
+
+### 扩大 UIButton 的点击范围
+
+比如在自定义的 `view` 中有一个 `UIButton` 类型的 `btn` 属性：
+
+```objectivec
+@property (nonatomic, strong) UIButton *btn;
+```
+
+想扩大其点击范围，"上/下/左/右"的范围均增加 `10` ，可重写自定义 `view` 的 `hitTest:withEvent:` 方法：
+
+```objectivec
+- (UIView *)hitTest:(CGPoint)point withEvent:(UIEvent *)event {
+    // 调用 `-convertPoint:fromView:` 方法进行坐标转换:
+    //   1. point 是以 self (即当前的自定义 view ) 为坐标系的
+    //   2. tempPoint 是以 _btn 为坐标系的
+    CGPoint tempPoint = [_btn convertPoint:point fromView:self];
+    // extendedRect 基于 _btn 是扩大后的 rect , "上/下/左/右"的范围均增加 10
+    // 1. 此时以 _btn 为坐标系, 因此第一个参数 rect 取值是 _btn.bounds
+    // 2. 后两个参数 dx 和 dy 取正数时代表缩小范围, 取负数时代表扩大范围.
+    CGRect extendedRect = CGRectInset(_btn.bounds, -10, -10);
+    if (CGRectContainsPoint(extendedRect, tempPoint)) {
+        return _btn;
+    } else {
+        return [super hitTest:point withEvent:event];
+    }
+}
+```
+
+`CGRectInset()` 是 `CoreGraphics` 中的函数，它接受 `3` 个参数：
+
+- 第一个参数代表原始的 `rect` ；
+- 第二、三个参数 `dx` 和 `dy` 取正数时代表缩小范围, 取负数时代表扩大范围 。
+
+函数的声明是：
+
+```objectivec
+/* 
+Inset `rect' by `(dx, dy)'
+i.e., offset its origin by `(dx, dy)', and decrease its size by `(2*dx, 2*dy)'. 
+*/
+
+CG_EXTERN CGRect CGRectInset(CGRect rect, CGFloat dx, CGFloat dy) __attribute__ ((warn_unused_result))
+    CG_AVAILABLE_STARTING(10.0, 2.0);
+```
+
+### 扩大 UIButton 的点击范围（使用分类）
+
+> 参考：[《UIButton 扩大点击范围以及关于响应者链条的思考》](https://www.anyanfeng.com/uibutton-hit-ambit/)
+
+通过关联对象给 `UIButton` 的实例添加 `hitEdgeInsets` 属性，因此每个 `UIButton` 实例都可以设置自己的 `hitEdgeInsets` ，若未设置则执行默认的逻辑。
+
+`UIButton+MYExpandRect.h` ：
+
+```objectivec
+#import <UIKit/UIKit.h>
+
+@interface UIButton (MYExpandRect)
+
+@property(nonatomic, assign) UIEdgeInsets hitEdgeInsets;
+
+@end
+```
+
+`UIButton+MYExpandRect.m` ：
+
+```objectivec
+#import "UIButton+MYExpandRect.h"
+#import <objc/runtime.h>
+
+static void * kHitEdgeInsets;
+
+@implementation UIButton (MYExpandRect)
+
+#pragma mark - set Method
+
+- (void)setHitEdgeInsets:(UIEdgeInsets)hitEdgeInsets {
+    NSValue *value = [NSValue value:&hitEdgeInsets withObjCType:@encode(UIEdgeInsets)];
+    objc_setAssociatedObject(self, kHitEdgeInsets, value, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+}
+
+#pragma mark - get Method
+
+- (UIEdgeInsets)hitEdgeInsets {
+    NSValue *value = objc_getAssociatedObject(self, kHitEdgeInsets);
+    UIEdgeInsets edgeInsets;
+    [value getValue:&edgeInsets];
+    return value ? edgeInsets: UIEdgeInsetsZero;
+}
+
+#pragma mark - override super method
+
+- (BOOL)pointInside:(CGPoint)point withEvent:(UIEvent *)event {
+    //如果 button 的边界值无变化/失效/隐藏/透明, 则直接调用父类的方法
+    if (UIEdgeInsetsEqualToEdgeInsets(self.hitEdgeInsets, UIEdgeInsetsZero) || !self.enabled || self.hidden || self.alpha == 0 ) {
+        return [super pointInside:point withEvent:event];
+    } else {
+        CGRect hitFrame = UIEdgeInsetsInsetRect(self.bounds, self.hitEdgeInsets);
+        return CGRectContainsPoint(hitFrame, point);
+    }
+}
+
+@end
+```
+
+### 扩大 UIButton 的点击范围（使用自定义的 Button ）
+
+定义了一个继承自 `UIButton` 的子类 `MYButton`：
+
+**方法一**，重写 `MYButton` 的 `pointInside:withEvent:` 方法：
+
+```objectivec
+- (BOOL)pointInside:(CGPoint)point withEvent:(UIEvent *)event {
+    CGRect extendedRect = CGRectInset(self.bounds, -10, -10);
+    if (CGRectContainsPoint(extendedRect, point)) {
+        return YES;
+    } else {
+        return [super pointInside:point withEvent:event];
+    }
+}
+```
+
+**方法二**，重写`hitTest:withEvent:` 方法：
+
+```objectivec
+- (UIView *)hitTest:(CGPoint)point withEvent:(UIEvent *)event {
+    CGRect extendedRect = CGRectInset(self.bounds, -10, -10);
+    if (CGRectContainsPoint(extendedRect, point)) {
+        return self;
+    } else {
+        return [super hitTest:point withEvent:event];
+    }
+}
+```
 
 ## Runtime
 
