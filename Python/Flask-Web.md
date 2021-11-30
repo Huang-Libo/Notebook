@@ -4,5 +4,6 @@
 
 ## 资源
 
-- [图灵官网](https://www.ituring.com.cn/book/2463)
-- [Flask Web开发（第2版）源代码.zip](https://github.com/Huang-Libo/image-hosting/raw/master/Files/Flask%20Web%E5%BC%80%E5%8F%91%EF%BC%88%E7%AC%AC2%E7%89%88%EF%BC%89%E6%BA%90%E4%BB%A3%E7%A0%81.zip)
+- [图灵在线](https://www.ituring.com.cn/book/2463)
+- [随书源码](https://github.com/miguelgrinberg/flasky)
+- [Flask 官网](https://flask.palletsprojects.com/)
