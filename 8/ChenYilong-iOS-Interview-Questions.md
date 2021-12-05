@@ -1,18 +1,31 @@
 # 《招聘一个靠谱的 iOS 》参考答案
 
-原 GitHub 地址：
+## 前言
+
+### 原 GitHub 地址
 
 - [《招聘一个靠谱的iOS》面试题参考答案（上）](https://github.com/ChenYilong/iOSInterviewQuestions/blob/master/01《招聘一个靠谱的iOS》面试题参考答案/《招聘一个靠谱的iOS》面试题参考答案（上）.md)
 - [《招聘一个靠谱的iOS》面试题参考答案（下）](https://github.com/ChenYilong/iOSInterviewQuestions/blob/master//01《招聘一个靠谱的iOS》面试题参考答案/《招聘一个靠谱的iOS》面试题参考答案（下）.md)
 
-原文说明：
+### 原文说明
 
-- 面试题来源是[微博@我就叫Sunny怎么了](http://weibo.com/u/1364395395)（孙源）的这篇博文：[《招聘一个靠谱的 iOS 》](http://blog.sunnyxx.com/2015/07/04/ios-interview/)，其中共 55 题，除第一题为纠错题外，其他 54 道均为简答题。
+- 面试题来源是[微博@我就叫Sunny怎么了](http://weibo.com/u/1364395395)（孙源）的这篇博文：[《招聘一个靠谱的 iOS 》](http://blog.sunnyxx.com/2015/07/04/ios-interview/)（原文中使用的的微博图链已失效，可在 [Internet Archive](https://web.archive.org/web/20160307181530/http://blog.sunnyxx.com/2015/07/04/ios-interview/) 中查看）。其中共 55 题，除第一题为纠错题外，其他 54 道均为简答题。
 - 答案为[微博@iOS程序犭袁](http://weibo.com/luohanchenyilong/)（陈艺龙）整理，未经出题者校对，如有纰漏，请向[微博@iOS程序犭袁](http://weibo.com/luohanchenyilong/)指正。
+
+### 改版说明
+
+原文有些内容过于臃肿，条理不够清晰。而对于题解而言，需要完整且相对精简，因此对原文做了两方面的调整：
+
+1. 删除重复和关联性不强的内容，去粗取精；
+2. 对于需要拓展的内容，尝试摘出来，用单独的一篇文章来讲解，在本文中只给出相关链接。
 
 <h2>目录</h2>
 
 - [《招聘一个靠谱的 iOS 》参考答案](#招聘一个靠谱的-ios-参考答案)
+  - [前言](#前言)
+    - [原 GitHub 地址](#原-github-地址)
+    - [原文说明](#原文说明)
+    - [改版说明](#改版说明)
   - [1. 风格纠错题](#1-风格纠错题)
     - [优化部分](#优化部分)
     - [硬伤部分](#硬伤部分)
@@ -47,25 +60,7 @@
 
 问题：下面代码的风格有什么问题？
 
-```objectivec
-typedef enum{
-	UserSex_Man,
-	UserSex woman
-}UserSex;
-
-@interface UserModel :NSObject
-
-@property(nonatomic, strong) NSString *name;
-@property (assign, nonatomic) int age;
-@property (nonatomic, assign) UserSex sex;
-
--(id)initUserModelWithUserName: (NSString*) name withAge:(int)age;
-
-
--(void) doLogIn;
-
-@end
-```
+![sunnyxx-code-style.jpg](../media/8/sunnyxx-code-style.jpg)
 
 **修改方法一**：
 
