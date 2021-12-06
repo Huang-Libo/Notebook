@@ -55,6 +55,18 @@
   - [23. 使用 Runtime Associate 方法关联的对象，需要在主对象 dealloc 的时候释放么？](#23-使用-runtime-associate-方法关联的对象需要在主对象-dealloc-的时候释放么)
   - [24. objc 中的实例方法和类方法有什么本质的区别和联系？](#24-objc-中的实例方法和类方法有什么本质的区别和联系)
   - [25. _objc_msgForward 函数是做什么的，直接调用它将会发生什么？](#25-_objc_msgforward-函数是做什么的直接调用它将会发生什么)
+  - [26. Runtime 如何实现 weak 变量的自动置 nil ？](#26-runtime-如何实现-weak-变量的自动置-nil-)
+  - [27. 能否向编译后得到的类中增加实例变量？能否向运行时创建的类中添加实例变量？为什么？](#27-能否向编译后得到的类中增加实例变量能否向运行时创建的类中添加实例变量为什么)
+  - [28. RunLoop 和线程有什么关系？](#28-runloop-和线程有什么关系)
+  - [29. RunLoop 的mode 作用是什么？](#29-runloop-的mode-作用是什么)
+  - [30. 以 + scheduledTimerWithTimeInterval...的方式触发的timer ，在滑动页面上的列表时，timer 会暂定回调，为什么？如何解决？](#30-以--scheduledtimerwithtimeinterval的方式触发的timer-在滑动页面上的列表时timer-会暂定回调为什么如何解决)
+  - [31. 猜想 RunLoop 内部是如何实现的？](#31-猜想-runloop-内部是如何实现的)
+  - [32. Objc 使用什么机制管理对象内存？](#32-objc-使用什么机制管理对象内存)
+  - [33. ARC 通过什么方式帮助开发者管理内存？](#33-arc-通过什么方式帮助开发者管理内存)
+  - [34. 不手动指定 autoreleasepool 的前提下，一个 autorealese 对象在什么时刻释放？（比如在一个 vc 的 viewDidLoad 中创建）](#34-不手动指定-autoreleasepool-的前提下一个-autorealese-对象在什么时刻释放比如在一个-vc-的-viewdidload-中创建)
+  - [35. BAD_ACCESS 在什么情况下出现？](#35-bad_access-在什么情况下出现)
+  - [36. 苹果是如何实现 autoreleasepool 的？](#36-苹果是如何实现-autoreleasepool-的)
+  - [37. 使用 block 时什么情况会发生引用循环，如何解决？](#37-使用-block-时什么情况会发生引用循环如何解决)
   - [参考](#参考)
 
 ## 1. 风格纠错题
@@ -2115,8 +2127,312 @@ typedef void (*voidIMP)(id, SEL, ...)
 
 - [JSPatch（Github 链接）](https://github.com/bang590/JSPatch)就是直接调用 `_objc_msgForward` 来实现其核心功能的：
   - JSPatch 以小巧的体积做到了让 JS 调用/替换任意 OC 方法，让 iOS App 具备热更新的能力。
-  - 作者的博文[《JSPatch实现原理详解》](http://blog.cnbang.net/tech/2808/)详细记录了实现原理，有兴趣可以看下。
+  - 作者的博文[《JSPatch 实现原理详解》](https://github.com/bang590/JSPatch/wiki/JSPatch-%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86%E8%AF%A6%E8%A7%A3)详细记录了实现原理，有兴趣可以看下。
 - 同时 [RAC (ReactiveCocoa)](https://github.com/ReactiveCocoa/ReactiveCocoa) 源码中也用到了该方法。
+
+## 26. Runtime 如何实现 weak 变量的自动置 nil ？
+
+runtime 维护了一个 `weak` 表，用于存储指向某个对象的所有 `weak` 指针。`weak` 表其实是一个 `hash`（哈希）表，`key` 是所指对象的地址，`value` 是 `weak` 指针的**地址数组**（地址数组中的元素是**对象指针的地址**）。
+
+## 27. 能否向编译后得到的类中增加实例变量？能否向运行时创建的类中添加实例变量？为什么？
+
+**结论**：
+
+- 不能向编译后得到的类中增加实例变量；
+- 能向运行时创建的类中添加实例变量；
+
+**原因**：
+
+- 因为编译后的类已经注册在 Runtime 中，~~类结构体中的 `objc_ivar_list` 实例变量的链表和 `instance_size` 实例变量的内存大小已经确定~~（这里提到的两个 API 都是旧版 Runtime 的 ❓ ），同时 Runtime 会调用 `class_setIvarLayout` 或 `class_setWeakIvarLayout` 来分别处理 `strong` 、 `weak` 引用。所以不能向存在的类中添加实例变量；
+- 运行时创建的类是可以添加实例变量，调用 `class_addIvar` 函数。但是得在调用 `objc_allocateClassPair` 之后，`objc_registerClassPair` 之前，原因同上。
+
+## 28. RunLoop 和线程有什么关系？
+
+RunLoop ，正如其名，loop 表示某种循环，和 run 放在一起就表示一直在运行着的循环。实际上，RunLoop 和线程是紧密相连的，可以这样说 RunLoop 是为了线程而生，没有线程，它就没有存在的必要。
+
+RunLoop 是线程的基础架构部分，`Cocoa` 和 `CoreFundation` 都提供了 RunLoop 对象方便配置和管理线程的 RunLoop （以下都以 `Cocoa` 为例）。每个线程，包括程序的主线程（main thread）都有与之相应的 RunLoop 对象。
+
+RunLoop 和线程的关系：
+
+**1）** 主线程的 RunLoop 默认是启动的。
+
+iOS 的应用程序里面，程序启动后会有一个如下的 `main()` 函数
+
+ ```objectivec
+int main(int argc, char * argv[]) {
+    @autoreleasepool {
+        return UIApplicationMain(argc, argv, nil, NSStringFromClass([AppDelegate class]));
+    }
+}
+```
+
+重点是 `UIApplicationMain()` 函数，这个方法会为 main thread 设置一个 NSRunLoop 对象，这就解释了：为什么我们的应用可以在无人操作的时候休息，需要让它干活的时候又能立马响应。
+
+**2）** 对其它线程来说，RunLoop 默认是没有启动的，如果你需要更多的线程交互则可以手动配置和启动，如果线程只是去执行一个长时间的已确定的任务则不需要。
+
+**3）** 在任何一个 `Cocoa` 程序的线程中，都可以通过以下代码来获取到当前线程的 RunLoop 。
+
+```objectivec
+NSRunLoop *runloop = [NSRunLoop currentRunLoop];
+```
+
+参考链接：[《Objective-C 之run loop详解》](http://blog.csdn.net/wzzvictory/article/details/9237973)。
+
+## 29. RunLoop 的mode 作用是什么？
+
+model 主要是用来指定事件在运行循环中的优先级的，分为：
+
+- `NSDefaultRunLoopMode`（`kCFRunLoopDefaultMode`）：默认，空闲状态
+- `UITrackingRunLoopMode` ：ScrollView 滑动时
+- `UIInitializationRunLoopMode` ：启动时
+- `NSRunLoopCommonModes`（`kCFRunLoopCommonModes`）：Mode 集合
+
+苹果公开提供的 Mode 有两个：
+
+1. `NSDefaultRunLoopMode`（`kCFRunLoopDefaultMode`）
+2. `NSRunLoopCommonModes`（`kCFRunLoopCommonModes`）
+
+## 30. 以 + scheduledTimerWithTimeInterval...的方式触发的timer ，在滑动页面上的列表时，timer 会暂定回调，为什么？如何解决？
+
+RunLoop 只能运行在一种 mode 下，如果要换 mode ，当前的 RunLoop 也需要停下重启成新的。利用这个机制，`ScrollView` `滚动过程中NSDefaultRunLoopMode`（`kCFRunLoopDefaultMode`）的 mode 会切换到 `UITrackingRunLoopMode` 来保证 `ScrollView` 的流畅滑动。
+
+如果我们把一个 `NSTimer` 对象以 `NSDefaultRunLoopMode` （`kCFRunLoopDefaultMode`）添加到主运行循环中的时候，
+`ScrollView` 滚动过程中会因为 mode 的切换，而导致 `NSTimer` 将不再被调度。
+
+同时因为 mode 还是可定制的，所以：
+
+`Timer` 计时会被 `ScrollView` 的滑动影响的问题可以通过将 timer 添加到 `NSRunLoopCommonModes`（`kCFRunLoopCommonModes`）来解决。代码如下：
+
+```objectivec
+// 将 timer 添加到 NSDefaultRunLoopMode 中
+[NSTimer scheduledTimerWithTimeInterval:1.0
+     target:self
+     selector:@selector(timerTick:)
+     userInfo:nil
+     repeats:YES];
+
+// 然后再添加到 NSRunLoopCommonModes 里
+NSTimer *timer = [NSTimer timerWithTimeInterval:1.0
+     target:self
+     selector:@selector(timerTick:)
+     userInfo:nil
+     repeats:YES];
+[[NSRunLoop currentRunLoop] addTimer:timer forMode:NSRunLoopCommonModes];
+```
+
+## 31. 猜想 RunLoop 内部是如何实现的？
+
+一般来讲，一个线程一次只能执行一个任务，执行完成后线程就会退出。如果我们需要一个机制，让线程能随时处理事件但并不退出，通常的代码逻辑
+是这样的：
+
+```c
+function loop() {
+    initialize();
+    do {
+        var message = get_next_message();
+        process_message(message);
+    } while (message != quit);
+}
+```
+
+或使用伪代码来展示下:
+
+```c
+int main(int argc, char * argv[]) {
+    //程序一直运行状态
+    while (AppIsRunning) {
+        //睡眠状态，等待唤醒事件
+        id whoWakesMe = SleepForWakingUp();
+        //得到唤醒事件
+        id event = GetEvent(whoWakesMe);
+        //开始处理事件
+        HandleEvent(event);
+    }
+    return 0;
+}
+```
+
+参考链接：
+
+- [《深入理解 RunLoop 》](http://blog.ibireme.com/2015/05/18/runloop/#base)
+- 戴铭的博文 [CFRunLoop](https://github.com/ming1016/study/wiki/CFRunLoop)
+
+## 32. Objc 使用什么机制管理对象内存？
+
+- 通过 `retainCount` 的机制来决定对象是否需要释放。
+- ~~每次 `runloop` 的时候，都会检查对象的 `retainCount`，如果 `retainCount` 为 0，说明该对象没有地方需要继续使用了，可以释放掉了。(正解：retainCount 不可能依赖 runloop 检查。runloop 只是自动管理了一个 autoreleasepool ，autoreleasepool pop 时可能会导致 retainCount 为 0 从而导致对象释放)~~
+- 每次 `release` 时检查 `retainCount` 减 `1` ，当为 `0` 时候释放对象。
+
+`release` 对象的各种情况如下：
+
+一、对象成员变量
+
+这个对象 `dealloc` 时候，成员变量 `objc_storeStrong(&ivar,nil)` `release`
+
+二、局部变量变量的释放
+
+分情况：
+
+**1、** `strong obj` 变量，出了作用域 `{}` ，就 `objc_storeStrong(obj,nil)` 来 `release` 对象；
+
+ ```C
+void
+objc_storeStrong(id *location, id obj)
+{
+    id prev = *location;
+    if (obj == prev) {
+        return;
+    }
+    objc_retain(obj);
+    *location = obj;
+    objc_release(prev);
+}
+ ```
+
+**2、** `weak obj` 变量，出了作用域，`objc_destroyWeak` 将变量（`obj`）的地址从 `weak` 表中删除；
+
+**3、** `autorelease obj` 变量，交给 `autoreleasePool` 对象管理，
+
+- 主动使用 `@autoreleasepool{}`，出了 `{}` 对象 `release`
+- 不使用 `@autoreleasepool{}`，交给线程管理
+
+① ~~线程开启 `RunLoop` ，在每次 `kCFRunLoopBeforeWaiting` 休眠时候，执行 `pop()`，再执行 `push()` ；~~（疑问❓：NSThread 常驻线程也是这样吗？待验证。）
+② 线程没有开启 `RunLoop` ，在线程结束时候执行 `pop()` 。
+
+## 33. ARC 通过什么方式帮助开发者管理内存？
+
+ARC 相对于 MRC ，不是在编译时添加 `retain` / `release` / `autorelease` 这么简单。应该是**编译时**和**运行时**两部分共同帮助开发者管理内存。
+
+- 在编译期，ARC 用的是更底层的 C 接口实现的 `retain` / `release` / `autorelease` ，这样做性能更好，也是为什么不能在 ARC 环境下手动 `retain` / `release` / `autorelease` 。
+- 同时对同一上下文的同一对象的成对 `retain` / `release` 操作进行优化（即忽略掉不必要的操作）。（再就是 `autorelease` 的优化，借助了 TLS（线程局部存储）。）
+
+## 34. 不手动指定 autoreleasepool 的前提下，一个 autorealese 对象在什么时刻释放？（比如在一个 vc 的 viewDidLoad 中创建）
+
+分两种情况：手动干预释放时机、系统自动去释放。
+
+1. 手动干预释放时机，指定 `autoreleasepool` ，在当前作用域大括号结束时释放；
+2. 系统自动去释放，不手动指定 `autoreleasepool` ：
+
+`__autoreleasing` 修饰的 `autorelease` 对象，是在创建好之后调用 `objc_autorelease` 会被添加到最近一次创建的自动释放池中，并且 `autorelease` 对象什么时候调用 `release` ，是由 RunLoop 来控制的：会在当前的 RunLoop 休眠之前，执行 `pop()` 函数、调用 `release` 时释放。
+
+~~但是如果每次都放进应用程序的 `main.m` 中的 autoreleasepool 中，迟早有被撑满的一刻。这个过程中必定有一个释放的动作。~~（ ⚠️ 纠正：主线程的 `autoreleasepool` 不是在 `main.m` 中创建的。。。）
+
+~~“子线程的 RunLoop 默认是不工作，无法主动创建，必须手动创建。”（表述不准确， 见 [issue#82](https://github.com/ChenYilong/iOSInterviewQuestions/issues/82)~~
+
+从 `RunLoop` 源代码中可知，子线程默认是没有 `RunLoop` 的，如果需要在子线程开启 `RunLoop` ，则需要调用 `[NSRunLoop CurrentRunLoop]` 方法，它内部实现是先检查线程，如果发现是子线程，以懒加载的形式创建一个子线程的 `RunLoop`。并存储在一个全局的可变字典里。开发者在调用 `[NSRunLoop CurrentRunLoop]` 时，是系统自动创建 `RunLoop` 的，而没法手动创建。
+
+自定义的 `NSOperation` 和 `NSThread` 需要手动创建自动释放池。比如： 自定义的 `NSOperation` 类中的 `main` 方法里就必须添加自动释放池。否则出了作用域后，自动释放对象会因为没有自动释放池去处理它，而造成内存泄露。
+
+但对于 `blockOperation` 和 `invocationOperation` 这种默认的 Operation ，系统已经帮我们封装好了，不需要手动创建自动释放池。
+
+`@autoreleasepool` 当自动释放池执行 `pop()` 时，会向自动释放池中的所有对象发送 `release` 消息，释放自动释放池中的所有对象。
+
+举一个例子: 如果在一个 `vc` 的 `viewDidLoad` 中创建一个 `autorelease` 对象，那么该对象会在 `viewDidAppear` 方法执行前就被销毁了。
+
+注意: 本次论述, 并不适用于 `TaggedPointer` 类型.
+
+参考链接：[《黑幕背后的 Autorelease 》](http://blog.sunnyxx.com/2014/10/15/behind-autorelease/)
+
+拓展问题：
+
+下面的对象 ，分别在什么地方被释放 ?
+
+ ```objectivec
+- (void)weakLifeCycleTest {
+    id obj0 = @"iTeaTime(技术清谈)";
+    __weak id obj1 = obj0;
+    id obj2 = [NSObject new];
+    __weak id obj3 = [NSObject new];
+    {
+        id obj4 = [NSObject new];
+    }
+    __autoreleasing id obj5 = [NSObject new];
+    __unsafe_unretained id obj6 = self;
+    NSLog(@"obj0=%@, obj1=%@, obj2=%@, obj3=%@, obj5=%@, obj6=%@", obj0, obj1, obj2, obj3, obj5, obj6);
+    // Lots of code ...
+}
+ ```
+
+- `obj0` 字符串属于常量区，不会释放 (类似的例子可以参考 [《第34题，autorelease对象的释放时机，对iOS9、10系统不适用 #90》]( https://github.com/ChenYilong/iOSInterviewQuestions/issues/90 ) )
+- `obj1` 指向的对象在常量区，不会释放
+- `obj2` 没有修复符，默认为 `__strong` ，会在对象被使用结束时释放。如果下方没有使用该对象，根据编译器是否优化，可能在下一行直接销毁，最晚可以在方法结束时销毁。
+- `obj3` 警告 *Assigning retained object to weak variable; object will be released after assignment* ，`new` 结束后，等号右侧对象立马被释放，左侧指针也立即销毁，下方打印也是 `null`
+- `obj4` 出了最近的括号销毁
+- `obj5` 出了最近的一个 autoreleasePool 时被释放
+- `obj6` 类似于基本数据结构的修饰符号 `assign` ，不会对修饰对象的生命周期产生影响，随着 `self` 的释放，`obj6` 也会随之释放。比如 `self` 被其它线程释放，那么 `obj6` 也会随之释放。
+
+讨论区：
+
+- [《关于第 34 题关于 NSOperation 中需要手动添加 Autorelease Pool 的部分的疑问 #25》]( https://github.com/ChenYilong/iOSInterviewQuestions/issues/25 )
+- [《34题-36题-题目中很多对 AutoreleasePool 的理解都是有问题的 #112》]( https://github.com/ChenYilong/iOSInterviewQuestions/issues/112 )
+
+## 35. BAD_ACCESS 在什么情况下出现？
+
+访问了悬垂指针，比如对一个已经释放的对象执行了 `release` 、访问已经释放对象的成员变量或者发消息。
+
+## 36. 苹果是如何实现 autoreleasepool 的？
+
+AutoreleasePool 是以 `AutoreleasePoolPage` 为结点的**双向链表**来实现的，主要通过下列三个函数完成：
+
+1. `objc_autoreleasepoolPush`
+2. `objc_autoreleasepoolPop`
+3. `objc_autorelease`
+
+看函数名就可以知道，对 `autorelease` 分别执行 `push` ，和 `pop` 操作。销毁对象时执行 release 操作。
+
+## 37. 使用 block 时什么情况会发生引用循环，如何解决？
+
+一个对象中强引用了 block ，在 block 中又强引用了该对象，就会发生循环引用。
+
+ARC 下的解决方法是：
+
+- 将该对象使用 `__weak` 修饰符修饰之后再在 block 中使用。
+- 使用 `unsafe_unretained` 关键字，用法与 `__weak` 一致。`unsafe_unretained` 不会产生强引用，不安全，指向的对象销毁时，指针存储的地址值不变。
+
+检测代码中是否存在循环引用问题，可参考下文中 39 题中提到的工具。
+
+MRC 下可使用 `unsafe_unretained` 和 `__block` 进行解决，`__weak` 不能在 MRC 中使用。在 MRC 下 `__block` 的用法简单化了，可以照搬 `__weak` 的使用方法，两者用法一致。
+
+用 `unsafe_unretained` 解决：
+
+```objectivec
+unsafe_unretained id weakSelf = self;
+self.block = ^{
+    NSLog(@"%@", @[weakSelf]);
+};
+```
+
+用 `__block`  解决：
+
+```objectivec
+__block id weakSelf = self;
+self.block = ^{
+    NSLog(@"%@", @[weakself]);
+};
+```
+
+其中最佳实践为 `weak`-`strong` dance 解法：
+
+```objectivec
+__weak typeof(self) weakSelf = self;
+self.block = ^{
+    __strong typeof(weakSelf) strongSelf = weakSelf;
+    if (!strongSelf) {
+         return;
+    }
+    NSLog(@"%@", @[strongSelf]);
+};
+self.block();
+```
+
+- `weakSelf` 是保证 block 内部（作用域内）不会产生循环引用
+- `strongSelf` 是保证 block 内部（作用域内） `self` 不会被 block 释放
+- `if (!strongSelf) { return;}` 该代码作用：因为 `weak` 指针指向的对象，是可能被随时释放的。为了防止 `self` 在 block 外部被释放，比如其它线程内被释放。
+
+讨论区 ：
+
+- 如果对MRC下的循环引用解决方案感兴趣，可参见讨论  [《issue#50 -- 37 题 block 循环引用问题》]( https://github.com/ChenYilong/iOSInterviewQuestions/issues/50 )
+- [《建议增加一个问题：__block和__weak的区别 #7》](https://github.com/ChenYilong/iOSInterviewQuestions/issues/7)
 
 ## 参考
 
