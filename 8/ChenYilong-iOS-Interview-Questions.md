@@ -54,6 +54,7 @@
   - [22. Runtime 如何通过 selector 找到对应的 IMP 地址？（分别考虑类方法和实例方法）](#22-runtime-如何通过-selector-找到对应的-imp-地址分别考虑类方法和实例方法)
   - [23. 使用 Runtime Associate 方法关联的对象，需要在主对象 dealloc 的时候释放么？](#23-使用-runtime-associate-方法关联的对象需要在主对象-dealloc-的时候释放么)
   - [24. objc 中的实例方法和类方法有什么本质的区别和联系？](#24-objc-中的实例方法和类方法有什么本质的区别和联系)
+  - [25. _objc_msgForward 函数是做什么的，直接调用它将会发生什么？](#25-_objc_msgforward-函数是做什么的直接调用它将会发生什么)
   - [参考](#参考)
 
 ## 1. 风格纠错题
@@ -1907,6 +1908,215 @@ objc_setAssociatedObject (
 5. 类方法中不能访问成员变量
 6. 类方法中不能直接调用对象方法
 
+## 25. _objc_msgForward 函数是做什么的，直接调用它将会发生什么？
+
+`_objc_msgForward` 是 `IMP` 类型，**用于消息转发的：当向一个对象发送一条消息，但它并没有实现的时候，`_objc_msgForward` 会尝试做消息转发。**
+
+我们可以这样创建一个 `_objc_msgForward` 对象：
+
+```objectivec
+IMP msgForwardIMP = _objc_msgForward;
+```
+
+在《 objc 中向一个对象发送消息 `[obj foo]` 和 `objc_msgSend()` 函数之间有什么关系？》曾提到 `objc_msgSend` 在“消息传递”中的作用。在“消息传递”过程中，`objc_msgSend` 的动作比较清晰：
+
+- 首先在 `Class` 中的**缓存**查找 `IMP`（没缓存则初始化缓存）；
+- 如果没找到，则向父类的 Class 查找；
+- 如果一直查找到根类仍旧没有实现，则用 `_objc_msgForward` 函数指针代替 `IMP` 。最后，执行这个 `IMP` 。
+
+Objective-C运行时是开源的，所以我们可以看到它的实现。打开 [Apple Open Source - ojbc4](http://www.opensource.apple.com/tarballs/objc4/) 下载一个最新版本，找到 `objc-runtime-new.mm` ，进入之后搜索 `_objc_msgForward` 。
+
+里面有对`_objc_msgForward`的功能解释：
+
+![https://github.com/ChenYilong](http://i.imgur.com/vcThcdA.png)
+
+```objectivec
+/***********************************************************************
+* lookUpImpOrForward.
+* The standard IMP lookup. 
+* initialize==NO tries to avoid +initialize (but sometimes fails)
+* cache==NO skips optimistic unlocked lookup (but uses cache elsewhere)
+* Most callers should use initialize==YES and cache==YES.
+* inst is an instance of cls or a subclass thereof, or nil if none is known. 
+*   If cls is an un-initialized metaclass then a non-nil inst is faster.
+* May return _objc_msgForward_impcache. IMPs destined for external use 
+*   must be converted to _objc_msgForward or _objc_msgForward_stret.
+*   If you don't want forwarding at all, use lookUpImpOrNil() instead.
+**********************************************************************/
+```
+
+对 `objc-runtime-new.mm` 文件里与 `_objc_msgForward` 有关的三个函数使用伪代码展示下：
+
+```objectivec
+id objc_msgSend(id self, SEL op, ...) {
+    if (!self) return nil;
+	IMP imp = class_getMethodImplementation(self->isa, SEL op);
+	imp(self, op, ...); //调用这个函数，伪代码...
+}
+ 
+//查找 IMP
+IMP class_getMethodImplementation(Class cls, SEL sel) {
+    if (!cls || !sel) return nil;
+    IMP imp = lookUpImpOrNil(cls, sel);
+    if (!imp) return _objc_msgForward; //_objc_msgForward 用于消息转发
+    return imp;
+}
+ 
+IMP lookUpImpOrNil(Class cls, SEL sel) {
+    if (!cls->initialize()) {
+        _class_initialize(cls);
+    }
+ 
+    Class curClass = cls;
+    IMP imp = nil;
+    do { // 先查缓存,缓存没有时重建,仍旧没有则向父类查询
+        if (!curClass) break;
+        if (!curClass->cache) fill_cache(cls, curClass);
+        imp = cache_getImp(curClass, sel);
+        if (imp) break;
+    } while (curClass = curClass->superclass);
+ 
+    return imp;
+}
+```
+
+虽然 Apple 没有公开 `_objc_msgForward` 的实现源码，但是我们还是能得出结论：
+
+`_objc_msgForward` 是一个函数指针（和 `IMP` 的类型一样），是用于消息转发的：当向一个对象发送一条消息，但它并没有实现的时候，`_objc_msgForward` 会尝试做消息转发。
+
+为了展示消息转发的具体动作，这里尝试向一个对象发送一条错误的消息，并查看一下 `_objc_msgForward` 是如何进行转发的。
+
+首先开启调试模式、打印出所有运行时发送的消息，可以在代码里执行下面的方法：
+
+```objectivec
+(void)instrumentObjcMessageSends(YES);
+```
+
+因为该函数处于 `objc-internal.h` 内，而该文件并不开放，所以调用的时候先声明，目的是告诉编译器程序目标文件包含该方法存在，让编译通过
+
+```objectivec
+OBJC_EXPORT void
+instrumentObjcMessageSends(BOOL flag)
+OBJC_AVAILABLE(10.0, 2.0, 9.0, 1.0, 2.0);
+```
+
+或者断点暂停程序运行，并在 `lldb` 中输入下面的命令：
+
+```objectivec
+call (void)instrumentObjcMessageSends(YES)
+```
+
+以第二种为例，操作如下所示：
+
+![https://github.com/ChenYilong](http://i.imgur.com/uEwTCC4.png)
+
+之后，运行时发送的所有消息都会打印到 `/tmp/msgSend-xxxx` 文件里了。
+
+终端中输入命令前往：
+
+```objectivec
+open /private/tmp
+```
+
+![https://github.com/ChenYilong](http://i.imgur.com/Fh5hhCw.png)
+
+可能看到有多条，找到最新生成的，双击打开
+
+在模拟器上执行执行以下语句（这一套调试方案仅适用于模拟器，真机不可用，关于该调试方案的拓展链接：[Can the messages sent to an object in Objective-C be monitored or printed out?](http://stackoverflow.com/a/10750398/3395008)），向一个对象发送一条错误的消息：
+
+```objectivec 
+#import <UIKit/UIKit.h>
+#import "AppDelegate.h"
+#import "CYLTest.h"
+
+int main(int argc, char * argv[]) {
+    @autoreleasepool {
+        CYLTest *test = [[CYLTest alloc] init];
+        [test performSelector:(@selector(iOS程序犭袁))];
+        return UIApplicationMain(argc, argv, nil, NSStringFromClass([AppDelegate class]));
+    }
+}
+```
+
+![https://github.com/ChenYilong](http://i.imgur.com/UjbmVvB.png)
+
+你可以在 `/tmp/msgSend-xxxx`（我这一次是`/tmp/msgSend-9805`）文件里，看到打印出来：
+
+![https://github.com/ChenYilong](http://i.imgur.com/AAERz1T.png)
+
+```objectivec
++ CYLTest NSObject initialize
++ CYLTest NSObject alloc
+- CYLTest NSObject init
+- CYLTest NSObject performSelector:
++ CYLTest NSObject resolveInstanceMethod:
++ CYLTest NSObject resolveInstanceMethod:
+- CYLTest NSObject forwardingTargetForSelector:
+- CYLTest NSObject forwardingTargetForSelector:
+- CYLTest NSObject methodSignatureForSelector:
+- CYLTest NSObject methodSignatureForSelector:
+- CYLTest NSObject class
+- CYLTest NSObject doesNotRecognizeSelector:
+- CYLTest NSObject doesNotRecognizeSelector:
+- CYLTest NSObject class
+```
+
+结合[《 NSObject 官方文档》](https://developer.apple.com/library/prerelease/watchos/documentation/Cocoa/Reference/Foundation/Classes/NSObject_Class/#//apple_ref/doc/uid/20000050-SW11)，排除掉 `NSObject` 做的事，剩下的就是 `_objc_msgForward` 消息转发做的几件事：
+
+1. 调用 `resolveInstanceMethod:` 方法 (或 `resolveClassMethod:` )。允许用户在此时为该 `Class` 动态添加实现。如果有实现了，则调用并返回 `YES` ，那么重新开始 `objc_msgSend` 流程。这一次对象会响应这个选择器，一般是因为它已经调用过 `class_addMethod` 。如果仍没实现，继续下面的动作。
+2. 调用 `forwardingTargetForSelector:` 方法，尝试找到一个能响应该消息的对象。如果获取到，则直接把消息转发给它，返回非 `nil` 对象。否则返回 `nil` ，继续下面的动作。注意，这里不要返回 `self` ，否则会形成死循环。
+3. 调用 `methodSignatureForSelector:` 方法，尝试获得一个方法签名。如果获取不到，则直接调用 `doesNotRecognizeSelector` 抛出异常。如果能获取，则返回非 `nil` ，则创建一个 `NSInvocation` 并调用`forwardInvocation:` 。
+4. 调用 `forwardInvocation:` 方法，将第 3 步获取到的`方法签名`包装成 `Invocation` 传入，如何处理就在这里面了。
+5. 调用 `doesNotRecognizeSelector:` ，默认的实现是抛出异常。如果第 3 步没能获得一个方法签名，执行该步骤。
+
+上面前 4 个方法均是**模板方法**，开发者可以*重写 (override)* ，由 Runtime 来调用。
+
+最常见的实现消息转发：就是重写方法 3 和 4 ，吞掉一个消息或者代理给其他对象都是没问题的，也就是说 `_objc_msgForward` 在进行消息转发的过程中会涉及以下这几个方法：
+
+1. `resolveInstanceMethod:`方法 (或 `resolveClassMethod:`)。
+2. `forwardingTargetForSelector:`方法
+3. `methodSignatureForSelector:`方法
+4. `forwardInvocation:`方法
+5. `doesNotRecognizeSelector:` 方法
+
+为了能更清晰地理解这些方法的作用，git 仓库里也给出了一个 Demo ，名称叫“ `_objc_msgForward_demo` ”,可运行起来看看。
+
+**下面回答下第二个问题“直接 `_objc_msgForward` 调用它将会发生什么？”**
+
+直接调用 `_objc_msgForward` 是非常危险的事，如果用不好会直接导致程序 Crash ，但是如果用得好，能做很多非常酷的事。
+
+正如前文所说：
+
+> `_objc_msgForward`是 `IMP` 类型，用于消息转发的：当向一个对象发送一条消息，但它并没有实现的时候，`_objc_msgForward` 会尝试做消息转发。
+
+如何调用`_objc_msgForward`？
+
+`_objc_msgForward` 隶属 C 语言，有三个参数 ：
+
+|| `_objc_msgForward`参数| 类型 |
+|---|----------|---------|
+| 1 | 所属对象 | `id` 类型 |
+| 2 | 方法名 | `SEL` 类型 |
+| 3 | 可变参数 | 可变参数类型 |
+
+首先了解下如何调用 `IMP` 类型的方法，IMP类型是如下格式：
+
+为了直观，我们可以通过如下方式定义一个 `IMP` 类型 ：
+
+```objectivec
+typedef void (*voidIMP)(id, SEL, ...)
+```
+
+一旦调用 `_objc_msgForward` ，将跳过查找 `IMP` 的过程，直接触发“消息转发”，如果调用了`_objc_msgForward`，即使这个对象确实已经实现了这个方法，你也会告诉`objc_msgSend`：
+
+> “我没有在这个对象里找到这个方法的实现”
+
+有哪些场景需要直接调用 `_objc_msgForward` ？最常见的场景是：你想获取某方法所对应的 `NSInvocation` 对象。举例说明：
+
+- [JSPatch（Github 链接）](https://github.com/bang590/JSPatch)就是直接调用 `_objc_msgForward` 来实现其核心功能的：
+  - JSPatch 以小巧的体积做到了让 JS 调用/替换任意 OC 方法，让 iOS App 具备热更新的能力。
+  - 作者的博文[《JSPatch实现原理详解》](http://blog.cnbang.net/tech/2808/)详细记录了实现原理，有兴趣可以看下。
+- 同时 [RAC (ReactiveCocoa)](https://github.com/ReactiveCocoa/ReactiveCocoa) 源码中也用到了该方法。
 
 ## 参考
 
