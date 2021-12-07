@@ -41,8 +41,8 @@
   - [11. @synthesize 和 @dynamic 分别有什么作用？](#11-synthesize-和-dynamic-分别有什么作用)
   - [12. ARC下，不显式指定任何属性关键字时，默认的关键字都有哪些？](#12-arc下不显式指定任何属性关键字时默认的关键字都有哪些)
   - [13. 用 @property 声明的 NSString（或 NSArray ，NSDictionary ）经常使用 copy 关键字，为什么？如果改用 strong 关键字，可能造成什么问题？](#13-用-property-声明的-nsstring或-nsarray-nsdictionary-经常使用-copy-关键字为什么如果改用-strong-关键字可能造成什么问题)
-    - [1. 对非集合类对象的 copy 操作](#1-对非集合类对象的-copy-操作)
-    - [2、集合类对象的 copy 与 mutableCopy](#2集合类对象的-copy-与-mutablecopy)
+    - [对非集合类对象的 copy 操作](#对非集合类对象的-copy-操作)
+    - [集合类对象的 copy 与 mutableCopy](#集合类对象的-copy-与-mutablecopy)
   - [14. @synthesize 合成实例变量的规则是什么？假如 property 名为 foo ，存在一个名为 _foo 的实例变量，那么还会自动合成新变量么？](#14-synthesize-合成实例变量的规则是什么假如-property-名为-foo-存在一个名为-_foo-的实例变量那么还会自动合成新变量么)
   - [15. 在有了自动合成属性实例变量之后，@synthesize 还有哪些使用场景？](#15-在有了自动合成属性实例变量之后synthesize-还有哪些使用场景)
   - [16. Objc 中向一个 nil 对象发送消息将会发生什么？](#16-objc-中向一个-nil-对象发送消息将会发生什么)
@@ -67,6 +67,24 @@
   - [35. BAD_ACCESS 在什么情况下出现？](#35-bad_access-在什么情况下出现)
   - [36. 苹果是如何实现 autoreleasepool 的？](#36-苹果是如何实现-autoreleasepool-的)
   - [37. 使用 block 时什么情况会发生引用循环，如何解决？](#37-使用-block-时什么情况会发生引用循环如何解决)
+  - [38. 在 block 内如何修改 block 外部变量？](#38-在-block-内如何修改-block-外部变量)
+  - [39. 使用系统的某些 block API（如 UIView 的 block 版本写动画时），是否也考虑引用循环问题？](#39-使用系统的某些-block-api如-uiview-的-block-版本写动画时是否也考虑引用循环问题)
+  - [40. GCD的队列（`dispatch_queue_t`）分哪两种类型？](#40-gcd的队列dispatch_queue_t分哪两种类型)
+  - [41. 如何用 GCD 同步若干个异步调用？（如根据若干个url异步加载多张图片，然后在都下载完成后合成一张整图）](#41-如何用-gcd-同步若干个异步调用如根据若干个url异步加载多张图片然后在都下载完成后合成一张整图)
+  - [42. `dispatch_barrier_async`的作用是什么？](#42-dispatch_barrier_async的作用是什么)
+  - [43. 苹果为什么要废弃 `dispatch_get_current_queue` ？](#43-苹果为什么要废弃-dispatch_get_current_queue-)
+  - [44. 以下代码运行结果如何？](#44-以下代码运行结果如何)
+  - [45. addObserver:forKeyPath:options:context: 各个参数的作用分别是什么，observer 中需要实现哪个方法才能获得 KVO 回调？](#45-addobserverforkeypathoptionscontext-各个参数的作用分别是什么observer-中需要实现哪个方法才能获得-kvo-回调)
+  - [46. 如何手动触发一个 value 的 KVO](#46-如何手动触发一个-value-的-kvo)
+  - [47. 若一个类有实例变量 `NSString *_foo` ，调用 setValue:forKey: 时，可以以 foo 还是 `_foo` 作为key？](#47-若一个类有实例变量-nsstring-_foo-调用-setvalueforkey-时可以以-foo-还是-_foo-作为key)
+  - [48. KVC 的 keyPath 中的集合运算符如何使用？](#48-kvc-的-keypath-中的集合运算符如何使用)
+  - [49. KVC 和 KVO 的 keyPath 一定是属性么？](#49-kvc-和-kvo-的-keypath-一定是属性么)
+  - [50. 如何关闭默认的KVO的默认实现，并进入自定义的KVO实现？](#50-如何关闭默认的kvo的默认实现并进入自定义的kvo实现)
+  - [51. Apple 用什么方式实现对一个对象的 KVO ？](#51-apple-用什么方式实现对一个对象的-kvo-)
+  - [52. IBOutlet 连出来的视图属性为什么可以被设置成 weak ?](#52-iboutlet-连出来的视图属性为什么可以被设置成-weak-)
+  - [53. IB 中 User Defined Runtime Attributes 如何使用？](#53-ib-中-user-defined-runtime-attributes-如何使用)
+  - [54. 如何调试 BAD_ACCESS 错误](#54-如何调试-bad_access-错误)
+  - [55. lldb（gdb）常用的调试命令？](#55-lldbgdb常用的调试命令)
   - [参考](#参考)
 
 ## 1. 风格纠错题
@@ -1275,7 +1293,7 @@ NSLog(@"%@",self.array);
 
 - [《第 13 题 疑问 对非集合类对象的 copy 操作 #19》]( https://github.com/ChenYilong/iOSInterviewQuestions/issues/19 )
 
-### 1. 对非集合类对象的 copy 操作
+### 对非集合类对象的 copy 操作
 
 在非集合类对象中：
 
@@ -1315,7 +1333,7 @@ NSString *stringCopy = [string copy];
 
 用 `@property` 声明 `NSString` 、`NSArray` 、`NSDictionary` 经常使用 `copy` 关键字，是因为他们有对应的可变类型：`NSMutableString` 、`NSMutableArray` 、`NSMutableDictionary` ，他们之间可能进行赋值操作，为确保对象中的字符串值不会无意间变动，应该在设置新属性值时拷贝一份。
 
-### 2、集合类对象的 copy 与 mutableCopy
+### 集合类对象的 copy 与 mutableCopy
 
 **从集合内的元素的角度**而言, 对任何集合对象（可变和不可变集合）进行的 `copy` 与 `mutableCopy` 操作都可以称之为浅拷贝。
 
@@ -2036,7 +2054,7 @@ open /private/tmp
 
 在模拟器上执行执行以下语句（这一套调试方案仅适用于模拟器，真机不可用，关于该调试方案的拓展链接：[Can the messages sent to an object in Objective-C be monitored or printed out?](http://stackoverflow.com/a/10750398/3395008)），向一个对象发送一条错误的消息：
 
-```objectivec 
+```objectivec
 #import <UIKit/UIKit.h>
 #import "AppDelegate.h"
 #import "CYLTest.h"
@@ -2158,7 +2176,7 @@ RunLoop 和线程的关系：
 
 iOS 的应用程序里面，程序启动后会有一个如下的 `main()` 函数
 
- ```objectivec
+```objectivec
 int main(int argc, char * argv[]) {
     @autoreleasepool {
         return UIApplicationMain(argc, argv, nil, NSStringFromClass([AppDelegate class]));
@@ -2275,7 +2293,7 @@ int main(int argc, char * argv[]) {
 
 **1、** `strong obj` 变量，出了作用域 `{}` ，就 `objc_storeStrong(obj,nil)` 来 `release` 对象；
 
- ```C
+```C
 void
 objc_storeStrong(id *location, id obj)
 {
@@ -2287,7 +2305,7 @@ objc_storeStrong(id *location, id obj)
     *location = obj;
     objc_release(prev);
 }
- ```
+```
 
 **2、** `weak obj` 变量，出了作用域，`objc_destroyWeak` 将变量（`obj`）的地址从 `weak` 表中删除；
 
@@ -2337,7 +2355,7 @@ ARC 相对于 MRC ，不是在编译时添加 `retain` / `release` / `autoreleas
 
 下面的对象 ，分别在什么地方被释放 ?
 
- ```objectivec
+```objectivec
 - (void)weakLifeCycleTest {
     id obj0 = @"iTeaTime(技术清谈)";
     __weak id obj1 = obj0;
@@ -2351,7 +2369,7 @@ ARC 相对于 MRC ，不是在编译时添加 `retain` / `release` / `autoreleas
     NSLog(@"obj0=%@, obj1=%@, obj2=%@, obj3=%@, obj5=%@, obj6=%@", obj0, obj1, obj2, obj3, obj5, obj6);
     // Lots of code ...
 }
- ```
+```
 
 - `obj0` 字符串属于常量区，不会释放 (类似的例子可以参考 [《第34题，autorelease对象的释放时机，对iOS9、10系统不适用 #90》]( https://github.com/ChenYilong/iOSInterviewQuestions/issues/90 ) )
 - `obj1` 指向的对象在常量区，不会释放
@@ -2433,6 +2451,837 @@ self.block();
 
 - 如果对MRC下的循环引用解决方案感兴趣，可参见讨论  [《issue#50 -- 37 题 block 循环引用问题》]( https://github.com/ChenYilong/iOSInterviewQuestions/issues/50 )
 - [《建议增加一个问题：__block和__weak的区别 #7》](https://github.com/ChenYilong/iOSInterviewQuestions/issues/7)
+
+## 38. 在 block 内如何修改 block 外部变量？
+
+注：本题代码请在仓库中查看以 Demo38 开头的工程（公众号请点击原文查看 GitHub 仓库）
+
+先描述下问题：
+
+默认情况下，在 block 中访问的外部变量是复制过去的，即：**写操作不对原变量生效**。但是你可以加上 `__block` 来让其写操作生效，示例代码如下:
+
+```objectivec
+__block int a = 0;
+void (^foo)(void) = ^{ 
+    a = 1; 
+};
+foo(); 
+//这里，a 的值被修改为 1
+```
+
+这是网上常见的描述。你同样可以在面试中这样回答，但你并没有答到“点子上”。真正的原因，并没有这么“神奇”，而且这种说法也有点牵强。面试官肯定会追问“为什么写操作就生效了？” 实际上需要有几个必要条件：
+
+- 将 auto 变量从栈 `copy` 到堆
+- 将 auto 变量封装为结构体(对象)
+
+我会将本问题分下面几个部分，分别作答：
+
+- 该问题研究的是哪种 `block` 类型?
+- 在 `block` 内为什么不能修改 `block` 外部变量
+- 最优解及原理解析
+- 其他几种解法
+- 改外部变量必要条件之"将 auto 变量从栈 `copy` 到堆"
+- 改外部变量必要条件之"将 auto 变量封装为结构体(对象)"
+
+**1）** 该问题研究的是哪种 block 类型?
+
+今天我们讨论是 `__NSMallocBlock__` (或者叫 `_NSConcreteMallocBlock`，两者是叫法不同，指的是同一个东西)。
+
+| Block 类型 | 环境 |
+|:-------------:|:-------------:|
+| `__NSGlobalBlock__` | 没有访问 auto 变量 |
+| `__NSStackBlock__` | 访问了 auto 变量 |
+| `__NSMallocBlock__` | `__NSStackBlock__` 调用了 `copy` |
+
+每一种类型的 block 调用 `copy` 后的结果如下所示
+
+| Block 的类 | 副本源的配置存储域| 复制效果 |
+|:-------------:|:-------------:|:-------------:|
+| `_NSConcreteGlobalBlock`| 程序的数据区域 | 什么也不做 |
+| `_NSConcreteStackBlock` | 栈 |  从栈复制到堆 |
+| `_NSConcreteMallocBlock`| 堆 | 引用计数增加 |
+
+在 ARC 环境下，编译器会根据情况自动将栈上的 block 复制到堆上，比如以下情况：
+
+- block 作为函数返回值时
+- 将 block 赋值给 `__strong` 指针时
+- block 作为 Cocoa API 中方法名含有 using Block 的方法参数时
+- Block 作为 GCD API 的方法参数时
+
+![https://github.com/ChenYilong](https://tva1.sinaimg.cn/large/007S8ZIlly1gfiwolczn7j30sa0xaq8k.jpg)
+
+更多细节可以查看：
+
+![https://github.com/ChenYilong](https://tva1.sinaimg.cn/large/007S8ZIlly1gfkx49l2xxj30u012bqfs.jpg)
+
+![https://github.com/ChenYilong](https://tva1.sinaimg.cn/large/007S8ZIlly1gfl31akk5hj30zg0lojz9.jpg)
+
+**2）** 在 `block` 内为什么不能修改 `block` 外部变量
+
+为了保证 block 内部能够正常访问外部的变量，block 有一个变量捕获机制。
+
+![https://github.com/ChenYilong](https://tva1.sinaimg.cn/large/007S8ZIlly1gfks99t8fej30u017uqf8.jpg)
+
+首先分析一下为什么不能修改：
+
+**Block 不允许修改外部变量的值**。Apple 这样设计，应该是考虑到了 block 的特殊性，block 本质上是一个对象，**block 的花括号区域是对象内部的一个函数，变量进入花括号，实际就是已经进入了另一个函数区域，改变了作用域**。在几个作用域之间进行切换时，如果不加上这样的限制，变量的可维护性将大大降低。又比如我想在 block 内声明了一个与外部同名的变量，此时是允许呢还是不允许呢？只有加上了这样的限制，这样的情景才能实现。
+
+所以 Apple 在编译器层面做了限制，如果在 block 内部试图修改 auto 变量（无修饰符），那么直接编译报错。
+
+你可以把编译器的这种行为理解为：对 block 内部捕获到的 auto 变量设置为只读属性，不允许直接修改。
+
+从代码层面进行证明：
+
+写一段 block 代码：
+
+```objectivec
+#import <UIKit/UIKit.h>
+#import "AppDelegate.h"
+
+typedef void (^CYLBlock)(void);
+
+int main(int argc, char * argv[]) {
+    NSString * appDelegateClassName;
+    @autoreleasepool {
+        appDelegateClassName = NSStringFromClass([AppDelegate class]);
+        int age = 10;
+        CYLBlock block = ^{
+            NSLog(@"age is %@", @(age));
+        };
+        block();
+    }
+    return UIApplicationMain(argc, argv, nil, appDelegateClassName);
+}
+```
+
+使用如下命令来查看对应的 C++ 代码：
+
+```shell
+xcrun -sdk iphoneos clang -arch arm64 -rewrite-objc main.m
+```
+
+代码如下所示：
+
+![图片待替换](https://tva1.sinaimg.cn/large/007S8ZIlly1gffg4w6nrmj30x10u04nr.jpg)
+
+```cpp
+typedef void (*CYLBlock)(void);
+
+struct __main_block_impl_0 {
+  struct __block_impl impl;
+  struct __main_block_desc_0* Desc;
+  int age;
+  __main_block_impl_0(void *fp, struct __main_block_desc_0 *desc, int _age, int flags=0) : age(_age) {
+    impl.isa = &_NSConcreteStackBlock;
+    impl.Flags = flags;
+    impl.FuncPtr = fp;
+    Desc = desc;
+  }
+};
+static void __main_block_func_0(struct __main_block_impl_0 *__cself) {
+  int age = __cself->age; // bound by copy
+
+            NSLog((NSString *)&__NSConstantStringImpl__var_folders_2w_wgnctp1932z76770l8lrrrbm0000gn_T_main_0d7ffa_mi_0, ((NSNumber *(*)(Class, SEL, int))(void *)objc_msgSend)(objc_getClass("NSNumber"), sel_registerName("numberWithInt:"), (int)(age)));
+        }
+
+static struct __main_block_desc_0 {
+  size_t reserved;
+  size_t Block_size;
+} __main_block_desc_0_DATA = { 0, sizeof(struct __main_block_impl_0)};
+int main(int argc, char * argv[]) {
+    NSString * appDelegateClassName;
+    /* @autoreleasepool */ { __AtAutoreleasePool __autoreleasepool; 
+        appDelegateClassName = NSStringFromClass(((Class (*)(id, SEL))(void *)objc_msgSend)((id)objc_getClass("AppDelegate"), sel_registerName("class")));
+        int age = 10;
+        CYLBlock block = ((void (*)())&__main_block_impl_0((void *)__main_block_func_0, &__main_block_desc_0_DATA, age));
+        ((void (*)(__block_impl *))((__block_impl *)block)->FuncPtr)((__block_impl *)block);
+    }
+    return UIApplicationMain(argc, argv, __null, appDelegateClassName);
+}
+static struct IMAGE_INFO { unsigned version; unsigned flag; } _OBJC_IMAGE_INFO = { 0, 2 };
+
+```
+
+如果
+
+- 加 `static` (放在静态存储区/全局初始化区 ) 缺点是会永久存储，内存开销大。
+- 将变量设置为`全局变量`，缺点也是内存开销大。
+
+将变量设置为全局变量
+
+![图片待替换](https://tva1.sinaimg.cn/large/007S8ZIlly1gfkzpoivkij31470u04qp.jpg)
+
+原理是 block 内外可直接访问全局变量
+
+![图片待替换](https://tva1.sinaimg.cn/large/007S8ZIlly1gfkzqxd6vkj31460u07wh.jpg)
+
+加 `static` (放在静态存储区/全局初始化区)
+
+原理是 block 内部对外部auto变量进行指针捕获
+
+![加 static (放在静态存储区/全局初始化区)](https://tva1.sinaimg.cn/large/007S8ZIlly1gfkzqiy0myj314a0u0b29.jpg)
+
+**最优解：使用 `__block` 关键字**
+
+![https://github.com/ChenYilong](https://tva1.sinaimg.cn/large/007S8ZIlly1gfks7378ktj30sk1auqby.jpg)
+
+改外部变量必要条件之"将 auto 从栈 copy 到堆"
+
+之所以要放堆里，原因是栈中内存管理是由系统管理，出了作用域就会被回收，堆中才是可以由我们程序员管理。
+
+这里先说结论：
+
+> 在 ARC 中无论是否添加 `__block` ，block 中的 auto 变量都会被从栈上 copy 到堆上。
+
+下面证明下该结论：
+
+先认识一下 `__block` 修饰符：
+
+- `__block` 可以用于解决 block 内部无法修改 auto 变量值的问题
+- `__block` 不能修饰全局变量、静态变量（static)
+
+编译器会将 `__block`  变量包装成一个对象
+
+```objectivec
+#import <UIKit/UIKit.h>
+#import "AppDelegate.h"
+
+typedef void (^CYLBlock)(void);
+
+int main(int argc, char * argv[]) {
+    NSString * appDelegateClassName;
+    @autoreleasepool {
+        appDelegateClassName = NSStringFromClass([AppDelegate class]);
+        // __block 可替换为 __block auto (auto 可省略)
+        __block int age = 10;
+        CYLBlock block = ^{
+            age = 20;
+            NSLog(@"age is %@", @(age));
+        };
+        block();
+    }
+    return UIApplicationMain(argc, argv, nil, appDelegateClassName);
+}
+```
+
+![https://github.com/ChenYilong](https://tva1.sinaimg.cn/large/007S8ZIlly1gffiapgoefj31420u0b29.jpg)
+
+下面用代码证明下外部变量被 copy 到堆上：
+
+我们可以打印下内存地址来进行验证：
+
+```objectivec
+__block int a = 0;
+NSLog(@"定义前：%p", &a);         //栈区
+void (^foo)(void) = ^{
+    a = 1;
+    NSLog(@"block内部：%p", &a);  //堆区
+};
+NSLog(@"定义后：%p", &a);         //堆区
+foo();
+```
+
+```objectivec
+2016-05-17 02:03:33.559 LeanCloudChatKit-iOS[1505:713679] 定义前：0x16fda86f8
+2016-05-17 02:03:33.559 LeanCloudChatKit-iOS[1505:713679] 定义后：0x155b22fc8
+2016-05-17 02:03:33.559 LeanCloudChatKit-iOS[1505:713679] block内部： 0x155b22fc8
+```
+
+“定义后”和“block 内部”两者的内存地址是一样的，我们都知道 block 内部的变量会被 copy 到堆区，“block 内部”打印的是堆地址，因而也就可以知道，“定义后”打印的也是堆的地址。
+
+那么如何证明“block 内部”打印的是堆地址？
+
+把三个 16 进制的内存地址转成 10 进制就是：
+
+- 定义后前：6171559672
+- block 内部：5732708296
+- 定义后：5732708296
+
+中间相差 438851376 个字节，也就是 418.5M 的空间，因为堆地址要小于栈地址，又因为 iOS 中主线程的栈区内存只有1M，Mac也只有8M，既然 iOS 中一条线程最大的栈空间是1M，显然a已经是在堆区了。
+
+这也证实了：a 在定义前是栈区，但只要进入了 block 区域，就变成了堆区。
+
+从代码角度讲：
+
+```objectivec
+// a 会被编译成一个结构体，a struct 里会有一个 a 存储 0
+__block int a = 0;
+NSLog(@"定义前：%p", &a); //栈区
+void (^foo)(void) = ^{
+a = 1;
+NSLog(@"block内部：%p", &a); //堆区
+};
+```
+
+这里会执行 copy 操作，下面是编译后的 copy 方法，a struct 会被拷贝到堆里，自然里面的 a struct->a 也会拷贝到堆里
+
+```objectivec
+static void __main_block_copy_0(struct __main_block_impl_0*dst, struct __main_block_impl_0*src) {_Block_object_assign((void*)&dst->a, (void*)src->a, 8/*BLOCK_FIELD_IS_BYREF*/);}
+```
+
+同理可证：
+
+ > 在 ARC 中无论是否添加 `__block` ，block 中的 auto 变量都会被从栈上 copy 到堆上。
+
+证明代码如下：
+
+```objectivec
+__block int a = 0;
+int b = 1;
+NSLog(@"定义前外部：a：%p", &a);         //栈区
+NSLog(@"定义前外部：b：%p", &b);         //栈区
+void (^foo)(void) = ^{
+    a = 1;
+    NSLog(@"block内部：a：%p", &a);     //堆区
+    NSLog(@"block内部：b：%p", &b);     //堆区
+};
+NSLog(@"定义后外部：a：%p", &a);         //堆区
+NSLog(@"定义后外部：b：%p", &b);         //栈区
+foo();
+```
+
+打印是：
+
+```objectivec
+2020-06-08 12:59:43.633180+0800 Demo_38_block_edit_var[35375:7813379] 定义前外部：a：0x7ffee3d81078
+2020-06-08 12:59:43.633328+0800 Demo_38_block_edit_var[35375:7813379] 定义前外部：b：0x7ffee3d8105c
+2020-06-08 12:59:43.633535+0800 Demo_38_block_edit_var[35375:7813379] 定义后外部：a：0x600003683578
+2020-06-08 12:59:43.633640+0800 Demo_38_block_edit_var[35375:7813379] 定义后外部：b：0x7ffee3d8105c
+2020-06-08 12:59:43.633754+0800 Demo_38_block_edit_var[35375:7813379] block内部：a：0x600003683578
+2020-06-08 12:59:43.633859+0800 Demo_38_block_edit_var[35375:7813379] block内部：b：0x6000038ff628
+```
+
+ `__block` 关键字修饰后，int类型也从 4 字节变成了 32 字节，这是 Foundation 框架 malloc 出来的。这也同样能证实上面的结论。（PS：居然比 NSObject alloc 出来的 16 字节要多一倍）。
+
+**改外部变量必要条件之“将 auto 变量封装为结构体(对象)”**
+
+正如上文提到的：
+
+> 我们都知道：**Block 不允许修改外部变量的值**，这里所说的外部变量的值，指的是栈中 auto 变量。`__block` 作用是将 auto 变量封装为结构体(对象)，在结构体内部新建一个同名 auto 变量，block 内截获该结构体的指针，在 block 中使用自动变量时，使用指针指向的结构体中的自动变量。于是就可以达到修改外部变量的作用。
+
+如果把编译器的“不允许修改外部”这种行为理解为：对 block 内部捕获到的 auto 变量设置为只读属性，不允许直接修改。
+
+那么 `__block` 的作用就是创建了一个函数，允许你通过这个函数修改“对外只读”的属性。
+
+属性对外只读，但是对外提供专门的修改值的方法，在开发中这种做法非常常见。
+
+自动变量生成的结构体：
+
+```objectivec
+struct __Block_byref_c_0 {
+  void *__isa;
+  __Block_byref_c_0 *__forwarding;
+  int __flags;
+  int __size;
+  // 自动变量
+  int c;
+};
+```
+
+block ：
+
+```objectivec
+struct __main_block_impl_0 {
+  struct __block_impl impl;
+  struct __main_block_desc_0* Desc;
+  //截获的结构体指针
+  __Block_byref_c_0 *c; // by ref
+  __main_block_impl_0(void *fp, struct __main_block_desc_0 *desc, __Block_byref_c_0 *_c, int flags=0) : c(_c->__forwarding) {
+    impl.isa = &_NSConcreteStackBlock;
+    impl.Flags = flags;
+    impl.FuncPtr = fp;
+    Desc = desc;
+  }
+};
+```
+
+block 中使用自动变量：
+
+```objectivec
+static int __main_block_func_0(struct __main_block_impl_0 *__cself, int a) {
+  // 指针
+  __Block_byref_c_0 *c = __cself->c; // bound by ref
+  (c->__forwarding->c) = 11;
+  a = a + (c->__forwarding->c);
+  return a;
+}
+```
+
+理解到这是因为添加了修改只读属性的方法，而非所谓的“写操作生效”，这一点至关重要，要不然你如何解释下面这个现象：
+
+以下代码编译可以通过，并且在 block 中成功将 a 的从 Tom 修改为 Jerry 。
+
+```objectivec
+NSMutableString *a = [NSMutableString stringWithString:@"Tom"];
+void (^foo)(void) = ^{
+    a.string = @"Jerry";
+    // a = [NSMutableString stringWithString:@"William"]; // 编译报错
+};
+foo();
+```
+
+同理如下操作也是允许的：
+
+```objectivec
+#import <UIKit/UIKit.h>
+#import "AppDelegate.h"
+
+typedef void (^CYLBlock)(void);
+
+int main(int argc, char * argv[]) {
+    NSString * appDelegateClassName;
+    @autoreleasepool {
+        appDelegateClassName = NSStringFromClass([AppDelegate class]);
+        
+        NSMutableArray *array = [[NSMutableArray array] init];
+        CYLBlock block = ^{
+            [array addobject:@"123"];
+            array = nil; //编译报错
+        };
+        block();
+    }
+    return UIApplicationMain(argc, argv, nil, appDelegateClassName);
+}
+
+```
+
+以上都是在使用变量而非修改变量，所以不会编译报错。
+
+## 39. 使用系统的某些 block API（如 UIView 的 block 版本写动画时），是否也考虑引用循环问题？
+
+注：39 题对应 Demo 请在仓库中查看以 Demo39 开头的工程。
+
+出题只举了一个例子，我们多举几个例子：
+
+```objectivec
+// 判断如下几种情况,是否有循环引用? 是否有内存泄漏?
+
+// 情况❶ UIViewAnimationsBlock
+[UIView animateWithDuration:duration animations:^{
+    [self.superview layoutIfNeeded];
+}]; 
+
+// 情况 ❷ NSNotificationCenterBlock
+[[NSNotificationCenter defaultCenter] addObserverForName:@"someNotification" object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification * notification) {
+    self.someProperty = xyz;
+}]; 
+
+// 情况 ❸ NSNotificationCenterIVARBlock
+_observer = [[NSNotificationCenter defaultCenter] addObserverForName:@"testKey" object:nil queue:nil usingBlock:^(NSNotification *note) {
+    [self dismissModalViewControllerAnimated:YES];
+}];
+
+// 情况 ❹ GCDBlock
+dispatch_group_async(self.operationGroup, self.serialQueue, ^{
+    [self doSomething];
+});
+
+// 情况 ❺ NSOperationQueueBlock
+[[NSOperationQueue mainQueue] addOperationWithBlock:^{
+    self.someProperty = xyz;
+}]; 
+```
+
+情况 | 循环引用 | 内存泄漏
+:-------------:|:-------------:|:-------------:
+情况 1 |不会循环应用 | 不会发生内存泄漏
+情况 2 |不会循环引用 | 会发生内存泄漏
+情况 3 |会循环引用   |会发生内存泄漏
+情况 4 |不会循环引用 |不会发生内存泄漏
+情况 5 |不会循环引用 |不会发生内存泄漏
+
+**情况一：**
+
+系统的某些 block API 中，比如 `UIView` 的 `block` 版本写动画时不需要考虑循环引用的问题，但也有一些系统 API 需要考虑内存泄漏的问题。
+
+其中 `UIView` 的 `block` 版本写动画时不需要考虑虑循环引用的原因是：
+
+比如典型的代码是这样：
+
+```objectivec
+// 思考：是否有内存泄漏?是否有循环引用?
+[UIView animateWithDuration:duration animations:^{
+    [self.superview layoutIfNeeded];
+}]; 
+```
+
+其中 `block` 会立即执行，所以并不会持有 `block` 。 其中 `duration` 延迟时间并不能决定 `block` 执行的时机， `block` 始终是瞬间执行。
+
+这里涉及了 `CoreAnimation`（核心动画）相关的知识：
+
+首先分清下面几个结构概念：
+
+- UIView 层
+- Layer 层
+- data 数据层
+
+其中
+
+- UIView 层的`block` 仅仅是提供了类似快照 data 的变化。
+- 当真正执行  `Animation` 动画时才会将“原有状态”与“执行完 `block` 的状态”做一个差值，来去做动画。
+
+这个问题关于循环引用的部分已经解答完毕，下面我们来扩展一下，探究一下系统 API 相关的内存泄漏问题。
+
+**情况二：**
+
+```objectivec
+// 情况 ❷ NSNotificationCenterBlock
+[[NSNotificationCenter defaultCenter] addObserverForName:@"someNotification" object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification * notification) {
+    self.someProperty = xyz;
+}]; 
+```
+
+那么为什么情况二 `NSNotificationCenter` 的代码会有内存泄漏问题呢？
+
+~~我之前的理解: self --> _observer --> block --> self 显然这也是一个循环引用。（对循环引用的成因解释有误，详见issue#73 <https://github.com/ChenYilong/iOSInterviewQuestions/issues/73> ）~~
+
+其实和循环引用没有关系；这里 `block` 强引用了 `self` , 但是 `self` 并没有强引用`block`; 所以没有循环引用。
+
+情况二这里出现内存泄漏问题实际上是因为：
+
+- `[NSNoficationCenter defaultCenter]` 持有了 `block`
+- 这个 `block` 持有了 `self`;
+- 而 `[NSNoficationCenter defaultCenter]` 是一个单例，因此这个单例持有了 `self` ，从而导致 `self` 不被释放。
+
+![https://github.com/ChenYilong](https://tva1.sinaimg.cn/large/007S8ZIlgy1gfcrlp0gn0j30z40lwag6.jpg)
+
+这个结论可参考参考issue中讨论：[《第39题的一些疑问 #138》](https://github.com/ChenYilong/iOSInterviewQuestions/issues/138)
+
+![图片待替换](https://tva1.sinaimg.cn/large/007S8ZIlgy1gfd5t6s8n8j31c00u0u0y.jpg)
+
+以下来自 [APPLE API文档 -- Instance Method
+addObserverForName:object:queue:usingBlock:]( https://developer.apple.com/documentation/foundation/nsnotificationcenter/1411723-addobserverforname)
+
+> The block is copied by the notification center and (the copy) held until the observer registration is removed.
+
+但整个过程中并没有循环引用，因为 `self` 没有持有 `NotificationCenter` , 也没有持有 `block`。即使 `self` 持有这个 `Observer` ，并没有任何证据或者文档标明 `Observer` 会持有这个`block` ，所以我之前的解释是不正确的。这里 Observer 应该是不持有 block 的，因为只需要 `NSNotificationCenter` 同时持有 `Observer` 和 `block` 即可实现 `API` 所提供的功能, 这里也不存在循环引用。
+
+**其中情况三：**
+
+```objectivec
+_observer = [[NSNotificationCenter defaultCenter] addObserverForName:@"testKey" object:nil queue:nil usingBlock:^(NSNotification *note) {
+    [self dismissModalViewControllerAnimated:YES];
+}];
+```
+
+存在循环引用
+
+![图片待替换](https://tva1.sinaimg.cn/large/007S8ZIlgy1gfd5sf6tbbj31c00u0npd.jpg)
+
+![图片待替换](https://i.loli.net/2020/06/02/pDLde8Hgkt4X69u.gif)
+
+![图片待替换](https://tva1.sinaimg.cn/large/007S8ZIlgy1gfd5v5laamj31hc0u0dvv.jpg)
+
+根据上面的原理，思考一下情况五：
+
+```objectivec
+// 情况 ❺ NSOperationQueueBlock
+[[NSOperationQueue mainQueue] addOperationWithBlock:^{
+    self.someProperty = xyz;
+}]; 
+```
+
+在 GNU Step 源码中可以证实：`[NSOperationQueue mainQueue]` 是单例，然后参考 `addOperationWithBlock` 源码可知：
+
+虽然是单例，但它并不持有 `block` ，不会造成循环引用，传递完成后就销毁了，不会造成无法释放的内存泄漏问题。
+
+参考issue中讨论：[《第39题的一些疑问 #138》](https://github.com/ChenYilong/iOSInterviewQuestions/issues/138)
+
+**情况四：**
+
+针对情况四 `GCD` 的问题，实际上，`self` 确实持有了 `queue` ; 而 `block` 也确实持有了 `self` ；但是并没有证据或者文档表明这个 queue 一定会持有 block ; 而且即使 queue 持有了 block , 在 block 执行完毕的时候，由于需要将任务从队列中移除，因此完全可以解除 queue 对 block 的持有关系，所以实际上这里也不存在循环引用。下面的测试代码可以验证这一点(其中 `CYLUser` 有一个属性 name )：
+
+```objectivec
+CYLUser *user = [[CYLUser alloc] init];
+dispatch_group_async(self.operationGroup, self.serialQueue, ^{
+    NSLog(@"dispatch_async demoGCDRetainCycle");
+    [self.testList addObject:@"demoGCDRetainCycle2"];
+    user.name = @"测试";
+    NSLog(@"Detecor 's name: %@", user.name);
+});
+```
+
+那么会看到先打印出 `dispatch_async demoGCDRetainCycle`, 然后打印出这个 `user` 的name, 然后执行 `CYLUser` 的 `-dealloc` 方法。也就是说在这个block执行完毕的时候，仅由这个block持有的 `user`就会被释放了, 从而验证这个 `block` 都被释放了，即使对应的 `queue` 还存在。
+
+什么时候这里会有循环引用呢？仍然是当 `self` 持有 `block` 的时候，例如这个 `block`是 `self` 的一个 `strong` 的属性，但这就和 `GCD` 的调用无关了，这个时候无论是否调用 `GCD` 的 `API` 都会有循环引用的。
+
+检测代码中是否存在循环引用/内存泄漏问题，
+
+- 可用 Xcode-instruments-Leak 工具查看
+- 也可以使用可以使用 Xcode 的 Debug 工具--内存图查看，使用方法
+- ![https://github.com/ChenYilong](https://i.loli.net/2020/06/02/pDLde8Hgkt4X69u.gif)
+- 使用 Facebook 开源的一个检测工具  [FBRetainCycleDetector](https://github.com/facebook/FBRetainCycleDetector) 。
+
+## 40. GCD的队列（`dispatch_queue_t`）分哪两种类型？
+
+1. 串行队列 Serial Dispatch Queue
+2. 并发队列 Concurrent Dispatch Queue
+
+## 41. 如何用 GCD 同步若干个异步调用？（如根据若干个url异步加载多张图片，然后在都下载完成后合成一张整图）
+
+使用 Dispatch Group 追加 block 到 Global Group Queue ，这些 block 如果全部执行完毕，就会执行 Main Dispatch Queue中 的结束处理的 block 。
+
+```objectivec
+dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
+dispatch_group_t group = dispatch_group_create();
+dispatch_group_async(group, queue, ^{ /*加载图片1 */ });
+dispatch_group_async(group, queue, ^{ /*加载图片2 */ });
+dispatch_group_async(group, queue, ^{ /*加载图片3 */ }); 
+dispatch_group_notify(group, dispatch_get_main_queue(), ^{
+    // 合并图片
+});
+```
+
+## 42. `dispatch_barrier_async`的作用是什么？
+
+在并发队列中，为了保持某些任务的顺序，需要等待一些任务完成后才能继续进行，使用 barrier 来等待之前任务完成，避免数据竞争等问题。
+
+`dispatch_barrier_async` 函数会等待追加到 Concurrent Dispatch Queue 并发队列中的操作全部执行完之后，然后再执行 `dispatch_barrier_async` 函数追加的处理，等 `dispatch_barrier_async` 追加的处理执行结束之后，Concurrent Dispatch Queue 才恢复之前的动作继续执行。
+
+**注意**：使用 `dispatch_barrier_async` ，该函数只能搭配**自定义的并发队列** `dispatch_queue_t` 使用。不能使用： `dispatch_get_global_queue` ，否则 `dispatch_barrier_async` 的作用会和 `dispatch_async` 的作用一模一样。
+
+## 43. 苹果为什么要废弃 `dispatch_get_current_queue` ？
+
+`dispatch_get_current_queue` 函数的行为常常与开发者所预期的不同。由于派发队列是按层级来组织的，这意味着排在某条队列中的块会在其上级队列里执行。
+
+队列间的层级关系会导致检查当前队列是否为执行同步派发所用的队列这种方法并不总是奏效。`dispatch_get_current_queue` 函数通常会被用于解决由不可以重入的代码所引发的死锁，然后能用此函数解决的问题，通常也可以用"队列特定数据"来解决。
+
+## 44. 以下代码运行结果如何？
+
+```objectivec
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    NSLog(@"1");
+    dispatch_sync(dispatch_get_main_queue(), ^{
+        NSLog(@"2");
+    });
+    NSLog(@"3");
+}
+```
+
+只输出：1 。发生主线程锁死。
+
+## 45. addObserver:forKeyPath:options:context: 各个参数的作用分别是什么，observer 中需要实现哪个方法才能获得 KVO 回调？
+
+```objectivec
+// 添加键值观察
+/*
+1 观察者，负责处理监听事件的对象
+2 观察的属性
+3 观察的选项
+4 上下文
+*/
+[self.person addObserver:self forKeyPath:@"name" options:NSKeyValueObservingOptionNew | NSKeyValueObservingOptionOld context:@"Person Name"];
+```
+
+observer中需要实现一下方法：
+
+```objectivec
+// 所有的 kvo 监听到事件，都会调用此方法
+/*
+ 1. 观察的属性
+ 2. 观察的对象
+ 3. change 属性变化字典（新／旧）
+ 4. 上下文，与监听的时候传递的一致
+ */
+- (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context;
+```
+
+## 46. 如何手动触发一个 value 的 KVO
+
+所谓的“手动触发”是区别于“自动触发”：
+
+自动触发是指类似这种场景：在注册 KVO 之前设置一个初始值，注册之后，设置一个不一样的值，就可以触发了。
+
+想知道如何手动触发，必须知道自动触发 KVO 的原理：
+
+键值观察通知依赖于 `NSObject` 的两个方法:  `willChangeValueForKey:` 和 `didChangevlueForKey:` 。在一个被观察属性发生改变之前，`willChangeValueForKey:` 一定会被调用，这就会记录旧的值。而当改变发生后，`observeValueForKey:ofObject:change:context:` 会被调用，继而 `didChangeValueForKey:` 也会被调用。如果可以手动实现这些调用，就可以实现“手动触发”了。
+
+那么“手动触发”的使用场景是什么？一般我们只在希望能控制“回调的调用时机”时才会这么做。
+
+具体做法如下：
+
+如果这个 `value` 是表示时间的 `self.now` ，那么代码如下：最后两行代码缺一不可。
+
+相关代码已放在仓库里。
+
+```objectivec
+//  手动触发 value 的KVO，最后两行代码缺一不可。
+//@property (nonatomic, strong) NSDate *now;
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    _now = [NSDate date];
+    [self addObserver:self forKeyPath:@"now" options:NSKeyValueObservingOptionNew context:nil];
+    NSLog(@"1");
+    [self willChangeValueForKey:@"now"]; // “手动触发 self.now 的 KVO ”，必写。
+    NSLog(@"2");
+    [self didChangeValueForKey:@"now"]; // “手动触发 self.now 的 KVO ”，必写。
+    NSLog(@"4");
+}
+```
+
+但是平时我们一般不会这么干，我们都是等系统去“自动触发”。“自动触发”的实现原理：
+
+> 比如调用 `setNow:` 时，系统还会以某种方式在中间插入 `wilChangeValueForKey:` 、 `didChangeValueForKey:` 和 `observeValueForKeyPath:ofObject:change:context:` 的调用。
+
+大家可能以为这是因为 `setNow:` 是合成方法，有时候我们也能看到有人这么写代码:
+
+```objectivec
+- (void)setNow:(NSDate *)aDate {
+    [self willChangeValueForKey:@"now"]; // 没有必要
+    _now = aDate;
+    [self didChangeValueForKey:@"now"];// 没有必要
+}
+```
+
+这完全没有必要，不要这么做，这样的话，KVO代码会被调用两次。KVO 在调用存取方法之前总是调用 `willChangeValueForKey:` ，之后总是调用 `didChangeValueForkey:` 。
+
+怎么做到的呢？答案是通过 isa 混写（isa-swizzling）。下文《Apple 用什么方式实现对一个对象的 KVO ？》会有详述。
+
+其中会触发两次，具体原因可以查看文档 [Apple document : Key-Value Observing Programming Guide-Manual Change Notification]( https://developer.apple.com/library/ios/documentation/Cocoa/Conceptual/KeyValueObserving/Articles/KVOCompliance.html#//apple_ref/doc/uid/20002178-SW3 "") ，主要是 `+automaticallyNotifiesObserversForKey:` 类方法了。
+
+参考链接：[Manual Change Notification---Apple 官方文档](https://developer.apple.com/library/ios/documentation/Cocoa/Conceptual/KeyValueObserving/Articles/KVOCompliance.html#//apple_ref/doc/uid/20002178-SW3)
+
+## 47. 若一个类有实例变量 `NSString *_foo` ，调用 setValue:forKey: 时，可以以 foo 还是 `_foo` 作为key？
+
+都可以。
+
+## 48. KVC 的 keyPath 中的集合运算符如何使用？
+
+1. 必须用在集合对象上或普通对象的集合属性上
+2. 简单集合运算符有 `@avg` ，`@count` ，`@max` ，`@min` ，`@sum`
+3. 格式 @"@sum.age" 或 @"集合属性.@max.age"
+
+## 49. KVC 和 KVO 的 keyPath 一定是属性么？
+
+KVC 支持实例变量，KVO 只能手动支持[手动设定实例变量的 KVO 实现监听](https://yq.aliyun.com/articles/30483)
+
+## 50. 如何关闭默认的KVO的默认实现，并进入自定义的KVO实现？
+
+请参考：
+
+1. [《如何自己动手实现 KVO 》](http://tech.glowing.com/cn/implement-kvo/)
+2. [**KVO for manually implemented properties**]( http://stackoverflow.com/a/10042641/3395008 )
+
+## 51. Apple 用什么方式实现对一个对象的 KVO ？
+
+[Apple 的文档](https://developer.apple.com/library/mac/documentation/Cocoa/Conceptual/KeyValueObserving/Articles/KVOImplementation.html)对 KVO 实现的描述：
+
+> Automatic key-value observing is implemented using a technique called isa-swizzling... When an observer is registered for an attribute of an object the isa pointer of the observed object is modified, pointing to an intermediate class rather than at the true class ...
+
+从 [Apple 的文档](https://developer.apple.com/library/mac/documentation/Cocoa/Conceptual/KeyValueObserving/Articles/KVOImplementation.html)可以看出：Apple 并不希望过多暴露 KVO 的实现细节。不过，要是借助 Runtime 提供的方法去深入挖掘，所有被掩盖的细节都会原形毕露：
+
+> 当你观察一个对象时，一个新的类会被动态创建。这个类继承自该对象的原本的类，并重写了被观察属性的 setter 方法。重写的 setter 方法会负责在调用原 setter 方法之前和之后，通知所有观察对象：值的更改。最后通过 `isa 混写（isa-swizzling）` 把这个对象的 `isa` 指针（ `isa` 指针告诉 Runtime 系统这个对象的类是什么）指向这个新创建的子类，对象就神奇的变成了新创建的子类的实例。我画了一张示意图，如下所示：
+
+<p align="center"><a href="https://mp.weixin.qq.com/s/A4e5h3xgIEh6PInf1Rjqsw"><img src="https://tva1.sinaimg.cn/large/007S8ZIlly1gfec69ggukj30qh0fvjta.jpg"></a></p>
+
+下面做下详细解释：
+
+键值观察通知依赖于 NSObject 的两个方法： `willChangeValueForKey:` 和 `didChangevlueForKey:` 。在一个被观察属性发生改变之前， `willChangeValueForKey:` 一定会被调用，这就会记录旧的值。而当改变发生后， `observeValueForKey:ofObject:change:context:` 会被调用，继而 `didChangeValueForKey:` 也会被调用。可以手动实现这些调用，但很少有人这么做。一般我们只在希望能控制回调的调用时机时才会这么做。大部分情况下，改变通知会自动调用。
+
+比如调用 `setNow:` 时，系统还会以某种方式在中间插入 `wilChangeValueForKey:` 、 `didChangeValueForKey:` 和 `observeValueForKeyPath:ofObject:change:context:` 的调用。大家可能以为这是因为 `setNow:` 是合成方法，有时候我们也能看到有人这么写代码:
+
+```objectivec
+- (void)setNow:(NSDate *)aDate {
+    [self willChangeValueForKey:@"now"]; // 没有必要
+    _now = aDate;
+    [self didChangeValueForKey:@"now"]; // 没有必要
+}
+```
+
+这完全没有必要，不要这么做，这样的话，KVO 代码会被调用两次。KVO 在调用存取方法之前总是调用 `willChangeValueForKey:` ，之后总是调用 `didChangeValueForkey:` 。怎么做到的呢？答案是通过 `isa` 混写（isa-swizzling）。第一次对一个对象调用 `addObserver:forKeyPath:options:context:` 时，框架会创建这个类的新的 KVO 子类，并将被观察对象转换为新子类的对象。在这个 KVO 特殊子类中， Cocoa 创建观察属性的 setter ，大致工作原理如下:
+
+```objectivec
+- (void)setNow:(NSDate *)aDate {
+    [self willChangeValueForKey:@"now"];
+    [super setValue:aDate forKey:@"now"];
+    [self didChangeValueForKey:@"now"];
+}
+```
+
+这种继承和方法注入是在运行时而不是编译时实现的。这就是正确命名如此重要的原因。只有在使用 KVC 命名约定时，KVO 才能做到这一点。
+
+然而 KVO 在实现中使用了 `isa 混写（ isa-swizzling）` ，这个的确不是很容易发现：Apple 还重写、覆盖了 `-class` 方法并返回原来的类。企图欺骗我们：这个类没有变，就是原本那个类。。。
+
+但是，假设“被监听的对象”的类对象是 `MYClass` ，有时候我们能看到对 `NSKVONotifying_MYClass` 的引用而不是对 `MYClass` 的引用。借此我们得以知道 Apple 使用了 `isa 混写（isa-swizzling）`。具体探究过程可参考[这篇博文](https://www.mikeash.com/pyblog/friday-qa-2009-01-23.html)。
+
+那么 `wilChangeValueForKey:` 、 `didChangeValueForKey:` 和 `observeValueForKeyPath:ofObject:change:context:` 这三个方法的执行顺序是怎样的呢？
+
+`wilChangeValueForKey:` 、 `didChangeValueForKey:` 很好理解，`observeValueForKeyPath:ofObject:change:context:` 的执行时机是什么时候呢？
+
+先看一个例子：
+
+代码已放在仓库里。
+
+```objectivec
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    [self addObserver:self forKeyPath:@"now" options:NSKeyValueObservingOptionNew context:nil];
+    NSLog(@"1");
+    [self willChangeValueForKey:@"now"]; // “手动触发self.now的KVO”，必写。
+    NSLog(@"2");
+    [self didChangeValueForKey:@"now"]; // “手动触发self.now的KVO”，必写。
+    NSLog(@"4");
+}
+
+- (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary<NSString *,id> *)change context:(void *)context {
+    NSLog(@"3");
+}
+
+```
+
+如果单单从下面这个例子的打印上，
+
+顺序似乎是 `wilChangeValueForKey:` 、 `observeValueForKeyPath:ofObject:change:context:` 、 `didChangeValueForKey:` 。
+
+其实不然，这里有一个 `observeValueForKeyPath:ofObject:change:context:`  , 和 `didChangeValueForKey:` 到底谁先调用的问题：如果 `observeValueForKeyPath:ofObject:change:context:` 是在 `didChangeValueForKey:` 内部触发的操作呢？那么顺序就是： `wilChangeValueForKey:` 、 `didChangeValueForKey:` 和 `observeValueForKeyPath:ofObject:change:context:`
+
+不信你把 `didChangeValueForKey:` 注视掉，看下 `observeValueForKeyPath:ofObject:change:context:` 会不会执行。
+
+了解到这一点很重要，正如  [46. 如何手动触发一个value的KVO](https://github.com/ChenYilong/iOSInterviewQuestions/blob/master/01《招聘一个靠谱的iOS》面试题参考答案/《招聘一个靠谱的iOS》面试题参考答案（下）.md#46-如何手动触发一个value的kvo)  所说的：
+
+“手动触发”的使用场景是什么？一般我们只在希望能控制“回调的调用时机”时才会这么做。
+
+而“回调的调用时机”就是在你调用 `didChangeValueForKey:` 方法时。
+
+## 52. IBOutlet 连出来的视图属性为什么可以被设置成 weak ?
+
+参考链接：[Should IBOutlets be strong or weak under ARC?](http://stackoverflow.com/questions/7678469/should-iboutlets-be-strong-or-weak-under-arc)
+
+文章告诉我们：
+
+> 因为既然有外链那么视图在 xib 或者 storyboard 中肯定存在，视图已经对它有一个强引用了。
+
+不过这个回答漏了个重要知识，使用 storyboard（ xib 不行）创建的 vc ，会有一个叫 `_topLevelObjectsToKeepAliveFromStoryboard` 的私有数组强引用所有 top level 的对象，所以这时即便 IBOutlet 声明成 weak 也没关系
+
+如果对本回答有疑问，欢迎参与讨论：
+
+- [《第52题 IBOutlet连出来的视图属性为什么可以被设置成weak? #51》]( https://github.com/ChenYilong/iOSInterviewQuestions/issues/51 )
+- [《关于weak的一个问题 #39》]( https://github.com/ChenYilong/iOSInterviewQuestions/issues/39 )
+
+## 53. IB 中 User Defined Runtime Attributes 如何使用？
+
+它能够通过 KVC 的方式配置一些你在 interface builder 中不能配置的属性。当你希望在IB中作尽可能多得事情，这个特性能够帮助你编写更加轻量级的 viewcontroller
+
+<p align="center"><a href="https://mp.weixin.qq.com/s/A4e5h3xgIEh6PInf1Rjqsw"><img src="https://tva1.sinaimg.cn/large/007S8ZIlly1gfecd2fpfuj307907q3yt.jpg"></a></p>
+
+## 54. 如何调试 BAD_ACCESS 错误
+
+1. 重写 object 的 `respondsToSelector` 方法，显示出现 EXEC_BAD_ACCESS 前访问的最后一个 object
+2. 通过在 Scheme 配置中勾选 ✅ *Enable Zombie Objects*
+3. 设置全局断点快速定位问题代码所在行
+4. Xcode 7 已经集成了 BAD_ACCESS 捕获功能：**Address Sanitizer** ，用法：在配置中勾选 ✅ *Enable Address Sanitizer*
+
+## 55. lldb（gdb）常用的调试命令？
+
+- `breakpoint` 设置断点定位到某一个函数
+- `n` 断点指针下一步
+- `po` 打印对象
+
+更多 lldb（gdb） 调试命令可查看
+
+1. [The LLDB Debugger](http://lldb.llvm.org/lldb-gdb.html)；
+2. 苹果官方文档：[iOS Debugging Magic](https://developer.apple.com/library/ios/technotes/tn2239/_index.html)。
 
 ## 参考
 
