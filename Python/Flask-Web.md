@@ -28,6 +28,10 @@
       - [请求钩子](#请求钩子)
       - [响应](#响应)
     - [Flask 扩展](#flask-扩展)
+  - [模板](#模板)
+    - [Jinja2 模板引擎](#jinja2-模板引擎)
+      - [渲染模板](#渲染模板)
+      - [变量](#变量)
 
 ## 前言
 
@@ -607,3 +611,91 @@ def get_user(id):
 Flask 的设计考虑了可扩展性，故而没有提供一些重要的功能，例如数据库和用户身份验证，所以开发者可以自由选择最适合应用的包，或者按需求自行开发。
 
 社区成员开发了大量不同用途的 Flask 扩展，如果这还不能满足需求，任何 Python 标准包或代码库都可以使用。
+
+## 模板
+
+模板是包含响应文本的文件，其中包含用占位变量表示的动态部分，其具体值只在请求的上下文中才能知道。使用真实值替换变量，再返回最终得到的响应字符串，这一过程称为**渲染**。为了渲染模板，Flask 使用一个名为 Jinja2 的强大模板引擎。
+
+### Jinja2 模板引擎
+
+形式最简单的 Jinja2 模板就是一个包含响应文本的文件。示例 3-1 是一个 Jinja2 模板，它和示例 2-1 中 `index()` 视图函数的响应一样。
+
+> 示例 3-1　`templates/index.html` ：Jinja2 模板
+
+```jinjia2
+<h1>Hello World!</h1>
+```
+
+示例 2-2 中，视图函数 `user()` 返回的响应中包含一个使用变量表示的动态部分。示例 3-2 使用模板实现了这个响应。
+
+> 示例 3-2　`templates/user.html` ：Jinja2 模板
+
+```jinjia2
+<h1>Hello, {{ name }}!</h1>
+```
+
+#### 渲染模板
+
+默认情况下，Flask 在应用目录中的 `templates` 子目录里寻找模板。在下一个 `hello.py` 版本中，你要新建 `templates` 子目录，再把前面定义的模板保存在里面，分别命名为 `index.html` 和 `user.html` 。
+
+应用中的视图函数需要修改一下，以便渲染这些模板。修改方法参见示例 3-3 。
+
+> 示例 3-3　`hello.py` ：渲染模板
+>  
+> 可以执行 `git checkout 3a` 检出应用的这个版本。
+
+```python
+from flask import Flask, render_template
+
+# ...
+
+@app.route('/')
+def index():
+    return render_template('index.html')
+
+@app.route('/user/<name>')
+def user(name):
+    return render_template('user.html', name=name)
+```
+
+Flask 提供的 `render_template()` 函数把 Jinja2 模板引擎集成到了应用中。这个函数的第一个参数是模板的文件名，随后的参数都是**键值对**，表示模板中变量对应的具体值。在这段代码中，第二个模板收到一个名为 `name` 的变量。
+
+前例中的 `name=name` 是经常使用的关键字参数：
+
+- 左边的 `name` 表示参数名，就是模板中使用的占位符；
+- 右边的 `name` 是当前作用域中的变量，表示同名参数的值。
+
+两侧使用相同的变量名是很常见，但不是强制要求。
+
+#### 变量
+
+示例 3-2 在模板中使用的 `{{ name }}` 结构表示一个变量，这是一种特殊的占位符，告诉模板引擎这个位置的值从渲染模板时使用的数据中获取。
+
+Jinja2 能识别所有类型的变量，甚至是一些复杂的类型，例如*列表*、*字典*和*对象*。下面是在模板中使用变量的一些示例：
+
+```jinjia2
+<p>A value from a dictionary: {{ mydict['key'] }}.</p>
+<p>A value from a list: {{ mylist[3] }}.</p>
+<p>A value from a list, with a variable index: {{ mylist[myintvar] }}.</p>
+<p>A value from an object's method: {{ myobj.somemethod() }}.</p>
+```
+
+变量的值可以使用**过滤器**修改。过滤器添加在变量名之后，二者之间以竖线分隔。例如，下述模板把 `name` 变量的值变成首字母大写的形式：
+
+```jinjia2
+Hello, {{ name|capitalize }}
+```
+
+Jinja2 提供的部分常用过滤器：
+
+- `safe` ：渲染值时不转义
+- `trim` ：把值的首尾空格删掉
+- `lower` ：把值转换成小写形式
+- `upper` ：把值转换成大写形式
+- `title` ：把值中每个单词的首字母都转换成大写
+- `capitalize` ：把值的首字母转换成大写，其他字母转换成小写
+- `striptags` ：渲染之前把值中所有的 HTML 标签都删掉
+
+`safe` 过滤器值得特别说明一下。默认情况下，出于安全考虑，Jinja2 会转义所有变量。例如，如果一个变量的值为 `'<h1>Hello</h1>'` ，Jinja2 会将其渲染成 `'&lt;h1&gt;Hello&lt;/ h1&gt;'` ，浏览器能显示这个 `h1` 元素，但不会解释它。很多情况下需要显示变量中存储的 HTML 代码，这时就可使用 `safe` 过滤器。
+
+**注意**：千万别在不可信的值上使用 `safe` 过滤器，例如用户在表单中输入的文本。
