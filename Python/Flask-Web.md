@@ -21,6 +21,13 @@
     - [动态路由](#动态路由)
     - [调试模式](#调试模式)
     - [命令行选项](#命令行选项)
+    - [请求–响应循环](#请求响应循环)
+      - [应用和请求上下文](#应用和请求上下文)
+      - [请求分派](#请求分派)
+      - [请求对象](#请求对象)
+      - [请求钩子](#请求钩子)
+      - [响应](#响应)
+    - [Flask 扩展](#flask-扩展)
 
 ## 前言
 
@@ -406,3 +413,197 @@ Options:
 
 `--reload` 、`--no-reload` 、`--debugger` 和 `--no-debugger` 参数对调试模式进行细致的设置。例如，启动调试模式后可以使用 `--no-debugger` 关闭调试器，但是应用还在调试模式中运行，而且重载器也启用了。
 
+### 请求–响应循环
+
+#### 应用和请求上下文
+
+Flask 使用**上下文**临时把某些对象变为**全局可访问**，比如**请求对象**，它封装了客户端发送的 HTTP 请求：
+
+```python
+from flask import request
+
+@app.route('/')
+def index():
+    user_agent = request.headers.get('User-Agent')
+    return '<p>Your browser is {}</p>'.format(user_agent)
+```
+
+注意：在这个视图函数中我们把 `request` 当作全局变量使用。事实上，`request` 不可能是全局变量。试想，在多线程服务器中，多个线程同时处理不同客户端发送的不同请求时，每个线程看到的 `request` 对象必然不同。**Flask 使用上下文让特定的变量在一个线程中全局可访问，与此同时却不会干扰其他线程。**
+
+在 Flask 中有两种上下文，**应用上下文**和**请求上下文**：
+
+- 应用上下文
+  - `current_app` ：当前应用的应用实例
+  - `g` ：处理请求时用作临时存储的对象，每次请求都会重设这个变量
+- 请求上下文
+  - `request` ：请求对象，封装了客户端发出的 HTTP 请求中的内容
+  - `session` ：用户会话，值为一个字典，存储请求之间需要“记住”的值
+
+Flask 在分派请求之前**激活**（或**推送**）应用上下文和请求上下文，请求处理完成后再将其删除。
+
+- **应用上下文**被推送后，就可以在当前线程中使用 `current_app` 和 `g` 变量。
+- 类似地，**请求上下文**被推送后，就可以使用 `request` 和 `session` 变量。
+
+如果使用这些变量时没有激活应用上下文或请求上下文，就会导致错误。
+
+下述 Python shell 会话演示了**应用上下文**的使用方法：
+
+```python
+>>> from hello import app
+>>> from flask import current_app
+>>> current_app.name
+Traceback (most recent call last):
+...
+RuntimeError: working outside of application context
+>>> app_ctx = app.app_context()
+>>> app_ctx.push()
+>>> current_app.name
+'hello'
+>>> app_ctx.pop()
+```
+
+在这个例子中，没激活应用上下文之前就调用 `current_app.name` 会导致错误，但推送完上下文之后就可以调用了。注意，获取应用上下文的方法是在应用实例上调用 `app.app_context()` 。
+
+#### 请求分派
+
+Flask 会在应用的 **URL 映射**中查找请求的 URL 。URL 映射是 URL 和视图函数之间的对应关系。Flask 使用 `app.route` 装饰器或者作用相同的 `app.add_url_rule()` 方法构建映射。
+
+要想查看 Flask 应用中的 URL 映射是什么样子，
+
+**方法一**，使用 `flask routes` ：
+
+```python
+(venv) $ flask routes
+Endpoint  Methods  Rule
+--------  -------  -----------------------
+index     GET      /
+static    GET      /static/<path:filename>
+user      GET      /user/<name>
+```
+
+**方法二**，以在 Python shell 中使用 `app.url_map` 查看为 `hello.py` 生成的映射：
+
+```python
+(venv) $ python
+>>> from hello import app
+>>> app.url_map
+Map([<Rule '/' (HEAD, OPTIONS, GET) -> index>,
+ <Rule '/static/<filename>' (HEAD, OPTIONS, GET) -> static>,
+ <Rule '/user/<name>' (HEAD, OPTIONS, GET) -> user>])
+```
+
+- `/` 和 `/user/<name>` 路由在应用中使用 `app.route` 装饰器定义。
+- `/static/<filename>` 路由是 Flask 添加的特殊路由，用于访问静态文件。
+
+URL 映射中的 (`HEAD`, `OPTIONS`, `GET`) 是请求方法，由路由进行处理。`HEAD` 和 `OPTIONS` 方法由 Flask 自动处理，因此可以这么说，在这个应用中，URL 映射中的 3 个路由都使用 `GET` 方法。
+
+#### 请求对象
+
+Flask 通过上下文变量 `request` 对外开放请求对象，它最常用的属性和方法：
+
+- `scheme` ：URL 方案（ http 或 https ）
+- `method` ：HTTP 请求方法，例如 GET 或 POST
+- `host` ：请求定义的主机名，如果客户端定义了端口号，还包括端口号
+- `base_url` ：同 `url` ，但没有查询字符串部分
+- `url` ：客户端请求的完整 URL
+- `full_path` ：URL 的路径和查询字符串部分
+- `path` ：URL 的路径部分
+- `query_string` ：URL 的查询字符串部分，返回原始二进制值
+- `args` ：字典，存储通过 URL 查询字符串传递的所有参数
+- `form` ：字典，存储请求提交的所有表单字段
+- `values` ：字典，`form` 和 `args` 的合集
+- `headers` ：字典，存储请求的所有 HTTP 首部
+- `cookies` ：字典，存储请求的所有 cookie
+- `files` ：字典，存储请求上传的所有文件
+- `remote_addr` ：客户端的 IP 地址
+- `blueprint` ：处理请求的 Flask 蓝本的名称；
+- `endpoint` ：处理请求的 Flask 端点的名称；Flask 把视图函数的名称用作路由端点的名称
+- `environ` ：请求的原始 WSGI 环境字典
+- `get_data()` ：返回请求主体缓冲的数据
+- `get_json()` ：返回一个 Python 字典，包含解析请求主体后得到的 JSON
+- `is_secure()` ：通过安全的连接（HTTPS）发送请求时返回 `True`
+
+#### 请求钩子
+
+有时在处理请求之前或之后执行代码会很有用。例如，在请求开始时，我们可能需要创建数据库连接或者验证发起请求的用户身份。请求钩子通过装饰器实现。Flask 支持以下 4 种钩子：
+
+- `before_first_request` ：注册一个函数，只在处理第一个请求之前运行。可以通过这个钩子添加服务器初始化任务。
+- `before_request` ：注册一个函数，在每次请求之前运行。
+- `after_request` ：注册一个函数，如果没有未处理的异常抛出，在每次请求之后运行。
+- `teardown_request` ：注册一个函数，即使有未处理的异常抛出，也在每次请求之后运行。
+
+在*请求钩子函数*和*视图函数*之间共享数据一般使用上下文全局变量 `g` 。例如，`before_request` 处理程序可以从数据库中加载已登录用户，并将其保存到 `g.user` 中。随后调用视图函数时，便可以通过 `g.user` 获取用户。
+
+#### 响应
+
+Flask 调用视图函数后，会将其返回值作为响应的内容。
+
+但 HTTP 协议需要的不仅是作为请求响应的字符串。HTTP 响应中一个很重要的部分是**状态码**，Flask 默认设为 `200` ，表明请求已被成功处理。
+
+如果视图函数返回的响应需要使用不同的状态码，可以把数字代码作为第二个返回值，添加到响应文本之后。例如，下述视图函数返回 `400` 状态码，表示请求无效：
+
+```python
+@app.route('/')
+def index():
+    return '<h1>Bad Request</h1>', 400
+```
+
+视图函数返回的响应还可接受第三个参数，这是一个由 HTTP 的 response `header` 组成的字典。
+
+如果不想返回由 1 个、2 个或 3 个值组成的*元组*，Flask 视图函数还可以返回一个**响应对象**。`make_response()` 函数可接受 1 个、2 个或 3 个参数（和视图函数的返回值一样），然后返回一个等效的响应对象。
+
+有时我们需要在视图函数中生成响应对象，然后在响应对象上调用各个方法，进一步设置响应。下例创建一个响应对象，然后设置 cookie ：
+
+```python
+from flask import make_response
+
+@app.route('/')
+def index():
+    response = make_response('<h1>This document carries a cookie!</h1>')
+    response.set_cookie('answer', '42')
+    return response
+```
+
+响应对象最常使用的属性和方法：
+
+- `status_code` ：HTTP 数字状态码
+- `headers` ：一个类似字典的对象，包含随响应发送的所有首部
+- `content_type` ：响应主体的媒体类型
+- `content_length` ：响应主体的长度
+- `set_data()` ：使用字符串或字节值设定响应
+- `get_data()` ：获取响应主体
+- `set_cookie()` ：为响应添加一个 cookie
+- `delete_cookie()` ：删除一个 cookie
+
+响应有个特殊的类型，称为**重定向**。这种响应没有页面文档，只会告诉浏览器一个新 URL ，用以加载新页面。重定向经常在 Web 表单中使用。
+
+重定向的状态码通常是 `302` ，在 Location 首部中提供目标 URL 。重定向响应可以使用 3 个值形式的返回值生成，也可在响应对象中设定。不过，由于使用频繁，Flask 提供了 `redirect()` 辅助函数，用于生成这种响应：
+
+```python
+from flask import redirect
+
+@app.route('/')
+def index():
+    return redirect('http://www.example.com')
+```
+
+还有一种特殊的响应由 `abort()` 函数生成，用于处理错误。在下面这个例子中，如果 URL 中动态参数 `id` 对应的用户不存在，就返回状态码 `404` ：
+
+```python
+from flask import abort
+
+@app.route('/user/<id>')
+def get_user(id):
+    user = load_user(id)
+    if not user:
+        abort(404)
+    return '<h1>Hello, {}</h1>'.format(user.name)
+```
+
+注意：`abort()` 不会把控制权交还给调用它的函数，而是**抛出异常**。
+
+### Flask 扩展
+
+Flask 的设计考虑了可扩展性，故而没有提供一些重要的功能，例如数据库和用户身份验证，所以开发者可以自由选择最适合应用的包，或者按需求自行开发。
+
+社区成员开发了大量不同用途的 Flask 扩展，如果这还不能满足需求，任何 Python 标准包或代码库都可以使用。
