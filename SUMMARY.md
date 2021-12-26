@@ -29,7 +29,8 @@
 
 ## 🐦 Swift
 
-- [Swift Inbox](swift/inbox.md)
+- [Swift Inbox](Swift/INBOX.md)
+- [Swift Docs](Swift/Swift-Docs.md)
 
 ## ⚛️ React
 
@@ -48,7 +49,7 @@
 
 ## 🐍 Python
 
-- [Flask Web开发](Python/Flask-Web.md)
+- [Flask Web 开发](Python/Flask-Web.md)
 
 ## 🌲 git
 
