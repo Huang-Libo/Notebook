@@ -2,6 +2,10 @@
 
 ## Apple 资源
 
+### 中文资料
+
+- [Swift 简介](https://developer.apple.com/cn/swift/)
+
 ### swift.org
 
 - [About Swift](https://www.swift.org/about/)
@@ -20,20 +24,11 @@
   - [Language Guide](https://docs.swift.org/swift-book/LanguageGuide/TheBasics.html)
   - [Language Reference](https://docs.swift.org/swift-book/ReferenceManual/AboutTheLanguageReference.html)
 
-### 教程
-
-[SwiftUI Tutorials](https://developer.apple.com/tutorials/swiftui)
-
-### 示例代码
-
-[Building a Great Mac App with SwiftUI](https://developer.apple.com/documentation/swiftui/building_a_great_mac_app_with_swiftui)
-
 ## 第三方资源
-
-### Swift Style Guide
 
 - [Swift Style Guide](https://google.github.io/swift/)
 
-### 中文资料
+## SwiftUI
 
-https://developer.apple.com/cn/swift/
+- 官方教程：[SwiftUI Tutorials](https://developer.apple.com/tutorials/swiftui)
+- 示例代码：[Building a Great Mac App with SwiftUI](https://developer.apple.com/documentation/swiftui/building_a_great_mac_app_with_swiftui)
