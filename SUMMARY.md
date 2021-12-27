@@ -9,6 +9,11 @@
 - [weak 源码分析](iOS/objc4-weak.md)
 - [AutoreleasePoolPage 源码分析](iOS/objc4-AutoreleasePool.md)
 
+## 🐦 Swift
+
+- [Swift Inbox](Swift/INBOX.md)
+- [Swift Docs](Swift/Swift-Docs.md)
+
 ## 📖 Digest
 
 - [ibireme - YY 系列简介](Digest/ibireme-AAA-repo-introduction.md)
@@ -26,11 +31,6 @@
 - [8](8/8.md)
 - [8-iOS](8/8-iOS.md)
 - [ChenYilong《招聘一个靠谱的 iOS 》参考答案](8/ChenYilong-iOS-Interview-Questions.md)
-
-## 🐦 Swift
-
-- [Swift Inbox](Swift/INBOX.md)
-- [Swift Docs](Swift/Swift-Docs.md)
 
 ## ⚛️ React
 
