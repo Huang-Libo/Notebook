@@ -14,6 +14,11 @@
 - [Swift Inbox](Swift/INBOX.md)
 - [Swift Docs](Swift/Swift-Docs.md)
 
+## SwiftUI
+
+- [SwiftUI-Tutorials](SwiftUI/SwiftUI-Tutorials/README.md)
+  - [Chapter 1: SwiftUI Essentials](SwiftUI/SwiftUI-Tutorials/Chapter-1-SwiftUI-Essentials.md)
+
 ## 📖 Digest
 
 - [ibireme - YY 系列简介](Digest/ibireme-AAA-repo-introduction.md)
