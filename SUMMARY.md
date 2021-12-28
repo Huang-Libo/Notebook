@@ -21,7 +21,7 @@
 
 ## 📖 Digest
 
-- [ibireme - YY 系列简介](Digest/ibireme/README.md)
+- [ibireme](Digest/ibireme/README.md)
   - [深入理解 RunLoop](Digest/ibireme/ibireme-RunLoop.md)
   - [保持界面流畅的技巧](Digest/ibireme/ibireme-smooth-user-interface.md)
   - [移动端图片格式调研](Digest/ibireme/ibireme-Image-benchmark.md)
