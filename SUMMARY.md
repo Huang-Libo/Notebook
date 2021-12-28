@@ -21,14 +21,14 @@
 
 ## 📖 Digest
 
-- [ibireme - YY 系列简介](Digest/ibireme-AAA-repo-introduction.md)
-- [ibireme《深入理解 RunLoop 》](Digest/ibireme-RunLoop.md)
-- [ibireme《保持界面流畅的技巧》](Digest/ibireme-smooth-user-interface.md)
-- [ibireme《移动端图片格式调研》](Digest/ibireme-Image-benchmark.md)
-- [ibireme《处理图片的 Tips 》](Digest/ibireme-Image-Tips.md)
-- [ibireme《YYCache 的设计思路》](Digest/ibireme-YYCache.md)
-- [ibireme《JSON 模型转换库评测》](Digest/ibireme-YYModel.md)
-- [ibireme《不再安全的 OSSpinLock 》](Digest/ibireme-OSSpinLock-is-unsafe.md)
+- [ibireme - YY 系列简介](Digest/ibireme/README.md)
+  - [深入理解 RunLoop](Digest/ibireme/ibireme-RunLoop.md)
+  - [保持界面流畅的技巧](Digest/ibireme/ibireme-smooth-user-interface.md)
+  - [移动端图片格式调研](Digest/ibireme/ibireme-Image-benchmark.md)
+  - [处理图片的 Tips](Digest/ibireme/ibireme-Image-Tips.md)
+  - [YYCache 的设计思路](Digest/ibireme/ibireme-YYCache.md)
+  - [JSON 模型转换库评测](Digest/ibireme/ibireme-YYModel.md)
+  - [不再安全的 OSSpinLock](Digest/ibireme/ibireme-OSSpinLock-is-unsafe.md)
 - [sunnyxx《黑幕背后的 Autorelease 》](Digest/sunnyxx-Autorelease.md)
 - [nianxi《漫谈 iOS Crash 收集框架》](Digest/nianxi-crash-reporter.md)
 
