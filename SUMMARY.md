@@ -25,6 +25,7 @@
 - [ibireme《JSON 模型转换库评测》](Digest/ibireme-YYModel.md)
 - [ibireme《不再安全的 OSSpinLock 》](Digest/ibireme-OSSpinLock-is-unsafe.md)
 - [sunnyxx《黑幕背后的 Autorelease 》](Digest/sunnyxx-Autorelease.md)
+- [nianxi《漫谈 iOS Crash 收集框架》](Digest/nianxi-crash-reporter.md)
 
 ## 🎱 Check List
 
