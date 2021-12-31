@@ -2,6 +2,7 @@
 
 - [8-iOS](#8-ios)
   - [基础](#基础)
+    - [沙盒](#沙盒)
     - [load 和 initialize](#load-和-initialize)
     - [UIView 和 CALayer 的区别](#uiview-和-calayer-的区别)
     - [寻找两个 UIView 的最近的公共 View](#寻找两个-uiview-的最近的公共-view)
@@ -27,6 +28,12 @@
     - [fishhook 的原理 & 位置无关代码](#fishhook-的原理--位置无关代码)
 
 ## 基础
+
+### 沙盒
+
+- 只有用户生成的文档和其他数据，或者不能由 App 重新创建的文档和其他数据，应该存储在 `/Documents` 目录下，并由 iCloud 自动备份。
+- 可以再次下载或重新生成的数据应该存储在 `/Library/Caches` 目录下。应该放在 `/Caches` 目录中的文件包括数据库缓存文件和可重新下载的内容，如杂志、报纸和地图应用程序使用的内容。
+- 临时使用的数据应该放在 `/tmp` 目录下。当你用完这些文件后要删除它们，这样它们就不会继续占用用户设备的空间了。
 
 ### load 和 initialize
 
