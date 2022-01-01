@@ -21,6 +21,8 @@
     - [Objective-C 方法调用的本质](#objective-c-方法调用的本质)
   - [RunLoop](#runloop)
     - [source0 和 source1 有什么区别](#source0-和-source1-有什么区别)
+  - [AutoReleasePool](#autoreleasepool)
+    - [NSThread 回调方法中的 autorelease 对象是什么时候释放的？](#nsthread-回调方法中的-autorelease-对象是什么时候释放的)
   - [App 启动优化](#app-启动优化)
     - [删除未使用的类和方法](#删除未使用的类和方法)
     - [统计启动时间](#统计启动时间)
@@ -544,6 +546,17 @@ typedef struct {
 // perform(info)
 __CFRUNLOOP_IS_CALLING_OUT_TO_A_SOURCE0_PERFORM_FUNCTION__(rls->_context.version0.perform, rls->_context.version0.info); 
 ```
+
+## AutoReleasePool
+
+### NSThread 回调方法中的 autorelease 对象是什么时候释放的？
+
+> 参考：
+>  
+> - [does NSThread create autoreleasepool automatically now?](https://stackoverflow.com/questions/24952549/does-nsthread-create-autoreleasepool-automatically-now/30519746)
+> - [NSthread 和 AutoReleasePool](https://juejin.cn/post/6844903971405086734#heading-13)
+
+在子线程你创建了 AutoreleasePool 的话，产生的 Autorelease 对象就会交给 AutoreleasePool 去管理。如果你没有创建 AutoreleasePool ，但是产生了 Autorelease 对象，就会调用 `autoreleaseNoPage` 方法。在这个方法中，会自动帮你创建一个 `hotpage`（hotPage 可以理解为当前正在使用的 AutoreleasePoolPage ），并调用 `page->add(obj)` 将对象添加到 AutoreleasePoolPage 的栈中，也就是说你不进行手动的内存管理，也不会内存泄漏。StackOverFlow 的作者也说道，这个是 OS X 10.9+ 和 iOS 7+ 才加入的特性。并且苹果没有对应的官方文档阐述此事，但是可以通过源码了解。
 
 ## App 启动优化
 
