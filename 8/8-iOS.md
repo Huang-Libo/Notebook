@@ -558,6 +558,101 @@ __CFRUNLOOP_IS_CALLING_OUT_TO_A_SOURCE0_PERFORM_FUNCTION__(rls->_context.version
 
 在子线程你创建了 AutoreleasePool 的话，产生的 Autorelease 对象就会交给 AutoreleasePool 去管理。如果你没有创建 AutoreleasePool ，但是产生了 Autorelease 对象，就会调用 `autoreleaseNoPage` 方法。在这个方法中，会自动帮你创建一个 `hotpage`（hotPage 可以理解为当前正在使用的 AutoreleasePoolPage ），并调用 `page->add(obj)` 将对象添加到 AutoreleasePoolPage 的栈中，也就是说你不进行手动的内存管理，也不会内存泄漏。StackOverFlow 的作者也说道，这个是 OS X 10.9+ 和 iOS 7+ 才加入的特性。并且苹果没有对应的官方文档阐述此事，但是可以通过源码了解。
 
+**相关代码**：
+
+```cpp
+void arr_init(void) 
+{
+    AutoreleasePoolPage::init();
+    SideTablesMap.init();
+    _objc_associations_init();
+}
+```
+
+```cpp
+static void init()
+{
+    int r __unused = pthread_key_init_np(AutoreleasePoolPage::key, 
+                                         AutoreleasePoolPage::tls_dealloc);
+    ASSERT(r == 0);
+}
+```
+
+```cpp
+static void tls_dealloc(void *p) 
+{
+    if (p == (void*)EMPTY_POOL_PLACEHOLDER) {
+        // No objects or pool pages to clean up here.
+        return;
+    }
+
+    // reinstate TLS value while we work
+    setHotPage((AutoreleasePoolPage *)p);
+
+    if (AutoreleasePoolPage *page = coldPage()) {
+        if (!page->empty()) objc_autoreleasePoolPop(page->begin());  // pop all of the pools
+        if (slowpath(DebugMissingPools || DebugPoolAllocation)) {
+            // pop() killed the pages already
+        } else {
+            page->kill();  // free all of the pages
+        }
+    }
+    
+    // clear TLS value so TLS destruction doesn't loop
+    setHotPage(nil);
+}
+```
+
+```objectivec
+static __attribute__((noinline))
+id *autoreleaseNoPage(id obj)
+{
+    // "No page" could mean no pool has been pushed
+    // or an empty placeholder pool has been pushed and has no contents yet
+    ASSERT(!hotPage());
+
+    bool pushExtraBoundary = false;
+    if (haveEmptyPoolPlaceholder()) {
+        // We are pushing a second pool over the empty placeholder pool
+        // or pushing the first object into the empty placeholder pool.
+        // Before doing that, push a pool boundary on behalf of the pool 
+        // that is currently represented by the empty placeholder.
+        pushExtraBoundary = true;
+    }
+    else if (obj != POOL_BOUNDARY  &&  DebugMissingPools) {
+        // We are pushing an object with no pool in place, 
+        // and no-pool debugging was requested by environment.
+        _objc_inform("MISSING POOLS: (%p) Object %p of class %s "
+                     "autoreleased with no pool in place - "
+                     "just leaking - break on "
+                     "objc_autoreleaseNoPool() to debug", 
+                     objc_thread_self(), (void*)obj, object_getClassName(obj));
+        objc_autoreleaseNoPool(obj);
+        return nil;
+    }
+    else if (obj == POOL_BOUNDARY  &&  !DebugPoolAllocation) {
+        // We are pushing a pool with no pool in place,
+        // and alloc-per-pool debugging was not requested.
+        // Install and return the empty pool placeholder.
+        return setEmptyPoolPlaceholder();
+    }
+
+    // We are pushing an object or a non-placeholder'd pool.
+
+    // Install the first page.
+    AutoreleasePoolPage *page = new AutoreleasePoolPage(nil);
+    setHotPage(page);
+    
+    // Push a boundary on behalf of the previously-placeholder'd pool.
+    if (pushExtraBoundary) {
+        page->add(POOL_BOUNDARY);
+    }
+    
+    // Push the requested object or pool.
+    return page->add(obj);
+}
+```
+
 ## App 启动优化
 
 > 参考：[美团外卖 iOS App 冷启动治理](https://tech.meituan.com/2018/12/06/waimai-ios-optimizing-startup.html)
