@@ -4,17 +4,17 @@ Swift, iOS 13.0+, macOS 10.15+
 
 - [Combine](#combine)
   - [Overview](#overview)
-    - [Publisher](#publisher)
-    - [Subscriber](#subscriber)
-    - [Subscription](#subscription)
-    - [CustomCombineIdentifierConvertible](#customcombineidentifierconvertible)
+  - [Publisher](#publisher)
+  - [Subscriber](#subscriber)
+  - [Subscription](#subscription)
+  - [CustomCombineIdentifierConvertible](#customcombineidentifierconvertible)
 
 ## Overview
 
 - *publisher* : expose values that can change over time.
 - *subscriber* : receive those values from the publishers.
 
-### Publisher
+## Publisher
 
 ```swift
 protocol Publisher
@@ -22,7 +22,15 @@ protocol Publisher
 
 Publishers have *operators* to act on the values received from upstream publishers and republish them.
 
-### Subscriber
+The *publisher* implements the `receive(subscriber:)` method to accept a *subscriber*.
+
+After this, the *publisher* can call the following methods on the *subscriber* :
+
+- `receive(subscription:):` Acknowledges the subscribe request and returns a `Subscription` instance. The `subscriber` uses the `subscription` to demand elements from the *publisher* and can use it to cancel publishing.
+- `receive(_:):` Delivers one element from the *publisher* to the *subscriber*.
+- `receive(completion:):` Informs the `subscriber` that publishing has ended, either normally or with an error.
+
+## Subscriber
 
 ```swift
 protocol Subscriber : CustomCombineIdentifierConvertible
@@ -30,7 +38,7 @@ protocol Subscriber : CustomCombineIdentifierConvertible
 
 Publishers only emit values when explicitly **requested** to do so by subscribers. This puts your subscriber code in control of how fast it receives events from the publishers it’s connected to.
 
-### Subscription
+## Subscription
 
 A protocol representing the **connection** of a *subscriber* to a *publisher*.
 
@@ -46,7 +54,7 @@ Tells a publisher that it may send more values to the subscriber.
 func request(_ demand: Subscribers.Demand)
 ```
 
-### CustomCombineIdentifierConvertible
+## CustomCombineIdentifierConvertible
 
 A protocol for **uniquely identifying** publisher streams.
 
