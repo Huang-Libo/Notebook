@@ -9,4 +9,10 @@
 ## pending
 
 - `associatedtype`
-- `some` , swift 5.1
+- `AnyObject`
+- `some` , Swift 5.1
+- `@frozen`, Combine
+- 泛型，`where`
+- 逃逸闭包 `@escaping`
+- Combine
+  - `Self.Output`
