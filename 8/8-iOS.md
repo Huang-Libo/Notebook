@@ -31,9 +31,23 @@
 
 ### 沙盒
 
-- 只有用户生成的文档和其他数据，或者不能由 App 重新创建的文档和其他数据，应该存储在 `/Documents` 目录下，并由 iCloud 自动备份。
-- 可以再次下载或重新生成的数据应该存储在 `/Library/Caches` 目录下。应该放在 `/Caches` 目录中的文件包括数据库缓存文件和可重新下载的内容，如杂志、报纸和地图应用程序使用的内容。
-- 临时使用的数据应该放在 `/tmp` 目录下。当你用完这些文件后要删除它们，这样它们就不会继续占用用户设备的空间了。
+> 参考：[iOS 沙盒及各个目录详解](https://blog.51cto.com/u_4955660/2842858)  
+> 原文：[Demystifying iOS/iPadOS SandBox with Swift Code (Medium)](https://medium.com/techiepedia/demystifying-ios-ipados-sandbox-with-swift-code-8c9222d19380)
+
+<img src="../media/8/iOS-sandbox.png" width="60%"/>
+
+- `AppName.app` ：是 App 的 bundle 。包含了 App 以及其所有的资源。这个目录你不能去进行写操作。为了防止篡改，在 App 安装的时候就进行了签名处理。一旦你进行了写操作，签名就会修改，App 就无法启动。这个目录的内容**不会**被 iTunes 或者 iCloud 备份。
+- `Documents/` ： 使用该目录主要是保存用户相关的数据。 这个目录下的文件可以通过*文件共享 (file sharing)* 提供给用户。因此这个目录下最好只存储 App 希望公开给用户的数据信息。这个目录的内容会被 iTunes 或者 iCloud 备份。
+- `Library/` 主要存与用户数据无关的数据（一般是不想共享给用户的数据）。下面有 `Caches/` 和 `Preferences/` 等子目录。App 也可以在这个目录下创建自己的目录。一般图片缓存，数据缓存都会可以放在这个 `Caches/` 子目录下。系统提供的数据存储 NSUserDefault 生成的 plist 文件，是放在 `Preferences/` 目录下的。需要注意的是 iTunes 和 iCloud 会备份除了 `Caches/` 文件夹外的其他内容。
+- `tmp/` 存放一些临时文件。这个文件目录下的数据在 App 不运行的时候都可能会被清除。因此对于可能还需要用到的数据，需要及早备份，如果不需要可以直接清除掉。这个目录的内容不会被 iTunes 或者 iCloud 进行备份。
+- 运行的时候 App 可以额外的申请容器目录，比如 iCloud Container 。
+
+因为有些文件夹会默认被备份。隐藏对于那些*大文件或者不需要备份的文件*，可以通过 `[URL setResourceValue:forKey:error:]` 方法进行设置不需要备份。
+比如 SDWebImage 里面就用到了：
+
+```objective-c
+[fileURL setResourceValue:@YES forKey:NSURLIsExcludedFromBackupKey error:nil];
+```
 
 ### load 和 initialize
 
