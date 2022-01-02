@@ -8,6 +8,7 @@ Swift, iOS 13.0+, macOS 10.15+
   - [Subscriber](#subscriber)
   - [Subscription](#subscription)
   - [CustomCombineIdentifierConvertible](#customcombineidentifierconvertible)
+  - [WWDC Video](#wwdc-video)
 
 ## Overview
 
@@ -73,3 +74,7 @@ Usage:
 ```swift
 let combineIdentifier = CombineIdentifier()
 ```
+
+## WWDC Video
+
+- [Introducing Combine](https://developer.apple.com/videos/play/wwdc2019/722/)
