@@ -6,6 +6,8 @@
     - [load 和 initialize](#load-和-initialize)
     - [UIView 和 CALayer 的区别](#uiview-和-calayer-的区别)
     - [寻找两个 UIView 的最近的公共 View](#寻找两个-uiview-的最近的公共-view)
+    - [NSNotification 的原理](#nsnotification-的原理)
+    - [NSNotificationQueue 怎样确保通知同步的](#nsnotificationqueue-怎样确保通知同步的)
   - [事件的传递和响应](#事件的传递和响应)
     - [iOS 系统响应触摸事件的机制](#ios-系统响应触摸事件的机制)
     - [在 UITabBar 中添加凸出的按钮](#在-uitabbar-中添加凸出的按钮)
@@ -28,6 +30,7 @@
   - [App 启动优化](#app-启动优化)
     - [删除未使用的类和方法](#删除未使用的类和方法)
     - [统计启动时间](#统计启动时间)
+    - [二进制重排](#二进制重排)
   - [开源库](#开源库)
     - [fishhook 的原理 & 位置无关代码](#fishhook-的原理--位置无关代码)
 
@@ -142,7 +145,19 @@
 }
 ```
 
+### NSNotification 的原理
+
+【待完善】
+
+### NSNotificationQueue 怎样确保通知同步的
+
+【待完善】
+
 ## 事件的传递和响应
+
+参考：
+
+- [iOS中触摸事件传递和响应原理](https://www.jianshu.com/p/4aeaf3aa0c7e)
 
 ### iOS 系统响应触摸事件的机制
 
@@ -410,7 +425,10 @@ Points that lie outside the receiver’s bounds are never reported as hits, even
 
 ### dealloc 的流程
 
-> 参考：[iOS - 老生常谈内存管理（四）：内存管理方法源码分析](https://juejin.cn/post/6844904131719593998#heading-63)
+> 参考：
+>  
+> - [iOS - 老生常谈内存管理（四）：内存管理方法源码分析](https://juejin.cn/post/6844904131719593998#heading-63)
+> - [dealloc 和关联对象](https://www.jianshu.com/p/7700c194cfcc)
 
 - 判断销毁对象前有没有需要处理的东西（如弱引用、关联对象、C++ 的析构函数、`SideTable` 的引用计数表等等）；
   - 如果没有就直接调用 `free` 函数销毁对象；
@@ -735,6 +753,10 @@ def referenced_selectors(path):
     }
 }
 ```
+
+### 二进制重排
+
+【待完善】
 
 ## 开源库
 
