@@ -62,7 +62,7 @@
 
 ## 💻 mac
 
-- [在 macOS 上修改 R.app (R GUI) 的默认 Language](/mac/Change-R-app-default-language-on-macOS.md)
+- [在 macOS 上修改 R.app (R GUI) 的默认 Language](/macOS/Change-R-app-default-language-on-macOS.md)
 
 ## 📝 log
 
