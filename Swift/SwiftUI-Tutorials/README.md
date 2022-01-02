@@ -12,6 +12,7 @@
     - [Videos](#videos)
     - [Sample Code](#sample-code)
     - [Forums](#forums)
+  - [Open Source Project](#open-source-project)
 
 ## Chapter 1: SwiftUI Essentials
 
@@ -32,3 +33,7 @@
 ### Forums
 
 [Forums: SwiftUI](https://developer.apple.com/forums/tags/swiftui/)
+
+## Open Source Project
+
+- [MovieSwiftUI](https://github.com/Dimillian/MovieSwiftUI)
