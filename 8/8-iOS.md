@@ -12,6 +12,8 @@
     - [扩大 UIButton 的点击范围](#扩大-uibutton-的点击范围)
     - [扩大 UIButton 的点击范围（使用分类）](#扩大-uibutton-的点击范围使用分类)
     - [扩大 UIButton 的点击范围（使用自定义的 Button ）](#扩大-uibutton-的点击范围使用自定义的-button-)
+    - [`hitTest:withEvent:`](#hittestwithevent)
+    - [iOS 点击事件如何穿透透明的 View ?](#ios-点击事件如何穿透透明的-view-)
   - [Runtime](#runtime)
     - [「从历年 weak 看 iOS 面试】」](#从历年-weak-看-ios-面试)
     - [消息转发流程](#消息转发流程)
@@ -312,6 +314,29 @@ static void * kHitEdgeInsets;
     }
 }
 ```
+
+### `hitTest:withEvent:`
+
+`hitTest:withEvent:` 文档：
+
+This method traverses the view hierarchy by calling the `pointInside:withEvent:` method of each subview to determine which subview should receive a touch event.
+
+If `pointInside:withEvent:` returns `YES`, then the subview’s hierarchy is similarly traversed until the frontmost view containing the specified point is found. If a view does not contain the point, its branch of the view hierarchy is ignored. You rarely need to call this method yourself, but you might override it to hide touch events from subviews.
+
+**This method ignores view objects that are hidden, that have disabled user interactions, or have an alpha level less than 0.01**. This method does not take the view’s content into account when determining a hit. Thus, a view can still be returned even if the specified point is in a transparent portion of that view’s content.
+Points that lie outside the receiver’s bounds are never reported as hits, even if they actually lie within one of the receiver’s subviews. This can occur if the current view’s `clipsToBounds` property is set to `NO` and the affected subview extends beyond the view’s bounds.
+
+### iOS 点击事件如何穿透透明的 View ?
+
+参考：[iOS 点击事件如何穿透透明的 View ?](https://cloud.tencent.com/developer/article/1645462)
+
+`hitTest:withEvent:` 方法的处理流程如下：
+
+首先调用当前视图的 `pointInside:withEvent:` 方法判断触摸点是否在当前视图内；
+
+- 若返回 `NO` ，则 `hitTest:withEvent:` 返回 `nil` ；
+- 若返回 `YES` ，则向当前视图的所有子视图 (`subviews`) 发送 `hitTest:withEvent:` 消息，所有子视图的遍历顺序是从 top 到 bottom ，即从 `subviews` 数组的末尾向前遍历，直到有子视图返回非空对象或者全部子视图遍历完毕；若第一次有子视图返回非空对象，则 `hitTest:withEvent:` 方法返回此对象，处理结束；
+如所有子视图都返回非，则 `hitTest:withEvent:` 方法返回自身 (`self`) 。
 
 ## Runtime
 
