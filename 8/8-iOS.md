@@ -23,6 +23,7 @@
     - [添加 weak 变量](#添加-weak-变量)
     - [weak 指针置为 nil 的过程](#weak-指针置为-nil-的过程)
     - [Objective-C 方法调用的本质](#objective-c-方法调用的本质)
+    - [Category](#category)
   - [RunLoop](#runloop)
     - [source0 和 source1 有什么区别](#source0-和-source1-有什么区别)
   - [AutoReleasePool](#autoreleasepool)
@@ -33,6 +34,16 @@
     - [二进制重排](#二进制重排)
   - [开源库](#开源库)
     - [fishhook 的原理 & 位置无关代码](#fishhook-的原理--位置无关代码)
+  - [其他【待完善】](#其他待完善)
+    - [三棵树 calayer](#三棵树-calayer)
+    - [Crash 的收集和上报](#crash-的收集和上报)
+    - [锁的类型](#锁的类型)
+    - [方法查找的过程](#方法查找的过程)
+    - [关联对象存在哪，对象释放时需要主动销毁吗，怎样实现 weak 关联对象](#关联对象存在哪对象释放时需要主动销毁吗怎样实现-weak-关联对象)
+    - [重写 isEqual](#重写-isequal)
+    - [多线程的用法](#多线程的用法)
+    - [信号量](#信号量)
+    - [NSOperation 与 GCD 的区别](#nsoperation-与-gcd-的区别)
 
 ## 基础
 
@@ -428,6 +439,8 @@ Points that lie outside the receiver’s bounds are never reported as hits, even
 > 参考：
 >  
 > - [iOS - 老生常谈内存管理（四）：内存管理方法源码分析](https://juejin.cn/post/6844904131719593998#heading-63)
+> - [ARC 下 dealloc 过程及 .cxx_destruct 的探究](http://blog.sunnyxx.com/2014/04/02/objc_dig_arc_dealloc/)
+> - [我们的对象会经历什么（iOS）](https://toutiao.io/posts/4cjm6y/preview)
 > - [dealloc 和关联对象](https://www.jianshu.com/p/7700c194cfcc)
 
 - 判断销毁对象前有没有需要处理的东西（如弱引用、关联对象、C++ 的析构函数、`SideTable` 的引用计数表等等）；
@@ -488,6 +501,10 @@ id obj2 = objc_msgSend(obj1, sel_registerName("init"));
 可以看出 `objc_getClass` 和 `sel_registerName` 的参数都是 C 字符串，因此，它们都是在**运行时**通过给定的字符串去查找对应的类和 `SEL` 。
 
 因此，在编译时只是将 Objective-C 的方法调用转成了 `objc_msgSend` ，在运行时再通过 `objc_getClass` 和 `sel_registerName` 来查找对应的`类`和`方法`。
+
+### Category
+
+[美团技术：《深入理解 Objective-C ：Category》](https://tech.meituan.com/2015/03/03/diveintocategory.html)
 
 ## RunLoop
 
@@ -786,3 +803,34 @@ fishhook 的功能：对**外部符号**进行*符号重绑定 (symbol rebind)* 
 **fishhook 的原理**：
 
 修改 `__la_symbol_ptr` 中外部符号存储的地址值，将它改为我们自己实现的函数的地址值。同时用一个函数指针存储外部符号的原始实现，这样就还能调用到该符号的原始实现。
+
+## 其他【待完善】
+
+### 三棵树 calayer
+
+### Crash 的收集和上报
+
+`.crash` 文件解析的方法
+
+### 锁的类型
+
+### 方法查找的过程
+
+### 关联对象存在哪，对象释放时需要主动销毁吗，怎样实现 weak 关联对象
+
+### 重写 isEqual
+
+### 多线程的用法
+
+### 信号量
+
+参考：
+
+- [dispatch_semaphore](https://zhangbuhuai.com/post/dispatch-semaphore.html)
+- [iOS信号量的理解和使用](https://www.jianshu.com/p/3ea873c38740)
+
+### NSOperation 与 GCD 的区别
+
+[多线程 NSOperation 与 GCD 的区别](https://univer2012.github.io/2017/12/02/28%E5%A4%9A%E7%BA%BF%E7%A8%8BNSOperation%E4%B8%8EGCD%E7%9A%84%E5%8C%BA%E5%88%AB/)
+
+`NSOperation` cancel
