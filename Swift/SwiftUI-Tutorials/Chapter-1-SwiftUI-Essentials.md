@@ -5,7 +5,6 @@
     - [Section 1: Create a New Project and Explore the Canvas](#section-1-create-a-new-project-and-explore-the-canvas)
     - [Section 2: Customize the Text View](#section-2-customize-the-text-view)
     - [Section 3: Combine Views Using Stacks](#section-3-combine-views-using-stacks)
-  - [Creating and Combining Views](#creating-and-combining-views-1)
   - [Building Lists and Navigation](#building-lists-and-navigation)
   - [Handling User Input](#handling-user-input)
 
@@ -18,6 +17,8 @@
 Create an app by declaring a structure that conforms to the `App` protocol. Implement the required `body` computed property to define the app’s content:
 
 ```swift
+// LandmarksApp.swift
+
 @main
 struct MyApp: App {
     var body: some Scene {
@@ -29,6 +30,8 @@ struct MyApp: App {
 ```
 
 ```swift
+// ContentView.swift
+
 struct ContentView: View {
     var body: some View {
         Text("Hello, world!")
@@ -47,8 +50,8 @@ To customize a SwiftUI view, you call methods called **modifiers**. Modifiers wr
 
 ### Section 3: Combine Views Using Stacks
 
-## Creating and Combining Views
-
 ## Building Lists and Navigation
+
+
 
 ## Handling User Input
