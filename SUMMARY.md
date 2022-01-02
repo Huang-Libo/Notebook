@@ -11,13 +11,10 @@
 
 ## 🐦 Swift
 
+- [SwiftUI-Tutorials](Swift/SwiftUI-Tutorials/README.md)
+  - [Chapter 1: SwiftUI Essentials](Swift/SwiftUI-Tutorials/Chapter-1-SwiftUI-Essentials.md)
 - [Swift Inbox](Swift/INBOX.md)
 - [Swift Docs](Swift/Swift-Docs.md)
-
-## 💙 SwiftUI
-
-- [SwiftUI-Tutorials](SwiftUI/SwiftUI-Tutorials/README.md)
-  - [Chapter 1: SwiftUI Essentials](SwiftUI/SwiftUI-Tutorials/Chapter-1-SwiftUI-Essentials.md)
 
 ## 📖 Digest
 
