@@ -38,7 +38,7 @@
 
 ## ⚛️ React
 
-- [安装](react/installation.md)
+- [安装](React/installation.md)
 
 ## 📱 React Native
 
