@@ -901,3 +901,24 @@ struct nlist_64 {
 - [巧用符号表 - 探求 fishhook 原理（一）](https://www.desgard.com/c/iosre/2017/12/16/fishhook-1.html)
 - [验证试验 - 探求 fishhook 原理（二）](https://www.desgard.com/c/iosre/2018/02/03/fishhook-2.html)
 
+## 参考
+
+https://blog.csdn.net/shengpeng3344/article/details/105179721
+
+https://huang-libo.github.io/posts/App-Startup-Time-dyld/#%E6%80%A5%E5%88%87%E7%9A%84%E7%AC%A6%E5%8F%B7%E8%A7%A3%E6%9E%90
+
+https://www.bilibili.com/video/BV1Qv411i7mi
+
+https://zhuanlan.zhihu.com/p/349723714
+
+https://zhuanlan.zhihu.com/p/349725265
+
+https://zhuanlan.zhihu.com/p/349725692
+
+https://ctinusdev.github.io/2017/08/20/Mach-OBasis_ASLR/
+
+https://juejin.cn/post/6844904175625568270
+
+https://zhangbuhuai.com/post/fishhook.html
+
+https://juejin.cn/post/6988867705637961742
