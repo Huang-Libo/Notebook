@@ -1,7 +1,7 @@
 
 # AutoreleasePoolPage 源码分析
 
-> 说明：本文摘出的源码均来自 **objc4-818.2** 这个版本。`AutoreleasePoolPage` 的源码位于 `objc4` 的 [NSObject.mm](https://opensource.apple.com/source/objc4/objc4-818.2/runtime/NSObject.mm.auto.html) 中。
+> 说明：本文的源码均摘自 **objc4-818.2** 这个版本。`AutoreleasePoolPage` 的源码位于 `objc4` 的 [NSObject.mm](https://opensource.apple.com/source/objc4/objc4-818.2/runtime/NSObject.mm.auto.html) 中。
 
 <h2>目录</h2>
 
@@ -54,6 +54,8 @@
     - [`objc_autoreleasePoolPush(void)`](#objc_autoreleasepoolpushvoid)
     - [`objc_autoreleasePoolPop(void *ctxt)`](#objc_autoreleasepoolpopvoid-ctxt)
     - [`objc_autorelease(id obj)`](#objc_autoreleaseid-obj)
+    - [objc_autoreleaseReturnValue](#objc_autoreleasereturnvalue)
+  - [对 autorelease 的优化](#对-autorelease-的优化)
   - [参考](#参考)
 
 ## 简介
@@ -1323,6 +1325,54 @@ if (AutoreleasePoolPage *page = coldPage()) {
 - ~~如果某个 `NSTread` 子线程是常驻子线程，却没有使用 `@autoreleasepool` 包裹，那么 `autorelease` 对象会因为没有释放而占用大量的内存，造成内存泄漏。~~（需要再研究一下 AFN2 的常驻线程）
 
 因此常驻子线程的~~回调方法~~一定要使用 `@autoreleasepool` 包裹，以保障每次执行完回调后，产生的 `autorelease` 对象能得到及时释放。
+
+### objc_autoreleaseReturnValue
+
+## 对 autorelease 的优化
+
+`SUPPORT_RETURN_AUTORELEASE`
+
+Fast handling of return through Cocoa's `+0` autoreleasing convention.
+
+The *caller* and *callee* cooperate to keep the returned object out of the autorelease pool and eliminate redundant `retain`/`release` pairs.
+
+An optimized *callee* looks at the *caller*'s instructions following the return. If the *caller*'s instructions are also optimized then the *callee* **skips all retain count operations**: no `autorelease`, no `retain`/`autorelease`.
+
+Instead it saves the result's current retain count (`+0` or `+1`) in **thread-local storage**. If the *caller* does not look optimized then the *callee* performs `autorelease` or `retain`/`autorelease` as usual.
+
+An optimized caller looks at the **thread-local storage**. If the result is set then it performs any `retain` or `release` needed to change the result from the retain count left by the *callee* to the retain count desired by the caller. Otherwise the caller assumes the result is currently at +0 from an unoptimized *callee* and performs any `retain` needed for that case.
+
+- There are two optimized *callees*:
+  - `objc_autoreleaseReturnValue`: result is currently `+1`. The unoptimized path `autoreleases` it.
+`objc_retainAutoreleaseReturnValue`: result is currently `+0`. The unoptimized path `retains` and `autoreleases` it.
+- There are two optimized *callers*:
+  - `objc_retainAutoreleasedReturnValue`: caller wants the value at `+1`. The unoptimized path retains it.
+  - `objc_unsafeClaimAutoreleasedReturnValue`: caller wants the value at `+0` unsafely. The unoptimized path does nothing.
+
+Example:
+
+```objectivec
+Callee:
+    // compute ret at +1
+    return objc_autoreleaseReturnValue(ret);
+
+Caller:
+    ret = callee();
+    ret = objc_retainAutoreleasedReturnValue(ret);
+    // use ret at +1 here
+```
+
+*Callee* sees the optimized *caller*, sets **TLS**, and leaves the result at **+1**.
+*Caller* sees the **TLS**, clears it, and accepts the result at `+1` as-is.
+
+The *callee*'s recognition of the optimized caller is architecture-dependent.
+
+- x86_64: Callee looks for `mov rax, rdi` followed by a call or jump instruction to objc_retainAutoreleasedReturnValue or objc_unsafeClaimAutoreleasedReturnValue.
+- i386:  Callee looks for a magic nop `movl %ebp, %ebp` (frame pointer register)
+- armv7: Callee looks for a magic nop `mov r7, r7` (frame pointer register).
+- arm64: Callee looks for a magic nop `mov x29, x29` (frame pointer register).
+
+*Tagged pointer objects* do participate in the optimized return scheme, because it saves message sends. They are not entered in the autorelease pool in the unoptimized case.
 
 ## 参考
 
