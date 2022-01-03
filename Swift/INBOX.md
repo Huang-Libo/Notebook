@@ -18,3 +18,11 @@
   - `Self.Output`
 - SwiftUI
   - `@State`
+  - bind : A binding controls the storage for a value, so you can pass data around to different views that need to read or write it.
+
+### `@EnvironmentObject` & `environmentObject(_:)`
+
+- The `@EnvironmentObject` attribute.
+  - You use this attribute in views that are lower down in the view hierarchy to receive data from views that are higher up.
+- The `environmentObject(_:)` modifier.
+  - You apply this modifier so that views further down in the view hierarchy can read data objects passed down through the environment.
