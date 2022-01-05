@@ -11,6 +11,7 @@ Carthage builds your dependencies and provides you with **binary frameworks**, b
       - [Building platform-specific framework bundles (default for Xcode 11 and below)](#building-platform-specific-framework-bundles-default-for-xcode-11-and-below)
       - [For all platforms](#for-all-platforms)
       - [(Optionally) Add build phase to warn about outdated dependencies](#optionally-add-build-phase-to-warn-about-outdated-dependencies)
+      - [Swift binary framework download compatibility](#swift-binary-framework-download-compatibility)
   - [Differences between Carthage and CocoaPods](#differences-between-carthage-and-cocoapods)
 
 ## Quick Start
@@ -66,6 +67,22 @@ On your application targets’ `Build Phases` settings tab, click the `+` icon a
 
 ```sh
 /usr/local/bin/carthage outdated --xcode-warnings 2>/dev/null
+```
+
+#### Swift binary framework download compatibility
+
+Carthage will check to make sure that downloaded Swift (and mixed Objective-C/Swift) frameworks were built with the same version of Swift that is in use locally.
+
+- If there is a version mismatch, Carthage will proceed to build the framework from source.
+- If the framework cannot be built from source, Carthage will fail.
+
+Because Carthage uses the output of `xcrun swift --version` to determine the local Swift version, make sure to run Carthage commands with the Swift toolchain that you intend to use.
+
+For many use cases, nothing additional is needed.
+However, for example, if you are building a Swift 2.3 project using Xcode 8.x, one approach to specifying your default `swift` for `carthage bootstrap` is to use the following command:
+
+```shell
+TOOLCHAINS=com.apple.dt.toolchain.Swift_2_3 carthage bootstrap
 ```
 
 ## Differences between Carthage and CocoaPods
