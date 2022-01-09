@@ -56,15 +56,17 @@ Carthage builds your dependencies and provides you with **binary frameworks**, b
     - [Version Files](#version-files)
       - [File location and format](#file-location-and-format)
       - [Caching builds with version files](#caching-builds-with-version-files)
+  - [CarthageKit](#carthagekit)
+  - [Differences between Carthage and CocoaPods](#differences-between-carthage-and-cocoapods)
   - [Known issues](#known-issues)
     - [DWARFs symbol problem](#dwarfs-symbol-problem)
-    - [Using Carthage with Xcode 12](#using-carthage-with-xcode-12)
+    - [Using Carthage with Xcode 12/13](#using-carthage-with-xcode-1213)
+      - [Scenario](#scenario)
       - [Why Carthage compilation fails](#why-carthage-compilation-fails)
       - [Workaround](#workaround)
       - [How to make it work](#how-to-make-it-work)
-      - [Workaround script](#workaround-script)
-  - [CarthageKit](#carthagekit)
-  - [Differences between Carthage and CocoaPods](#differences-between-carthage-and-cocoapods)
+      - [`carthage.sh`'s artifacts](#carthageshs-artifacts)
+      - [Better solution: Use xcframeworks](#better-solution-use-xcframeworks)
 
 ## Quick Start
 
@@ -658,81 +660,6 @@ For a given *platform*, if the commitish matches and the *recorded hash* of each
 
 **Version files will be ignored and all dependencies will be built unless `--cache-builds` is provided as a build option.** Version files may also be manually deleted in order to clear Carthage’s cache data. Version files are always produced after a project has been built.
 
-## Known issues
-
-### DWARFs symbol problem
-
-Pre-built framework cannot be debugged using step execution on other machine than on which the framework was built. Simply `carthage bootstrap/build/update --no-use-binaries` should fix this, but for muore automated workaround, see [#924](https://github.com/Carthage/Carthage/isses/924). Dupe [rdar://23551273](http://www.openradar.me/23551273) if you want Apple to fix the root cause of this problem.
-
-- [#2137](https://github.com/Carthage/Carthage/issues/2137)
-- [stackoverflow: Debugging (owned) Framework when using Carthage](https://stackoverflow.com/questions/38862464/debugging-owned-framework-when-using-carthage)
-
-### Using Carthage with Xcode 12
-
-As Carthage doesn't work out of the box with Xcode 12, this document will guide through a workaround that works for most cases.
-
-#### Why Carthage compilation fails
-
-Well, shortly, Carthage builds *fat frameworks*, which means that the framework contains binaries for all supported architectures.
-
-Until *Apple Silicon* was introduced it all worked just fine, but now **there is a conflict as there are duplicate architectures (arm64 for devices and arm64 for simulator)**.
-This means that Carthage cannot link architecture specific frameworks to a single fat framework.
-
-You can find more info in [respective issue #3019](https://github.com/Carthage/Carthage/issues/3019).
-
-#### Workaround
-
-> Perhaps a better solution is to support **xcframework** instead of using `lipo`...
-
-As a workaround you can invoke carthage **using this script, it will remove the arm64 architecture for simulator**, so the above mentioned conflict doesn't exist.
-
-#### How to make it work
-
-1. place this script somewhere to your `PATH` (I personally have it in `/usr/local/bin/carthage.sh`)
-2. make it the script executable, so open your _Terminal_ and run
-
-    ```shell
-    chmod +x /usr/local/bin/carthage.sh
-    ```
-
-3. from now on instead of running e.g.
-
-   ```shell
-   carthage bootstrap --platform iOS --cache-builds
-   ```
-
-   you need to run our script
-
-   ```shell
-   carthage.sh bootstrap --platform iOS --cache-builds
-   ```
-
-#### Workaround script
-
-This script has a known limitation - **it will remove arm64 simulator architecture from compiled framework, so frameworks compiled using it cannot be used on Macs running Apple Silicon.**
-
-```bash
-### carthage.sh
-### Usage example: ./carthage.sh build --platform iOS
-
-set -euo pipefail
-
-xcconfig=$(mktemp /tmp/static.xcconfig.XXXXXX)
-trap 'rm -f "$xcconfig"' INT TERM HUP EXIT
-
-### For Xcode 12 make sure EXCLUDED_ARCHS is set to arm architectures otherwise
-### the build will fail on lipo due to duplicate architectures.
-
-CURRENT_XCODE_VERSION=$(xcodebuild -version | grep "Build version" | cut -d' ' -f3)
-echo "EXCLUDED_ARCHS__EFFECTIVE_PLATFORM_SUFFIX_simulator__NATIVE_ARCH_64_BIT_x86_64__XCODE_1200__BUILD_$CURRENT_XCODE_VERSION = arm64 arm64e armv7 armv7s armv6 armv8" >> $xcconfig
-
-echo 'EXCLUDED_ARCHS__EFFECTIVE_PLATFORM_SUFFIX_simulator__NATIVE_ARCH_64_BIT_x86_64__XCODE_1200 = $(EXCLUDED_ARCHS__EFFECTIVE_PLATFORM_SUFFIX_simulator__NATIVE_ARCH_64_BIT_x86_64__XCODE_1200__BUILD_$(XCODE_PRODUCT_BUILD_VERSION))' >> $xcconfig
-echo 'EXCLUDED_ARCHS = $(inherited) $(EXCLUDED_ARCHS__EFFECTIVE_PLATFORM_SUFFIX_$(EFFECTIVE_PLATFORM_SUFFIX)__NATIVE_ARCH_64_BIT_$(NATIVE_ARCH_64_BIT)__XCODE_$(XCODE_VERSION_MAJOR))' >> $xcconfig
-
-export XCODE_XCCONFIG_FILE="$xcconfig"
-carthage "$@"
-```
-
 ## CarthageKit
 
 Most of the functionality of the `carthage` command line tool is actually encapsulated in a framework named CarthageKit.
@@ -758,3 +685,190 @@ By contrast, Carthage has been created as a *decentralized* dependency manager. 
 - Carthage uses `xcodebuild` to build dependencies, instead of integrating them into a single workspace, it doesn’t have a similar specification file but your dependencies must include their own Xcode project that describes how to build their products.
 
 Ultimately, we created Carthage because we wanted the **simplest** tool possible, a dependency manager that gets the job done without taking over the responsibility of Xcode, and without creating extra work for framework authors. **CocoaPods offers many amazing features that Carthage will never have, at the expense of additional complexity.**
+
+## Known issues
+
+### DWARFs symbol problem
+
+Pre-built framework cannot be debugged using step execution on other machine than on which the framework was built. Simply `carthage bootstrap/build/update --no-use-binaries` should fix this, but for muore automated workaround, see [#924](https://github.com/Carthage/Carthage/isses/924). Dupe [rdar://23551273](http://www.openradar.me/23551273) if you want Apple to fix the root cause of this problem.
+
+- [#2137](https://github.com/Carthage/Carthage/issues/2137)
+- [stackoverflow: Debugging (owned) Framework when using Carthage](https://stackoverflow.com/questions/38862464/debugging-owned-framework-when-using-carthage)
+
+### Using Carthage with Xcode 12/13
+
+As Carthage doesn't work out of the box with Xcode 12, this document will guide through a workaround that works for most cases.
+
+#### Scenario
+
+Use *Xcode 13.2* :
+
+```sh
+carthage update --platform iOS
+```
+
+Error Info:
+
+```console
+A shell task 
+(
+/usr/bin/xcrun lipo
+-create 
+org.carthage.CarthageKit/Alamofire/5.5.0/Build/Intermediates.noindex/ArchiveIntermediates/Alamofire\ iOS/IntermediateBuildFilesPath/UninstalledProducts/iphoneos/Alamofire.framework/Alamofire 
+org.carthage.CarthageKit/Alamofire/5.5.0/Build/Products/Release-iphonesimulator/Alamofire.framework/Alamofire
+-output
+Alamofire-Carthage-Demo/Carthage/Build/iOS/Alamofire.framework/Alamofire
+) 
+failed with exit code 1:
+
+lipo:
+org.carthage.CarthageKit/Alamofire/5.5.0/Build/Intermediates.noindex/ArchiveIntermediates/Alamofire iOS/IntermediateBuildFilesPath/UninstalledProducts/iphoneos/Alamofire.framework/Alamofire
+and
+org.carthage.CarthageKit/Alamofire/5.5.0/Build/Products/Release-iphonesimulator/Alamofire.framework/Alamofire
+
+have the same architectures (arm64) and can't be in the same fat output file
+
+Building universal frameworks with common architectures is not possible.
+The device and simulator slices for "Alamofire" both build for: arm64
+Rebuild with --use-xcframeworks to create an xcframework bundle instead.
+```
+
+#### Why Carthage compilation fails
+
+Well, shortly, Carthage builds *fat frameworks*, which means that the framework contains binaries for all supported architectures.
+
+Until *Apple Silicon* was introduced it all worked just fine, but now **there is a conflict as there are duplicate architectures (arm64 for devices and arm64 for simulator)**.
+This means that Carthage cannot link architecture specific frameworks to a single fat framework.
+
+You can find more info in [respective issue #3019](https://github.com/Carthage/Carthage/issues/3019).
+
+#### Workaround
+
+> Tips: [A better solution](#better-solution-use-xcframeworks) is to support **xcframework** instead of using `lipo` :
+>  
+> `carthage update --use-xcframeworks --platform iOS`
+
+As a workaround you can invoke carthage **using this script, it will remove the arm64 architecture for simulator**, so the above mentioned conflict doesn't exist.
+
+#### How to make it work
+
+1. place this script somewhere to your `PATH` (I personally have it in `/usr/local/bin/carthage.sh`)
+
+    > This script has a known limitation - **it will remove arm64 simulator architecture from compiled framework, so frameworks compiled using it cannot be used on Macs running Apple Silicon.**
+
+    `carthage.sh` ([#3201, Update for Xocde 13](https://github.com/Carthage/Carthage/issues/3201)):
+
+    ```bash
+    ### carthage.sh
+    ### Usage example: ./carthage.sh build --platform iOS
+
+    set -euo pipefail
+ 
+    xcconfig=$(mktemp /tmp/static.xcconfig.XXXXXX)
+    trap 'rm -f "$xcconfig"' INT TERM HUP EXIT
+    
+    # For Xcode 12 make sure EXCLUDED_ARCHS is set to arm architectures otherwise
+    # the build will fail on lipo due to duplicate architectures.
+    
+    CURRENT_XCODE_VERSION="$(xcodebuild -version | grep "Xcode" | cut -d' ' -f2 | cut -d'.' -f1)00"
+    CURRENT_XCODE_BUILD=$(xcodebuild -version | grep "Build version" | cut -d' ' -f3)
+
+    echo "EXCLUDED_ARCHS__EFFECTIVE_PLATFORM_SUFFIX_simulator__NATIVE_ARCH_64_BIT_x86_64__XCODE_${CURRENT_XCODE_VERSION}__BUILD_${CURRENT_XCODE_BUILD} = arm64 arm64e armv7 armv7s armv6 armv8" >> $xcconfig
+    
+    echo 'EXCLUDED_ARCHS__EFFECTIVE_PLATFORM_SUFFIX_simulator__NATIVE_ARCH_64_BIT_x86_64__XCODE_'${CURRENT_XCODE_VERSION}' = $(EXCLUDED_ARCHS__EFFECTIVE_PLATFORM_SUFFIX_simulator__NATIVE_ARCH_64_BIT_x86_64__XCODE_$(XCODE_VERSION_MAJOR)__BUILD_$(XCODE_PRODUCT_BUILD_VERSION))' >> $xcconfig
+    echo 'EXCLUDED_ARCHS = $(inherited) $(EXCLUDED_ARCHS__EFFECTIVE_PLATFORM_SUFFIX_$(EFFECTIVE_PLATFORM_SUFFIX)__NATIVE_ARCH_64_BIT_$(NATIVE_ARCH_64_BIT)__XCODE_$(XCODE_VERSION_MAJOR))' >> $xcconfig
+
+    export XCODE_XCCONFIG_FILE="$xcconfig"
+    carthage "$@"
+    ```
+
+2. make it the script executable, so open your *Terminal* and run
+
+    ```shell
+    chmod +x /usr/local/bin/carthage.sh
+    ```
+
+3. from now on instead of running e.g.
+
+   ```shell
+   carthage bootstrap --platform iOS --cache-builds
+   ```
+
+   you need to run our script
+
+   ```shell
+   carthage.sh bootstrap --platform iOS --cache-builds
+   ```
+
+> Tips: If you still encounter errors, delete the `Carthage/Build` folder and run again.
+
+#### `carthage.sh`'s artifacts
+
+```sh
+carthage.sh update --platform iOS
+```
+
+Check the type of binary files generated:
+
+```sh
+file Alamofire
+```
+
+It's a fat framework (**Without** *arm64 simulator*):
+
+```console
+Alamofire: Mach-O universal binary with 4 architectures: [arm_v7:Mach-O dynamically linked shared library arm_v7] [x86_64] [i386] [arm64]
+Alamofire (for architecture armv7):	Mach-O dynamically linked shared library arm_v7
+Alamofire (for architecture x86_64):	Mach-O 64-bit dynamically linked shared library x86_64
+Alamofire (for architecture i386):	Mach-O dynamically linked shared library i386
+Alamofire (for architecture arm64):	Mach-O 64-bit dynamically linked shared library arm64
+```
+
+#### Better solution: Use xcframeworks
+
+xcframeworks is introduced in *iOS 13* .
+
+```sh
+carthage update --use-xcframeworks --platform iOS
+```
+
+Output:
+
+```console
+*** Cloning Alamofire
+*** Checking out Alamofire at "5.5.0"
+*** No cache found for Alamofire, building with all downstream dependencies
+*** xcodebuild output can be found in /var/folders/v9/p8g78lvd1hnd0b_xgdlmg6kr0000gn/T/carthage-xcodebuild.1HILvk.log
+*** Skipped downloading Alamofire binary due to the error:
+	"API rate limit exceeded for 116.206.103.246. (But here's the good news: Authenticated requests get a higher rate limit. Check out the documentation for more details.)"
+*** Building scheme "Alamofire iOS" in Alamofire.xcworkspace
+```
+
+`Alamofire.xcframework`'s architecture：
+
+```plaintext
+- Alamofire.xcframework
+  - ios-arm64_i386_x86_64-simulator
+    - Alamofire
+  - ios-arm64_armv7
+    - Alamofire
+```
+
+*Alamofire binary's* file type in `ios-arm64_i386_x86_64-simulator` :
+
+```sh
+❯ file Alamofire
+Alamofire: Mach-O universal binary with 3 architectures: [x86_64:Mach-O 64-bit dynamically linked shared library x86_64] [i386] [arm64]
+Alamofire (for architecture x86_64):	Mach-O 64-bit dynamically linked shared library x86_64
+Alamofire (for architecture i386):	Mach-O dynamically linked shared library i386
+Alamofire (for architecture arm64):	Mach-O 64-bit dynamically linked shared library arm64
+```
+
+*Alamofire binary's* file type in `ios-arm64_armv7` :
+
+```sh
+❯ file Alamofire
+Alamofire: Mach-O universal binary with 2 architectures: [arm_v7:Mach-O dynamically linked shared library arm_v7] [arm64]
+Alamofire (for architecture armv7):	Mach-O dynamically linked shared library arm_v7
+Alamofire (for architecture arm64):	Mach-O 64-bit dynamically linked shared library arm64
+```
