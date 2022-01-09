@@ -828,6 +828,8 @@ Alamofire (for architecture arm64):	Mach-O 64-bit dynamically linked shared libr
 
 xcframeworks is introduced in *iOS 13* .
 
+This is an example for installing Alamofire with carthage, using xcframeworks:
+
 ```sh
 carthage update --use-xcframeworks --platform iOS
 ```
@@ -849,9 +851,17 @@ Output:
 ```plaintext
 - Alamofire.xcframework
   - ios-arm64_i386_x86_64-simulator
-    - Alamofire
+    - Alamofire.framework
+      - Headers
+      - Modules
+        - Alamofire.swiftmodule
+      - Alamofire
   - ios-arm64_armv7
-    - Alamofire
+    - Alamofire.framework
+      - Headers
+      - Modules
+        - Alamofire.swiftmodule
+      - Alamofire
 ```
 
 *Alamofire binary's* file type in `ios-arm64_i386_x86_64-simulator` :
