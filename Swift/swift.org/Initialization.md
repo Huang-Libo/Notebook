@@ -15,6 +15,8 @@
     - [Optional Property Types](#optional-property-types)
     - [Assigning Constant Properties During Initialization](#assigning-constant-properties-during-initialization)
   - [Default Initializers](#default-initializers)
+    - [Memberwise Initializers for Structure Types](#memberwise-initializers-for-structure-types)
+  - [Initializer Delegation for Value Types](#initializer-delegation-for-value-types)
 
 ## Setting Initial Values for Stored Properties
 
@@ -198,5 +200,47 @@ beetsQuestion.response = "I also like beets. (But not with cheese.)"
 ```
 
 ## Default Initializers
+
+Swift provides a *default initializer* for any *structure* or *class* that provides default values for all of its properties and doesn’t provide at least one initializer itself. The default initializer simply creates a new instance with all of its properties set to their default values.
+
+This example defines a class called *ShoppingListItem*, which encapsulates the *name*, *quantity*, and *purchase* state of an item in a shopping list:
+
+```swift
+class ShoppingListItem {
+    var name: String?
+    var quantity = 1
+    var purchased = false
+}
+var item = ShoppingListItem()
+```
+
+Because all properties of the `ShoppingListItem` class have default values, and because it’s a *base class* with *no* superclass, `ShoppingListItem` automatically gains a default initializer implementation that creates a new instance with all of its properties set to their default values.
+
+### Memberwise Initializers for Structure Types
+
+Structure types automatically receive a *memberwise initializer* if they don’t define any of their own custom initializers. Unlike a *default initializer*, the structure receives a memberwise initializer even if it has stored properties that don’t have default values.
+
+The `Size` structure automatically receives an `init(width:height:)` memberwise initializer, which you can use to initialize a new `Size` instance:
+
+```swift
+struct Size {
+    var width = 0.0, height = 0.0
+}
+let twoByTwo = Size(width: 2.0, height: 2.0)
+```
+
+When you call a *memberwise initializer*, you can omit values for any properties that have default values. In the example above, the Size structure has a default value for both its `height` and `width` properties. You can omit either property or both properties, and the initializer uses the default value for anything you omit. For example:
+
+```swift
+let zeroByTwo = Size(height: 2.0)
+print(zeroByTwo.width, zeroByTwo.height)
+// Prints "0.0 2.0"
+
+let zeroByZero = Size()
+print(zeroByZero.width, zeroByZero.height)
+// Prints "0.0 0.0"
+```
+
+## Initializer Delegation for Value Types
 
 
