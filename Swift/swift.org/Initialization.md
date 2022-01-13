@@ -11,6 +11,7 @@
   - [Customizing Initialization](#customizing-initialization)
     - [Initialization Parameters](#initialization-parameters)
     - [Parameter Names and Argument Labels](#parameter-names-and-argument-labels)
+    - [Initializer Parameters Without Argument Labels](#initializer-parameters-without-argument-labels)
 
 ## Setting Initial Values for Stored Properties
 
@@ -89,5 +90,39 @@ let freezingPointOfWater = Celsius(fromKelvin: 273.15)
 ```
 
 ### Parameter Names and Argument Labels
+
+As with function and method parameters, initialization parameters can have both a *parameter name* for use within the initializer’s body and an *argument label* for use when calling the initializer.
+
+Swift provides an automatic *argument label* for every parameter in an initializer if you don’t provide one.
+
+The following example defines a structure called `Color`, with three constant properties called `red`, `green`, and `blue`. These properties store a value between `0.0` and `1.0` to indicate the amount of red, green, and blue in the color.
+
+```swift
+struct Color {
+    let red, green, blue: Double
+    init(red: Double, green: Double, blue: Double) {
+        self.red   = red
+        self.green = green
+        self.blue  = blue
+    }
+    init(white: Double) {
+        red   = white
+        green = white
+        blue  = white
+    }
+}
+```
+
+Note that it isn’t possible to call these initializers without using *argument labels*. Argument labels must **always** be used in an initializer if they’re defined, and omitting them is a compile-time error:
+
+```swift
+let magenta = Color(red: 1.0, green: 0.0, blue: 1.0)
+let halfGray = Color(white: 0.5)
+
+// this reports a compile-time error - argument labels are required
+let veryGreen = Color(0.0, 1.0, 0.0)
+```
+
+### Initializer Parameters Without Argument Labels
 
 
