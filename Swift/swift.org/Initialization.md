@@ -12,6 +12,9 @@
     - [Initialization Parameters](#initialization-parameters)
     - [Parameter Names and Argument Labels](#parameter-names-and-argument-labels)
     - [Initializer Parameters Without Argument Labels](#initializer-parameters-without-argument-labels)
+    - [Optional Property Types](#optional-property-types)
+    - [Assigning Constant Properties During Initialization](#assigning-constant-properties-during-initialization)
+  - [Default Initializers](#default-initializers)
 
 ## Setting Initial Values for Stored Properties
 
@@ -124,5 +127,76 @@ let veryGreen = Color(0.0, 1.0, 0.0)
 ```
 
 ### Initializer Parameters Without Argument Labels
+
+If you don’t want to use an *argument label* for an initializer parameter, write an *underscore* (`_`) instead of an explicit argument label for that parameter to override the default behavior.
+
+Here’s an expanded version of the `Celsius` example from [Initialization Parameters](#initialization-parameters) above, with an additional initializer to create a new Celsius instance from a Double value that’s already in the Celsius scale:
+
+```swift
+struct Celsius {
+    var temperatureInCelsius: Double
+    init(fromFahrenheit fahrenheit: Double) {
+        temperatureInCelsius = (fahrenheit - 32.0) / 1.8
+    }
+    init(fromKelvin kelvin: Double) {
+        temperatureInCelsius = kelvin - 273.15
+    }
+    init(_ celsius: Double) {
+        temperatureInCelsius = celsius
+    }
+}
+// bodyTemperature.temperatureInCelsius is 37.0
+let bodyTemperature = Celsius(37.0)
+```
+
+### Optional Property Types
+
+Properties of optional type are automatically initialized with a value of `nil`, indicating that the property is deliberately intended to have “no value yet” during initialization.
+
+The following example defines a class called `SurveyQuestion`, with an optional String property called response:
+
+```swift
+class SurveyQuestion {
+    var text: String
+    var response: String?
+    init(text: String) {
+        self.text = text
+    }
+    func ask() {
+        print(text)
+    }
+}
+let cheeseQuestion = SurveyQuestion(text: "Do you like cheese?")
+// Prints "Do you like cheese?"
+cheeseQuestion.ask()
+cheeseQuestion.response = "Yes, I do like cheese."
+```
+
+### Assigning Constant Properties During Initialization
+
+You can assign a value to a *constant property* at any point during initialization, Once a constant property is assigned a value, it can’t be further modified.
+
+> **NOTE**: For `class` instances, a constant property can be modified during initialization only by the class that introduces it. **It can’t be modified by a subclass.**
+
+Even though the `text` property is now a constant, it can still be set within the class’s initializer:
+
+```swift
+class SurveyQuestion {
+    let text: String
+    var response: String?
+    init(text: String) {
+        self.text = text
+    }
+    func ask() {
+        print(text)
+    }
+}
+let beetsQuestion = SurveyQuestion(text: "How about beets?")
+// Prints "How about beets?"
+beetsQuestion.ask()
+beetsQuestion.response = "I also like beets. (But not with cheese.)"
+```
+
+## Default Initializers
 
 
