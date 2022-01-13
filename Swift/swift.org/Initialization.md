@@ -17,6 +17,7 @@
   - [Default Initializers](#default-initializers)
     - [Memberwise Initializers for Structure Types](#memberwise-initializers-for-structure-types)
   - [Initializer Delegation for Value Types](#initializer-delegation-for-value-types)
+  - [Class Inheritance and Initialization](#class-inheritance-and-initialization)
 
 ## Setting Initial Values for Stored Properties
 
@@ -242,5 +243,79 @@ print(zeroByZero.width, zeroByZero.height)
 ```
 
 ## Initializer Delegation for Value Types
+
+Initializers can call other initializers to perform part of an instance’s initialization. This process, known as *initializer delegation*, avoids duplicating code across multiple initializers.
+
+The rules for how *initializer delegation* works, and for what forms of delegation are allowed, are different for *value types* and *class types*.
+
+- *Value types* (structures and enumerations) don’t support inheritance, and so their initializer delegation process is relatively simple, because they can only delegate to another initializer that they provide themselves.
+- Classes, however, can inherit from other classes. This means that classes have additional responsibilities for ensuring that all stored properties they inherit are assigned a suitable value during initialization.
+
+Note that if you define a *custom initializer* for a value type, you will no longer have access to the *default initializer* (or the *memberwise initializer*, if it’s a *structure*) for that type. This constraint prevents a situation in which additional essential setup provided in a more complex initializer is accidentally circumvented by someone using one of the automatic initializers.
+
+> **NOTE**: If you want your custom value type to be initializable with the *default initializer* and *memberwise initializer*, and also with your own *custom initializers*, write your custom initializers in an `extension` rather than as part of the value type’s original implementation.
+
+The following example defines a custom `Rect` structure to represent a geometric rectangle. The example requires two supporting structures called `Size` and `Point`, both of which provide default values of `0.0` for all of their properties:
+
+```swift
+struct Size {
+    var width = 0.0, height = 0.0
+}
+struct Point {
+    var x = 0.0, y = 0.0
+}
+```
+
+You can initialize the Rect structure below in one of three ways:
+
+- by using its default zero-initialized *origin* and *size* property values
+- by providing a specific *origin point* and *size*
+- by providing a specific *center point* and *size*.
+
+These initialization options are represented by three custom initializers that are part of the Rect structure’s definition:
+
+```swift
+struct Rect {
+    var origin = Point()
+    var size = Size()
+    init() {}
+    init(origin: Point, size: Size) {
+        self.origin = origin
+        self.size = size
+    }
+    init(center: Point, size: Size) {
+        let originX = center.x - (size.width / 2)
+        let originY = center.y - (size.height / 2)
+        self.init(origin: Point(x: originX, y: originY), size: size)
+    }
+}
+```
+
+The first `Rect` initializer, `init()`, is functionally the same as the default initializer that the structure would have received if it didn’t have its own custom initializers.
+
+```swift
+// basicRect's origin is (0.0, 0.0) and its size is (0.0, 0.0)
+let basicRect = Rect()
+```
+
+The second `Rect` initializer, `init(origin:size:)`, is functionally the same as the *memberwise initializer* that the structure would have received if it didn’t have its own custom initializers.
+
+```swift
+// originRect's origin is (2.0, 2.0) and its size is (5.0, 5.0)
+let originRect = Rect(origin: Point(x: 2.0, y: 2.0),
+                      size: Size(width: 5.0, height: 5.0))
+```
+
+The third `Rect` initializer, `init(center:size:)` starts by calculating an appropriate *origin point* based on a *center point* and a *size* value. It then calls (or delegates) to the *init(origin:size:)* initializer, which stores the new *origin* and *size* values in the appropriate properties:
+
+```swift
+// centerRect's origin is (2.5, 2.5) and its size is (3.0, 3.0)
+let centerRect = Rect(center: Point(x: 4.0, y: 4.0),
+                      size: Size(width: 3.0, height: 3.0))
+```
+
+> **NOTE**: For an alternative way to write this example without defining the `init()` and `init(origin:size:)` initializers yourself, see [Extensions](https://docs.swift.org/swift-book/LanguageGuide/Extensions.html).
+
+## Class Inheritance and Initialization
 
 
