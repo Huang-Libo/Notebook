@@ -510,4 +510,56 @@ These rules apply even if your subclass adds further *convenience initializers*.
 
 ### Designated and Convenience Initializers in Action
 
+This example defines a hierarchy of three classes called `Food`, `RecipeIngredient`, and `ShoppingListItem`, and demonstrates how their initializers interact.
+
+The base class in the hierarchy is called `Food`, this class introduces a single `String` property called `name` and provides two initializers for creating `Food` instances:
+
+```swift
+class Food {
+    var name: String
+    init(name: String) {
+        self.name = name
+    }
+    convenience init() {
+        self.init(name: "[Unnamed]")
+    }
+}
+```
+
+The `Food` class doesn’t have a superclass, and so the `init(name: String)` initializer doesn’t need to call `super.init()` to complete its initialization.
+
+The figure below shows the initializer chain for the Food class:
+
+<img src="../../media/Swift/initializersExample01_2x.png" width="60%"/>
+
+```swift
+let namedMeat = Food(name: "Bacon")
+// namedMeat's name is "Bacon"
+let mysteryMeat = Food()
+// mysteryMeat's name is "[Unnamed]"
+```
+
+The second class in the hierarchy is a subclass of `Food` called `RecipeIngredient`. The `RecipeIngredient` class models an ingredient in a cooking recipe. It introduces an Int property called `quantity` (in addition to the `name` property it inherits from `Food`) and defines two initializers for creating `RecipeIngredient` instances:
+
+```swift
+class RecipeIngredient: Food {
+    var quantity: Int
+    init(name: String, quantity: Int) {
+        self.quantity = quantity
+        super.init(name: name)
+    }
+    override convenience init(name: String) {
+        self.init(name: name, quantity: 1)
+    }
+}
+```
+
+The figure below shows the initializer chain for the `RecipeIngredient` class:
+
+<img src="../../media/Swift/initializersExample02_2x.png" width="60%"/>
+
+This process satisfies *safety check 1* from [Two-Phase Initialization](#two-phase-initialization) above.
+
+The `init(name: String)` *convenience initializer* provided by `RecipeIngredient` takes the same parameters as the `init(name: String)` *designated initializer* from `Food`. Because this *convenience initializer* overrides a *designated initializer* from its superclass, it must be marked with the `override` modifier (as described in [Initializer Inheritance and Overriding](#initializer-inheritance-and-overriding).
+
 
