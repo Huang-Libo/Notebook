@@ -20,6 +20,8 @@
   - [Class Inheritance and Initialization](#class-inheritance-and-initialization)
     - [Designated Initializers and Convenience Initializers](#designated-initializers-and-convenience-initializers)
     - [Syntax for Designated and Convenience Initializers](#syntax-for-designated-and-convenience-initializers)
+    - [Initializer Delegation for Class Types](#initializer-delegation-for-class-types)
+    - [Two-Phase Initialization](#two-phase-initialization)
 
 ## Setting Initial Values for Stored Properties
 
@@ -333,5 +335,45 @@ Every class must have at least one designated initializer. In some cases, this r
 *Convenience initializers* are secondary, supporting initializers for a class. You can define a convenience initializer to call a *designated initializer* from the same class as the convenience initializer with some of the designated initializer’s parameters set to default values.
 
 ### Syntax for Designated and Convenience Initializers
+
+*Designated initializers* for classes are written in the same way as simple initializers for value types:
+
+```swift
+init() {
+    
+}
+```
+
+Convenience initializers are written in the same style, but with the convenience modifier placed before the init keyword, separated by a space:
+
+```swift
+convenience init() {
+    
+}
+```
+
+### Initializer Delegation for Class Types
+
+To simplify the relationships between designated and convenience initializers, Swift applies the following three rules for delegation calls between initializers:
+
+- **Rule 1**: A designated initializer must call a designated initializer from its immediate superclass.
+- **Rule 2**: A convenience initializer must call another initializer from the same class.
+- **Rule 3**: A convenience initializer must ultimately call a designated initializer.
+
+A simple way to remember this is:
+
+- Designated initializers must always delegate *up*.
+- Convenience initializers must always delegate *across*.
+
+These rules are illustrated in the figure below:
+
+<img src="../../media/Swift/initializerDelegation01_2x.png" width="60%"/>
+
+The figure below shows a more complex class hierarchy for four classes. It illustrates how the designated initializers in this hierarchy act as “*funnel*” points for class initialization, simplifying the interrelationships among classes in the chain:
+
+<img src="../../media/Swift/initializerDelegation02_2x.png" width="60%"/>
+
+### Two-Phase Initialization
+
 
 
