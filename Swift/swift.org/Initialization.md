@@ -22,6 +22,7 @@
     - [Syntax for Designated and Convenience Initializers](#syntax-for-designated-and-convenience-initializers)
     - [Initializer Delegation for Class Types](#initializer-delegation-for-class-types)
     - [Two-Phase Initialization](#two-phase-initialization)
+    - [Initializer Inheritance and Overriding](#initializer-inheritance-and-overriding)
 
 ## Setting Initial Values for Stored Properties
 
@@ -397,6 +398,28 @@ Here’s how two-phase initialization plays out, based on the four safety checks
 
 **Phase 1**
 
-- 
+- A designated or convenience initializer is called on a class.
+Memory for a new instance of that class is allocated. The memory isn’t yet initialized.
+- A designated initializer for that class confirms that all stored properties introduced by that class have a value. The memory for these stored properties is now initialized.
+- The designated initializer hands off to a superclass initializer to perform the same task for its own stored properties.
+- This continues up the class inheritance chain until the top of the chain is reached.
+- Once the top of the chain is reached, and the final class in the chain has ensured that all of its stored properties have a value, the instance’s memory is considered to be fully initialized, and phase 1 is complete.
 
 **Phase 2**
+
+- Working back down from the top of the chain, each designated initializer in the chain has the option to customize the instance further. Initializers are now able to access `self` and can modify its properties, call its instance methods, and so on.
+- Finally, any convenience initializers in the chain have the option to customize the instance and to work with `self`.
+
+Here’s how *phase 1* looks for an initialization call for a hypothetical subclass and superclass:
+
+<img src="../../media/Swift/twoPhaseInitialization01_2x.png" width="60%"/>
+
+As soon as all properties of the superclass have an initial value, its memory is considered fully initialized, and phase 1 is complete.
+
+Here’s how *phase 2* looks for the same initialization call:
+
+<img src="../../media/Swift/twoPhaseInitialization02_2x.png" width="60%"/>
+
+### Initializer Inheritance and Overriding
+
+
