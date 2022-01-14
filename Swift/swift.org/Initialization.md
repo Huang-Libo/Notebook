@@ -375,5 +375,28 @@ The figure below shows a more complex class hierarchy for four classes. It illus
 
 ### Two-Phase Initialization
 
+Class initialization in Swift is a two-phase process.
 
+1. In the first phase, each stored property is assigned an initial value by the class that introduced it.
+2. Once the initial state for every stored property has been determined, the second phase begins, and each class is given the opportunity to customize its stored properties further before the new instance is considered ready for use.
 
+> **NOTE**: Swift’s two-phase initialization process is similar to initialization in Objective-C. The main difference is that during phase 1, Objective-C assigns zero or null values (such as 0 or nil) to every property. Swift’s initialization flow is more flexible in that it lets you set custom initial values, and can cope with types for which 0 or nil isn’t a valid default value.
+
+The class instance isn’t fully valid *until* the first phase ends. Properties can only be accessed, and methods can only be called, once the class instance is known to be valid at the end of the first phase.
+
+Swift’s compiler performs four helpful safety-checks to make sure that two-phase initialization is completed without error:
+
+- **Safety check 1**: A *designated initializer* must ensure that all of the properties introduced by its class are initialized before it delegates *up* to a superclass initializer.
+- **Safety check 2**: A *designated initializer* must delegate up to a superclass initializer *before* assigning a value to an inherited property.
+  - If it doesn’t, the new value the designated initializer assigns will be overwritten by the superclass as part of its own initialization.
+- **Safety check 3**: A *convenience initializer* must delegate to another initializer *before* assigning a value to any property (including properties defined by the same class).
+  - If it doesn’t, the new value the convenience initializer assigns will be overwritten by its own class’s designated initializer.
+- **Safety check 4**: An initializer can’t call any instance methods, read the values of any instance properties, or refer to `self` as a value *until* after the first phase of initialization is complete.
+
+Here’s how two-phase initialization plays out, based on the four safety checks above:
+
+**Phase 1**
+
+- 
+
+**Phase 2**
