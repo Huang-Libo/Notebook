@@ -17,7 +17,89 @@ You can also use a *property wrapper* to reuse code in the getter and setter of 
 
 - [Properties](#properties)
   - [Stored Properties](#stored-properties)
+    - [Stored Properties of Constant Structure Instances](#stored-properties-of-constant-structure-instances)
+    - [Lazy Stored Properties](#lazy-stored-properties)
+    - [Stored Properties and Instance Variables](#stored-properties-and-instance-variables)
+  - [Computed Properties](#computed-properties)
 
 ## Stored Properties
+
+In its simplest form, a stored property is a constant (`var`) or variable (`let`) that’s stored as part of an instance of a particular *class* or *structure*.
+
+The example below defines a structure called `FixedLengthRange`, which describes a range of integers whose range `length` can’t be changed after it’s created:
+
+```swift
+struct FixedLengthRange {
+    var firstValue: Int
+    let length: Int
+}
+var rangeOfThreeItems = FixedLengthRange(firstValue: 0, length: 3)
+// the range represents integer values 0, 1, and 2
+rangeOfThreeItems.firstValue = 6
+// the range now represents integer values 6, 7, and 8
+```
+
+### Stored Properties of Constant Structure Instances
+
+If you create an instance of a structure and assign that instance to a constant, you can’t modify the instance’s properties, even if they were declared as variable properties:
+
+```swift
+// this range represents integer values 0, 1, 2, and 3
+let rangeOfFourItems = FixedLengthRange(firstValue: 0, length: 4)
+// this will report an error, even though firstValue is a variable property
+rangeOfFourItems.firstValue = 6
+
+```
+
+- This behavior is due to *structures* being *value types*. When an instance of a value type is marked as a constant, so are all of its properties.
+- The same isn’t true for cla*s*ses, which are *reference types*. If you assign an instance of a reference type to a constant, you can still change that instance’s variable properties.
+
+### Lazy Stored Properties
+
+A *lazy stored property* is a property whose initial value isn’t calculated until the first time it’s used. You indicate a lazy stored property by writing the `lazy` modifier before its declaration.
+
+> **NOTE**: You must *always* declare a `lazy` property as a variable (with the `var` keyword), because its initial value might not be retrieved until after instance initialization completes. Constant properties must always have a value *before* initialization completes, and therefore can’t be declared as `lazy`.
+
+The example below uses a lazy stored property to avoid unnecessary initialization of a complex class. This example defines two classes called `DataImporter` and `DataManager`, neither of which is shown in full:
+
+```swift
+class DataImporter {
+    /*
+    DataImporter is a class to import data from an external file.
+    The class is assumed to take a nontrivial amount of time to initialize.
+    */
+    var filename = "data.txt"
+    // the DataImporter class would provide data importing functionality here
+}
+
+class DataManager {
+    lazy var importer = DataImporter()
+    var data: [String] = []
+    // the DataManager class would provide data management functionality here
+}
+
+let manager = DataManager()
+manager.data.append("Some data")
+manager.data.append("Some more data")
+// the DataImporter instance for the importer property hasn't yet been created
+```
+
+Because it’s marked with the `lazy` modifier, the `DataImporter` instance for the `importer` property is only created when the `importer` property is first accessed, such as when its `filename` property is queried:
+
+```swift
+print(manager.importer.filename)
+// the DataImporter instance for the importer property has now been created
+// Prints "data.txt"
+```
+
+> **NOTE**: If a property marked with the `lazy` modifier is accessed by multiple threads simultaneously and the property hasn’t yet been initialized, there’s no guarantee that the property will be initialized only once.
+
+### Stored Properties and Instance Variables
+
+If you have experience with Objective-C, you may know that it provides two ways to store values and references as part of a class instance. In addition to properties, you can use instance variables as a backing store for the values stored in a property.
+
+Swift unifies these concepts into a single property declaration. A Swift property doesn’t have a corresponding instance variable, and the backing store for a property isn’t accessed directly.
+
+## Computed Properties
 
 
