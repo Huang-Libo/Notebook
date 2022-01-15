@@ -26,6 +26,7 @@ You can also use a *property wrapper* to reuse code in the getter and setter of 
     - [Read-Only Computed Properties](#read-only-computed-properties)
   - [Property Observers](#property-observers)
   - [Property Wrappers](#property-wrappers)
+    - [Setting Initial Values for Wrapped Properties](#setting-initial-values-for-wrapped-properties)
 
 ## Stored Properties
 
@@ -267,5 +268,68 @@ The `willSet` and `didSet` observers for `totalSteps` are called whenever the pr
 > **NOTE**: If you pass a property that has observers to a function as an *in-out* parameter, the `willSet` and `didSet` observers are always called. This is because of the copy-in copy-out memory model for *in-out* parameters: The value is always *written back* to the property at the end of the function. For a detailed discussion of the behavior of *in-out* parameters, see [LANGUAGE REFERENCE: In-Out Parameters](https://docs.swift.org/swift-book/ReferenceManual/Declarations.html#ID545).
 
 ## Property Wrappers
+
+A *property wrapper* adds a layer of separation between *code that manages how a property is stored* and the *code that defines a property*.
+
+For example, if you have properties that provide thread-safety checks or store their underlying data in a database, you have to write that code on every property. When you use a property wrapper, you write the management code once when you define the wrapper, and then reuse that management code by applying it to multiple properties.
+
+To define a property wrapper, you make a *structure*, *enumeration*, or *class* that defines a `wrappedValue` property.
+
+In the code below, the `TwelveOrLess` structure ensures that the value it wraps always contains a number less than or equal to `12`. If you ask it to store a larger number, it stores `12` instead.
+
+```swift
+@propertyWrapper
+struct TwelveOrLess {
+    private var number = 0
+    var wrappedValue: Int {
+        get { return number }
+        set { number = min(newValue, 12) }
+    }
+}
+```
+
+You apply a wrapper to a property by writing the wrapper’s name before the property as an attribute. Here’s a structure that stores a rectangle that uses the `TwelveOrLess` property wrapper to ensure its dimensions are always `12` or less:
+
+```swift
+struct SmallRectangle {
+    @TwelveOrLess var height: Int
+    @TwelveOrLess var width: Int
+}
+
+var rectangle = SmallRectangle()
+print(rectangle.height)
+// Prints "0"
+
+rectangle.height = 10
+print(rectangle.height)
+// Prints "10"
+
+rectangle.height = 24
+print(rectangle.height)
+// Prints "12"
+```
+
+When you apply a wrapper to a property, the compiler synthesizes code that provides storage for the wrapper and code that provides access to the property through the wrapper. (The property wrapper is responsible for storing the wrapped value, so there’s no synthesized code for that.)
+
+You could write code that uses the behavior of a property wrapper, without taking advantage of the special attribute syntax. For example, here’s a version of `SmallRectangle` from the previous code listing that wraps its properties in the `TwelveOrLess` structure explicitly, instead of writing `@TwelveOrLess` as an attribute:
+
+```swift
+struct SmallRectangle {
+    private var _height = TwelveOrLess()
+    private var _width = TwelveOrLess()
+    var height: Int {
+        get { return _height.wrappedValue }
+        set { _height.wrappedValue = newValue }
+    }
+    var width: Int {
+        get { return _width.wrappedValue }
+        set { _width.wrappedValue = newValue }
+    }
+}
+```
+
+The `_height` and `_width` properties store an instance of the property wrapper, `TwelveOrLess`. The getter and setter for height and width wrap access to the `wrappedValue` property.
+
+### Setting Initial Values for Wrapped Properties
 
 
