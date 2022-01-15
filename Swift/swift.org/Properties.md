@@ -27,6 +27,7 @@ You can also use a *property wrapper* to reuse code in the getter and setter of 
   - [Property Observers](#property-observers)
   - [Property Wrappers](#property-wrappers)
     - [Setting Initial Values for Wrapped Properties](#setting-initial-values-for-wrapped-properties)
+    - [Projecting a Value From a Property Wrapper](#projecting-a-value-from-a-property-wrapper)
 
 ## Stored Properties
 
@@ -331,5 +332,102 @@ struct SmallRectangle {
 The `_height` and `_width` properties store an instance of the property wrapper, `TwelveOrLess`. The getter and setter for height and width wrap access to the `wrappedValue` property.
 
 ### Setting Initial Values for Wrapped Properties
+
+To support setting an initial value or other customization, the property wrapper needs to add an initializer. Here’s an expanded version of `TwelveOrLess` called `SmallNumber` that defines initializers that set the wrapped and maximum value:
+
+```swift
+@propertyWrapper
+struct SmallNumber {
+    private var maximum: Int
+    private var number: Int
+
+    var wrappedValue: Int {
+        get { return number }
+        set { number = min(newValue, maximum) }
+    }
+
+    init() {
+        maximum = 12
+        number = 0
+    }
+    init(wrappedValue: Int) {
+        maximum = 12
+        number = min(wrappedValue, maximum)
+    }
+    init(wrappedValue: Int, maximum: Int) {
+        self.maximum = maximum
+        number = min(wrappedValue, maximum)
+    }
+}
+```
+
+When you apply a wrapper to a property and you don’t specify an initial value, Swift uses the init() initializer to set up the wrapper. For example:
+
+```swift
+struct ZeroRectangle {
+    @SmallNumber var height: Int
+    @SmallNumber var width: Int
+}
+
+var zeroRectangle = ZeroRectangle()
+print(zeroRectangle.height, zeroRectangle.width)
+// Prints "0 0"
+```
+
+`SmallNumber` also supports writing those initial values as part of declaring the property. When you specify an initial value for the property, Swift uses the `init(wrappedValue:)` initializer to set up the wrapper. For example:
+
+```swift
+struct UnitRectangle {
+    @SmallNumber var height: Int = 1
+    @SmallNumber var width: Int = 1
+}
+
+var unitRectangle = UnitRectangle()
+print(unitRectangle.height, unitRectangle.width)
+// Prints "1 1"
+```
+
+When you write `= 1` on a property with a wrapper, that’s translated into a call to the `init(wrappedValue:)` initializer.
+
+When you write arguments in parentheses after the custom attribute, Swift uses the initializer that accepts those arguments to set up the wrapper. For example, if you provide an initial value and a maximum value, Swift uses the `init(wrappedValue:maximum:)` initializer:
+
+```swift
+struct NarrowRectangle {
+    @SmallNumber(wrappedValue: 2, maximum: 5) var height: Int
+    @SmallNumber(wrappedValue: 3, maximum: 4) var width: Int
+}
+
+var narrowRectangle = NarrowRectangle()
+print(narrowRectangle.height, narrowRectangle.width)
+// Prints "2 3"
+
+narrowRectangle.height = 100
+narrowRectangle.width = 100
+print(narrowRectangle.height, narrowRectangle.width)
+// Prints "5 4"
+```
+
+This syntax is the most general way to use a property wrapper. You can provide whatever arguments you need to the attribute, and they’re passed to the initializer.
+
+When you include property wrapper arguments, you can also specify an initial value using assignment. Swift treats the assignment like a `wrappedValue` argument and uses the initializer that accepts the arguments you include. For example:
+
+```swift
+struct MixedRectangle {
+    @SmallNumber var height: Int = 1
+    @SmallNumber(maximum: 9) var width: Int = 2
+}
+
+var mixedRectangle = MixedRectangle()
+print(mixedRectangle.height)
+// Prints "1"
+
+mixedRectangle.height = 20
+print(mixedRectangle.height)
+// Prints "12"
+```
+
+The instance of `SmallNumber` that wraps `height` is created by calling `SmallNumber(wrappedValue: 1)`, which uses the default `maximum` value of `12`. The instance that wraps width is created by calling `SmallNumber(wrappedValue: 2, maximum: 9)`.
+
+### Projecting a Value From a Property Wrapper
 
 
