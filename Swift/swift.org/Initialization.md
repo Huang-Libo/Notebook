@@ -1,6 +1,8 @@
 # Initialization
 
-> Swift 5.5 , 2022/01/13
+> Version: *Swift 5.5*  
+> Source: [*swift-book: Initialization*](https://docs.swift.org/swift-book/LanguageGuide/Initialization.html)  
+> Digest Date: *January 13, 2022*  
 
 *Initialization* is the process of preparing an instance of a *class*, *structure*, or *enumeration* for use. Unlike Objective-C initializers, Swift initializers don’t return a value.
 
