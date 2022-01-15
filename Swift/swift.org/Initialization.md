@@ -27,6 +27,7 @@
     - [Initializer Inheritance and Overriding](#initializer-inheritance-and-overriding)
     - [Automatic Initializer Inheritance](#automatic-initializer-inheritance)
     - [Designated and Convenience Initializers in Action](#designated-and-convenience-initializers-in-action)
+  - [Failable Initializers](#failable-initializers)
 
 ## Setting Initial Values for Stored Properties
 
@@ -562,6 +563,55 @@ The figure below shows the initializer chain for the `RecipeIngredient` class:
 
 This process satisfies *safety check 1* from [Two-Phase Initialization](#two-phase-initialization) above.
 
-The `init(name: String)` *convenience initializer* provided by `RecipeIngredient` takes the same parameters as the `init(name: String)` *designated initializer* from `Food`. Because this *convenience initializer* overrides a *designated initializer* from its superclass, it must be marked with the `override` modifier (as described in [Initializer Inheritance and Overriding](#initializer-inheritance-and-overriding).
+The `init(name: String)` *convenience initializer* provided by `RecipeIngredient` takes the same parameters as the `init(name: String)` *designated initializer* from `Food`. Because this *convenience initializer* overrides a *designated initializer* from its superclass, it must be marked with the `override` modifier (as described in [Initializer Inheritance and Overriding](#initializer-inheritance-and-overriding)).
+
+`RecipeIngredient` has provided an implementation of all of its superclass’s *designated initializers*. Therefore, `RecipeIngredient` automatically inherits all of its superclass’s *convenience initializers* too.
+
+All three of these initializers can be used to create new RecipeIngredient instances:
+
+```swift
+let oneMysteryItem = RecipeIngredient()
+let oneBacon = RecipeIngredient(name: "Bacon")
+let sixEggs = RecipeIngredient(name: "Eggs", quantity: 6)
+```
+
+The third and final class in the hierarchy is a subclass of RecipeIngredient called `ShoppingListItem`.
+
+`ShoppingListItem` introduces a Boolean property called `purchased`, with a default value of `false`. `ShoppingListItem` also adds a computed `description` property, which provides a textual description of a `ShoppingListItem` instance:
+
+```swift
+class ShoppingListItem: RecipeIngredient {
+    var purchased = false
+    var description: String {
+        var output = "\(quantity) x \(name)"
+        output += purchased ? " ✔" : " ✘"
+        return output
+    }
+}
+```
+
+Because it provides a *default value* for all of the properties it introduces and doesn’t define any initializers itself, ShoppingListItem automatically inherits *all* of the designated and convenience initializers from its superclass.
+
+<img src="../../media/Swift/initializersExample03_2x.png" width="70%"/>
+
+You can use all three of the inherited initializers to create a new ShoppingListItem instance:
+
+```swift
+var breakfastList = [
+    ShoppingListItem(),
+    ShoppingListItem(name: "Bacon"),
+    ShoppingListItem(name: "Eggs", quantity: 6),
+]
+breakfastList[0].name = "Orange juice"
+breakfastList[0].purchased = true
+for item in breakfastList {
+    print(item.description)
+}
+// 1 x Orange juice ✔
+// 1 x Bacon ✘
+// 6 x Eggs ✘
+```
+
+## Failable Initializers
 
 
