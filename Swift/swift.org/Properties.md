@@ -21,6 +21,10 @@ You can also use a *property wrapper* to reuse code in the getter and setter of 
     - [Lazy Stored Properties](#lazy-stored-properties)
     - [Stored Properties and Instance Variables](#stored-properties-and-instance-variables)
   - [Computed Properties](#computed-properties)
+    - [Shorthand Setter Declaration](#shorthand-setter-declaration)
+    - [Shorthand Getter Declaration](#shorthand-getter-declaration)
+    - [Read-Only Computed Properties](#read-only-computed-properties)
+  - [Property Observers](#property-observers)
 
 ## Stored Properties
 
@@ -101,5 +105,110 @@ If you have experience with Objective-C, you may know that it provides two ways 
 Swift unifies these concepts into a single property declaration. A Swift property doesn’t have a corresponding instance variable, and the backing store for a property isn’t accessed directly.
 
 ## Computed Properties
+
+In addition to stored properties, `classes`, `structures`, and `enumerations` can define *computed properties*, which don’t actually store a value. Instead, they provide a getter and an optional setter to retrieve and set other properties and values indirectly.
+
+```swift
+struct Point {
+    var x = 0.0, y = 0.0
+}
+struct Size {
+    var width = 0.0, height = 0.0
+}
+struct Rect {
+    var origin = Point()
+    var size = Size()
+    var center: Point {
+        get {
+            let centerX = origin.x + (size.width / 2)
+            let centerY = origin.y + (size.height / 2)
+            return Point(x: centerX, y: centerY)
+        }
+        set(newCenter) {
+            origin.x = newCenter.x - (size.width / 2)
+            origin.y = newCenter.y - (size.height / 2)
+        }
+    }
+}
+var square = Rect(origin: Point(x: 0.0, y: 0.0),
+                  size: Size(width: 10.0, height: 10.0))
+let initialSquareCenter = square.center
+square.center = Point(x: 15.0, y: 15.0)
+print("square.origin is now at (\(square.origin.x), \(square.origin.y))")
+// Prints "square.origin is now at (10.0, 10.0)"
+```
+
+`Rect` defines a custom *getter* and *setter* for a computed variable called `center`, to enable you to work with the rectangle’s `center` as if it were a real stored property.
+
+Setting the `center` property calls the setter for `center`, which modifies the `x` and `y` values of the stored `origin` property, and moves the square to its new position.
+
+<img src="../../media/Swift/computedProperties_2x.png" width="50%"/>
+
+### Shorthand Setter Declaration
+
+If a computed property’s setter doesn’t define a name for the new value to be set, a default name of `newValue` is used. Here’s an alternative version of the `Rect` structure that takes advantage of this shorthand notation:
+
+```swift
+struct AlternativeRect {
+    var origin = Point()
+    var size = Size()
+    var center: Point {
+        get {
+            let centerX = origin.x + (size.width / 2)
+            let centerY = origin.y + (size.height / 2)
+            return Point(x: centerX, y: centerY)
+        }
+        set {
+            origin.x = newValue.x - (size.width / 2)
+            origin.y = newValue.y - (size.height / 2)
+        }
+    }
+}
+```
+
+### Shorthand Getter Declaration
+
+If the entire body of a getter is a single expression, the getter implicitly returns that expression. Here’s an another version of the `Rect` structure that takes advantage of this shorthand notation and the shorthand notation for setters:
+
+```swift
+struct CompactRect {
+    var origin = Point()
+    var size = Size()
+    var center: Point {
+        get {
+            Point(x: origin.x + (size.width / 2),
+                  y: origin.y + (size.height / 2))
+        }
+        set {
+            origin.x = newValue.x - (size.width / 2)
+            origin.y = newValue.y - (size.height / 2)
+        }
+    }
+}
+```
+
+Omitting the `return` from a getter follows the same rules as omitting `return` from a function, as described in [Functions With an Implicit Return](https://docs.swift.org/swift-book/LanguageGuide/Functions.html#ID607).
+
+### Read-Only Computed Properties
+
+A computed property with a getter but no setter is known as a *read-only computed property*.
+
+> **NOTE**: You must declare computed properties, including read-only computed properties as *variable properties* with the `var` keyword, because their value isn’t fixed. The `let` keyword is only used for constant properties, to indicate that their values can’t be changed once they’re set as part of instance initialization.
+
+You can simplify the declaration of a read-only computed property by removing the get keyword and its braces:
+
+```swift
+struct Cuboid {
+    var width = 0.0, height = 0.0, depth = 0.0
+    var volume: Double {
+        return width * height * depth
+    }
+}
+let fourByFiveByTwo = Cuboid(width: 4.0, height: 5.0, depth: 2.0)
+print("the volume of fourByFiveByTwo is \(fourByFiveByTwo.volume)")
+// Prints "the volume of fourByFiveByTwo is 40.0"
+```
+
+## Property Observers
 
 
