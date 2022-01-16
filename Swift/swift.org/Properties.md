@@ -149,7 +149,7 @@ print("square.origin is now at (\(square.origin.x), \(square.origin.y))")
 
 Setting the `center` property calls the setter for `center`, which modifies the `x` and `y` values of the stored `origin` property, and moves the square to its new position.
 
-<img src="../../media/Swift/computedProperties_2x.png" width="50%"/>
+<img src="../../media/Swift/swift.org/computedProperties_2x.png" width="50%"/>
 
 ### Shorthand Setter Declaration
 

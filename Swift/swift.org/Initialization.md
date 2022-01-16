@@ -380,11 +380,11 @@ A simple way to remember this is:
 
 These rules are illustrated in the figure below:
 
-<img src="../../media/Swift/initializerDelegation01_2x.png" width="70%"/>
+<img src="../../media/Swift/swift.org/initializerDelegation01_2x.png" width="70%"/>
 
 The figure below shows a more complex class hierarchy for four classes. It illustrates how the designated initializers in this hierarchy act as “*funnel*” points for class initialization, simplifying the interrelationships among classes in the chain:
 
-<img src="../../media/Swift/initializerDelegation02_2x.png" width="70%"/>
+<img src="../../media/Swift/swift.org/initializerDelegation02_2x.png" width="70%"/>
 
 ### Two-Phase Initialization
 
@@ -424,13 +424,13 @@ Memory for a new instance of that class is allocated. The memory isn’t yet ini
 
 Here’s how *phase 1* looks for an initialization call for a hypothetical subclass and superclass:
 
-<img src="../../media/Swift/twoPhaseInitialization01_2x.png" width="70%"/>
+<img src="../../media/Swift/swift.org/twoPhaseInitialization01_2x.png" width="70%"/>
 
 As soon as all properties of the superclass have an initial value, its memory is considered fully initialized, and phase 1 is complete.
 
 Here’s how *phase 2* looks for the same initialization call:
 
-<img src="../../media/Swift/twoPhaseInitialization02_2x.png" width="70%"/>
+<img src="../../media/Swift/swift.org/twoPhaseInitialization02_2x.png" width="70%"/>
 
 ### Initializer Inheritance and Overriding
 
@@ -540,7 +540,7 @@ The `Food` class doesn’t have a superclass, and so the `init(name: String)` in
 
 The figure below shows the initializer chain for the Food class:
 
-<img src="../../media/Swift/initializersExample01_2x.png" width="70%"/>
+<img src="../../media/Swift/swift.org/initializersExample01_2x.png" width="70%"/>
 
 ```swift
 let namedMeat = Food(name: "Bacon")
@@ -566,7 +566,7 @@ class RecipeIngredient: Food {
 
 The figure below shows the initializer chain for the `RecipeIngredient` class:
 
-<img src="../../media/Swift/initializersExample02_2x.png" width="70%"/>
+<img src="../../media/Swift/swift.org/initializersExample02_2x.png" width="70%"/>
 
 This process satisfies *safety check 1* from [Two-Phase Initialization](#two-phase-initialization) above.
 
@@ -599,7 +599,7 @@ class ShoppingListItem: RecipeIngredient {
 
 Because it provides a *default value* for all of the properties it introduces and doesn’t define any initializers itself, ShoppingListItem automatically inherits *all* of the designated and convenience initializers from its superclass.
 
-<img src="../../media/Swift/initializersExample03_2x.png" width="70%"/>
+<img src="../../media/Swift/swift.org/initializersExample03_2x.png" width="70%"/>
 
 You can use all three of the inherited initializers to create a new ShoppingListItem instance:
 
@@ -925,7 +925,7 @@ Note that the closure’s end curly brace is followed by an empty pair of parent
 
 The example below defines a structure called `Chessboard`, which models a board for the game of chess. Chess is played on an 8 x 8 board, with alternating black and white squares.
 
-<img src="../../media/Swift/chessBoard_2x.png" width="70%"/>
+<img src="../../media/Swift/swift.org/chessBoard_2x.png" width="70%"/>
 
 To represent this game board, the `Chessboard` structure has a single property called `boardColors`, which is an array of 64 `Bool` values. A value of `true` in the array represents a black square and a value of `false` represents a white square.
 

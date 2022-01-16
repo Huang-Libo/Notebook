@@ -155,7 +155,7 @@ print("hd is still \(hd.width) pixels wide")
 
 because they’re separate instances, setting the width of `cinema` to `2048` doesn’t affect the width stored in `hd`, as shown in the figure below:
 
-<img src="../../media/Swift/sharedStateStruct_2x.png" width="70%"/>
+<img src="../../media/Swift/swift.org/sharedStateStruct_2x.png" width="70%"/>
 
 The same behavior applies to enumerations:
 
@@ -199,7 +199,7 @@ alsoTenEighty.frameRate = 30.0
 
 Because classes are reference types, `tenEighty` and `alsoTenEighty` actually both refer to the same `VideoMode` instance. Effectively, they’re just two different names for the same single instance, as shown in the figure below:
 
-<img src="../../media/Swift/sharedStateClass_2x.png" width="70%"/>
+<img src="../../media/Swift/swift.org/sharedStateClass_2x.png" width="70%"/>
 
 Checking the `frameRate` property of `tenEighty` shows that it correctly reports the new frame rate of `30.0` from the underlying `VideoMode` instance:
 
