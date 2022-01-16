@@ -18,6 +18,7 @@ Unlike other programming languages, Swift doesn’t require you to create separa
     - [Memberwise Initializers for Structure Types](#memberwise-initializers-for-structure-types)
   - [Structures and Enumerations Are Value Types](#structures-and-enumerations-are-value-types)
   - [Classes Are Reference Types](#classes-are-reference-types)
+    - [Identity Operators](#identity-operators)
 
 ## Comparing Structures and Classes
 
@@ -175,5 +176,37 @@ print("The remembered direction is \(rememberedDirection)")
 ```
 
 ## Classes Are Reference Types
+
+Unlike value types, *reference types* are not copied when they’re assigned to a variable or constant, or when they’re passed to a function. Rather than a copy, a reference to the same existing instance is used.
+
+Here’s an example, using the `VideoMode` class defined above:
+
+```swift
+let tenEighty = VideoMode()
+tenEighty.resolution = hd
+tenEighty.interlaced = true
+tenEighty.name = "1080i"
+tenEighty.frameRate = 25.0
+```
+
+Next, `tenEighty` is assigned to a new constant, called `alsoTenEighty`, and the frame rate of `alsoTenEighty` is modified:
+
+```swift
+let alsoTenEighty = tenEighty
+alsoTenEighty.frameRate = 30.0
+```
+
+Because classes are reference types, `tenEighty` and `alsoTenEighty` actually both refer to the same `VideoMode` instance. Effectively, they’re just two different names for the same single instance, as shown in the figure below:
+
+<img src="../../media/Swift/sharedStateClass_2x.png" width="70%"/>
+
+Checking the `frameRate` property of `tenEighty` shows that it correctly reports the new frame rate of `30.0` from the underlying `VideoMode` instance:
+
+```swift
+print("The frameRate property of tenEighty is now \(tenEighty.frameRate)")
+// Prints "The frameRate property of tenEighty is now 30.0"
+```
+
+### Identity Operators
 
 
