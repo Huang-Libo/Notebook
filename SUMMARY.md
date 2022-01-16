@@ -15,6 +15,7 @@
 ## 🐦 Swift
 
 - [swift.org](Swift/swift.org/README.md)
+  - [Structures and Classes](Swift/swift.org/ClassesAndStructures.md)
   - [Properties](Swift/swift.org/Properties.md)
   - [Initialization](Swift/swift.org/Initialization.md)
 - [SwiftUI-Tutorials](Swift/SwiftUI-Tutorials/README.md)
