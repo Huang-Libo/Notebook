@@ -19,6 +19,7 @@ Unlike other programming languages, Swift doesn’t require you to create separa
   - [Structures and Enumerations Are Value Types](#structures-and-enumerations-are-value-types)
   - [Classes Are Reference Types](#classes-are-reference-types)
     - [Identity Operators](#identity-operators)
+    - [Pointers](#pointers)
 
 ## Comparing Structures and Classes
 
@@ -209,4 +210,29 @@ print("The frameRate property of tenEighty is now \(tenEighty.frameRate)")
 
 ### Identity Operators
 
+It can sometimes be useful to find out whether two constants or variables refer to exactly the same instance of a class. To enable this, Swift provides two identity operators:
 
+- Identical to (`===`)
+- Not identical to (`!==`)
+
+Use these operators to check whether two constants or variables refer to the same single instance:
+
+```swift
+if tenEighty === alsoTenEighty {
+    print("tenEighty and alsoTenEighty refer to the same VideoMode instance.")
+}
+// Prints "tenEighty and alsoTenEighty refer to the same VideoMode instance."
+```
+
+Note that *identical to* (represented by three equals signs, or `===`) doesn’t mean the same thing as `equal to` (represented by two equals signs, or `==`).
+
+- *Identical to* means that two constants or variables of class type refer to exactly the same class instance.
+- *Equal to* means that two instances are considered equal or equivalent in value, for some appropriate meaning of equal, as defined by the type’s designer.
+
+When you define your own custom structures and classes, it’s your responsibility to decide what qualifies as two instances being equal. The process of defining your own implementations of the `==` and `!=` operators is described in [Equivalence Operators](https://docs.swift.org/swift-book/LanguageGuide/AdvancedOperators.html#ID45).
+
+### Pointers
+
+If you have experience with C, C++, or Objective-C, you may know that these languages use pointers to refer to addresses in memory. A Swift constant or variable that refers to an instance of some reference type is similar to a pointer in C, but **isn’t a direct pointer to an address in memory**, and doesn’t require you to write an asterisk (`*`) to indicate that you are creating a reference. Instead, these references are defined like any other constant or variable in Swift.
+
+The standard library provides *pointer* and *buffer* types that you can use if you need to interact with pointers directly—see [Manual Memory Management](https://developer.apple.com/documentation/swift/swift_standard_library/manual_memory_management).
