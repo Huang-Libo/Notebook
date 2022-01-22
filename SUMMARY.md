@@ -15,6 +15,7 @@
 ## 🐦 Swift
 
 - [swift.org](Swift/swift.org/README.md)
+  - [Closures](Swift/swift.org/Closures.md)
   - [Structures and Classes](Swift/swift.org/ClassesAndStructures.md)
   - [Properties](Swift/swift.org/Properties.md)
   - [Initialization](Swift/swift.org/Initialization.md)
