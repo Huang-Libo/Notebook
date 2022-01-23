@@ -11,6 +11,10 @@
   - [Closure Expressions](#closure-expressions)
     - [The Sorted Method](#the-sorted-method)
     - [Closure Expression Syntax](#closure-expression-syntax)
+    - [Inferring Type From Context](#inferring-type-from-context)
+    - [Implicit Returns from Single-Expression Closures](#implicit-returns-from-single-expression-closures)
+    - [Shorthand Argument Names](#shorthand-argument-names)
+    - [Operator Methods](#operator-methods)
 
 ## Introduction
 
@@ -84,5 +88,45 @@ Because the body of the closure is so short, it can even be written on a single 
 ```swift
 reversedNames = names.sorted(by: { (s1: String, s2: String) -> Bool in return s1 > s2 } )
 ```
+
+### Inferring Type From Context
+
+Because all of the types can be inferred, the return arrow (`->`) and the parentheses around the names of the parameters can also be omitted:
+
+```swift
+reversedNames = names.sorted(by: { s1, s2 in return s1 > s2 } )
+```
+
+It’s always possible to infer the parameter types and return type when passing a closure to a function or method as an inline closure expression. As a result, you *never* need to write an inline closure in its fullest form when the closure is used as a function or method argument.
+
+### Implicit Returns from Single-Expression Closures
+
+Single-expression closures can implicitly return the result of their single expression by omitting the `return` keyword from their declaration, as in this version of the previous example:
+
+```swift
+reversedNames = names.sorted(by: { s1, s2 in s1 > s2 } )
+```
+
+### Shorthand Argument Names
+
+Swift automatically provides shorthand argument names to inline closures, which can be used to refer to the values of the closure’s arguments by the names `$0`, `$1`, `$2`, and so on.
+
+If you use these shorthand argument names within your closure expression, you can omit the closure’s *argument list* from its definition. The type of the shorthand argument names is inferred from the expected function type, and the highest numbered shorthand argument you use determines the number of arguments that the closure takes. The `in` keyword can also be omitted, because the closure expression is made up entirely of its body:
+
+```swift
+reversedNames = names.sorted(by: { $0 > $1 } )
+```
+
+- Here, `$0` and `$1` refer to the closure’s first and second `String` arguments. Because `$1` is the shorthand argument with highest number, the closure is understood to take two arguments.
+- Because the `sorted(by:)` function here expects a closure whose arguments are both strings, the shorthand arguments `$0` and `$1` are both of type `String`.
+
+### Operator Methods
+
+There’s actually an even shorter way to write the closure expression above. Swift’s `String` type defines its string-specific implementation of the greater-than operator (`>`) as a method that has two parameters of type `String`, and returns a value of type `Bool`. This exactly matches the method type needed by the `sorted(by:)` method. Therefore, you can simply pass in the greater-than operator, and Swift will infer that you want to use its string-specific implementation:
+
+```swift
+reversedNames = names.sorted(by: >)
+```
+
 
 
