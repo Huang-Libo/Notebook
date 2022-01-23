@@ -44,7 +44,7 @@ Swift’s closure expressions have a clean, clear style, with optimizations that
 
 ### The Sorted Method
 
-Swift’s standard library provides a method called *sorted(by:)*, which sorts an array of values of a known type, based on the output of a sorting closure that you provide. Once it completes the sorting process, the *sorted(by:)* method returns a *new* array of the same type and size as the old one, with its elements in the correct sorted order. The original array *isn’t* modified by the *sorted(by:)* method.
+Swift’s standard library provides a method called `sorted(by:)`, which sorts an array of values of a known type, based on the output of a sorting closure that you provide. Once it completes the sorting process, the `sorted(by:)` method returns a *new* array of the same type and size as the old one, with its elements in the correct sorted order. The original array *isn’t* modified by the `sorted(by:)` method.
 
 The closure expression examples below use the `sorted(by:)` method to sort an array of String values in reverse alphabetical order. Here’s the initial array to be sorted:
 
@@ -102,7 +102,9 @@ Because all of the types can be inferred, the return arrow (`->`) and the parent
 reversedNames = names.sorted(by: { s1, s2 in return s1 > s2 } )
 ```
 
-It’s always possible to infer the parameter types and return type when passing a closure to a function or method as an inline closure expression. As a result, you *never* need to write an inline closure in its fullest form when the closure is used as a function or method argument.
+It’s always possible to infer the parameter types and return type when passing a closure to a function or method as an inline closure expression.
+
+As a result, you *never* need to write an inline closure in its fullest form when the closure is used as a function or method argument.
 
 ### Implicit Returns from Single-Expression Closures
 
@@ -114,7 +116,7 @@ reversedNames = names.sorted(by: { s1, s2 in s1 > s2 } )
 
 ### Shorthand Argument Names
 
-Swift automatically provides shorthand argument names to inline closures, which can be used to refer to the values of the closure’s arguments by the names `$0`, `$1`, `$2`, and so on.
+Swift automatically provides shorthand argument names to *inline closures*, which can be used to refer to the values of the closure’s arguments by the names `$0`, `$1`, `$2`, and so on.
 
 If you use these shorthand argument names within your closure expression, you can omit the closure’s *argument list* from its definition. The type of the shorthand argument names is inferred from the expected function type, and the highest numbered shorthand argument you use determines the number of arguments that the closure takes. The `in` keyword can also be omitted, because the closure expression is made up entirely of its body:
 
