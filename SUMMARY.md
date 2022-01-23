@@ -19,6 +19,7 @@
   - [Structures and Classes](Swift/swift.org/ClassesAndStructures.md)
   - [Properties](Swift/swift.org/Properties.md)
   - [Initialization](Swift/swift.org/Initialization.md)
+  - [Optional Chaining](Swift/swift.org/OptionalChaining.md)
 - [SwiftUI-Tutorials](Swift/SwiftUI-Tutorials/README.md)
   - [Chapter 1: SwiftUI Essentials](Swift/SwiftUI-Tutorials/Chapter-1-SwiftUI-Essentials.md)
   - [Chapter 2: Drawing and Animation](Swift/SwiftUI-Tutorials/Chapter-2-Drawing-and-Animation.md)
