@@ -9,6 +9,8 @@
 - [Optional Chaining](#optional-chaining)
   - [Optional Chaining as an Alternative to Forced Unwrapping](#optional-chaining-as-an-alternative-to-forced-unwrapping)
   - [Defining Model Classes for Optional Chaining](#defining-model-classes-for-optional-chaining)
+  - [Accessing Properties Through Optional Chaining](#accessing-properties-through-optional-chaining)
+  - [Calling Methods Through Optional Chaining](#calling-methods-through-optional-chaining)
 
 ## Optional Chaining as an Alternative to Forced Unwrapping
 
@@ -79,5 +81,122 @@ if let roomCount = john.residence?.numberOfRooms {
 ```
 
 ## Defining Model Classes for Optional Chaining
+
+You can use optional chaining with calls to properties, methods, and subscripts that are more than one level deep.
+
+The code snippets below define four model classes for use in several subsequent examples, including examples of multilevel optional chaining.
+
+These classes expand upon the `Person` and `Residence` model from above by adding a `Room` and `Address` class, with associated *properties*, *methods*, and *subscripts*.
+
+The `Person` class is defined in the same way as before:
+
+```swift
+class Person {
+    var residence: Residence?
+}
+```
+
+The `Residence` class is more complex than before. This time, the `Residence` class defines a variable property called `rooms`, which is initialized with an empty array of type `[Room]`:
+
+```swift
+class Residence {
+    var rooms: [Room] = []
+    var numberOfRooms: Int {
+        return rooms.count
+    }
+    subscript(i: Int) -> Room {
+        get {
+            return rooms[i]
+        }
+        set {
+            rooms[i] = newValue
+        }
+    }
+    func printNumberOfRooms() {
+        print("The number of rooms is \(numberOfRooms)")
+    }
+    var address: Address?
+}
+```
+
+As a shortcut to accessing its `rooms` array, this version of `Residence` provides a *read-write* subscript that provides access to the room at the requested index in the `rooms` array.
+
+Finally, `Residence` defines an optional property called `address`, with a type of `Address?`. The `Address` class type for this property is defined below.
+
+The `Room` class used for the `rooms` array is a simple class with one property called `name`, and an initializer to set that property to a suitable room name:
+
+```swift
+class Room {
+    let name: String
+    init(name: String) { self.name = name }
+}
+```
+
+The final class in this model is called `Address`. This class has three optional properties of type `String?`. The first two properties, `buildingName` and `buildingNumber`, are alternative ways to identify a particular building as part of an address. The third property, `street`, is used to name the street for that address:
+
+```swift
+class Address {
+    var buildingName: String?
+    var buildingNumber: String?
+    var street: String?
+    func buildingIdentifier() -> String? {
+        if let buildingNumber = buildingNumber, let street = street {
+            return "\(buildingNumber) \(street)"
+        } else if buildingName != nil {
+            return buildingName
+        } else {
+            return nil
+        }
+    }
+}
+```
+
+## Accessing Properties Through Optional Chaining
+
+Use the classes defined above to create a new Person instance, and try to access its `numberOfRooms` property as before:
+
+```swift
+let john = Person()
+if let roomCount = john.residence?.numberOfRooms {
+    print("John's residence has \(roomCount) room(s).")
+} else {
+    print("Unable to retrieve the number of rooms.")
+}
+// Prints "Unable to retrieve the number of rooms."
+```
+
+Because `john.residence` is `nil`, this optional chaining call fails in the same way as before.
+
+```swift
+let someAddress = Address()
+someAddress.buildingNumber = "29"
+someAddress.street = "Acacia Road"
+john.residence?.address = someAddress
+```
+
+In this example, the attempt to set the `address` property of `john.residence` will fail, because `john.residence` is currently `nil`.
+
+The assignment is part of the *optional chaining*, which means none of the code on the *right-hand side* of the `=` operator is evaluated.
+
+In the previous example, it’s not easy to see that `someAddress` is *never* evaluated, because accessing a constant doesn’t have any side effects.
+
+The listing below does the same assignment, but it uses a function to create the address. The function prints “*Function was called*” before returning a value, which lets you see whether the *right-hand side* of the `=` operator was evaluated.
+
+```swift
+func createAddress() -> Address {
+    print("Function was called.")
+
+    let someAddress = Address()
+    someAddress.buildingNumber = "29"
+    someAddress.street = "Acacia Road"
+
+    return someAddress
+}
+john.residence?.address = createAddress()
+```
+
+You can tell that the `createAddress()` function isn’t called, because *nothing* is printed. （因为 `john.residence` 目前还是 `nil` ）
+
+## Calling Methods Through Optional Chaining
 
 
