@@ -11,6 +11,8 @@
   - [Defining Model Classes for Optional Chaining](#defining-model-classes-for-optional-chaining)
   - [Accessing Properties Through Optional Chaining](#accessing-properties-through-optional-chaining)
   - [Calling Methods Through Optional Chaining](#calling-methods-through-optional-chaining)
+  - [Accessing Subscripts Through Optional Chaining](#accessing-subscripts-through-optional-chaining)
+  - [Accessing Subscripts of Optional Type](#accessing-subscripts-of-optional-type)
 
 ## Optional Chaining as an Alternative to Forced Unwrapping
 
@@ -232,3 +234,50 @@ if (john.residence?.address = someAddress) != nil {
 }
 // Prints "It was not possible to set the address."
 ```
+
+## Accessing Subscripts Through Optional Chaining
+
+You can use optional chaining to try to retrieve and set a value from a subscript on an optional value, and to check whether that subscript call is successful.
+
+> **NOTE**: When you access a subscript on an optional value through optional chaining, you place the question mark *before* the subscript’s brackets, not after. The optional chaining question mark always follows immediately after the part of the expression that’s optional.
+
+The example below tries to retrieve the name of the first room in the `rooms` array of the `john.residence` property using the subscript defined on the `Residence` class. Because `john.residence` is currently `nil`, the subscript call fails:
+
+```swift
+if let firstRoomName = john.residence?[0].name {
+    print("The first room name is \(firstRoomName).")
+} else {
+    print("Unable to retrieve the first room name.")
+}
+// Prints "Unable to retrieve the first room name."
+```
+
+The optional chaining question mark in this subscript call is placed immediately after `john.residence`, before the subscript brackets, because `john.residence` is the optional value on which optional chaining is being attempted.
+
+Similarly, you can try to set a new value through a subscript with optional chaining:
+
+```swift
+john.residence?[0] = Room(name: "Bathroom")
+```
+
+This subscript setting attempt also fails, because residence is currently `nil`.
+
+If you create and assign an actual `Residence` instance to `john.residence`, with one or more `Room` instances in its `rooms` array, you can use the `Residence` subscript to access the actual items in the `rooms` array through optional chaining:
+
+```swift
+let johnsHouse = Residence()
+johnsHouse.rooms.append(Room(name: "Living Room"))
+johnsHouse.rooms.append(Room(name: "Kitchen"))
+john.residence = johnsHouse
+
+if let firstRoomName = john.residence?[0].name {
+    print("The first room name is \(firstRoomName).")
+} else {
+    print("Unable to retrieve the first room name.")
+}
+// Prints "The first room name is Living Room."
+```
+
+## Accessing Subscripts of Optional Type
+
+
