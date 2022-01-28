@@ -12,7 +12,9 @@
   - [Accessing Properties Through Optional Chaining](#accessing-properties-through-optional-chaining)
   - [Calling Methods Through Optional Chaining](#calling-methods-through-optional-chaining)
   - [Accessing Subscripts Through Optional Chaining](#accessing-subscripts-through-optional-chaining)
-  - [Accessing Subscripts of Optional Type](#accessing-subscripts-of-optional-type)
+    - [Accessing Subscripts of Optional Type](#accessing-subscripts-of-optional-type)
+  - [Linking Multiple Levels of Chaining](#linking-multiple-levels-of-chaining)
+  - [Chaining on Methods with Optional Return Values](#chaining-on-methods-with-optional-return-values)
 
 ## Optional Chaining as an Alternative to Forced Unwrapping
 
@@ -278,6 +280,86 @@ if let firstRoomName = john.residence?[0].name {
 // Prints "The first room name is Living Room."
 ```
 
-## Accessing Subscripts of Optional Type
+### Accessing Subscripts of Optional Type
 
+If a subscript returns a value of optional type—such as the key subscript of Swift’s `Dictionary` type, place a question mark `after` the subscript’s closing bracket to chain on its optional return value:
 
+```swift
+var testScores = ["Dave": [86, 82, 84], "Bev": [79, 94, 81]]
+testScores["Dave"]?[0] = 91
+testScores["Bev"]?[0] += 1
+testScores["Brian"]?[0] = 72
+// the "Dave" array is now [91, 82, 84] and the "Bev" array is now [80, 94, 81]
+```
+
+The first two calls succeed, because the testScores dictionary contains keys for "`Dave`" and "`Bev`". The third call fails, because the `testScores` dictionary doesn’t contain a key for "`Brian`".
+
+## Linking Multiple Levels of Chaining
+
+Multiple levels of *optional chaining* don’t add more levels of optionality to the returned value.
+
+To put it another way:
+
+- If the type you are trying to retrieve isn’t optional, it will become optional because of the optional chaining.
+- If the type you are trying to retrieve is already optional, it will not become more optional because of the chaining.
+
+Therefore:
+
+- If you try to retrieve an Int value through optional chaining, an Int? is always returned, no matter how many levels of chaining are used.
+- Similarly, if you try to retrieve an Int? value through optional chaining, an Int? is always returned, no matter how many levels of chaining are used.
+
+The example below tries to access the `street` property of the `address` property of the `residence` property of `john`. There are *two* levels of optional chaining in use here, to chain through the `residence` and `address` properties, both of which are of optional type:
+
+```swift
+if let johnsStreet = john.residence?.address?.street {
+    print("John's street name is \(johnsStreet).")
+} else {
+    print("Unable to retrieve the address.")
+}
+// Prints "Unable to retrieve the address."
+```
+
+The value of `john.residence` currently contains a valid Residence instance. However, the value of `john.residence.address` is currently nil. Because of this, the call to `john.residence?.address?.street` fails.
+
+If you set an actual `Address` instance as the value for `john.residence.address`, and set an actual value for the address’s `street` property, you can access the value of the `street` property through multilevel optional chaining:
+
+```swift
+let johnsAddress = Address()
+johnsAddress.buildingName = "The Larches"
+johnsAddress.street = "Laurel Street"
+john.residence?.address = johnsAddress
+
+if let johnsStreet = john.residence?.address?.street {
+    print("John's street name is \(johnsStreet).")
+} else {
+    print("Unable to retrieve the address.")
+}
+// Prints "John's street name is Laurel Street."
+```
+
+## Chaining on Methods with Optional Return Values
+
+You can also use optional chaining to call a method that returns a value of optional type, and to chain on that method’s return value if needed.
+
+The example below calls the `Address` class’s `buildingIdentifier()` method through optional chaining. This method returns a value of type `String?`. As described above, the ultimate return type of this method call after optional chaining is also `String?`:
+
+```swift
+if let buildingIdentifier = john.residence?.address?.buildingIdentifier() {
+    print("John's building identifier is \(buildingIdentifier).")
+}
+// Prints "John's building identifier is The Larches."
+```
+
+If you want to perform further optional chaining on this method’s return value, place the optional chaining question mark *after* the method’s parentheses:
+
+```swift
+if let beginsWithThe =
+    john.residence?.address?.buildingIdentifier()?.hasPrefix("The") {
+    if beginsWithThe {
+        print("John's building identifier begins with \"The\".")
+    } else {
+        print("John's building identifier doesn't begin with \"The\".")
+    }
+}
+// Prints "John's building identifier begins with "The"."
+```
