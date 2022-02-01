@@ -33,6 +33,9 @@
     - [Protocol Inheritance](#protocol-inheritance)
     - [Protocol Conformance](#protocol-conformance)
   - [Extensions](#extensions)
+    - [Private Members in Extensions](#private-members-in-extensions)
+  - [Generics](#generics)
+  - [Type Aliases](#type-aliases)
 
 ## Modules and Source Files
 
@@ -343,4 +346,56 @@ If you define a new protocol that inherits from an existing protocol, the new pr
 
 ## Extensions
 
+You can extend a *class*, *structure*, or *enumeration* in any access context in which the class, structure, or enumeration is available.
 
+Any *type members* added in an extension have the same default access level as type members declared in the original type being extended.
+
+- If you extend a *public* or *internal* type, any new type members you add have a default access level of *internal*.
+- If you extend a *file-private* type, any new type members you add have a default access level of file private.
+- If you extend a private type, any new type members you add have a default access level of private.
+
+Alternatively, you can mark an extension with an explicit access-level modifier (for example, `private`) to set a new default access level for *all* members defined within the extension. This new default can still be overridden within the extension for individual type members.
+
+You can’t provide an explicit access-level modifier for an extension if you’re using that extension to add *protocol* conformance. Instead, the protocol’s own access level is used to provide the default access level for each protocol requirement implementation within the extension.
+
+### Private Members in Extensions
+
+Extensions that are in the same file as the *class*, *structure*, or *enumeration* that they extend behave as if the code in the extension had been written as part of the original type’s declaration. As a result, you can:
+
+- Declare a private member in the original declaration, and access that member from extensions in the same file.
+- Declare a private member in one extension, and access that member from another extension in the same file.
+- Declare a private member in an extension, and access that member from the original declaration in the same file.
+
+This behavior means you can use extensions in the same way to organize your code, whether or not your types have private entities. For example, given the following simple protocol:
+
+```swift
+protocol SomeProtocol {
+    func doSomething()
+}
+```
+
+You can use an extension to add protocol conformance, like this:
+
+```swift
+struct SomeStruct {
+    private var privateVariable = 12
+}
+
+extension SomeStruct: SomeProtocol {
+    func doSomething() {
+        print(privateVariable)
+    }
+}
+```
+
+## Generics
+
+The access level for a generic type or generic function is the minimum of the access level of the generic type or function itself and the access level of any type constraints on its type parameters.
+
+## Type Aliases
+
+Any type aliases you define are treated as distinct types for the purposes of access control.
+
+A type alias can have an access level less than or equal to the access level of the type it aliases. For example, a private type alias can alias a private, file-private, internal, public, or open type, but a public type alias can’t alias an internal, file-private, or private type.
+
+> **NOTE**: This rule also applies to type aliases for *associated types* used to satisfy protocol conformances.
