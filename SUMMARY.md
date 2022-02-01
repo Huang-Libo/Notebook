@@ -20,6 +20,7 @@
   - [Properties](Swift/swift.org/Properties.md)
   - [Initialization](Swift/swift.org/Initialization.md)
   - [Optional Chaining](Swift/swift.org/OptionalChaining.md)
+  - [Generics](Swift/swift.org/Generics.md)
   - [Access Control](Swift/swift.org/AccessControl.md)
 - [SwiftUI-Tutorials](Swift/SwiftUI-Tutorials/README.md)
   - [Chapter 1: SwiftUI Essentials](Swift/SwiftUI-Tutorials/Chapter-1-SwiftUI-Essentials.md)
