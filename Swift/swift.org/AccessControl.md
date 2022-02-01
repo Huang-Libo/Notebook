@@ -24,6 +24,9 @@
     - [Raw Values and Associated Values](#raw-values-and-associated-values)
     - [Nested Types](#nested-types)
   - [Subclassing](#subclassing)
+  - [Constants, Variables, Properties, and Subscripts](#constants-variables-properties-and-subscripts)
+    - [Getters and Setters](#getters-and-setters)
+  - [Initializers](#initializers)
 
 ## Modules and Source Files
 
@@ -189,5 +192,110 @@ The types used for any *raw values* or *associated values* in an enumeration def
 The access level of a nested type is the same as its containing type, unless the containing type is public. *Nested types defined within a public type have an automatic access level of internal.* If you want a nested type within a public type to be publicly available, you must explicitly declare the nested type as public.
 
 ## Subclassing
+
+**Subclassing**:
+
+- You can subclass any class that can be accessed in the current access context and that’s defined in the *same module* as the subclass.
+- You can also subclass any `open` class that’s defined in a *different module*.
+
+A subclass can’t have a higher access level than its superclass—for example, you can’t write a public subclass of an internal superclass.
+
+**Override**:
+
+- In addition, for classes that are defined in the *same module*, you can override any class member (method, property, initializer, or subscript) that’s visible in a certain access context.
+- For classes that are defined in *another module*, you can override any `open` class member.
+
+*An override can make an inherited class member more accessible than its superclass version.*
+
+In the example below, class `A` is a *public* class with a *file-private* method called `someMethod()`. Class `B` is a subclass of `A`, with a reduced access level of “*internal*”. Nonetheless, class `B` provides an override of `someMethod()` with an access level of “*internal*”, which is higher than the original implementation of `someMethod()`:
+
+```swift
+public class A {
+    fileprivate func someMethod() {}
+}
+
+internal class B: A {
+    override internal func someMethod() {}
+}
+```
+
+It’s even valid for a subclass member to call a superclass member that has lower access permissions than the subclass member, as long as the call to the superclass’s member takes place within an allowed access level context (that is, within the same source file as the superclass for a file-private member call, or within the same module as the superclass for an internal member call):
+
+```swift
+public class A {
+    fileprivate func someMethod() {}
+}
+
+internal class B: A {
+    override internal func someMethod() {
+        super.someMethod()
+    }
+}
+```
+
+Because superclass `A` and subclass `B` are defined in the same source file, it’s valid for the `B` implementation of `someMethod()` to call `super.someMethod()`.
+
+## Constants, Variables, Properties, and Subscripts
+
+- A *constant*, *variable*, or *property* can’t be more public than its type. It’s *not* valid to write a public property with a private type, for example.
+- Similarly, a *subscript* can’t be more public than either its *index type* or *return type*.
+
+If a *constant*, *variable*, *property*, or *subscript* makes use of a private type, the constant, variable, property, or subscript *must* also be marked as private:
+
+```swift
+private var privateInstance = SomePrivateClass()
+```
+
+### Getters and Setters
+
+Getters and setters for *constants*, *variables*, *properties*, and *subscripts* automatically receive the *same* access level as the constant, variable, property, or subscript they belong to.
+
+You can give a setter a *lower* access level than its corresponding getter, to restrict the read-write scope of that variable, property, or subscript. You assign a lower access level by writing `fileprivate(set)`, `private(set)`, or `internal(set)` before the `var` or `subscript` introducer.
+
+> **NOTE**: This rule applies to stored properties as well as computed properties. Even though you don’t write an explicit getter and setter for a stored property, Swift still *synthesizes* an implicit getter and setter for you to provide access to the stored property’s backing storage. Use `fileprivate(set)`, `private(set)`, and `internal(set)` to change the access level of this synthesized setter in exactly the same way as for an explicit setter in a computed property.
+
+The example below defines a structure called TrackedString, which keeps track of the number of times a string property is modified:
+
+```swift
+struct TrackedString {
+    private(set) var numberOfEdits = 0
+    var value: String = "" {
+        didSet {
+            numberOfEdits += 1
+        }
+    }
+}
+
+```
+
+The `TrackedString` structure defines a stored string property called `value`, with an initial value of `""` (an empty string). The structure also defines a stored integer property called `numberOfEdits`, which is used to track the number of times that `value` is modified. This modification tracking is implemented with a `didSet` property observer on the `value` property, which increments `numberOfEdits` every time the `value` property is set to a new value.
+
+If you create a `TrackedString` instance and modify its string value a few times, you can see the `numberOfEdits` property value update to match the number of modifications:
+
+```swift
+var stringToEdit = TrackedString()
+stringToEdit.value = "This string will be tracked."
+stringToEdit.value += " This edit will increment numberOfEdits."
+stringToEdit.value += " So will this one."
+print("The number of edits is \(stringToEdit.numberOfEdits)")
+// Prints "The number of edits is 3"
+```
+
+Note that you can assign an explicit access level for both a getter and a setter if required. The example below shows a version of the `TrackedString` structure in which the structure is defined with an explicit access level of `public`. The structure’s members (including the `numberOfEdits` property) therefore have an *internal* access level by default. You can make the structure’s `numberOfEdits` property getter *public*, and its property setter *private*, by combining the *public* and *private(set)* access-level modifiers:
+
+```swift
+public struct TrackedString {
+    public private(set) var numberOfEdits = 0
+    public var value: String = "" {
+        didSet {
+            numberOfEdits += 1
+        }
+    }
+    public init() {}
+}
+
+```
+
+## Initializers
 
 
