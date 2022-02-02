@@ -22,6 +22,8 @@
     - [Adding Constraints to an Associated Type](#adding-constraints-to-an-associated-type)
     - [Using a Protocol in Its Associated Type’s Constraints](#using-a-protocol-in-its-associated-types-constraints)
   - [Generic Where Clauses](#generic-where-clauses)
+  - [Extensions with a Generic Where Clause](#extensions-with-a-generic-where-clause)
+  - [Contextual Where Clauses](#contextual-where-clauses)
 
 ## The Problem That Generics Solve
 
@@ -454,5 +456,157 @@ extension IntStack: SuffixableContainer {
 ```
 
 ## Generic Where Clauses
+
+It can also be useful to define requirements for associated types. You do this by defining *a generic where clause*. A generic `where` clause enables you to require that an associated type must conform to a certain protocol, or that certain type parameters and associated types must be the same. A generic `where` clause starts with the `where` keyword, followed by constraints for associated types or equality relationships between types and associated types. You write a generic `where` clause right before the opening curly brace of a type or function’s body.
+
+The example below defines a generic function called `allItemsMatch`, which checks to see if two `Container` instances contain the same items in the same order. The function returns a `Boolean` value of `true` if all items match and a value of `false` if they don’t.
+
+The two containers to be checked don’t have to be the same type of container (although they can be), but they do have to hold the same type of items. This requirement is expressed through a combination of type constraints and a generic `where` clause:
+
+```swift
+func allItemsMatch<C1: Container, C2: Container>
+    (_ someContainer: C1, _ anotherContainer: C2) -> Bool
+    where C1.Item == C2.Item, C1.Item: Equatable {
+
+        // Check that both containers contain the same number of items.
+        if someContainer.count != anotherContainer.count {
+            return false
+        }
+
+        // Check each pair of items to see if they're equivalent.
+        for i in 0..<someContainer.count {
+            if someContainer[i] != anotherContainer[i] {
+                return false
+            }
+        }
+
+        // All items match, so return true.
+        return true
+}
+```
+
+This function takes two arguments called `someContainer` and `anotherContainer`. The `someContainer` argument is of type `C1`, and the `anotherContainer` argument is of type `C2`. Both `C1` and `C2` are type parameters for two container types to be determined when the function is called.
+
+The following requirements are placed on the function’s two type parameters:
+
+- `C1` must conform to the `Container` protocol (written as `C1: Container`).
+- `C2` must also conform to the `Container` protocol (written as `C2: Container`).
+- The `Item` for `C1` must be the same as the `Item` for `C2` (written as `C1.Item == C2.Item`).
+- The `Item` for `C1` must conform to the `Equatable` protocol (written as `C1.Item: Equatable`).
+
+These requirements mean:
+
+- `someContainer` is a container of type `C1`.
+- `anotherContainer` is a container of type `C2`.
+- `someContainer` and `anotherContainer` contain the same type of items.
+- The items in `someContainer` can be checked with the not equal operator (`!=`) to see if they’re different from each other.
+
+These requirements enable the `allItemsMatch(_:_:)` function to compare the two containers, even if they’re of a different container type.
+
+Here’s how the `allItemsMatch(_:_:)` function looks in action:
+
+```swift
+var stackOfStrings = Stack<String>()
+stackOfStrings.push("uno")
+stackOfStrings.push("dos")
+stackOfStrings.push("tres")
+
+var arrayOfStrings = ["uno", "dos", "tres"]
+
+if allItemsMatch(stackOfStrings, arrayOfStrings) {
+    print("All items match.")
+} else {
+    print("Not all items match.")
+}
+// Prints "All items match."
+
+```
+
+Even though the stack and the array are of a different type, they both conform to the `Container` protocol, and both contain the same type of values. You can therefore call the `allItemsMatch(_:_:)` function with these two containers as its arguments.
+
+In the example above, the `allItemsMatch(_:_:)` function correctly reports that all of the items in the two containers match.
+
+## Extensions with a Generic Where Clause
+
+You can also use a generic `where` clause as part of an extension. The example below extends the generic `Stack` structure from the previous examples to add an `isTop(_:)` method.
+
+```swift
+extension Stack where Element: Equatable {
+    func isTop(_ item: Element) -> Bool {
+        guard let topItem = items.last else {
+            return false
+        }
+        return topItem == item
+    }
+}
+```
+
+This new `isTop(_:)` method first checks that the stack isn’t empty, and then compares the given item against the stack’s topmost item. If you tried to do this without a generic where clause, you would have a problem: The implementation of `isTop(_:)` uses the `==` operator, but the definition of Stack doesn’t require its items to be equatable, so using the `==` operator results in a compile-time error.
+
+Using a generic `where` clause lets you add a new requirement to the extension, so that the extension adds the `isTop(_:)` method only when the items in the stack are equatable.
+
+Here’s how the `isTop(_:)` method looks in action:
+
+```swift
+if stackOfStrings.isTop("tres") {
+    print("Top element is tres.")
+} else {
+    print("Top element is something else.")
+}
+// Prints "Top element is tres."
+```
+
+If you try to call the `isTop(_:)` method on a stack whose elements aren’t equatable, you’ll get a compile-time error.
+
+```swift
+struct NotEquatable { }
+var notEquatableStack = Stack<NotEquatable>()
+let notEquatableValue = NotEquatable()
+notEquatableStack.push(notEquatableValue)
+notEquatableStack.isTop(notEquatableValue)  // Error
+```
+
+You can use a generic `where` clause with extensions to a protocol. The example below extends the `Container` protocol from the previous examples to add a `startsWith(_:)` method.
+
+```swift
+extension Container where Item: Equatable {
+    func startsWith(_ item: Item) -> Bool {
+        return count >= 1 && self[0] == item
+    }
+}
+```
+
+The `startsWith(_:)` method first makes sure that the container has at least one item, and then it checks whether the first item in the container matches the given item.
+
+This new `startsWith(_:)` method can be used with any type that conforms to the `Container` protocol, including the stacks and arrays used above, as long as the container’s items are equatable.
+
+```swift
+if [9, 9, 9].startsWith(42) {
+    print("Starts with 42.")
+} else {
+    print("Starts with something else.")
+}
+// Prints "Starts with something else."
+```
+
+The generic `where` clause in the example above requires `Item` to conform to a protocol, but you can also write a generic `where` clauses that require `Item` to be a specific type. For example:
+
+```swift
+extension Container where Item == Double {
+    func average() -> Double {
+        var sum = 0.0
+        for index in 0..<count {
+            sum += self[index]
+        }
+        return sum / Double(count)
+    }
+}
+print([1260.0, 1200.0, 98.6, 37.0].average())
+// Prints "648.9"
+```
+
+You can include multiple requirements in a generic `where` clause that’s part of an extension, just like you can for a generic `where` clause that you write elsewhere. Separate each requirement in the list with a *comma*.
+
+## Contextual Where Clauses
 
 
