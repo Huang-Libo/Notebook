@@ -13,6 +13,15 @@
   - [Naming Type Parameters](#naming-type-parameters)
   - [Generic Types](#generic-types)
   - [Extending a Generic Type](#extending-a-generic-type)
+  - [Type Constraints](#type-constraints)
+    - [Type Constraint Syntax](#type-constraint-syntax)
+    - [Type Constraints in Action](#type-constraints-in-action)
+  - [Associated Types](#associated-types)
+    - [Associated Types in Action](#associated-types-in-action)
+    - [Extending an Existing Type to Specify an Associated Type](#extending-an-existing-type-to-specify-an-associated-type)
+    - [Adding Constraints to an Associated Type](#adding-constraints-to-an-associated-type)
+    - [Using a Protocol in Its Associated Type’s Constraints](#using-a-protocol-in-its-associated-types-constraints)
+  - [Generic Where Clauses](#generic-where-clauses)
 
 ## The Problem That Generics Solve
 
@@ -170,5 +179,280 @@ let fromTheTop = stackOfStrings.pop()
 ```
 
 ## Extending a Generic Type
+
+When you extend a generic type, you don’t provide a type parameter list as part of the extension’s definition. Instead, the type parameter list from the *original* type definition is available within the body of the extension, and the original type parameter names are used to refer to the type parameters from the original definition.
+
+The following example extends the generic `Stack` type to add a read-only *computed property* called `topItem`, which returns the top item on the stack without popping it from the stack:
+
+```swift
+extension Stack {
+    var topItem: Element? {
+        return items.isEmpty ? nil : items[items.count - 1]
+    }
+}
+```
+
+The `topItem` computed property can now be used with any `Stack` instance to access and query its top item without removing it.
+
+```swift
+if let topItem = stackOfStrings.topItem {
+    print("The top item on the stack is \(topItem).")
+}
+// Prints "The top item on the stack is tres."
+```
+
+Extensions of a generic type can also include requirements that instances of the extended type must satisfy in order to gain the new functionality, as discussed in [Extensions with a Generic Where Clause](#extensions-with-a-generic-where-clause) below.
+
+## Type Constraints
+
+The `swapTwoValues(_:_:)` function and the `Stack` type can work with any type. However, it’s sometimes useful to enforce certain *type constraints* on the types that can be used with generic functions and generic types. Type constraints specify that a type parameter must inherit from a specific class, or conform to a particular protocol or protocol composition.
+
+For example, Swift’s `Dictionary` type places a limitation on the types that can be used as keys for a dictionary. As described in [Dictionaries](https://docs.swift.org/swift-book/LanguageGuide/CollectionTypes.html#ID113), the type of a dictionary’s keys must be *hashable*. That is, it must provide a way to make itself *uniquely* representable.
+
+This requirement is enforced by a type constraint on the key type for `Dictionary`, which specifies that the key type must conform to the `Hashable` protocol, a special protocol defined in the Swift standard library. All of Swift’s *basic types* (such as `String`, `Int`, `Double`, and `Bool`) are hashable by default. For information about making your own custom types conform to the Hashable protocol, see [Conforming to the Hashable Protocol](https://developer.apple.com/documentation/swift/hashable#2849490).
+
+You can define your own type constraints when creating custom generic types, and these constraints provide much of the power of generic programming. Abstract concepts like Hashable characterize types in terms of their conceptual characteristics, rather than their concrete type.
+
+### Type Constraint Syntax
+
+You write type constraints by placing a single class or protocol constraint after a type parameter’s name, separated by a *colon*, as part of the type parameter list.
+
+The basic syntax for type constraints on a generic function is shown below (although the syntax is the same for generic types):
+
+```swift
+func someFunction<T: SomeClass, U: SomeProtocol>(someT: T, someU: U) {
+    // function body goes here
+}
+```
+
+### Type Constraints in Action
+
+Here’s a nongeneric function called `findIndex(ofString:in:)`, which is given a `String` value to find and an array of `String` values within which to find it. The `findIndex(ofString:in:)` function returns an optional `Int` value, which will be the index of the first matching string in the array if it’s found, or `nil` if the string can’t be found:
+
+```swift
+func findIndex(ofString valueToFind: String, in array: [String]) -> Int? {
+    for (index, value) in array.enumerated() {
+        if value == valueToFind {
+            return index
+        }
+    }
+    return nil
+}
+```
+
+The `findIndex(ofString:in:)` function can be used to find a string value in an array of strings:
+
+```swift
+let strings = ["cat", "dog", "llama", "parakeet", "terrapin"]
+if let foundIndex = findIndex(ofString: "llama", in: strings) {
+    print("The index of llama is \(foundIndex)")
+}
+// Prints "The index of llama is 2"
+```
+
+The principle of finding the index of a value in an array isn’t useful only for strings, however. You can write the same functionality as a generic function by replacing any mention of strings with values of some type `T` instead.
+
+Here’s how you might expect a generic version of `findIndex(ofString:in:)`, called `findIndex(of:in:)`, to be written. Note that the return type of this function is still `Int?`, because the function returns an optional index number, not an optional value from the array. Be warned, though, this function doesn’t compile, for reasons explained after the example:
+
+```swift
+func findIndex<T>(of valueToFind: T, in array:[T]) -> Int? {
+    for (index, value) in array.enumerated() {
+        if value == valueToFind {
+            return index
+        }
+    }
+    return nil
+}
+```
+
+This function doesn’t compile as written above. The problem lies with the equality check, “`if value == valueToFind`”. Not every type in Swift can be compared with the equal to operator (`==`). If you create your own class or structure to represent a complex data model, for example, then the meaning of “equal to” for that class or structure isn’t something that Swift can guess for you. Because of this, it isn’t possible to guarantee that this code will work for *every* possible type `T`, and an appropriate error is reported when you try to compile the code.
+
+All is not lost, however. The Swift standard library defines a protocol called `Equatable`, which requires any conforming type to implement the equal to operator (`==`) and the not equal to operator (`!=`) to compare any two values of that type. All of Swift’s standard types automatically support the `Equatable` protocol.
+
+Any type that’s `Equatable` can be used safely with the `findIndex(of:in:)` function, because it’s guaranteed to support the equal to operator. To express this fact, you write a type constraint of `Equatable` as part of the type parameter’s definition when you define the function:
+
+```swift
+func findIndex<T: Equatable>(of valueToFind: T, in array:[T]) -> Int? {
+    for (index, value) in array.enumerated() {
+        if value == valueToFind {
+            return index
+        }
+    }
+    return nil
+}
+```
+
+The single type parameter for `findIndex(of:in:)` is written as `T: Equatable`, which means “any type `T` that conforms to the `Equatable` protocol.”
+
+The `findIndex(of:in:)` function now compiles successfully and can be used with any type that’s `Equatable`, such as `Double` or `String`:
+
+```swift
+let doubleIndex = findIndex(of: 9.3, in: [3.14159, 0.1, 0.25])
+// doubleIndex is an optional Int with no value, because 9.3 isn't in the array
+let stringIndex = findIndex(of: "Andrea", in: ["Mike", "Malcolm", "Andrea"])
+// stringIndex is an optional Int containing a value of 2
+```
+
+## Associated Types
+
+When defining a protocol, it’s sometimes useful to declare one or more *associated types* as part of the protocol’s definition. An associated type gives a placeholder name to a type that’s used as part of the protocol. The actual type to use for that associated type isn’t specified until the protocol is adopted. Associated types are specified with the `associatedtype` keyword.
+
+### Associated Types in Action
+
+Here’s an example of a protocol called `Container`, which declares an associated type called `Item`:
+
+```swift
+protocol Container {
+    associatedtype Item
+    mutating func append(_ item: Item)
+    var count: Int { get }
+    subscript(i: Int) -> Item { get }
+}
+```
+
+This protocol doesn’t specify how the items in the container should be stored or what type they’re allowed to be. The protocol only specifies the three bits of functionality that any type must provide in order to be considered a `Container`. A conforming type can provide additional functionality, as long as it satisfies these three requirements.
+
+The `Container` protocol declares an associated type called `Item`, written as `associatedtype Item`. The protocol doesn’t define what Item is, that information is left for any conforming type to provide.
+
+Nonetheless, the `Item` alias provides a way to refer to the type of the items in a Container, and to define a type for use with the `append(_:)` method and subscript, to ensure that the expected behavior of any `Container` is enforced.
+
+Here’s a version of the nongeneric `IntStack` type from [Generic Types](#generic-types) above, adapted to conform to the `Container` protocol:
+
+```swift
+struct IntStack: Container {
+    // original IntStack implementation
+    var items: [Int] = []
+    mutating func push(_ item: Int) {
+        items.append(item)
+    }
+    mutating func pop() -> Int {
+        return items.removeLast()
+    }
+    // conformance to the Container protocol
+    typealias Item = Int
+    mutating func append(_ item: Int) {
+        self.push(item)
+    }
+    var count: Int {
+        return items.count
+    }
+    subscript(i: Int) -> Int {
+        return items[i]
+    }
+}
+```
+
+`IntStack` specifies that for this implementation of `Container`, the appropriate Item to use is a type of `Int`. The definition of `typealias Item = Int` turns the abstract type of `Item` into a concrete type of `Int` for this implementation of the `Container` protocol.
+
+Thanks to Swift’s *type inference*, you don’t actually need to declare a concrete `Item` of `Int` as part of the definition of `IntStack`. Because `IntStack` conforms to all of the requirements of the `Container` protocol, Swift can *infer* the appropriate `Item` to use, simply by looking at the type of the `append(_:)` method’s `item` parameter and the return type of the subscript. *Indeed, if you delete the typealias Item = Int line from the code above, everything still works, because it’s clear what type should be used for Item.*
+
+You can also make the generic `Stack` type conform to the `Container` protocol:
+
+```swift
+struct Stack<Element>: Container {
+    // original Stack<Element> implementation
+    var items: [Element] = []
+    mutating func push(_ item: Element) {
+        items.append(item)
+    }
+    mutating func pop() -> Element {
+        return items.removeLast()
+    }
+    // conformance to the Container protocol
+    mutating func append(_ item: Element) {
+        self.push(item)
+    }
+    var count: Int {
+        return items.count
+    }
+    subscript(i: Int) -> Element {
+        return items[i]
+    }
+}
+```
+
+This time, the type parameter `Element` is used as the type of the `append(_:)` method’s `item` parameter and the return type of the subscript. Swift can therefore infer that Element is the appropriate type to use as the `Item` for this particular container.
+
+### Extending an Existing Type to Specify an Associated Type
+
+You can extend an existing type to add conformance to a protocol, as described in [Adding Protocol Conformance with an Extension](https://docs.swift.org/swift-book/LanguageGuide/Protocols.html#ID277). This includes a protocol with an *associated type*.
+
+Swift’s `Array` type already provides an `append(_:)` method, a `count` property, and a subscript with an `Int` index to retrieve its elements. These three capabilities match the requirements of the `Container` protocol. This means that you can extend `Array` to conform to the Container protocol simply by declaring that `Array` adopts the protocol. You do this with an empty extension, as described in [Declaring Protocol Adoption with an Extension](https://docs.swift.org/swift-book/LanguageGuide/Protocols.html#ID278):
+
+```swift
+extension Array: Container {}
+```
+
+Array’s existing `append(_:)` method and subscript enable Swift to infer the appropriate type to use for `Item`, just as for the generic `Stack` type above. After defining this extension, you can use any `Array` as a `Container`.
+
+### Adding Constraints to an Associated Type
+
+You can add *type constraints* to an associated type in a protocol to require that conforming types satisfy those constraints.
+
+For example, the following code defines a version of `Container` that requires the items in the container to be equatable.
+
+```swift
+protocol Container {
+    associatedtype Item: Equatable
+    mutating func append(_ item: Item)
+    var count: Int { get }
+    subscript(i: Int) -> Item { get }
+}
+```
+
+### Using a Protocol in Its Associated Type’s Constraints
+
+A protocol can appear as part of its own requirements. For example, here’s a protocol that refines the `Container` protocol, adding the requirement of a `suffix(_:)` method. The `suffix(_:)` method returns a given number of elements from the end of the container, storing them in an instance of the `Suffix` type.
+
+```swift
+protocol SuffixableContainer: Container {
+    associatedtype Suffix: SuffixableContainer where Suffix.Item == Item
+    func suffix(_ size: Int) -> Suffix
+}
+```
+
+In this protocol, `Suffix` is an associated type, like the `Item` type in the `Container` example above. `Suffix` has two constraints: It must conform to the `SuffixableContainer` protocol (the protocol currently being defined), and its `Item` type must be the same as the container’s `Item` type. The constraint on `Item` is a generic `where` clause, which is discussed in [Associated Types with a Generic Where Clause](#associated-types-with-a-generic-where-clause) below.
+
+Here’s an extension of the `Stack` type from [Generic Types](#generic-types) above that adds conformance to the `SuffixableContainer` protocol:
+
+```swift
+extension Stack: SuffixableContainer {
+    func suffix(_ size: Int) -> Stack {
+        var result = Stack()
+        for index in (count-size)..<count {
+            result.append(self[index])
+        }
+        return result
+    }
+    // Inferred that Suffix is Stack.
+}
+var stackOfInts = Stack<Int>()
+stackOfInts.append(10)
+stackOfInts.append(20)
+stackOfInts.append(30)
+let suffix = stackOfInts.suffix(2)
+// suffix contains 20 and 30
+```
+
+In the example above, the `Suffix` associated type for `Stack` is also `Stack`, so the suffix operation on `Stack` returns another `Stack`.
+
+Alternatively, a type that conforms to `SuffixableContainer` can have a `Suffix` type that’s different from itself, meaning the suffix operation can return a different type.
+
+For example, here’s an extension to the *nongeneric* `IntStack` type that adds `SuffixableContainer` conformance, using `Stack<Int>` as its suffix type instead of `IntStack`:
+
+```swift
+extension IntStack: SuffixableContainer {
+    func suffix(_ size: Int) -> Stack<Int> {
+        var result = Stack<Int>()
+        for index in (count-size)..<count {
+            result.append(self[index])
+        }
+        return result
+    }
+    // Inferred that Suffix is Stack<Int>.
+}
+```
+
+## Generic Where Clauses
 
 
