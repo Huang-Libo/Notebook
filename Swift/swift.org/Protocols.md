@@ -17,6 +17,7 @@ In addition to specifying requirements that conforming types must implement, you
     - [Class Implementations of Protocol Initializer Requirements](#class-implementations-of-protocol-initializer-requirements)
     - [Failable Initializer Requirements](#failable-initializer-requirements)
   - [Protocols as Types](#protocols-as-types)
+  - [Delegation](#delegation)
 
 ## Protocol Syntax
 
@@ -238,5 +239,49 @@ Protocols can define failable initializer requirements for conforming types, as 
 A failable initializer requirement can be satisfied by a failable or nonfailable initializer on a conforming type. A nonfailable initializer requirement can be satisfied by a nonfailable initializer or an implicitly unwrapped failable initializer.
 
 ## Protocols as Types
+
+Protocols don’t actually implement any functionality themselves. Nonetheless, you can use protocols as a fully fledged types in your code. Using a protocol as a type is sometimes called an *existential type*, which comes from the phrase “there exists a type *T* such that *T* conforms to the protocol”.
+
+You can use a protocol in many places where other types are allowed, including:
+
+- As a parameter type or return type in a function, method, or initializer
+- As the type of a constant, variable, or property
+- As the type of items in an array, dictionary, or other container
+
+Here’s an example of a protocol used as a type:
+
+```swift
+class Dice {
+    let sides: Int
+    let generator: RandomNumberGenerator
+    init(sides: Int, generator: RandomNumberGenerator) {
+        self.sides = sides
+        self.generator = generator
+    }
+    func roll() -> Int {
+        return Int(generator.random() * Double(sides)) + 1
+    }
+}
+```
+
+This example defines a new class called `Dice`, which represents an *n*-sided dice for use in a board game. `Dice` instances have an integer property called `sides`, which represents how many sides they have, and a property called `generator`, which provides a random number generator from which to create dice roll values.
+
+`Dice` provides one instance method, `roll`, which returns an integer value between `1` and the number of sides on the dice. This method calls the generator’s `random()` method to create a new random number between `0.0` and `1.0`, and uses this random number to create a dice roll value within the correct range.
+
+Here’s how the `Dice` class can be used to create a *six*-sided dice with a `LinearCongruentialGenerator` instance as its random number generator:
+
+```swift
+var d6 = Dice(sides: 6, generator: LinearCongruentialGenerator())
+for _ in 1...5 {
+    print("Random dice roll is \(d6.roll())")
+}
+// Random dice roll is 3
+// Random dice roll is 5
+// Random dice roll is 4
+// Random dice roll is 5
+// Random dice roll is 4
+```
+
+## Delegation
 
 
