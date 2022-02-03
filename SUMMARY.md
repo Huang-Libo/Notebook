@@ -20,6 +20,7 @@
   - [Properties](Swift/swift.org/Properties.md)
   - [Initialization](Swift/swift.org/Initialization.md)
   - [Optional Chaining](Swift/swift.org/OptionalChaining.md)
+  - [Protocols](Swift/swift.org/Protocols.md)
   - [Generics](Swift/swift.org/Generics.md)
   - [Access Control](Swift/swift.org/AccessControl.md)
 - [SwiftUI-Tutorials](Swift/SwiftUI-Tutorials/README.md)
