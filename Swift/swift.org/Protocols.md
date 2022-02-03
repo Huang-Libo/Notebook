@@ -18,6 +18,7 @@ In addition to specifying requirements that conforming types must implement, you
     - [Failable Initializer Requirements](#failable-initializer-requirements)
   - [Protocols as Types](#protocols-as-types)
   - [Delegation](#delegation)
+  - [Adding Protocol Conformance with an Extension](#adding-protocol-conformance-with-an-extension)
 
 ## Protocol Syntax
 
@@ -283,5 +284,108 @@ for _ in 1...5 {
 ```
 
 ## Delegation
+
+*Delegation* is a design pattern that enables a *class* or *structure* to hand off (or delegate) some of its responsibilities to an instance of another type.
+
+The example below defines two protocols for use with dice-based board games:
+
+```swift
+protocol DiceGame {
+    var dice: Dice { get }
+    func play()
+}
+protocol DiceGameDelegate: AnyObject {
+    func gameDidStart(_ game: DiceGame)
+    func game(_ game: DiceGame, didStartNewTurnWithDiceRoll diceRoll: Int)
+    func gameDidEnd(_ game: DiceGame)
+}
+```
+
+The `DiceGame` protocol is a protocol that can be adopted by any game that involves dice.
+
+The `DiceGameDelegate` protocol can be adopted to track the progress of a `DiceGame`. To prevent strong reference cycles, delegates are declared as `weak` references. For information about weak references, see [Strong Reference Cycles Between Class Instances](https://docs.swift.org/swift-book/LanguageGuide/AutomaticReferenceCounting.html#ID51).
+
+Marking the protocol as *class-only* lets the `SnakesAndLadders` class later in this chapter declare that its delegate must use a `weak` reference. **A class-only protocol is marked by its inheritance from `AnyObject`**, as discussed in [Class-Only Protocols](#class-only-protocols).
+
+Here’s a version of the *Snakes and Ladders* game originally introduced in [Control Flow](https://docs.swift.org/swift-book/LanguageGuide/ControlFlow.html). This version is adapted to use a `Dice` instance for its dice-rolls; to adopt the `DiceGame` protocol; and to notify a `DiceGameDelegate` about its progress:
+
+```swift
+class SnakesAndLadders: DiceGame {
+    let finalSquare = 25
+    let dice = Dice(sides: 6, generator: LinearCongruentialGenerator())
+    var square = 0
+    var board: [Int]
+    init() {
+        board = Array(repeating: 0, count: finalSquare + 1)
+        board[03] = +08; board[06] = +11; board[09] = +09; board[10] = +02
+        board[14] = -10; board[19] = -11; board[22] = -02; board[24] = -08
+    }
+    weak var delegate: DiceGameDelegate?
+    func play() {
+        square = 0
+        delegate?.gameDidStart(self)
+        gameLoop: while square != finalSquare {
+            let diceRoll = dice.roll()
+            delegate?.game(self, didStartNewTurnWithDiceRoll: diceRoll)
+            switch square + diceRoll {
+            case finalSquare:
+                break gameLoop
+            case let newSquare where newSquare > finalSquare:
+                continue gameLoop
+            default:
+                square += diceRoll
+                square += board[square]
+            }
+        }
+        delegate?.gameDidEnd(self)
+    }
+}
+```
+
+For a description of the *Snakes and Ladders* gameplay, see [Break](https://docs.swift.org/swift-book/LanguageGuide/ControlFlow.html#ID137).
+
+This version of the game is wrapped up as a class called `SnakesAndLadders`, which adopts the `DiceGame` protocol. It provides a gettable `dice` property and a `play()` method in order to conform to the protocol. (The `dice` property is declared as a constant property because it doesn’t need to change after initialization, and the protocol only requires that it must be gettable.)
+
+Note that the `delegate` property is defined as an *optional* `DiceGameDelegate`, because a `delegate` isn’t required in order to play the game. Because it’s of an optional type, the `delegate` property is automatically set to an initial value of `nil`. Thereafter, the game instantiator has the option to set the property to a suitable delegate. Because the DiceGameDelegate protocol is *class-only*, you can declare the delegate to be `weak` to prevent reference cycles.
+
+This next example shows a class called `DiceGameTracker`, which adopts the `DiceGameDelegate` protocol:
+
+```swift
+class DiceGameTracker: DiceGameDelegate {
+    var numberOfTurns = 0
+    func gameDidStart(_ game: DiceGame) {
+        numberOfTurns = 0
+        if game is SnakesAndLadders {
+            print("Started a new game of Snakes and Ladders")
+        }
+        print("The game is using a \(game.dice.sides)-sided dice")
+    }
+    func game(_ game: DiceGame, didStartNewTurnWithDiceRoll diceRoll: Int) {
+        numberOfTurns += 1
+        print("Rolled a \(diceRoll)")
+    }
+    func gameDidEnd(_ game: DiceGame) {
+        print("The game lasted for \(numberOfTurns) turns")
+    }
+}
+```
+
+Here’s how `DiceGameTracker` looks in action:
+
+```swift
+let tracker = DiceGameTracker()
+let game = SnakesAndLadders()
+game.delegate = tracker
+game.play()
+// Started a new game of Snakes and Ladders
+// The game is using a 6-sided dice
+// Rolled a 3
+// Rolled a 5
+// Rolled a 4
+// Rolled a 5
+// The game lasted for 4 turns
+```
+
+## Adding Protocol Conformance with an Extension
 
 
