@@ -13,6 +13,7 @@ In addition to specifying requirements that conforming types must implement, you
   - [Property Requirements](#property-requirements)
   - [Method Requirements](#method-requirements)
   - [Mutating Method Requirements](#mutating-method-requirements)
+  - [Initializer Requirements](#initializer-requirements)
 
 ## Protocol Syntax
 
@@ -146,5 +147,38 @@ print("And another one: \(generator.random())")
 ```
 
 ## Mutating Method Requirements
+
+ It’s sometimes necessary for a method to modify (or *mutate*) the instance it belongs to. For instance methods on *value types* (that is, *structures* and *enumerations*) you place the `mutating` keyword before a method’s `func` keyword to indicate that the method is allowed to modify the instance it belongs to and any properties of that instance. This process is described in [Modifying Value Types from Within Instance Methods](https://docs.swift.org/swift-book/LanguageGuide/Methods.html#ID239).
+
+> **NOTE**: If you mark a protocol instance method requirement as `mutating`, you don’t need to write the `mutating` keyword when writing an implementation of that method for a *class*. The `mutating` keyword is only used by *structures* and *enumerations*.
+
+The example below defines a protocol called `Togglable`, which defines a single instance method requirement called `toggle`. As its name suggests, the `toggle()` method is intended to toggle or invert the state of any conforming type, typically by modifying a property of that type.
+
+```swift
+protocol Togglable {
+    mutating func toggle()
+}
+```
+
+The example below defines an enumeration called `OnOffSwitch`. This enumeration toggles between two states, indicated by the enumeration cases `on` and `off`. The enumeration’s `toggle` implementation is marked as `mutating`, to match the `Togglable` protocol’s requirements:
+
+```swift
+enum OnOffSwitch: Togglable {
+    case off, on
+    mutating func toggle() {
+        switch self {
+        case .off:
+            self = .on
+        case .on:
+            self = .off
+        }
+    }
+}
+var lightSwitch = OnOffSwitch.off
+lightSwitch.toggle()
+// lightSwitch is now equal to .on
+```
+
+## Initializer Requirements
 
 
