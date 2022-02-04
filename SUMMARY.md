@@ -16,6 +16,7 @@
 
 - [Language Guide](Swift/LanguageGuide/README.md)
   - [Closures](Swift/LanguageGuide/Closures.md)
+  - [Enumerations](Swift/LanguageGuide/Enumerations.md)
   - [Structures and Classes](Swift/LanguageGuide/ClassesAndStructures.md)
   - [Properties](Swift/LanguageGuide/Properties.md)
   - [Initialization](Swift/LanguageGuide/Initialization.md)
