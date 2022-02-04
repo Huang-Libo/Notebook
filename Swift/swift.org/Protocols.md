@@ -31,6 +31,7 @@ In addition to specifying requirements that conforming types must implement, you
   - [Protocol Composition](#protocol-composition)
   - [Checking for Protocol Conformance](#checking-for-protocol-conformance)
   - [Optional Protocol Requirements](#optional-protocol-requirements)
+  - [Protocol Extensions](#protocol-extensions)
 
 ## Protocol Syntax
 
@@ -758,5 +759,99 @@ for object in objects {
 Whenever an object in the array conforms to the `HasArea` protocol, the optional value returned by the `as?` operator is unwrapped with optional binding into a constant called `objectWithArea`. The `objectWithArea` constant is known to be of type `HasArea`, and so its `area` property can be accessed and printed in a type-safe way.
 
 ## Optional Protocol Requirements
+
+You can define *optional requirements* for protocols. These requirements don’t have to be implemented by types that conform to the protocol. Optional requirements are prefixed by the `optional` modifier as part of the protocol’s definition.
+
+Optional requirements are available so that you can write code that interoperates with Objective-C. Both the protocol and the optional requirement must be marked with the `@objc` attribute. Note that `@objc` protocols can be adopted only by classes that inherit from Objective-C classes or other `@objc` classes. They can’t be adopted by *structures* or *enumerations*.
+
+When you use a method or property in an optional requirement, its type automatically becomes an optional. For example, a method of type `(Int) -> String` becomes `((Int) -> String)?`. Note that the entire function type is wrapped in the optional, not the method’s return value.
+
+An optional protocol requirement can be called with optional chaining, to account for the possibility that the requirement was *not implemented* by a type that conforms to the protocol. You check for an implementation of an optional method by writing a *question mark* after the name of the method when it’s called, such as `someOptionalMethod?(someArgument)`. For information on optional chaining, see [Optional Chaining](https://docs.swift.org/swift-book/LanguageGuide/OptionalChaining.html).
+
+The following example defines an integer-counting class called `Counter`, which uses an external data source to provide its increment amount. This data source is defined by the `CounterDataSource` protocol, which has two *optional* requirements:
+
+```swift
+@objc protocol CounterDataSource {
+    @objc optional func increment(forCount count: Int) -> Int
+    @objc optional var fixedIncrement: Int { get }
+}
+```
+
+The `CounterDataSource` protocol defines an optional method requirement called `increment(forCount:)` and an optional property requirement called `fixedIncrement`. These requirements define two different ways for data sources to provide an appropriate increment amount for a `Counter` instance.
+
+The `Counter` class, defined below, has an optional `dataSource` property of type `CounterDataSource?`:
+
+```swift
+class Counter {
+    var count = 0
+    var dataSource: CounterDataSource?
+    func increment() {
+        if let amount = dataSource?.increment?(forCount: count) {
+            count += amount
+        } else if let amount = dataSource?.fixedIncrement {
+            count += amount
+        }
+    }
+}
+```
+
+The `Counter` class stores its current value in a variable property called `count`. The `Counter` class also defines a method called `increment`, which increments the `count` property every time the method is called.
+
+Here’s a simple `CounterDataSource` implementation where the data source returns a constant value of `3` every time it’s queried. It does this by implementing the optional `fixedIncrement` property requirement:
+
+```swift
+class ThreeSource: NSObject, CounterDataSource {
+    let fixedIncrement = 3
+}
+```
+
+You can use an instance of `ThreeSource` as the data source for a new `Counter` instance:
+
+```swift
+var counter = Counter()
+counter.dataSource = ThreeSource()
+for _ in 1...4 {
+    counter.increment()
+    print(counter.count)
+}
+// 3
+// 6
+// 9
+// 12
+```
+
+Here’s a more complex data source called `TowardsZeroSource`, which makes a `Counter` instance count up or down towards zero from its current `count` value:
+
+```swift
+class TowardsZeroSource: NSObject, CounterDataSource {
+    func increment(forCount count: Int) -> Int {
+        if count == 0 {
+            return 0
+        } else if count < 0 {
+            return 1
+        } else {
+            return -1
+        }
+    }
+}
+```
+
+You can use an instance of `TowardsZeroSource` with the existing `Counter` instance to count from `-4` to `zero`. Once the counter reaches zero, no more counting takes place:
+
+```swift
+counter.count = -4
+counter.dataSource = TowardsZeroSource()
+for _ in 1...5 {
+    counter.increment()
+    print(counter.count)
+}
+// -3
+// -2
+// -1
+// 0
+// 0
+```
+
+## Protocol Extensions
 
 
