@@ -1,6 +1,6 @@
 # Protocols
 
-> Version: *Swift 5.5*  
+> Version: *Swift 5.6*  
 > Source: [*swift-book: Protocols*](https://docs.swift.org/swift-book/LanguageGuide/Protocols.html)  
 > Digest Date: *February 3, 2022*  
 
