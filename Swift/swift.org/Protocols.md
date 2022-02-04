@@ -26,6 +26,9 @@ In addition to specifying requirements that conforming types must implement, you
     - [Hashable](#hashable)
     - [Comparable](#comparable)
   - [Collections of Protocol Types](#collections-of-protocol-types)
+  - [Protocol Inheritance](#protocol-inheritance)
+  - [Class-Only Protocols](#class-only-protocols)
+  - [Protocol Composition](#protocol-composition)
 
 ## Protocol Syntax
 
@@ -543,5 +546,81 @@ for level in levels.sorted() {
 ```
 
 ## Collections of Protocol Types
+
+A protocol can be used as the type to be stored in a collection such as an array or a dictionary, as mentioned in [Protocols as Types](#protocols-as-types). This example creates an array of TextRepresentable things:
+
+```swift
+let things: [TextRepresentable] = [game, d12, simonTheHamster]
+```
+
+It’s now possible to iterate over the items in the array, and print each item’s textual description:
+
+```swift
+for thing in things {
+    print(thing.textualDescription)
+}
+// A game of Snakes and Ladders with 25 squares
+// A 12-sided dice
+// A hamster named Simon
+```
+
+## Protocol Inheritance
+
+A protocol can *inherit* one or more other protocols and can add further requirements on top of the requirements it inherits. The syntax for protocol inheritance is similar to the syntax for class inheritance, but with the option to list multiple inherited protocols, separated by commas:
+
+```swift
+protocol InheritingProtocol: SomeProtocol, AnotherProtocol {
+    // protocol definition goes here
+}
+```
+
+Here’s an example of a protocol that inherits the `TextRepresentable` protocol from above:
+
+```swift
+protocol PrettyTextRepresentable: TextRepresentable {
+    var prettyTextualDescription: String { get }
+}
+```
+
+The `SnakesAndLadders` class can be extended to adopt and conform to `PrettyTextRepresentable`:
+
+```swift
+extension SnakesAndLadders: PrettyTextRepresentable {
+    var prettyTextualDescription: String {
+        var output = textualDescription + ":\n"
+        for index in 1...finalSquare {
+            switch board[index] {
+            case let ladder where ladder > 0:
+                output += "▲ "
+            case let snake where snake < 0:
+                output += "▼ "
+            default:
+                output += "○ "
+            }
+        }
+        return output
+    }
+}
+```
+
+The `prettyTextualDescription` property can now be used to print a pretty text description of any `SnakesAndLadders` instance:
+
+```swift
+print(game.prettyTextualDescription)
+// A game of Snakes and Ladders with 25 squares:
+// ○ ○ ▲ ○ ○ ▲ ○ ○ ▲ ▲ ○ ○ ○ ▼ ○ ○ ○ ○ ▼ ○ ○ ▼ ○ ▼ ○
+```
+
+## Class-Only Protocols
+
+You can limit protocol adoption to *class* types (and not *structures* or *enumerations*) by adding the `AnyObject` protocol to a protocol’s inheritance list.
+
+```swift
+protocol SomeClassOnlyProtocol: AnyObject, SomeInheritedProtocol {
+    // class-only protocol definition goes here
+}
+```
+
+## Protocol Composition
 
 
