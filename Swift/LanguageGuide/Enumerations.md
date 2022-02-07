@@ -23,6 +23,8 @@ Enumerations in Swift are *first-class types* in their own right. They adopt man
 - [Enumerations](#enumerations)
   - [Enumeration Syntax](#enumeration-syntax)
   - [Matching Enumeration Values with a Switch Statement](#matching-enumeration-values-with-a-switch-statement)
+  - [Iterating over Enumeration Cases](#iterating-over-enumeration-cases)
+  - [Associated Values](#associated-values)
 
 ## Enumeration Syntax
 
@@ -70,5 +72,65 @@ directionToHead = .east
 ```
 
 ## Matching Enumeration Values with a Switch Statement
+
+You can match individual enumeration values with a `switch` statement:
+
+```swift
+directionToHead = .south
+switch directionToHead {
+case .north:
+    print("Lots of planets have a north")
+case .south:
+    print("Watch out for penguins")
+case .east:
+    print("Where the sun rises")
+case .west:
+    print("Where the skies are blue")
+}
+// Prints "Watch out for penguins"
+```
+
+As described in [Control Flow](https://docs.swift.org/swift-book/LanguageGuide/ControlFlow.html), a `switch` statement must be exhaustive when considering an enumeration’s cases. If the `case` for `.west` is omitted, this code doesn’t compile, because it doesn’t consider the complete list of `CompassPoint` cases. Requiring exhaustiveness ensures that enumeration cases aren’t accidentally omitted.
+
+When it isn’t appropriate to provide a `case` for every enumeration case, you can provide a `default` case to cover any cases that aren’t addressed explicitly:
+
+```swift
+let somePlanet = Planet.earth
+switch somePlanet {
+case .earth:
+    print("Mostly harmless")
+default:
+    print("Not a safe place for humans")
+}
+// Prints "Mostly harmless"
+```
+
+## Iterating over Enumeration Cases
+
+For some enumerations, it’s useful to have a collection of all of that enumeration’s cases. You enable this by writing `: CaseIterable` after the enumeration’s name. Swift exposes a collection of all the cases as an `allCases` property of the enumeration type. Here’s an example:
+
+```swift
+enum Beverage: CaseIterable {
+    case coffee, tea, juice
+}
+let numberOfChoices = Beverage.allCases.count
+print("\(numberOfChoices) beverages available")
+// Prints "3 beverages available"
+```
+
+The example above counts how many cases there are, and the example below uses a `for-in` loop to iterate over all the cases.
+
+```swift
+for beverage in Beverage.allCases {
+    print(beverage)
+}
+// coffee
+// tea
+// juice
+```
+
+The syntax used in the examples above marks the enumeration as conforming to the [CaseIterable](https://developer.apple.com/documentation/swift/caseiterable) protocol.
+
+## Associated Values
 
 
