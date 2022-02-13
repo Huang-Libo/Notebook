@@ -7,6 +7,8 @@ Swift, iOS 13.0+, macOS 10.15+
   - [Publisher](#publisher)
   - [Subscriber](#subscriber)
   - [Subscription](#subscription)
+  - [Binding](#binding)
+  - [State](#state)
   - [CustomCombineIdentifierConvertible](#customcombineidentifierconvertible)
   - [WWDC Video](#wwdc-video)
 
@@ -54,6 +56,84 @@ Tells a publisher that it may send more values to the subscriber.
 ```swift
 func request(_ demand: Subscribers.Demand)
 ```
+
+## Binding
+
+A *property wrapper* type that can read and write a value owned by a source of truth.
+
+**Declaration**:
+
+```swift
+@frozen @propertyWrapper @dynamicMemberLookup struct Binding<Value>
+```
+
+**Overview**:
+
+Use a binding to create a two-way connection between a property that stores data, and a view that displays and changes the data. A binding connects a property to a source of truth stored elsewhere, instead of storing data directly.
+
+For example, a button that toggles between play and pause can create a binding to a property of its parent view using the `Binding` *property wrapper*.
+
+```swift
+struct PlayButton: View {
+    @Binding var isPlaying: Bool
+
+    var body: some View {
+        Button(action: {
+            self.isPlaying.toggle()
+        }) {
+            HStack {
+                Image(systemName: (isPlaying ? "pause.circle" : "play.circle"))
+                Text("abc")
+                
+            }
+        }
+    }
+}
+```
+
+The parent view declares a property to hold the playing state, using the `State` *property wrapper* to indicate that this property is the value’s source of truth.
+
+```swift
+struct PlayerView: View {
+    var name: String
+    @State private var isPlaying: Bool = false
+
+    var body: some View {
+        VStack {
+            Text(name)
+            Text(isPlaying ? "✅" : "❌")
+            PlayButton(isPlaying: $isPlaying)
+        }
+        .padding()
+    }
+}
+```
+
+When `PlayerView` initializes `PlayButton`, it passes a binding of its state property into the button’s binding property. Applying the `$` prefix to a property wrapped value returns its `projectedValue`, which for a *state property wrapper* returns a binding to the value.
+
+Whenever the user taps the `PlayButton`, the `PlayerView` updates its `isPlaying` state.
+
+## State
+
+A *property wrapper* type that can read and write a value managed by SwiftUI.
+
+**Declaration**:
+
+```swift
+@frozen @propertyWrapper struct State<Value>
+```
+
+**Overview**:
+
+SwiftUI manages the storage of any property you declare as a state. When the state value changes, the view invalidates its appearance and recomputes the `body`. Use the state as the single source of truth for a given view.
+
+A `State` instance isn’t the value itself; it’s a means of reading and writing the value. To access a state’s underlying value, use its variable name, which returns the `wrappedValue` property value.
+
+You should only access a state property from inside the view’s body, or from methods called by it. For this reason, declare your state properties as `private`, to prevent clients of your view from accessing them. **It is safe to mutate state properties from any thread.**
+
+To pass a state property to another view in the view hierarchy, use the variable name with the `$` prefix operator. This retrieves a binding of the state property from its `projectedValue` property.
+
+For example, in the following code example `PlayerView` passes its state property `isPlaying` to `PlayButton` using `$isPlaying`.
 
 ## CustomCombineIdentifierConvertible
 
