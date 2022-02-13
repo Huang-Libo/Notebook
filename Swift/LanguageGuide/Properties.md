@@ -333,7 +333,7 @@ struct SmallRectangle {
 }
 ```
 
-The `_height` and `_width` properties store an instance of the property wrapper, `TwelveOrLess`. The getter and setter for height and width wrap access to the `wrappedValue` property.
+The `_height` and `_width` properties store an instance of the property wrapper, `TwelveOrLess`. The getter and setter for `height` and `width` wrap access to the `wrappedValue` property.
 
 ### Setting Initial Values for Wrapped Properties
 
@@ -430,13 +430,14 @@ print(mixedRectangle.height)
 // Prints "12"
 ```
 
-The instance of `SmallNumber` that wraps `height` is created by calling `SmallNumber(wrappedValue: 1)`, which uses the default `maximum` value of `12`. The instance that wraps width is created by calling `SmallNumber(wrappedValue: 2, maximum: 9)`.
+- The instance of `SmallNumber` that wraps `height` is created by calling `SmallNumber(wrappedValue: 1)`, which uses the default `maximum` value of `12`.
+- The instance that wraps `width` is created by calling `SmallNumber(wrappedValue: 2, maximum: 9)`.
 
 ### Projecting a Value From a Property Wrapper
 
 In addition to the *wrapped value*, a property wrapper can expose additional functionality by defining a *projected value*.
 
-For example, a *property wrapper* that manages access to a database can expose a `flushDatabaseConnection()` method on its projected value. **The name of the projected value is the same as the wrapped value, except it begins with a dollar sign (`$`).**
+For example, a *property wrapper* that manages access to a database can expose a `flushDatabaseConnection()` method on its *projected value*. **The name of the projected value is the same as the wrapped value, except it begins with a dollar sign (`$`).**
 
 In the `SmallNumber` example above, if you try to set the property to a number that’s too large, the property wrapper adjusts the number before storing it. The code below adds a `projectedValue` property to the `SmallNumber` structure to keep track of whether the property wrapper adjusted the new value for the property before storing that new value.
 
@@ -478,9 +479,9 @@ print(someStructure.$someNumber)
 // Prints "true"
 ```
 
-Writing `someStructure.$someNumber` accesses the wrapper’s projected value.
+Writing `someStructure.$someNumber` accesses the wrapper’s *projected value*.
 
-A wrapper that needs to expose more information can return an instance of some other data type, or it can return `self` to expose the instance of the wrapper as its projected value.
+A wrapper that needs to expose more information can return an instance of some other data type, or it can return `self` to expose the instance of the wrapper as its *projected value*.
 
 When you access a *projected value* from code that’s part of the type, like a property getter or an instance method, you can omit `self.` before the property name, just like accessing other properties.
 
