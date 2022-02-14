@@ -9,6 +9,7 @@ Swift, iOS 13.0+, macOS 10.15+
   - [Subscription](#subscription)
   - [Binding](#binding)
   - [State](#state)
+  - [EnvironmentObject](#environmentobject)
   - [CustomCombineIdentifierConvertible](#customcombineidentifierconvertible)
   - [WWDC Video](#wwdc-video)
 
@@ -134,6 +135,20 @@ You should only access a state property from inside the view’s body, or from m
 To pass a state property to another view in the view hierarchy, use the variable name with the `$` prefix operator. This retrieves a binding of the state property from its `projectedValue` property.
 
 For example, in the following code example `PlayerView` passes its state property `isPlaying` to `PlayButton` using `$isPlaying`.
+
+## EnvironmentObject
+
+A *property wrapper* type for an observable object supplied by a parent or ancestor view.
+
+**Declaration**:
+
+```swift
+@frozen @propertyWrapper struct EnvironmentObject<ObjectType> where ObjectType : ObservableObject
+```
+
+**Overview**:
+
+An environment object invalidates the current view whenever the observable object changes. If you declare a property as an environment object, be sure to set a corresponding model object on an ancestor view by calling its environmentObject(_:) modifier.
 
 ## CustomCombineIdentifierConvertible
 
