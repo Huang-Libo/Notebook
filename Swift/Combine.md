@@ -10,6 +10,7 @@ Swift, iOS 13.0+, macOS 10.15+
   - [Binding](#binding)
   - [State](#state)
   - [EnvironmentObject](#environmentobject)
+  - [StateObject](#stateobject)
   - [CustomCombineIdentifierConvertible](#customcombineidentifierconvertible)
   - [WWDC Video](#wwdc-video)
 
@@ -149,6 +150,49 @@ A *property wrapper* type for an observable object supplied by a parent or ances
 **Overview**:
 
 An *environment object* **invalidates** the current view whenever the observable object changes. If you declare a property as an *environment object*, be sure to set a corresponding model object on an ancestor view by calling its `environmentObject(_:)` modifier.
+
+## StateObject
+
+A *property wrapper* type that instantiates an observable object.
+
+**Declaration**:
+
+```swift
+@frozen @propertyWrapper struct StateObject<ObjectType> where ObjectType : ObservableObject
+```
+
+**Overview**:
+
+Create a state object in a `View`, `App`, or `Scene` by applying the `@StateObject` attribute to a property declaration and providing an initial value that conforms to the `ObservableObject` protocol:
+
+```swift
+@StateObject var model = DataModel()
+```
+
+SwiftUI creates a new instance of the object only once for each instance of the structure that declares the object. When published properties of the observable object change, SwiftUI updates the parts of any view that depend on those properties:
+
+```swift
+Text(model.title) // Updates the view any time `title` changes.
+```
+
+You can pass the *state object* into a property that has the `ObservedObject` attribute. You can alternatively add the object to the environment of a view hierarchy by applying the `environmentObject(_:)` modifier:
+
+```swift
+ContentView()
+    .environmentObject(model)
+```
+
+If you create an *environment object* as shown in the code above, you can read the object inside `ContentView` or any of its descendants using the `EnvironmentObject` attribute:
+
+```swift
+@EnvironmentObject var model: DataModel
+```
+
+Get a `Binding` to one of the state object’s properties using the `$` operator. Use a binding when you want to create a two-way connection to one of the object’s properties. For example, you can let a `Toggle` control a Boolean value called `isEnabled` stored in the model:
+
+```swift
+Toggle("Enabled", isOn: $model.isEnabled)
+```
 
 ## CustomCombineIdentifierConvertible
 
