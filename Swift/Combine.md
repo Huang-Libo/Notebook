@@ -11,6 +11,7 @@ Swift, iOS 13.0+, macOS 10.15+
   - [State](#state)
   - [EnvironmentObject](#environmentobject)
   - [StateObject](#stateobject)
+  - [ObservableObject](#observableobject)
   - [CustomCombineIdentifierConvertible](#customcombineidentifierconvertible)
   - [WWDC Video](#wwdc-video)
 
@@ -192,6 +193,46 @@ Get a `Binding` to one of the state object’s properties using the `$` operator
 
 ```swift
 Toggle("Enabled", isOn: $model.isEnabled)
+```
+
+## ObservableObject
+
+A type of object with a `publisher` that emits before the object has changed.
+
+**Declaration**:
+
+```swift
+protocol ObservableObject : AnyObject
+```
+
+**Overview**:
+
+By default an `ObservableObject` synthesizes an `objectWillChange` *publisher* that emits the changed value before any of its `@Published` properties changes.
+
+```swift
+class Contact: ObservableObject {
+    @Published var name: String
+    @Published var age: Int
+
+    init(name: String, age: Int) {
+        self.name = name
+        self.age = age
+    }
+
+    func haveBirthday() -> Int {
+        age += 1
+        return age
+    }
+}
+
+let john = Contact(name: "John Appleseed", age: 24)
+cancellable = john.objectWillChange
+    .sink { _ in
+        print("\(john.age) will change")
+}
+print(john.haveBirthday())
+// Prints "24 will change"
+// Prints "25"
 ```
 
 ## CustomCombineIdentifierConvertible
