@@ -148,7 +148,7 @@ A *property wrapper* type for an observable object supplied by a parent or ances
 
 **Overview**:
 
-An environment object invalidates the current view whenever the observable object changes. If you declare a property as an environment object, be sure to set a corresponding model object on an ancestor view by calling its environmentObject(_:) modifier.
+An *environment object* **invalidates** the current view whenever the observable object changes. If you declare a property as an *environment object*, be sure to set a corresponding model object on an ancestor view by calling its `environmentObject(_:)` modifier.
 
 ## CustomCombineIdentifierConvertible
 
