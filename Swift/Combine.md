@@ -12,6 +12,8 @@ Swift, iOS 13.0+, macOS 10.15+
   - [EnvironmentObject](#environmentobject)
   - [StateObject](#stateobject)
   - [ObservableObject](#observableobject)
+  - [ObservedObject](#observedobject)
+  - [Published](#published)
   - [CustomCombineIdentifierConvertible](#customcombineidentifierconvertible)
   - [WWDC Video](#wwdc-video)
 
@@ -234,6 +236,54 @@ print(john.haveBirthday())
 // Prints "24 will change"
 // Prints "25"
 ```
+
+## ObservedObject
+
+A *property wrapper* type that subscribes to an *observable object* and **invalidates** a view whenever the observable object changes.
+
+**Declaration**:
+
+```swift
+@propertyWrapper @frozen struct ObservedObject<ObjectType> where ObjectType : ObservableObject
+```
+
+## Published
+
+A type that publishes a property marked with an attribute.
+
+**Declaration**:
+
+```swift
+@propertyWrapper struct Published<Value>
+```
+
+**Overview**:
+
+Publishing a property with the `@Published` attribute creates a `publisher` of this type. You access the publisher with the `$` operator, as shown here:
+
+```swift
+class Weather {
+    @Published var temperature: Double
+    init(temperature: Double) {
+        self.temperature = temperature
+    }
+}
+
+let weather = Weather(temperature: 20)
+cancellable = weather.$temperature
+    .sink() {
+        print ("Temperature now: \($0)")
+}
+weather.temperature = 25
+
+// Prints:
+// Temperature now: 20.0
+// Temperature now: 25.0
+```
+
+When the property changes, publishing occurs in the property’s `willSet` block, meaning `subscriber`s receive the new value before it’s actually set on the property. In the above example, the second time the sink executes its closure, it receives the parameter value `25`. However, if the closure evaluated `weather.temperature`, the value returned would be `20`.
+
+> **Important**: The `@Published` attribute is `class` constrained. Use it with properties of classes, not with non-class types like structures.
 
 ## CustomCombineIdentifierConvertible
 
