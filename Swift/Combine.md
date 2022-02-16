@@ -9,6 +9,7 @@ Swift, iOS 13.0+, macOS 10.15+
   - [Subscription](#subscription)
   - [Binding](#binding)
   - [State](#state)
+  - [EnvironmentValues](#environmentvalues)
   - [EnvironmentObject](#environmentobject)
   - [StateObject](#stateobject)
   - [ObservableObject](#observableobject)
@@ -139,6 +140,75 @@ You should only access a state property from inside the view’s body, or from m
 To pass a state property to another view in the view hierarchy, use the variable name with the `$` prefix operator. This retrieves a binding of the state property from its `projectedValue` property.
 
 For example, in the following code example `PlayerView` passes its state property `isPlaying` to `PlayButton` using `$isPlaying`.
+
+## EnvironmentValues
+
+A collection of environment values propagated through a view hierarchy.
+
+**Declaration**:
+
+```swift
+struct EnvironmentValues
+```
+
+**Overview**:
+
+SwiftUI exposes a collection of values to your app’s views in an `EnvironmentValues` structure. To read a value from the structure, declare a property using the `Environment` *property wrapper* and specify the value’s key path. For example, you can read the current `locale`:
+
+```swift
+@Environment(\.locale) var locale: Locale
+```
+
+Use the property you declare to dynamically control a view’s layout. SwiftUI automatically sets or updates many environment values, like `pixelLength`, `scenePhase`, or `locale`, based on *device characteristics*, *system state*, or *user settings*. For others, like *lineLimit*, SwiftUI provides a reasonable default value.
+
+You can set or override some values using the `environment(_:_:)` view modifier:
+
+```swift
+MyView()
+    .environment(\.lineLimit, 2)
+```
+
+The value that you set affects the environment for the view that you modify — including its descendants in the view hierarchy — but only up to the point where you apply a different environment modifier.
+
+SwiftUI provides dedicated view modifiers for setting some values, which typically makes your code easier to read. For example, rather than setting the `lineLimit` value directly, as in the previous example, you should instead use the `lineLimit(_:)` modifier:
+
+```swift
+MyView()
+    .lineLimit(2)
+```
+
+In some cases, using a dedicated view modifier provides additional functionality. For example, you must use the `preferredColorScheme(_:)` modifier rather than setting `colorScheme` directly to ensure that the new value propagates up to the presenting container when presenting a view like a popover:
+
+```swift
+MyView()
+    .popover(isPresented: $isPopped) {
+        PopoverContent()
+            .preferredColorScheme(.dark)
+    }
+```
+
+Create custom environment values by defining a type that conforms to the `EnvironmentKey` protocol, and then extending the environment values structure with a new property. Use your key to get and set the value, and provide a dedicated modifier for clients to use when setting the value:
+
+```swift
+private struct MyEnvironmentKey: EnvironmentKey {
+    static let defaultValue: String = "Default value"
+}
+
+extension EnvironmentValues {
+    var myCustomValue: String {
+        get { self[MyEnvironmentKey.self] }
+        set { self[MyEnvironmentKey.self] = newValue }
+    }
+}
+
+extension View {
+    func myCustomValue(_ myCustomValue: String) -> some View {
+        environment(\.myCustomValue, myCustomValue)
+    }
+}
+```
+
+Clients of your value then access the value in the usual way, reading it with the `Environment` *property wrapper*, and setting it with the `myCustomValue` view modifier.
 
 ## EnvironmentObject
 
