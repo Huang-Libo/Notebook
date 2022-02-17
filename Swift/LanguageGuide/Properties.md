@@ -365,7 +365,7 @@ struct SmallNumber {
 }
 ```
 
-When you apply a wrapper to a property and you don’t specify an initial value, Swift uses the init() initializer to set up the wrapper. For example:
+When you apply a wrapper to a property and you don’t specify an initial value, Swift uses the `init()` initializer to set up the wrapper. For example:
 
 ```swift
 struct ZeroRectangle {
