@@ -4,19 +4,20 @@ Swift, iOS 13.0+, macOS 10.15+
 
 - [Combine](#combine)
   - [Overview](#overview)
-  - [Publisher](#publisher)
-  - [Subscriber](#subscriber)
-  - [Subscription](#subscription)
-  - [Binding](#binding)
+  - [Protocol](#protocol)
+    - [Publisher](#publisher)
+    - [Subscriber](#subscriber)
+    - [Subscription](#subscription)
+    - [CustomCombineIdentifierConvertible](#customcombineidentifierconvertible)
+    - [ObservableObject](#observableobject)
   - [State](#state)
-  - [EnvironmentValues](#environmentvalues)
-  - [Environment](#environment)
-  - [EnvironmentObject](#environmentobject)
+  - [Binding](#binding)
   - [StateObject](#stateobject)
-  - [ObservableObject](#observableobject)
   - [ObservedObject](#observedobject)
   - [Published](#published)
-  - [CustomCombineIdentifierConvertible](#customcombineidentifierconvertible)
+  - [EnvironmentObject](#environmentobject)
+  - [EnvironmentValues](#environmentvalues)
+  - [Environment](#environment)
   - [WWDC Video](#wwdc-video)
 
 ## Overview
@@ -24,7 +25,9 @@ Swift, iOS 13.0+, macOS 10.15+
 - *publisher* : expose values that can change over time.
 - *subscriber* : receive those values from the publishers.
 
-## Publisher
+## Protocol
+
+### Publisher
 
 ```swift
 protocol Publisher
@@ -40,7 +43,7 @@ After this, the *publisher* can call the following methods on the *subscriber* :
 - `receive(_:):` Delivers one element from the *publisher* to the *subscriber*.
 - `receive(completion:):` Informs the `subscriber` that publishing has ended, either normally or with an error.
 
-## Subscriber
+### Subscriber
 
 ```swift
 protocol Subscriber : CustomCombineIdentifierConvertible
@@ -48,21 +51,116 @@ protocol Subscriber : CustomCombineIdentifierConvertible
 
 Publishers only emit values when explicitly **requested** to do so by subscribers. This puts your subscriber code in control of how fast it receives events from the publishers it’s connected to.
 
-## Subscription
+### Subscription
 
 A protocol representing the **connection** of a *subscriber* to a *publisher*.
+
+**Declaration**:
 
 ```swift
 protocol Subscription : Cancellable, CustomCombineIdentifierConvertible
 ```
 
-`request(_:)`
+**Topics**:
 
-Tells a publisher that it may send more values to the subscriber.
+- `request(_:)`, Tells a publisher that it may send more values to the subscriber.
+
+    ```swift
+    func request(_ demand: Subscribers.Demand)
+    ```
+
+### CustomCombineIdentifierConvertible
+
+A protocol for *uniquely identifying* publisher streams.
+
+Inherited by: `Subscriber`, `Subscription`.
+
+**Declaration**:
 
 ```swift
-func request(_ demand: Subscribers.Demand)
+protocol CustomCombineIdentifierConvertible
 ```
+
+**Overview**:
+
+If you create a custom `Subscription` or `Subscriber` type, implement this protocol so that development tools can uniquely identify publisher chains in your app.
+
+- If your type is a class, Combine provides an implementation of `combineIdentifier` for you.
+- If your type is a structure, set up the identifier as follows:
+
+    ```swift
+    let combineIdentifier = CombineIdentifier()
+    ```
+
+**Topics**:
+
+- `combineIdentifier`, A unique identifier for identifying publisher streams:
+
+    ```swift
+    var combineIdentifier: CombineIdentifier { get }
+    ```
+
+### ObservableObject
+
+A type of object with a `publisher` that emits before the object has changed.
+
+**Declaration**:
+
+```swift
+protocol ObservableObject : AnyObject
+```
+
+**Overview**:
+
+By default an `ObservableObject` synthesizes an `objectWillChange` *publisher* that emits the changed value before any of its `@Published` properties changes.
+
+```swift
+class Contact: ObservableObject {
+    @Published var name: String
+    @Published var age: Int
+
+    init(name: String, age: Int) {
+        self.name = name
+        self.age = age
+    }
+
+    func haveBirthday() -> Int {
+        age += 1
+        return age
+    }
+}
+
+let john = Contact(name: "John Appleseed", age: 24)
+cancellable = john.objectWillChange
+    .sink { _ in
+        print("\(john.age) will change")
+}
+print(john.haveBirthday())
+// Prints "24 will change"
+// Prints "25"
+```
+
+## State
+
+A *property wrapper* type that can read and write a value managed by SwiftUI.
+
+**Declaration**:
+
+```swift
+@frozen @propertyWrapper struct State<Value>
+```
+
+**Overview**:
+
+SwiftUI manages the storage of any property you declare as a state. When the state value changes, the view invalidates its appearance and recomputes the `body`. Use the state as the single source of truth for a given view.
+
+A `State` instance isn’t the value itself; it’s a means of reading and writing the value. To access a state’s underlying value, use its variable name, which returns the `wrappedValue` property value.
+
+You should only access a state property from inside the view’s body, or from methods called by it. For this reason, declare your state properties as `private`, to prevent clients of your view from accessing them. **It is safe to mutate state properties from any thread.**
+
+To pass a state property to another view in the view hierarchy, use the variable name with the `$` prefix operator. This retrieves a binding of the state property from its `projectedValue` property.
+
+For example, in the following code example `PlayerView` passes its state property `isPlaying` to `PlayButton` using `$isPlaying`.
 
 ## Binding
 
@@ -76,9 +174,9 @@ A *property wrapper* type that can read and write a value owned by a source of t
 
 **Overview**:
 
-Use a binding to create a two-way connection between a property that stores data, and a view that displays and changes the data. A binding connects a property to a source of truth stored elsewhere, instead of storing data directly.
+Use a binding to create a two-way connection between *a property that stores data*, and *a view that displays and changes the data*. A binding connects a property to a source of truth stored elsewhere, instead of storing data directly.
 
-For example, a button that toggles between play and pause can create a binding to a property of its parent view using the `Binding` *property wrapper*.
+For example, a button that toggles between *play* and *pause* can create a binding to a property of its parent view using the `Binding` *property wrapper*.
 
 ```swift
 struct PlayButton: View {
@@ -116,31 +214,114 @@ struct PlayerView: View {
 }
 ```
 
-When `PlayerView` initializes `PlayButton`, it passes a binding of its state property into the button’s binding property. Applying the `$` prefix to a property wrapped value returns its `projectedValue`, which for a *state property wrapper* returns a binding to the value.
+When `PlayerView` initializes `PlayButton`, it passes a binding of its state property into the button’s binding property. Applying the `$` prefix to a *property wrapped value* returns its `projectedValue`, which for a `state` *property wrapper* returns a binding to the value.
 
 Whenever the user taps the `PlayButton`, the `PlayerView` updates its `isPlaying` state.
 
-## State
+## StateObject
 
-A *property wrapper* type that can read and write a value managed by SwiftUI.
+A *property wrapper* type that instantiates an observable object.
 
 **Declaration**:
 
 ```swift
-@frozen @propertyWrapper struct State<Value>
+@frozen @propertyWrapper struct StateObject<ObjectType> where ObjectType : ObservableObject
 ```
 
 **Overview**:
 
-SwiftUI manages the storage of any property you declare as a state. When the state value changes, the view invalidates its appearance and recomputes the `body`. Use the state as the single source of truth for a given view.
+Create a state object in a `View`, `App`, or `Scene` by applying the `@StateObject` attribute to a property declaration and providing an initial value that conforms to the `ObservableObject` protocol:
 
-A `State` instance isn’t the value itself; it’s a means of reading and writing the value. To access a state’s underlying value, use its variable name, which returns the `wrappedValue` property value.
+```swift
+@StateObject var model = DataModel()
+```
 
-You should only access a state property from inside the view’s body, or from methods called by it. For this reason, declare your state properties as `private`, to prevent clients of your view from accessing them. **It is safe to mutate state properties from any thread.**
+SwiftUI creates a new instance of the object *only once* for each instance of the structure that declares the object. When `published` properties of the `observable` object change, SwiftUI updates the parts of any view that depend on those properties:
 
-To pass a state property to another view in the view hierarchy, use the variable name with the `$` prefix operator. This retrieves a binding of the state property from its `projectedValue` property.
+```swift
+Text(model.title) // Updates the view any time `title` changes.
+```
 
-For example, in the following code example `PlayerView` passes its state property `isPlaying` to `PlayButton` using `$isPlaying`.
+You can pass the *state object* into a property that has the `ObservedObject` attribute. You can alternatively add the object to the environment of a view hierarchy by applying the `environmentObject(_:)` modifier:
+
+```swift
+ContentView()
+    .environmentObject(model)
+```
+
+If you create an *environment object* as shown in the code above, you can read the object inside `ContentView` or any of its descendants using the `EnvironmentObject` attribute:
+
+```swift
+@EnvironmentObject var model: DataModel
+```
+
+Get a `Binding` to one of the state object’s properties using the `$` operator. Use a binding when you want to create a two-way connection to one of the object’s properties. For example, you can let a `Toggle` control a Boolean value called `isEnabled` stored in the model:
+
+```swift
+Toggle("Enabled", isOn: $model.isEnabled)
+```
+
+## ObservedObject
+
+A *property wrapper* type that subscribes to an *observable object* and **invalidates** a view whenever the observable object changes.
+
+**Declaration**:
+
+```swift
+@propertyWrapper @frozen struct ObservedObject<ObjectType> where ObjectType : ObservableObject
+```
+
+## Published
+
+A type that publishes a property marked with an attribute.
+
+**Declaration**:
+
+```swift
+@propertyWrapper struct Published<Value>
+```
+
+**Overview**:
+
+Publishing a property with the `@Published` attribute creates a `publisher` of this type. You access the publisher with the `$` operator, as shown here:
+
+```swift
+class Weather {
+    @Published var temperature: Double
+    init(temperature: Double) {
+        self.temperature = temperature
+    }
+}
+
+let weather = Weather(temperature: 20)
+cancellable = weather.$temperature
+    .sink() {
+        print ("Temperature now: \($0)")
+}
+weather.temperature = 25
+
+// Prints:
+// Temperature now: 20.0
+// Temperature now: 25.0
+```
+
+When the property changes, publishing occurs in the property’s `willSet` block, meaning `subscriber`s receive the new value before it’s actually set on the property. In the above example, the second time the `sink` executes its closure, it receives the parameter value `25`. However, if the closure evaluated `weather.temperature`, the value returned would be `20`.
+
+> **Important**: The `@Published` attribute is `class` constrained. Use it with properties of classes, not with non-class types like structures.
+
+## EnvironmentObject
+
+A *property wrapper* type for an `observable` object supplied by a parent or ancestor view.
+
+**Declaration**:
+
+```swift
+@frozen @propertyWrapper struct EnvironmentObject<ObjectType> where ObjectType : ObservableObject
+```
+
+**Overview**:
+
+An *environment object* **invalidates** the current view whenever the observable object changes. If you declare a property as an *environment object*, be sure to set a corresponding model object on an ancestor view by calling its `environmentObject(_:)` modifier.
 
 ## EnvironmentValues
 
@@ -244,171 +425,6 @@ If the value changes, SwiftUI updates any parts of your view that depend on the 
 You can use this *property wrapper* to read — but not set — an environment value. SwiftUI updates some environment values automatically based on system settings and provides reasonable defaults for others. You can override some of these, as well as set custom environment values that you define, using the `environment(_:_:)` view modifier.
 
 For the complete list of environment values provided by SwiftUI, see the properties of the `EnvironmentValues` structure. For information about creating custom environment values, see the `EnvironmentKey` protocol.
-
-## EnvironmentObject
-
-A *property wrapper* type for an observable object supplied by a parent or ancestor view.
-
-**Declaration**:
-
-```swift
-@frozen @propertyWrapper struct EnvironmentObject<ObjectType> where ObjectType : ObservableObject
-```
-
-**Overview**:
-
-An *environment object* **invalidates** the current view whenever the observable object changes. If you declare a property as an *environment object*, be sure to set a corresponding model object on an ancestor view by calling its `environmentObject(_:)` modifier.
-
-## StateObject
-
-A *property wrapper* type that instantiates an observable object.
-
-**Declaration**:
-
-```swift
-@frozen @propertyWrapper struct StateObject<ObjectType> where ObjectType : ObservableObject
-```
-
-**Overview**:
-
-Create a state object in a `View`, `App`, or `Scene` by applying the `@StateObject` attribute to a property declaration and providing an initial value that conforms to the `ObservableObject` protocol:
-
-```swift
-@StateObject var model = DataModel()
-```
-
-SwiftUI creates a new instance of the object only once for each instance of the structure that declares the object. When published properties of the observable object change, SwiftUI updates the parts of any view that depend on those properties:
-
-```swift
-Text(model.title) // Updates the view any time `title` changes.
-```
-
-You can pass the *state object* into a property that has the `ObservedObject` attribute. You can alternatively add the object to the environment of a view hierarchy by applying the `environmentObject(_:)` modifier:
-
-```swift
-ContentView()
-    .environmentObject(model)
-```
-
-If you create an *environment object* as shown in the code above, you can read the object inside `ContentView` or any of its descendants using the `EnvironmentObject` attribute:
-
-```swift
-@EnvironmentObject var model: DataModel
-```
-
-Get a `Binding` to one of the state object’s properties using the `$` operator. Use a binding when you want to create a two-way connection to one of the object’s properties. For example, you can let a `Toggle` control a Boolean value called `isEnabled` stored in the model:
-
-```swift
-Toggle("Enabled", isOn: $model.isEnabled)
-```
-
-## ObservableObject
-
-A type of object with a `publisher` that emits before the object has changed.
-
-**Declaration**:
-
-```swift
-protocol ObservableObject : AnyObject
-```
-
-**Overview**:
-
-By default an `ObservableObject` synthesizes an `objectWillChange` *publisher* that emits the changed value before any of its `@Published` properties changes.
-
-```swift
-class Contact: ObservableObject {
-    @Published var name: String
-    @Published var age: Int
-
-    init(name: String, age: Int) {
-        self.name = name
-        self.age = age
-    }
-
-    func haveBirthday() -> Int {
-        age += 1
-        return age
-    }
-}
-
-let john = Contact(name: "John Appleseed", age: 24)
-cancellable = john.objectWillChange
-    .sink { _ in
-        print("\(john.age) will change")
-}
-print(john.haveBirthday())
-// Prints "24 will change"
-// Prints "25"
-```
-
-## ObservedObject
-
-A *property wrapper* type that subscribes to an *observable object* and **invalidates** a view whenever the observable object changes.
-
-**Declaration**:
-
-```swift
-@propertyWrapper @frozen struct ObservedObject<ObjectType> where ObjectType : ObservableObject
-```
-
-## Published
-
-A type that publishes a property marked with an attribute.
-
-**Declaration**:
-
-```swift
-@propertyWrapper struct Published<Value>
-```
-
-**Overview**:
-
-Publishing a property with the `@Published` attribute creates a `publisher` of this type. You access the publisher with the `$` operator, as shown here:
-
-```swift
-class Weather {
-    @Published var temperature: Double
-    init(temperature: Double) {
-        self.temperature = temperature
-    }
-}
-
-let weather = Weather(temperature: 20)
-cancellable = weather.$temperature
-    .sink() {
-        print ("Temperature now: \($0)")
-}
-weather.temperature = 25
-
-// Prints:
-// Temperature now: 20.0
-// Temperature now: 25.0
-```
-
-When the property changes, publishing occurs in the property’s `willSet` block, meaning `subscriber`s receive the new value before it’s actually set on the property. In the above example, the second time the sink executes its closure, it receives the parameter value `25`. However, if the closure evaluated `weather.temperature`, the value returned would be `20`.
-
-> **Important**: The `@Published` attribute is `class` constrained. Use it with properties of classes, not with non-class types like structures.
-
-## CustomCombineIdentifierConvertible
-
-A protocol for **uniquely identifying** publisher streams.
-
-Inherited by: `Subscriber`, `Subscription`.
-
-**combineIdentifier** (Default Implementation Provided):
-
-Declaration:
-
-```swift
-var combineIdentifier: CombineIdentifier { get }
-```
-
-Usage:
-
-```swift
-let combineIdentifier = CombineIdentifier()
-```
 
 ## WWDC Video
 
