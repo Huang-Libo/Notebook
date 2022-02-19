@@ -10,7 +10,6 @@ Swift, iOS 13.0+, macOS 10.15+
     - [Subscription](#subscription)
     - [CustomCombineIdentifierConvertible](#customcombineidentifierconvertible)
     - [ObservableObject](#observableobject)
-    - [UIViewControllerRepresentable](#uiviewcontrollerrepresentable)
   - [State](#state)
   - [Binding](#binding)
   - [StateObject](#stateobject)
@@ -140,24 +139,6 @@ print(john.haveBirthday())
 // Prints "24 will change"
 // Prints "25"
 ```
-
-### UIViewControllerRepresentable
-
-A view that represents a `UIKit` *view controller*.
-
-**Declaration**:
-
-```swift
-protocol UIViewControllerRepresentable : View where Self.Body == Never
-```
-
-**Overview**:
-
-Use a `UIViewControllerRepresentable` instance to create and manage a `UIViewController` object in your SwiftUI interface. Adopt this protocol in one of your app’s custom instances, and use its methods to create, update, and tear down your view controller. The creation and update processes parallel the behavior of SwiftUI views, and you use them to configure your view controller with your app’s current state information. Use the teardown process to remove your view controller cleanly from your SwiftUI. For example, you might use the teardown process to notify other objects that the view controller is disappearing.
-
-To add your view controller into your SwiftUI interface, create your `UIViewControllerRepresentable` instance and add it to your SwiftUI interface. The system calls the methods of your custom instance at appropriate times.
-
-The system doesn’t automatically communicate changes occurring within your view controller to other parts of your SwiftUI interface. When you want your view controller to coordinate with other SwiftUI views, you must provide a `Coordinator` instance to facilitate those interactions. For example, you use a coordinator to forward *target-action* and *delegate messages* from your view controller to any SwiftUI views.
 
 ## State
 
