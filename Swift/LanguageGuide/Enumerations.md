@@ -26,6 +26,7 @@ Enumerations in Swift are *first-class types* in their own right. They adopt man
   - [Iterating over Enumeration Cases](#iterating-over-enumeration-cases)
   - [Associated Values](#associated-values)
   - [Raw Values](#raw-values)
+    - [Implicitly Assigned Raw Values](#implicitly-assigned-raw-values)
 
 ## Enumeration Syntax
 
@@ -206,5 +207,28 @@ case let .qrCode(productCode):
 ```
 
 ## Raw Values
+
+The barcode example in [Associated Values](#associated-values) shows how cases of an enumeration can declare that they store associated values of different types. As an alternative to associated values, enumeration cases can come prepopulated with default values (called *raw values*), which are all of the same type.
+
+Here’s an example that stores raw ASCII values alongside named enumeration cases:
+
+```swift
+enum ASCIIControlCharacter: Character {
+    case tab = "\t"
+    case lineFeed = "\n"
+    case carriageReturn = "\r"
+}
+```
+
+Raw values can be *strings*, *characters*, or any of the *integer* or *floating-point number* types. Each raw value must be unique within its enumeration declaration.
+
+> **NOTE**: 
+>  
+> Raw values are *not* the same as associated values.
+>  
+> - Raw values are set to prepopulated values when you first define the enumeration in your code, like the three ASCII codes above. The raw value for a particular enumeration case is always the same.
+> - Associated values are set when you create a new constant or variable based on one of the enumeration’s cases, and can be different each time you do so.
+
+### Implicitly Assigned Raw Values
 
 
