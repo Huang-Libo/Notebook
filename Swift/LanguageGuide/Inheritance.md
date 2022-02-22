@@ -10,6 +10,8 @@ Classes can also add *property observers* to inherited properties in order to be
   - [Defining a Base Class](#defining-a-base-class)
   - [Subclassing](#subclassing)
   - [Overriding](#overriding)
+    - [Accessing Superclass Methods, Properties, and Subscripts](#accessing-superclass-methods-properties-and-subscripts)
+    - [Overriding Methods](#overriding-methods)
 
 ## Defining a Base Class
 
@@ -107,5 +109,23 @@ print("Tandem: \(tandem.description)")
 ```
 
 ## Overriding
+
+A subclass can provide its own custom implementation of an
+
+- *instance method*, *type method*,
+- *instance property*, *type property*,
+- or *subscript*
+
+that it would otherwise inherit from a superclass. This is known as *overriding*.
+
+To override a characteristic that would otherwise be inherited, you prefix your overriding definition with the `override` keyword. Doing so clarifies that you intend to provide an override and haven’t provided a matching definition by mistake. Overriding by accident can cause unexpected behavior, and any overrides without the `override` keyword are diagnosed as an error when your code is compiled.
+
+The `override` keyword also prompts the Swift compiler to check that your overriding class’s superclass (or one of its parents) has a declaration that matches the one you provided for the override. This check ensures that your overriding definition is correct.
+
+### Accessing Superclass Methods, Properties, and Subscripts
+
+
+
+### Overriding Methods
 
 
