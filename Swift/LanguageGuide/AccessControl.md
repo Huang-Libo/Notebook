@@ -82,11 +82,11 @@ Therefore, you don’t need to specify a custom access level. You may, however, 
 
 ### Access Levels for Frameworks
 
-When you develop a framework, mark the public-facing interface to that framework as *open* or *public* so that it can be viewed and accessed by other modules, such as an app that imports the framework. This public-facing interface is the application programming interface (or API) for the framework.
+When you develop a framework, mark the public-facing interface to that framework as `open` or `public` so that it can be viewed and accessed by other modules, such as an app that imports the framework. This public-facing interface is the application programming interface (or API) for the framework.
 
 ### Access Levels for Unit Test Targets
 
-When you write an app with a unit test target, the code in your app needs to be made available to that module in order to be tested. By default, only entities marked as *open* or *public* are accessible to other modules.
+When you write an app with a unit test target, the code in your app needs to be made available to that module in order to be tested. By default, only entities marked as `open` or `public` are accessible to other modules.
 
 However, a unit test target can access any internal entity, if you mark the import declaration for a product module with the `@testable` attribute and compile that product module with testing enabled.
 
@@ -175,7 +175,7 @@ private func someFunction() -> (SomeInternalClass, SomePrivateClass) {
 }
 ```
 
-It’s not valid to mark the definition of *someFunction()* with the *public* or *internal* modifiers, or to use the default setting of *internal*, because public or internal users of the function might *not* have appropriate access to the private class used in the function’s return type.
+It’s not valid to mark the definition of *someFunction()* with the `public` or *internal* modifiers, or to use the default setting of *internal*, because public or internal users of the function might *not* have appropriate access to the private class used in the function’s return type.
 
 ### Enumeration Types
 
@@ -290,7 +290,7 @@ print("The number of edits is \(stringToEdit.numberOfEdits)")
 // Prints "The number of edits is 3"
 ```
 
-Note that you can assign an explicit access level for both a getter and a setter if required. The example below shows a version of the `TrackedString` structure in which the structure is defined with an explicit access level of `public`. The structure’s members (including the `numberOfEdits` property) therefore have an *internal* access level by default. You can make the structure’s `numberOfEdits` property getter *public*, and its property setter *private*, by combining the *public* and *private(set)* access-level modifiers:
+Note that you can assign an explicit access level for both a getter and a setter if required. The example below shows a version of the `TrackedString` structure in which the structure is defined with an explicit access level of `public`. The structure’s members (including the `numberOfEdits` property) therefore have an *internal* access level by default. You can make the structure’s `numberOfEdits` property getter *public*, and its property setter *private*, by combining the `public` and `private(set)` access-level modifiers:
 
 ```swift
 public struct TrackedString {
