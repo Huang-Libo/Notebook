@@ -318,7 +318,7 @@ This protocol doesn’t specify how the items in the container should be stored 
 
 The `Container` protocol declares an associated type called `Item`, written as `associatedtype Item`. The protocol doesn’t define what Item is, that information is left for any conforming type to provide.
 
-Nonetheless, the `Item` alias provides a way to refer to the type of the items in a Container, and to define a type for use with the `append(_:)` method and subscript, to ensure that the expected behavior of any `Container` is enforced.
+Nonetheless, the `Item` alias provides a way to refer to the type of the items in a Container, and to define a type for use with the `append(_:)` method and *subscript*, to ensure that the expected behavior of any `Container` is enforced.
 
 Here’s a version of the nongeneric `IntStack` type from [Generic Types](#generic-types) above, adapted to conform to the `Container` protocol:
 
@@ -348,7 +348,7 @@ struct IntStack: Container {
 
 `IntStack` specifies that for this implementation of `Container`, the appropriate Item to use is a type of `Int`. The definition of `typealias Item = Int` turns the abstract type of `Item` into a concrete type of `Int` for this implementation of the `Container` protocol.
 
-Thanks to Swift’s *type inference*, you don’t actually need to declare a concrete `Item` of `Int` as part of the definition of `IntStack`. Because `IntStack` conforms to all of the requirements of the `Container` protocol, Swift can *infer* the appropriate `Item` to use, simply by looking at the type of the `append(_:)` method’s `item` parameter and the return type of the subscript. *Indeed, if you delete the typealias Item = Int line from the code above, everything still works, because it’s clear what type should be used for Item.*
+Thanks to Swift’s *type inference*, you don’t actually need to declare a concrete `Item` of `Int` as part of the definition of `IntStack`. Because `IntStack` conforms to all of the requirements of the `Container` protocol, Swift can *infer* the appropriate `Item` to use, simply by looking at the type of the `append(_:)` method’s `item` parameter and the return type of the subscript. *Indeed, if you delete the `typealias Item = Int` line from the code above, everything still works, because it’s clear what type should be used for Item.*
 
 You can also make the generic `Stack` type conform to the `Container` protocol:
 
@@ -415,7 +415,12 @@ protocol SuffixableContainer: Container {
 }
 ```
 
-In this protocol, `Suffix` is an associated type, like the `Item` type in the `Container` example above. `Suffix` has two constraints: It must conform to the `SuffixableContainer` protocol (the protocol currently being defined), and its `Item` type must be the same as the container’s `Item` type. The constraint on `Item` is a generic `where` clause, which is discussed in [Associated Types with a Generic Where Clause](#associated-types-with-a-generic-where-clause) below.
+In this protocol, `Suffix` is an associated type, like the `Item` type in the `Container` example above. `Suffix` has two constraints:
+
+- It must conform to the `SuffixableContainer` protocol (the protocol currently being defined),
+- and its `Item` type must be the same as the container’s `Item` type.
+
+The constraint on `Item` is a generic `where` clause, which is discussed in [Associated Types with a Generic Where Clause](#associated-types-with-a-generic-where-clause) below.
 
 Here’s an extension of the `Stack` type from [Generic Types](#generic-types) above that adds conformance to the `SuffixableContainer` protocol:
 
