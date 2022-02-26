@@ -11,17 +11,11 @@
 
 ## pending
 
-- `associatedtype`
-- `AnyObject`
 - `some` , Swift 5.1
-- `@frozen`, Combine
-- 泛型，`where`
-- 逃逸闭包 `@escaping`
+- `@frozen`
 - Combine
   - `Self.Output`
 - SwiftUI
-  - `@State`
-  - bind : A binding controls the storage for a value, so you can pass data around to different views that need to read or write it.
 
 ### `@EnvironmentObject` & `environmentObject(_:)`
 
