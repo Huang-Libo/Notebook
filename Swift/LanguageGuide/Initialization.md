@@ -221,7 +221,7 @@ beetsQuestion.response = "I also like beets. (But not with cheese.)"
 
 Swift provides a *default initializer* for any *structure* or *class* that provides default values for all of its properties and doesn’t provide at least one initializer itself. The default initializer simply creates a new instance with all of its properties set to their default values.
 
-This example defines a class called *ShoppingListItem*, which encapsulates the *name*, *quantity*, and *purchase* state of an item in a shopping list:
+This example defines a class called `ShoppingListItem`, which encapsulates the *name*, *quantity*, and *purchase* state of an item in a shopping list:
 
 ```swift
 class ShoppingListItem {
