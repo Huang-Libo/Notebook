@@ -1,5 +1,9 @@
 # Inheritance
 
+> Version: *Swift 5.6*  
+> Source: [*swift-book: Inheritance*](https://docs.swift.org/swift-book/LanguageGuide/Inheritance.html)  
+> Digest Date: *February 23, 2022*  
+
 A class can *inherit* methods, properties, and other characteristics from another class.
 
 Classes in Swift can call and access *methods*, *properties*, and *subscripts* belonging to their superclass and can provide their own *overriding* versions of those methods, properties, and subscripts to refine or modify their behavior.
