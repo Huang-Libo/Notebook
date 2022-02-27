@@ -10,6 +10,9 @@
   - [Asynchronous Sequences](#asynchronous-sequences)
   - [Calling Asynchronous Functions in Parallel](#calling-asynchronous-functions-in-parallel)
   - [Tasks and Task Groups](#tasks-and-task-groups)
+    - [Unstructured Concurrency](#unstructured-concurrency)
+    - [Task Cancellation](#task-cancellation)
+  - [Actors](#actors)
 
 ## Introduction
 
@@ -168,4 +171,110 @@ You can also mix both of these approaches in the same code.
 
 ## Tasks and Task Groups
 
+A *task* is a unit of work that can be run asynchronously as part of your program. All asynchronous code runs as part of some task. The `async-let` syntax described in the previous section creates a child task for you. You can also create a task group and add child tasks to that group, which gives you more control over priority and cancellation, and lets you create a dynamic number of tasks.
 
+Tasks are arranged in a hierarchy. Each task in a task group has the same parent task, and each task can have child tasks. Because of the explicit relationship between tasks and task groups, this approach is called *structured concurrency*. Although you take on some of the responsibility for correctness, the explicit parent-child relationships between tasks lets Swift handle some behaviors like propagating cancellation for you, and lets Swift detect some errors at compile time.
+
+```swift
+await withTaskGroup(of: Data.self) { taskGroup in
+    let photoNames = await listPhotos(inGallery: "Summer Vacation")
+    for name in photoNames {
+        taskGroup.addTask { await downloadPhoto(named: name) }
+    }
+}
+```
+
+For more information about task groups, see [TaskGroup](https://developer.apple.com/documentation/swift/taskgroup).
+
+### Unstructured Concurrency
+
+In addition to the structured approaches to concurrency described in the previous sections, Swift also supports *unstructured concurrency*.
+
+Unlike tasks that are part of a task group, an *unstructured task* doesn’t have a parent task. You have complete flexibility to manage unstructured tasks in whatever way your program needs, but you’re also completely responsible for their correctness.
+
+- To create an *unstructured task* that runs on the current actor, call the [Task.init(priority:operation:)](https://developer.apple.com/documentation/swift/task/3856790-init) initializer.
+- To create an *unstructured task* that’s not part of the current actor, known more specifically as a *detached task*, call the [Task.detached(priority:operation:)](https://developer.apple.com/documentation/swift/task/3856786-detached) class method.
+
+Both of these operations return a task handle that lets you interact with the task, for example, to wait for its result or to cancel it.
+
+```swift
+let newPhoto = // ... some photo data ...
+let handle = Task {
+    return await add(newPhoto, toGalleryNamed: "Spring Adventures")
+}
+let result = await handle.value
+```
+
+For more information about managing *detached tasks*, see [Task](https://developer.apple.com/documentation/swift/task).
+
+### Task Cancellation
+
+Swift concurrency uses a cooperative cancellation model. Each task checks whether it has been canceled at the appropriate points in its execution, and responds to cancellation in whatever way is appropriate. Depending on the work you’re doing, that usually means one of the following:
+
+- Throwing an error like `CancellationError`
+- Returning `nil` or an empty collection
+- Returning the partially completed work
+
+To check for cancellation,
+
+- either call [Task.checkCancellation()](https://developer.apple.com/documentation/swift/task/3814826-checkcancellation), which throws `CancellationError` if the task has been canceled,
+- or check the value of `Task.isCancelled` and handle the cancellation in your own code.
+
+For example, a task that’s downloading photos from a gallery might need to delete partial downloads and close network connections.
+
+To propagate cancellation manually, call [Task.cancel()](https://developer.apple.com/documentation/swift/task/3851218-cancel).
+
+## Actors
+
+Like classes, **actors are reference types**, so the comparison of *value types* and *reference types* in [Classes Are Reference Types](https://docs.swift.org/swift-book/LanguageGuide/ClassesAndStructures.html#ID89) applies to actors as well as classes.
+
+Unlike classes, actors allow only one task to access their mutable state at a time, which makes it safe for code in multiple tasks to interact with the same instance of an actor.
+
+For example, here’s an actor that records temperatures:
+
+```swift
+actor TemperatureLogger {
+    let label: String
+    var measurements: [Int]
+    private(set) var max: Int
+
+    init(label: String, measurement: Int) {
+        self.label = label
+        self.measurements = [measurement]
+        self.max = measurement
+    }
+}
+```
+
+You introduce an actor with the `actor` keyword, followed by its definition in a pair of braces. The `TemperatureLogger` actor has properties that other code outside the actor can access, and restricts the `max` property so only code inside the actor can update the maximum value.
+
+You create an instance of an actor using the same initializer syntax as structures and classes. When you access a *property* or *method* of an actor, you use `await` to mark the potential suspension point, for example:
+
+```swift
+let logger = TemperatureLogger(label: "Outdoors", measurement: 25)
+print(await logger.max)
+// Prints "25"
+```
+
+In this example, accessing `logger.max` is a possible suspension point. Because the actor allows only one task at a time to access its mutable state, if code from another task is already interacting with the logger, this code suspends while it waits to access the property.
+
+In contrast, code that’s part of the actor doesn’t write `await` when accessing the actor’s properties. For example, here’s a method that updates a `TemperatureLogger` with a new temperature:
+
+```swift
+extension TemperatureLogger {
+    func update(with measurement: Int) {
+        measurements.append(measurement)
+        if measurement > max {
+            max = measurement
+        }
+    }
+}
+```
+
+If you try to access those properties from outside the actor, like you would with an instance of a class, you’ll get a compile-time error; for example:
+
+```swift
+print(logger.max)  // Error
+```
+
+Accessing `logger.max` without writing `await` fails because the properties of an actor are part of that actor’s isolated local state. **Swift guarantees that only code inside an actor can access the actor’s local state.** This guarantee is known as *actor isolation*.
