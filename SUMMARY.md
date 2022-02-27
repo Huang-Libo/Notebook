@@ -23,6 +23,7 @@
   - [Initialization](Swift/LanguageGuide/Initialization.md)
   - [Optional Chaining](Swift/LanguageGuide/OptionalChaining.md)
   - [Error Handling](Swift/LanguageGuide/ErrorHandling.md)
+  - [Concurrency](Swift/LanguageGuide/Concurrency.md)
   - [Extensions](Swift/LanguageGuide/Extensions.md)
   - [Protocols](Swift/LanguageGuide/Protocols.md)
   - [Generics](Swift/LanguageGuide/Generics.md)
