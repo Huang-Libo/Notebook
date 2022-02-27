@@ -24,6 +24,7 @@
   - [Optional Chaining](Swift/LanguageGuide/OptionalChaining.md)
   - [Error Handling](Swift/LanguageGuide/ErrorHandling.md)
   - [Concurrency](Swift/LanguageGuide/Concurrency.md)
+  - [Type Casting](Swift/LanguageGuide/TypeCasting.md)
   - [Extensions](Swift/LanguageGuide/Extensions.md)
   - [Protocols](Swift/LanguageGuide/Protocols.md)
   - [Generics](Swift/LanguageGuide/Generics.md)
