@@ -86,4 +86,9 @@ Even though `Rank` and `Suit` are nested within `BlackjackCard`, their type can 
 
 ## Referring to Nested Types
 
+To use a nested type outside of its definition context, prefix its name with the name of the type it’s nested within:
 
+```swift
+let heartsSymbol = BlackjackCard.Suit.hearts.rawValue
+// heartsSymbol is "♡"
+```
