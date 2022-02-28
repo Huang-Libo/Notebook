@@ -19,6 +19,7 @@
   - [Enumerations](Swift/LanguageGuide/Enumerations.md)
   - [Structures and Classes](Swift/LanguageGuide/ClassesAndStructures.md)
   - [Properties](Swift/LanguageGuide/Properties.md)
+  - [Methods](Swift/LanguageGuide/Methods.md)
   - [Inheritance](Swift/LanguageGuide/Inheritance.md)
   - [Initialization](Swift/LanguageGuide/Initialization.md)
   - [Deinitialization](Swift/LanguageGuide/Deinitialization.md)
