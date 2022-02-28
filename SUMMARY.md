@@ -21,6 +21,7 @@
   - [Properties](Swift/LanguageGuide/Properties.md)
   - [Inheritance](Swift/LanguageGuide/Inheritance.md)
   - [Initialization](Swift/LanguageGuide/Initialization.md)
+  - [Deinitialization](Swift/LanguageGuide/Deinitialization.md)
   - [Optional Chaining](Swift/LanguageGuide/OptionalChaining.md)
   - [Error Handling](Swift/LanguageGuide/ErrorHandling.md)
   - [Concurrency](Swift/LanguageGuide/Concurrency.md)
