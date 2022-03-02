@@ -9,6 +9,7 @@
 - [Functions](#functions)
   - [Introduction](#introduction)
   - [Defining and Calling Functions](#defining-and-calling-functions)
+  - [Function Parameters and Return Values](#function-parameters-and-return-values)
 
 ## Introduction
 
@@ -21,5 +22,35 @@ Every function in Swift has a type, consisting of the function’s *parameter ty
 Functions can also be written within other functions to encapsulate useful functionality within a *nested function* scope.
 
 ## Defining and Calling Functions
+
+The function in the example below is called `greet(person:)`:
+
+```swift
+func greet(person: String) -> String {
+    let greeting = "Hello, " + person + "!"
+    return greeting
+}
+
+print(greet(person: "Anna"))
+// Prints "Hello, Anna!"
+print(greet(person: "Brian"))
+// Prints "Hello, Brian!"
+```
+
+You call the `greet(person:)` function by passing it a `String` value after the `person` *argument label*, such as greet(person: "Anna"). Because the function returns a `String` value, `greet(person:)` can be wrapped in a call to the `print(_:separator:terminator:)` function to print that string and see its return value, as shown above.
+
+> **NOTE**: The `print(_:separator:terminator:)` function doesn’t have a label for its first argument, and its other arguments are optional because they have a default value. These variations on function syntax are discussed below in [Function Argument Labels and Parameter Names](#function-argument-labels-and-parameter-names) and [Default Parameter Values](#default-parameter-values).
+
+To make the body of this function shorter, you can combine the message creation and the return statement into one line:
+
+```swift
+func greetAgain(person: String) -> String {
+    return "Hello again, " + person + "!"
+}
+print(greetAgain(person: "Anna"))
+// Prints "Hello again, Anna!"
+```
+
+## Function Parameters and Return Values
 
 
