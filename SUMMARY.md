@@ -21,6 +21,7 @@
   - [Structures and Classes](Swift/LanguageGuide/ClassesAndStructures.md)
   - [Properties](Swift/LanguageGuide/Properties.md)
   - [Methods](Swift/LanguageGuide/Methods.md)
+  - [Subscripts](Swift/LanguageGuide/Subscripts.md)
   - [Inheritance](Swift/LanguageGuide/Inheritance.md)
   - [Initialization](Swift/LanguageGuide/Initialization.md)
   - [Deinitialization](Swift/LanguageGuide/Deinitialization.md)
