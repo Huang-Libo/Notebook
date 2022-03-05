@@ -34,6 +34,7 @@
   - [Extensions](Swift/LanguageGuide/Extensions.md)
   - [Protocols](Swift/LanguageGuide/Protocols.md)
   - [Generics](Swift/LanguageGuide/Generics.md)
+  - [Automatic Reference Counting](Swift/LanguageGuide/AutomaticReferenceCounting.md)
   - [Access Control](Swift/LanguageGuide/AccessControl.md)
 - [SwiftUI-Tutorials](Swift/SwiftUI-Tutorials/README.md)
   - [Chapter 1: SwiftUI Essentials](Swift/SwiftUI-Tutorials/Chapter-1-SwiftUI-Essentials.md)
