@@ -9,6 +9,7 @@
   - [How ARC Works](#how-arc-works)
   - [ARC in Action](#arc-in-action)
   - [Strong Reference Cycles Between Class Instances](#strong-reference-cycles-between-class-instances)
+  - [Resolving Strong Reference Cycles Between Class Instances](#resolving-strong-reference-cycles-between-class-instances)
 
 ## Introduction
 
@@ -128,5 +129,35 @@ unit4A = Apartment(unit: "4A")
 ```
 
 Here’s how the strong references look after creating and assigning these two instances. The `john` variable now has a strong reference to the new `Person` instance, and the `unit4A` variable has a strong reference to the new `Apartment` instance:
+
+![referenceCycle01_2x.png](../../media/Swift/swift.org/AutomaticReferenceCounting/referenceCycle01_2x.png)
+
+You can now link the two instances together so that the person has an apartment, and the apartment has a tenant. Note that an exclamation point (`!`) is used to unwrap and access the instances stored inside the `john` and `unit4A` optional variables, so that the properties of those instances can be set:
+
+```swift
+john!.apartment = unit4A
+unit4A!.tenant = john
+```
+
+Here’s how the strong references look after you link the two instances together:
+
+![referenceCycle02_2x.png](../../media/Swift/swift.org/AutomaticReferenceCounting/referenceCycle02_2x.png)
+
+Unfortunately, linking these two instances creates a strong reference cycle between them. The `Person` instance now has a strong reference to the `Apartment` instance, and the `Apartment` instance has a strong reference to the `Person` instance. Therefore, when you break the strong references held by the `john` and `unit4A` variables, the reference counts don’t drop to zero, and the instances aren’t deallocated by ARC:
+
+```swift
+john = nil
+unit4A = nil
+```
+
+Note that neither deinitializer was called when you set these two variables to `nil`. The strong reference cycle prevents the `Person` and `Apartment` instances from ever being deallocated, causing a memory leak in your app.
+
+Here’s how the strong references look after you set the `john` and `unit4A` variables to `nil`:
+
+![referenceCycle03_2x.png](../../media/Swift/swift.org/AutomaticReferenceCounting/referenceCycle03_2x.png)
+
+The strong references between the `Person` instance and the `Apartment` instance remain and can’t be broken.
+
+## Resolving Strong Reference Cycles Between Class Instances
 
 
