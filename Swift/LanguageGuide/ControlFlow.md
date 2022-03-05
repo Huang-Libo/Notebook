@@ -27,6 +27,7 @@
     - [Fallthrough](#fallthrough)
     - [Labeled Statements](#labeled-statements)
   - [Early Exit](#early-exit)
+  - [Checking API Availability](#checking-api-availability)
 
 ## Introduction
 
@@ -684,4 +685,55 @@ The dice is rolled at the start of each loop. Rather than moving the player imme
 
 ## Early Exit
 
+A `guard` statement, like an `if` statement, executes statements depending on the Boolean value of an expression. You use a `guard` statement to require that a condition must be `true` in order for the code after the `guard` statement to be executed.
 
+Unlike an `if` statement, a `guard` statement always has an `else` clause, the code inside the `else` clause is executed if the condition isn’t `true`.
+
+```swift
+func greet(person: [String: String]) {
+    guard let name = person["name"] else {
+        return
+    }
+
+    print("Hello \(name)!")
+
+    guard let location = person["location"] else {
+        print("I hope the weather is nice near you.")
+        return
+    }
+
+    print("I hope the weather is nice in \(location).")
+}
+
+greet(person: ["name": "John"])
+// Prints "Hello John!"
+// Prints "I hope the weather is nice near you."
+greet(person: ["name": "Jane", "location": "Cupertino"])
+// Prints "Hello Jane!"
+// Prints "I hope the weather is nice in Cupertino."
+```
+
+If the `guard` statement’s condition is met, code execution continues after the `guard` statement’s closing brace. Any variables or constants that were assigned values using an *optional binding* as part of the condition are available for the rest of the code block that the `guard` statement appears in.
+
+If that condition isn’t met, the code inside the `else` branch is executed. That branch must transfer control to exit the code block in which the `guard` statement appears. It can do this with a control transfer statement such as `return`, `break`, `continue`, or `throw`, or it can call a function or method that doesn’t return, such as `fatalError(_:file:line:)`.
+
+## Checking API Availability
+
+Swift has built-in support for checking API availability, which ensures that you don’t accidentally use APIs that are unavailable on a given deployment target.
+
+You use an *availability condition* in an `if` or `guard` statement to conditionally execute a block of code, depending on whether the APIs you want to use are available at runtime. The compiler uses the information from the availability condition when it verifies that the APIs in that block of code are available.
+
+```swift
+if #available(iOS 10, macOS 10.12, *) {
+    // Use iOS 10 APIs on iOS, and use macOS 10.12 APIs on macOS
+} else {
+    // Fall back to earlier iOS and macOS APIs
+}
+```
+
+- The availability condition above specifies that in iOS, the body of the if statement executes only in *iOS 10* and later; in macOS, only in *macOS 10.12* and later.
+- The last argument, `*`, is required and specifies that on any other platform, the body of the if executes on the minimum deployment target specified by your target.
+
+In its general form, the availability condition takes a list of platform names and versions. You use platform names such as *iOS*, *macOS*, *watchOS*, and *tvOS*, for the full list, see [Declaration Attributes](https://docs.swift.org/swift-book/ReferenceManual/Attributes.html#ID348).
+
+In addition to specifying major version numbers like *iOS 8* or *macOS 10.10*, you can specify minor versions numbers like *iOS 11.2.6* and *macOS 10.13.3*.
