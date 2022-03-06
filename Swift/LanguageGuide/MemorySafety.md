@@ -9,6 +9,8 @@
   - [Understanding Conflicting Access to Memory](#understanding-conflicting-access-to-memory)
     - [Characteristics of Memory Access](#characteristics-of-memory-access)
   - [Conflicting Access to In-Out Parameters](#conflicting-access-to-in-out-parameters)
+  - [Conflicting Access to self in Methods](#conflicting-access-to-self-in-methods)
+  - [Conflicting Access to Properties](#conflicting-access-to-properties)
 
 ## Introduction
 
@@ -80,5 +82,108 @@ However, there are several ways to access memory, called long-term accesses, tha
 Overlapping accesses appear primarily in code that uses in-out parameters in functions and methods or mutating methods of a structure. The specific kinds of Swift code that use long-term accesses are discussed in the sections below.
 
 ## Conflicting Access to In-Out Parameters
+
+A function has long-term write access to all of its `in-out` parameters. The write access for an `in-out` parameter starts after all of the *non-in-out* parameters have been evaluated and lasts for the entire duration of that function call. If there are multiple `in-out` parameters, the write accesses start in the same order as the parameters appear.
+
+One consequence of this long-term write access is that you can’t access the original variable that was passed as `in-out`, even if scoping rules and access control would otherwise permit it—any access to the original creates a conflict. For example:
+
+```swift
+var stepSize = 1
+
+func increment(_ number: inout Int) {
+    number += stepSize
+}
+
+increment(&stepSize)
+// Error: conflicting accesses to stepSize
+```
+
+In the code above, `stepSize` is a global variable, and it’s normally accessible from within `increment(_:)`. However, the read access to `stepSize` overlaps with the write access to `number`. As shown in the figure below, both `number` and `stepSize` refer to the same location in memory. The read and write accesses refer to the same memory and they overlap, producing a conflict.
+
+![memory_increment_2x.png](../../media/Swift/swift.org/memory_increment_2x.png)
+
+One way to solve this conflict is to make an explicit copy of `stepSize`:
+
+```swift
+// Make an explicit copy.
+var copyOfStepSize = stepSize
+increment(&copyOfStepSize)
+
+// Update the original.
+stepSize = copyOfStepSize
+// stepSize is now 2
+```
+
+When you make a copy of `stepSize` before calling `increment(_:)`, it’s clear that the value of `copyOfStepSize` is incremented by the current step size. The read access ends before the write access starts, so there isn’t a conflict.
+
+Another consequence of long-term write access to `in-out` parameters is that passing a single variable as the argument for multiple `in-out` parameters of the same function produces a conflict. For example:
+
+```swift
+func balance(_ x: inout Int, _ y: inout Int) {
+    let sum = x + y
+    x = sum / 2
+    y = sum - x
+}
+var playerOneScore = 42
+var playerTwoScore = 30
+balance(&playerOneScore, &playerTwoScore)  // OK
+balance(&playerOneScore, &playerOneScore)
+// Error: conflicting accesses to playerOneScore
+```
+
+The `balance(_:_:)` function above modifies its two parameters to divide the total value evenly between them. Calling it with `playerOneScore` and `playerTwoScore` as arguments doesn’t produce a conflict, there are two write accesses that overlap in time, but they access different locations in memory.
+
+In contrast, passing `playerOneScore` as the value for *both* parameters produces a conflict because **it tries to perform two write accesses to the same location in memory at the same time**.
+
+> **NOTE**: Because operators are functions, they can also have long-term accesses to their `in-out` parameters. For example, if `balance(_:_:)` was an operator function named <`^`>, writing `playerOneScore <^> playerOneScore` would result in the same conflict as `balance(&playerOneScore, &playerOneScore)`.
+
+## Conflicting Access to self in Methods
+
+A *mutating* method on a structure has write access to `self` for the duration of the method call. For example, consider a game where each player has a health amount, which decreases when taking damage, and an energy amount, which decreases when using special abilities.
+
+```swift
+struct Player {
+    var name: String
+    var health: Int
+    var energy: Int
+
+    static let maxHealth = 10
+    mutating func restoreHealth() {
+        health = Player.maxHealth
+    }
+}
+```
+
+In the `restoreHealth()` method above, a write access to `self` starts at the beginning of the method and lasts until the method returns. In this case, there’s no other code inside `restoreHealth()` that could have an overlapping access to the properties of a `Player` instance. The `shareHealth(with:)` method below takes another `Player` instance as an `in-out` parameter, creating the possibility of overlapping accesses.
+
+```swift
+extension Player {
+    mutating func shareHealth(with teammate: inout Player) {
+        balance(&teammate.health, &health)
+    }
+}
+
+var oscar = Player(name: "Oscar", health: 10, energy: 10)
+var maria = Player(name: "Maria", health: 5, energy: 10)
+oscar.shareHealth(with: &maria)  // OK
+```
+
+In the example above, calling the `shareHealth(with:)` method for Oscar’s player to share health with Maria’s player doesn’t cause a conflict. There’s a write access to `oscar` during the method call because `oscar` is the value of `self` in a *mutating* method, and there’s a write access to `maria` for the same duration because `maria` was passed as an `in-out` parameter. As shown in the figure below, they access different locations in memory. Even though the two write accesses overlap in time, they don’t conflict.
+
+![memory_share_health_maria_2x.png](../../media/Swift/swift.org/memory_share_health_maria_2x.png)
+
+However, if you pass `oscar` as the argument to `shareHealth(with:)`, there’s a conflict:
+
+```swift
+oscar.shareHealth(with: &oscar)
+// Error: conflicting accesses to oscar
+```
+
+The mutating method needs write access to `self` for the duration of the method, and the `in-out` parameter needs write access to teammate for the same duration. Within the method, both `self` and `teammate` refer to the same location in memory, as shown in the figure below. The two write accesses refer to the same memory and they overlap, producing a conflict.
+
+![memory_share_health_oscar_2x.png](../../media/Swift/swift.org/memory_share_health_oscar_2x.png)
+
+## Conflicting Access to Properties
+
 
 
