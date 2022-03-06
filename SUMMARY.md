@@ -37,6 +37,7 @@
   - [Automatic Reference Counting](Swift/LanguageGuide/AutomaticReferenceCounting.md)
   - [Memory Safety](Swift/LanguageGuide/MemorySafety.md)
   - [Access Control](Swift/LanguageGuide/AccessControl.md)
+  - [Advanced Operators](Swift/LanguageGuide/AdvancedOperators.md)
 - [SwiftUI-Tutorials](Swift/SwiftUI-Tutorials/README.md)
   - [Chapter 1: SwiftUI Essentials](Swift/SwiftUI-Tutorials/Chapter-1-SwiftUI-Essentials.md)
   - [Chapter 2: Drawing and Animation](Swift/SwiftUI-Tutorials/Chapter-2-Drawing-and-Animation.md)
