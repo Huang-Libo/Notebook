@@ -35,6 +35,7 @@
   - [Protocols](Swift/LanguageGuide/Protocols.md)
   - [Generics](Swift/LanguageGuide/Generics.md)
   - [Automatic Reference Counting](Swift/LanguageGuide/AutomaticReferenceCounting.md)
+  - [Memory Safety](Swift/LanguageGuide/MemorySafety.md)
   - [Access Control](Swift/LanguageGuide/AccessControl.md)
 - [SwiftUI-Tutorials](Swift/SwiftUI-Tutorials/README.md)
   - [Chapter 1: SwiftUI Essentials](Swift/SwiftUI-Tutorials/Chapter-1-SwiftUI-Essentials.md)
