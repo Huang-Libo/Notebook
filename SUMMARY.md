@@ -59,6 +59,7 @@
 - [sunnyxx](Digest/sunnyxx/README.md)
   - [黑幕背后的 Autorelease](Digest/sunnyxx/sunnyxx-Autorelease.md)
 - [nianxi《漫谈 iOS Crash 收集框架》](Digest/nianxi-crash-reporter.md)
+- [MVVM vs VIPER](Digest/MVVM-vs-VIPER.md)
 
 ## 🎱 Check List
 
