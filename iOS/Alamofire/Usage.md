@@ -10,7 +10,7 @@
     - [`URLEncodedFormParameterEncoder`](#urlencodedformparameterencoder)
       - [GET Request With URL-Encoded Parameters](#get-request-with-url-encoded-parameters)
       - [POST Request With URL-Encoded Parameters](#post-request-with-url-encoded-parameters)
-    - [Configuring the Sorting of Encoded Values](#configuring-the-sorting-of-encoded-values)
+      - [Configuring the Sorting of Encoded Values](#configuring-the-sorting-of-encoded-values)
       - [Configuring the Encoding of `Array` Parameters](#configuring-the-encoding-of-array-parameters)
       - [Configuring the Encoding of `Bool` Parameters](#configuring-the-encoding-of-bool-parameters)
       - [Configuring the Encoding of `Data` Parameters](#configuring-the-encoding-of-data-parameters)
@@ -220,15 +220,30 @@ AF.request("https://httpbin.org/post",
 
 ### `URLEncodedFormParameterEncoder`
 
-The `URLEncodedFormParameterEncoder` encodes values into a url-encoded string to be set as or appended to any existing URL query string or set as the HTTP body of the request. Controlling where the encoded string is set can be done by setting the `destination` of the encoding. The `URLEncodedFormParameterEncoder.Destination` enumeration has three cases:
+The `URLEncodedFormParameterEncoder` encodes values into a *url-encoded* string to be set as or appended to any existing URL *query string* or set as the *HTTP body* of the request.
 
-- `.methodDependent` - Applies the encoded query string result to existing query string for `.get`, `.head` and `.delete` requests and sets it as the HTTP body for requests with any other HTTP method.
+Controlling where the encoded string is set can be done by setting the `destination` of the encoding. The `URLEncodedFormParameterEncoder.Destination` enumeration has three cases:
+
+- `.methodDependent` - Applies the encoded query string result to existing *query string* for `.get`, `.head` and `.delete` requests and sets it as the *HTTP body* for requests with any other HTTP method.
 - `.queryString` - Sets or appends the encoded string to the query of the request's `URL`.
 - `.httpBody` - Sets the encoded string as the HTTP body of the `URLRequest`.
 
-The `Content-Type` HTTP header of an encoded request with HTTP body is set to `application/x-www-form-urlencoded; charset=utf-8`, if `Content-Type` is not already set.
+The `Content-Type` HTTP header of an encoded request with HTTP body is set to:
 
-Internally, `URLEncodedFormParameterEncoder` uses `URLEncodedFormEncoder` to perform the actual encoding from an `Encodable` type to a URL encoded form `String`. This encoder can be used to customize the encoding for various types, including `Array` using the `ArrayEncoding`, `Bool` using the `BoolEncoding`, `Data` using the `DataEncoding`, `Date` using the `DateEncoding`, coding keys using the `KeyEncoding`, and spaces using the `SpaceEncoding`.
+```
+application/x-www-form-urlencoded; charset=utf-8
+```
+
+, if `Content-Type` is not already set.
+
+Internally, `URLEncodedFormParameterEncoder` uses `URLEncodedFormEncoder` to perform the actual encoding from an `Encodable` type to a URL encoded form `String`. This encoder can be used to customize the encoding for various types, including
+
+- `Array` using the `ArrayEncoding`,
+- `Bool` using the `BoolEncoding`,
+- `Data` using the `DataEncoding`,
+- `Date` using the `DateEncoding`,
+- *coding keys* using the `KeyEncoding`,
+- *spaces* using the `SpaceEncoding`.
 
 #### GET Request With URL-Encoded Parameters
 
@@ -260,9 +275,11 @@ AF.request("https://httpbin.org/post", method: .post, parameters: parameters, en
 // HTTP body: "qux[]=x&qux[]=y&qux[]=z&baz[]=a&baz[]=b&foo[]=bar"
 ```
 
-### Configuring the Sorting of Encoded Values
+#### Configuring the Sorting of Encoded Values
 
-Since Swift 4.2, the hashing algorithm used by Swift's `Dictionary` type produces a random internal ordering at runtime which differs between app launches. This can cause encoded parameters to change order, which may have an impact on caching and other behaviors. By default `URLEncodedFormEncoder` will sort its encoded key-value pairs. While this produces constant output for all `Encodable` types, it may not match the actual encoding order implemented by the type. You can set `alphabetizeKeyValuePairs` to `false` to return to implementation order, though that will also have the randomized `Dictionary` order as well.
+Since *Swift 4.2*, the hashing algorithm used by Swift's `Dictionary` type produces a random internal ordering at runtime which differs between app launches. This can cause encoded parameters to change order, which may have an impact on caching and other behaviors.
+
+By default `URLEncodedFormEncoder` will sort its encoded key-value pairs. While this produces constant output for all `Encodable` types, it may not match the actual encoding order implemented by the type. You can set `alphabetizeKeyValuePairs` to `false` to return to implementation order, though that will also have the randomized `Dictionary` order as well.
 
 You can create your own `URLEncodedFormParameterEncoder` and specify the desired `alphabetizeKeyValuePairs` in the initializer of the passed `URLEncodedFormEncoder`:
 
@@ -309,7 +326,7 @@ let encoder = URLEncodedFormParameterEncoder(encoder: URLEncodedFormEncoder(bool
 `DataEncoding` includes the following methods for encoding `Data` parameters:
 
 - `.deferredToData` - Uses `Data`'s native `Encodable` support.
-- `.base64` - Encodes `Data` as a Base 64 encoded `String`. This is the default case.
+- `.base64` - Encodes `Data` as a *Base 64* encoded `String`. This is the default case.
 - `.custom((Data) -> throws -> String)` - Encodes `Data` using the given closure.
 
 You can create your own `URLEncodedFormParameterEncoder` and specify the desired `DataEncoding` in the initializer of the passed `URLEncodedFormEncoder`:
@@ -323,8 +340,8 @@ let encoder = URLEncodedFormParameterEncoder(encoder: URLEncodedFormEncoder(data
 Given the sheer number of ways to encode a `Date` into a `String`, `DateEncoding` includes the following methods for encoding `Date` parameters:
 
 - `.deferredToDate` - Uses `Date`'s native `Encodable` support. This is the default case.
-- `.secondsSince1970` - Encodes `Date`s as seconds since midnight UTC on January 1, 1970.
-- `.millisecondsSince1970` - Encodes `Date`s as milliseconds since midnight UTC on January 1, 1970.
+- `.secondsSince1970` - Encodes `Date`s as seconds since midnight UTC on *January 1, 1970*.
+- `.millisecondsSince1970` - Encodes `Date`s as milliseconds since midnight UTC on *January 1, 1970*.
 - `.iso8601` - Encodes `Date`s according to the ISO 8601 and RFC3339 standards.
 - `.formatted(DateFormatter)` - Encodes `Date`s using the given `DateFormatter`.
 - `.custom((Date) throws -> String)` - Encodes `Date`s using the given closure.
