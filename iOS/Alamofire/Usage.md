@@ -70,7 +70,12 @@ Additionally, networking in Alamofire (and the *URL Loading System* in general) 
 
 ### Aside: The `AF` Namespace and Reference
 
-Previous versions of Alamofire's documentation used examples like `Alamofire.request()`. This API, while it appeared to require the `Alamofire` prefix, in fact worked fine without it. The `request` method and other functions were available globally in any file with `import Alamofire`. Starting in Alamofire 5, this functionality has been removed and instead the `AF` global is a reference to `Session.default`. This allows Alamofire to offer the same convenience functionality while not having to pollute the global namespace every time Alamofire is used and not having to duplicate the `Session` API globally. Similarly, types extended by Alamofire will use an `af` property extension to separate the functionality Alamofire adds from other extensions.
+Previous versions of Alamofire's documentation used examples like `Alamofire.request()`. This API, while it appeared to require the `Alamofire` prefix, in fact worked fine without it. The `request` method and other functions were available globally in any file with `import Alamofire`.
+
+Starting in *Alamofire 5*,
+
+- this functionality has been removed and instead the `AF` global is a reference to `Session.default`. This allows Alamofire to offer the same convenience functionality while not having to pollute the global namespace every time Alamofire is used and not having to duplicate the `Session` API globally.
+- Similarly, types extended by Alamofire will use an `af` property extension to separate the functionality Alamofire adds from other extensions.
 
 ## Making Requests
 
@@ -143,15 +148,15 @@ AF.request("https://httpbin.org/put", method: .put)
 AF.request("https://httpbin.org/delete", method: .delete)
 ```
 
-It's important to remember that the different HTTP methods may have different semantics and require different parameter encodings depending on what the server expects. For instance, passing body data in a `GET` request is not supported by `URLSession` or Alamofire and will return an error.
+It's important to remember that the different HTTP methods may have different semantics and require different parameter encodings depending on what the server expects. For instance, **passing body data in a `GET` request is not supported by `URLSession` or Alamofire and will return an error**.
 
 Alamofire also offers an extension on `URLRequest` to bridge the `httpMethod` property that returns a `String` to an `HTTPMethod` value:
 
 ```swift
-public extension URLRequest {
+extension URLRequest {
     /// Returns the `httpMethod` as Alamofire's `HTTPMethod` type.
-    var method: HTTPMethod? {
-        get { return httpMethod.flatMap(HTTPMethod.init) }
+    public var method: HTTPMethod? {
+        get { httpMethod.flatMap(HTTPMethod.init) }
         set { httpMethod = newValue?.rawValue }
     }
 }
@@ -169,13 +174,15 @@ AF.request("https://httpbin.org/headers", method: .custom)
 
 ### Setting Other `URLRequest` Properties
 
-Alamofire's request creation methods offer the most common parameters for customization but sometimes those just aren't enough. The `URLRequest`s created from the passed values can be modified by using a `RequestModifier` closure when creating requests. For example, to set the `URLRequest`'s `timeoutInterval` to 5 seconds, modify the request in the closure.
+Alamofire's request creation methods offer the most common parameters for customization but sometimes those just aren't enough. The `URLRequest`s created from the passed values can be modified by using a `RequestModifier` closure when creating requests.
+
+For example, to set the `URLRequest`'s `timeoutInterval` to 5 seconds, modify the request in the closure.
 
 ```swift
 AF.request("https://httpbin.org/get", requestModifier: { $0.timeoutInterval = 5 }).response(...)
 ```
 
-`RequestModifier`s also work with trailing closure syntax.
+`RequestModifier`s also work with *trailing closure syntax*.
 
 ```swift
 AF.request("https://httpbin.org/get") { urlRequest in
@@ -185,11 +192,15 @@ AF.request("https://httpbin.org/get") { urlRequest in
 .response(...)
 ```
 
-`RequestModifier`s only apply to request created using methods taking a `URL` and other individual components, not to values created directly from `URLRequestConvertible` values, as those values should be able to set all parameters themselves. Additionally, adoption of `URLRequestConvertible` is recommended once *most* requests start needing to be modified during creation. You can read more in our [Advanced Usage documentation](https://github.com/Alamofire/Alamofire/blob/master/Documentation/AdvancedUsage.md#making-requests).
+`RequestModifier`s only apply to request created using methods taking a `URL` and other individual components, not to values created directly from `URLRequestConvertible` values, as those values should be able to set all parameters themselves.
+
+Additionally, adoption of `URLRequestConvertible` is recommended once *most* requests start needing to be modified during creation. You can read more in our [Advanced Usage documentation](https://github.com/Alamofire/Alamofire/blob/master/Documentation/AdvancedUsage.md#making-requests).
 
 ### Request Parameters and Parameter Encoders
 
-Alamofire supports passing any `Encodable` type as the parameters of a request. These parameters are then passed through a type conforming to the `ParameterEncoder` protocol and added to the `URLRequest` which is then sent over the network. Alamofire includes two `ParameterEncoder` conforming types: `JSONParameterEncoder` and `URLEncodedFormParameterEncoder`. These types cover the most common encodings used by modern services (XML encoding is left as an exercise for the reader).
+Alamofire supports passing any `Encodable` type as the parameters of a request. These parameters are then passed through a type conforming to the `ParameterEncoder` protocol and added to the `URLRequest` which is then sent over the network.
+
+Alamofire includes two `ParameterEncoder` conforming types: `JSONParameterEncoder` and `URLEncodedFormParameterEncoder`. These types cover the most common encodings used by modern services (XML encoding is left as an exercise for the reader).
 
 ```swift
 struct Login: Encodable {
