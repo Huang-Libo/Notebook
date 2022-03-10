@@ -57,7 +57,7 @@ Swift provides *five* different *access levels* for entities within your code. T
 
 *Open access* is the **highest** (least restrictive) access level and *private access* is the **lowest** (most restrictive) access level.
 
-*Open access* applies only to *classes* and *class members*, and it differs from *public access* by allowing code outside the module to *subclass* and *override*.
+***Open access* applies only to *classes* and *class members*, and it differs from *public access* by allowing code outside the module to *subclass* and *override*.**
 
 ### Guiding Principle of Access Levels
 
