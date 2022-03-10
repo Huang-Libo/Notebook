@@ -3,58 +3,58 @@
 - [Using Alamofire](#using-alamofire)
   - [Introduction](#introduction)
     - [Aside: The `AF` Namespace and Reference](#aside-the-af-namespace-and-reference)
-  - [Making Requests](#making-requests)
-    - [HTTP Methods](#http-methods)
-    - [Setting Other `URLRequest` Properties](#setting-other-urlrequest-properties)
-    - [Request Parameters and Parameter Encoders](#request-parameters-and-parameter-encoders)
-      - [`URLEncodedFormParameterEncoder`](#urlencodedformparameterencoder)
-        - [GET Request With URL-Encoded Parameters](#get-request-with-url-encoded-parameters)
-        - [POST Request With URL-Encoded Parameters](#post-request-with-url-encoded-parameters)
-      - [Configuring the Sorting of Encoded Values](#configuring-the-sorting-of-encoded-values)
-        - [Configuring the Encoding of `Array` Parameters](#configuring-the-encoding-of-array-parameters)
-        - [Configuring the Encoding of `Bool` Parameters](#configuring-the-encoding-of-bool-parameters)
-        - [Configuring the Encoding of `Data` Parameters](#configuring-the-encoding-of-data-parameters)
-        - [Configuring the Encoding of `Date` Parameters](#configuring-the-encoding-of-date-parameters)
-        - [Configuring the Encoding of Coding Keys](#configuring-the-encoding-of-coding-keys)
-        - [Configuring the Encoding of Spaces](#configuring-the-encoding-of-spaces)
-      - [`JSONParameterEncoder`](#jsonparameterencoder)
-        - [POST Request with JSON-Encoded Parameters](#post-request-with-json-encoded-parameters)
-        - [Configuring a Custom `JSONEncoder`](#configuring-a-custom-jsonencoder)
-        - [Manual Parameter Encoding of a `URLRequest`](#manual-parameter-encoding-of-a-urlrequest)
-    - [HTTP Headers](#http-headers)
-    - [Response Validation](#response-validation)
-      - [Automatic Validation](#automatic-validation)
-      - [Manual Validation](#manual-validation)
-    - [Response Handling](#response-handling)
-      - [Response Handler](#response-handler)
-      - [Response Data Handler](#response-data-handler)
-      - [Response String Handler](#response-string-handler)
-      - [Response `Decodable` Handler](#response-decodable-handler)
-      - [Chained Response Handlers](#chained-response-handlers)
-      - [Response Handler Queue](#response-handler-queue)
-    - [Response Caching](#response-caching)
-    - [Authentication](#authentication)
-      - [HTTP Basic Authentication](#http-basic-authentication)
-      - [Authentication with `URLCredential`](#authentication-with-urlcredential)
-      - [Manual Authentication](#manual-authentication)
-    - [Downloading Data to a File](#downloading-data-to-a-file)
-      - [Download File Destination](#download-file-destination)
-      - [Download Progress](#download-progress)
-      - [Canceling and Resuming a Download](#canceling-and-resuming-a-download)
-    - [Uploading Data to a Server](#uploading-data-to-a-server)
-      - [Uploading Data](#uploading-data)
-      - [Uploading a File](#uploading-a-file)
-      - [Uploading Multipart Form Data](#uploading-multipart-form-data)
-      - [Upload Progress](#upload-progress)
-    - [Streaming Data from a Server](#streaming-data-from-a-server)
-      - [Streaming `Data`](#streaming-data)
-      - [Streaming `String`s](#streaming-strings)
-      - [Streaming `Decodable` Values](#streaming-decodable-values)
-      - [Producing an `InputStream`](#producing-an-inputstream)
-      - [Cancellation](#cancellation)
-    - [Statistical Metrics](#statistical-metrics)
-      - [`URLSessionTaskMetrics`](#urlsessiontaskmetrics)
-    - [cURL Command Output](#curl-command-output)
+  - [Example: Making Requests](#example-making-requests)
+  - [HTTP Methods](#http-methods)
+  - [Setting Other `URLRequest` Properties](#setting-other-urlrequest-properties)
+  - [Request Parameters and Parameter Encoders](#request-parameters-and-parameter-encoders)
+    - [`URLEncodedFormParameterEncoder`](#urlencodedformparameterencoder)
+      - [GET Request With URL-Encoded Parameters](#get-request-with-url-encoded-parameters)
+      - [POST Request With URL-Encoded Parameters](#post-request-with-url-encoded-parameters)
+    - [Configuring the Sorting of Encoded Values](#configuring-the-sorting-of-encoded-values)
+      - [Configuring the Encoding of `Array` Parameters](#configuring-the-encoding-of-array-parameters)
+      - [Configuring the Encoding of `Bool` Parameters](#configuring-the-encoding-of-bool-parameters)
+      - [Configuring the Encoding of `Data` Parameters](#configuring-the-encoding-of-data-parameters)
+      - [Configuring the Encoding of `Date` Parameters](#configuring-the-encoding-of-date-parameters)
+      - [Configuring the Encoding of Coding Keys](#configuring-the-encoding-of-coding-keys)
+      - [Configuring the Encoding of Spaces](#configuring-the-encoding-of-spaces)
+    - [`JSONParameterEncoder`](#jsonparameterencoder)
+      - [POST Request with JSON-Encoded Parameters](#post-request-with-json-encoded-parameters)
+      - [Configuring a Custom `JSONEncoder`](#configuring-a-custom-jsonencoder)
+      - [Manual Parameter Encoding of a `URLRequest`](#manual-parameter-encoding-of-a-urlrequest)
+  - [HTTP Headers](#http-headers)
+  - [Response Validation](#response-validation)
+    - [Automatic Validation](#automatic-validation)
+    - [Manual Validation](#manual-validation)
+  - [Response Handling](#response-handling)
+    - [Response Handler](#response-handler)
+    - [Response Data Handler](#response-data-handler)
+    - [Response String Handler](#response-string-handler)
+    - [Response `Decodable` Handler](#response-decodable-handler)
+    - [Chained Response Handlers](#chained-response-handlers)
+    - [Response Handler Queue](#response-handler-queue)
+  - [Response Caching](#response-caching)
+  - [Authentication](#authentication)
+    - [HTTP Basic Authentication](#http-basic-authentication)
+    - [Authentication with `URLCredential`](#authentication-with-urlcredential)
+    - [Manual Authentication](#manual-authentication)
+  - [Downloading Data to a File](#downloading-data-to-a-file)
+    - [Download File Destination](#download-file-destination)
+    - [Download Progress](#download-progress)
+    - [Canceling and Resuming a Download](#canceling-and-resuming-a-download)
+  - [Uploading Data to a Server](#uploading-data-to-a-server)
+    - [Uploading Data](#uploading-data)
+    - [Uploading a File](#uploading-a-file)
+    - [Uploading Multipart Form Data](#uploading-multipart-form-data)
+    - [Upload Progress](#upload-progress)
+  - [Streaming Data from a Server](#streaming-data-from-a-server)
+    - [Streaming `Data`](#streaming-data)
+    - [Streaming `String`s](#streaming-strings)
+    - [Streaming `Decodable` Values](#streaming-decodable-values)
+    - [Producing an `InputStream`](#producing-an-inputstream)
+    - [Cancellation](#cancellation)
+  - [Statistical Metrics](#statistical-metrics)
+    - [`URLSessionTaskMetrics`](#urlsessiontaskmetrics)
+  - [cURL Command Output](#curl-command-output)
 
 ## Introduction
 
@@ -77,7 +77,7 @@ Starting in *Alamofire 5*,
 - this functionality has been removed and instead the `AF` global is a reference to `Session.default`. This allows Alamofire to offer the same convenience functionality while not having to pollute the global namespace every time Alamofire is used and not having to duplicate the `Session` API globally.
 - Similarly, types extended by Alamofire will use an `af` property extension to separate the functionality Alamofire adds from other extensions.
 
-## Making Requests
+## Example: Making Requests
 
 Alamofire provides a variety of convenience methods for making HTTP requests. At the simplest, just provide a `String` that can be converted into a `URL`:
 
@@ -115,7 +115,7 @@ open func request(_ urlRequest: URLRequestConvertible,
 
 This method creates a `DataRequest` for any type conforming to Alamofire's `URLRequestConvertible` protocol. All of the different parameters from the previous version are encapsulated in that value, which can give rise to very powerful abstractions. This is discussed in our [Advanced Usage](https://github.com/Alamofire/Alamofire/blob/master/Documentation/AdvancedUsage.md) documentation.
 
-### HTTP Methods
+## HTTP Methods
 
 The `HTTPMethod` type lists the HTTP methods defined in [RFC 7231 §4.3](https://tools.ietf.org/html/rfc7231#section-4.3):
 
@@ -172,7 +172,7 @@ extension HTTPMethod {
 AF.request("https://httpbin.org/headers", method: .custom)
 ```
 
-### Setting Other `URLRequest` Properties
+## Setting Other `URLRequest` Properties
 
 Alamofire's request creation methods offer the most common parameters for customization but sometimes those just aren't enough. The `URLRequest`s created from the passed values can be modified by using a `RequestModifier` closure when creating requests.
 
@@ -196,7 +196,7 @@ AF.request("https://httpbin.org/get") { urlRequest in
 
 Additionally, adoption of `URLRequestConvertible` is recommended once *most* requests start needing to be modified during creation. You can read more in our [Advanced Usage documentation](https://github.com/Alamofire/Alamofire/blob/master/Documentation/AdvancedUsage.md#making-requests).
 
-### Request Parameters and Parameter Encoders
+## Request Parameters and Parameter Encoders
 
 Alamofire supports passing any `Encodable` type as the parameters of a request. These parameters are then passed through a type conforming to the `ParameterEncoder` protocol and added to the `URLRequest` which is then sent over the network.
 
@@ -218,7 +218,7 @@ AF.request("https://httpbin.org/post",
 }
 ```
 
-#### `URLEncodedFormParameterEncoder`
+### `URLEncodedFormParameterEncoder`
 
 The `URLEncodedFormParameterEncoder` encodes values into a url-encoded string to be set as or appended to any existing URL query string or set as the HTTP body of the request. Controlling where the encoded string is set can be done by setting the `destination` of the encoding. The `URLEncodedFormParameterEncoder.Destination` enumeration has three cases:
 
@@ -230,7 +230,7 @@ The `Content-Type` HTTP header of an encoded request with HTTP body is set to `a
 
 Internally, `URLEncodedFormParameterEncoder` uses `URLEncodedFormEncoder` to perform the actual encoding from an `Encodable` type to a URL encoded form `String`. This encoder can be used to customize the encoding for various types, including `Array` using the `ArrayEncoding`, `Bool` using the `BoolEncoding`, `Data` using the `DataEncoding`, `Date` using the `DateEncoding`, coding keys using the `KeyEncoding`, and spaces using the `SpaceEncoding`.
 
-##### GET Request With URL-Encoded Parameters
+#### GET Request With URL-Encoded Parameters
 
 ```swift
 let parameters = ["foo": "bar"]
@@ -243,7 +243,7 @@ AF.request("https://httpbin.org/get", parameters: parameters, encoder: URLEncode
 // https://httpbin.org/get?foo=bar
 ```
 
-##### POST Request With URL-Encoded Parameters
+#### POST Request With URL-Encoded Parameters
 
 ```swift
 let parameters: [String: [String]] = [
@@ -260,7 +260,7 @@ AF.request("https://httpbin.org/post", method: .post, parameters: parameters, en
 // HTTP body: "qux[]=x&qux[]=y&qux[]=z&baz[]=a&baz[]=b&foo[]=bar"
 ```
 
-#### Configuring the Sorting of Encoded Values
+### Configuring the Sorting of Encoded Values
 
 Since Swift 4.2, the hashing algorithm used by Swift's `Dictionary` type produces a random internal ordering at runtime which differs between app launches. This can cause encoded parameters to change order, which may have an impact on caching and other behaviors. By default `URLEncodedFormEncoder` will sort its encoded key-value pairs. While this produces constant output for all `Encodable` types, it may not match the actual encoding order implemented by the type. You can set `alphabetizeKeyValuePairs` to `false` to return to implementation order, though that will also have the randomized `Dictionary` order as well.
 
@@ -270,7 +270,7 @@ You can create your own `URLEncodedFormParameterEncoder` and specify the desired
 let encoder = URLEncodedFormParameterEncoder(encoder: URLEncodedFormEncoder(alphabetizeKeyValuePairs: false))
 ```
 
-##### Configuring the Encoding of `Array` Parameters
+#### Configuring the Encoding of `Array` Parameters
 
 Since there is no published specification for how to encode collection types, by default Alamofire follows the convention of appending `[]` to the key for array values (`foo[]=1&foo[]=2`), and appending the key surrounded by square brackets for nested dictionary values (`foo[bar]=baz`).
 
@@ -289,7 +289,7 @@ You can create your own `URLEncodedFormParameterEncoder` and specify the desired
 let encoder = URLEncodedFormParameterEncoder(encoder: URLEncodedFormEncoder(arrayEncoding: .noBrackets))
 ```
 
-##### Configuring the Encoding of `Bool` Parameters
+#### Configuring the Encoding of `Bool` Parameters
 
 The `URLEncodedFormEncoder.BoolEncoding` enumeration provides the following methods for encoding `Bool` parameters:
 
@@ -304,7 +304,7 @@ You can create your own `URLEncodedFormParameterEncoder` and specify the desired
 let encoder = URLEncodedFormParameterEncoder(encoder: URLEncodedFormEncoder(boolEncoding: .numeric))
 ```
 
-##### Configuring the Encoding of `Data` Parameters
+#### Configuring the Encoding of `Data` Parameters
 
 `DataEncoding` includes the following methods for encoding `Data` parameters:
 
@@ -318,7 +318,7 @@ You can create your own `URLEncodedFormParameterEncoder` and specify the desired
 let encoder = URLEncodedFormParameterEncoder(encoder: URLEncodedFormEncoder(dataEncoding: .base64))
 ```
 
-##### Configuring the Encoding of `Date` Parameters
+#### Configuring the Encoding of `Date` Parameters
 
 Given the sheer number of ways to encode a `Date` into a `String`, `DateEncoding` includes the following methods for encoding `Date` parameters:
 
@@ -335,7 +335,7 @@ You can create your own `URLEncodedFormParameterEncoder` and specify the desired
 let encoder = URLEncodedFormParameterEncoder(encoder: URLEncodedFormEncoder(dateEncoding: .iso8601))
 ```
 
-##### Configuring the Encoding of Coding Keys
+#### Configuring the Encoding of Coding Keys
 
 Due to the variety of parameter key styles, `KeyEncoding` provides the following methods to customize key encoding from keys in `lowerCamelCase`:
 
@@ -353,7 +353,7 @@ You can create your own `URLEncodedFormParameterEncoder` and specify the desired
 let encoder = URLEncodedFormParameterEncoder(encoder: URLEncodedFormEncoder(keyEncoding: .convertToSnakeCase))
 ```
 
-##### Configuring the Encoding of Spaces
+#### Configuring the Encoding of Spaces
 
 Older form encoders used `+` to encode spaces and some servers still expect this encoding instead of the modern percent encoding, so Alamofire includes the following methods for encoding spaces:
 
@@ -366,11 +366,11 @@ You can create your own `URLEncodedFormParameterEncoder` and specify the desired
 let encoder = URLEncodedFormParameterEncoder(encoder: URLEncodedFormEncoder(spaceEncoding: .plusReplaced))
 ```
 
-#### `JSONParameterEncoder`
+### `JSONParameterEncoder`
 
 `JSONParameterEncoder` encodes `Encodable` values using Swift's `JSONEncoder` and sets the result as the `httpBody` of the `URLRequest`. The `Content-Type` HTTP header field of an encoded request is set to `application/json` if not already set.
 
-##### POST Request with JSON-Encoded Parameters
+#### POST Request with JSON-Encoded Parameters
 
 ```swift
 let parameters: [String: [String]] = [
@@ -386,7 +386,7 @@ AF.request("https://httpbin.org/post", method: .post, parameters: parameters, en
 // HTTP body: {"baz":["a","b"],"foo":["bar"],"qux":["x","y","z"]}
 ```
 
-##### Configuring a Custom `JSONEncoder`
+#### Configuring a Custom `JSONEncoder`
 
 You can customize the behavior of `JSONParameterEncoder` by passing it a `JSONEncoder` instance configured to your needs:
 
@@ -397,7 +397,7 @@ encoder.keyEncodingStrategy = .convertToSnakeCase
 let parameterEncoder = JSONParameterEncoder(encoder: encoder)
 ```
 
-##### Manual Parameter Encoding of a `URLRequest`
+#### Manual Parameter Encoding of a `URLRequest`
 
 The `ParameterEncoder` APIs can also be used outside of Alamofire by encoding parameters directly in `URLRequest`s.
 
@@ -410,7 +410,7 @@ let encodedURLRequest = try URLEncodedFormParameterEncoder.default.encode(parame
                                                                           into: urlRequest)
 ```
 
-### HTTP Headers
+## HTTP Headers
 
 Alamofire includes its own `HTTPHeaders` type, an order-preserving and case-insensitive representation of HTTP header name / value pairs. The `HTTPHeader` types encapsulate a single name / value pair and provides a variety of static values for common headers.
 
@@ -450,11 +450,11 @@ The default Alamofire `Session` provides a default set of headers for every `Req
 
 If you need to customize these headers, a custom `URLSessionConfiguration` should be created, the `headers` property updated, and the configuration applied to a new `Session` instance. Use `URLSessionConfiguration.af.default` to customize your configuration while keeping Alamofire's default headers.
 
-### Response Validation
+## Response Validation
 
 By default, Alamofire treats any completed request to be successful, regardless of the content of the response. Calling `validate()` before a response handler causes an error to be generated if the response had an unacceptable status code or MIME type.
 
-#### Automatic Validation
+### Automatic Validation
 
 The `validate()` API automatically validates that status codes are within the `200..<300` range, and that the `Content-Type` header of the response matches the `Accept` header of the request, if one is provided.
 
@@ -464,7 +464,7 @@ AF.request("https://httpbin.org/get").validate().responseData { response in
 }
 ```
 
-#### Manual Validation
+### Manual Validation
 
 ```swift
 AF.request("https://httpbin.org/get")
@@ -480,7 +480,7 @@ AF.request("https://httpbin.org/get")
     }
 ```
 
-### Response Handling
+## Response Handling
 
 Alamofire's `DataRequest` and `DownloadRequest` both have a corresponding response type: `DataResponse<Success, Failure: Error>` and `DownloadResponse<Success, Failure: Error>`. Both of these are composed of two generics: the serialized type and the error type. By default, all response values will produce the `AFError` error type (i.e. `DataResponse<Success, AFError>`). Alamofire uses the simpler `AFDataResponse<Success>` and `AFDownloadResponse<Success>`, in its public API, which always have `AFError` error types. `UploadRequest`, a subclass of `DataRequest`, uses the same `DataResponse` type.
 
@@ -539,7 +539,7 @@ None of the response handlers perform any validation of the `HTTPURLResponse` it
 
 > For example, response status codes in the `400..<500` and `500..<600` ranges do NOT automatically trigger an `Error`. Alamofire uses [Response Validation](#response-validation) method chaining to achieve this.
 
-#### Response Handler
+### Response Handler
 
 The `response` handler does NOT evaluate any of the response data. It merely forwards on all information directly from the `URLSessionDelegate`. It is the Alamofire equivalent of using `cURL` to execute a `Request`.
 
@@ -551,7 +551,7 @@ AF.request("https://httpbin.org/get").response { response in
 
 > We strongly encourage you to leverage the other response serializers taking advantage of `Response` and `Result` types.
 
-#### Response Data Handler
+### Response Data Handler
 
 The `responseData` handler uses a `DataResponseSerializer` to extract and validate the `Data` returned by the server. If no errors occur and `Data` is returned, the response `Result` will be a `.success` and the `value` will be the `Data` returned from the server.
 
@@ -561,7 +561,7 @@ AF.request("https://httpbin.org/get").responseData { response in
 }
 ```
 
-#### Response String Handler
+### Response String Handler
 
 The `responseString` handler uses a `StringResponseSerializer` to convert the `Data` returned by the server into a `String` with the specified encoding. If no errors occur and the server data is successfully serialized into a `String`, the response `Result` will be a `.success` and the `value` will be of type `String`.
 
@@ -573,7 +573,7 @@ AF.request("https://httpbin.org/get").responseString { response in
 
 > If no encoding is specified, Alamofire will use the text encoding specified in the `HTTPURLResponse` from the server. If the text encoding cannot be determined by the server response, it defaults to `.isoLatin1`.
 
-#### Response `Decodable` Handler
+### Response `Decodable` Handler
 
 The `responseDecodable` handler uses a `DecodableResponseSerializer` to convert the `Data` returned by the server into the passed `Decodable` type using the specified `DataDecoder` (a protocol abstraction for `Decoder`s which can decode from `Data`). If no errors occur and the server data is successfully decoded into a `Decodable` type, the response `Result` will be a `.success` and the `value` will be of the passed type.
 
@@ -585,7 +585,7 @@ AF.request("https://httpbin.org/get").responseDecodable(of: DecodableType.self) 
 }
 ```
 
-#### Chained Response Handlers
+### Chained Response Handlers
 
 Response handlers can also be chained:
 
@@ -601,7 +601,7 @@ Alamofire.request("https://httpbin.org/get")
 
 > It is important to note that using multiple response handlers on the same `Request` requires the server data to be serialized multiple times, once for each response handler. Using multiple response handlers on the same `Request` should generally be avoided as best practice, especially in production environments. They should only be used for debugging or in circumstances where there is no better option.
 
-#### Response Handler Queue
+### Response Handler Queue
 
 Closures passed to response handlers are executed on the `.main` queue by default, but a specific `DispatchQueue` can be passed on which to execute the closure. Actual serialization work (conversion of `Data` to some other type) is always executed in the background on either the `rootQueue` or the `serializationQueue`, if one was provided, of the `Session` issuing the request.
 
@@ -614,13 +614,13 @@ AF.request("https://httpbin.org/get").responseDecodable(of: DecodableType.self, 
 }
 ```
 
-### Response Caching
+## Response Caching
 
 Response caching is handled on the system framework level by [`URLCache`](https://developer.apple.com/reference/foundation/urlcache). It provides a composite in-memory and on-disk cache and lets you manipulate the sizes of both the in-memory and on-disk portions.
 
 > By default, Alamofire leverages the `URLCache.shared` instance. In order to customize the `URLCache` instance used, see the [Session Configuration](AdvancedUsage.md#session-manager) section.
 
-### Authentication
+## Authentication
 
 Authentication is handled on the system framework level by [`URLCredential`](https://developer.apple.com/reference/foundation/nsurlcredential) and [`URLAuthenticationChallenge`](https://developer.apple.com/reference/foundation/urlauthenticationchallenge).
 
@@ -633,7 +633,7 @@ Authentication is handled on the system framework level by [`URLCredential`](htt
 - [Kerberos](https://en.wikipedia.org/wiki/Kerberos_%28protocol%29)
 - [NTLM](https://en.wikipedia.org/wiki/NT_LAN_Manager)
 
-#### HTTP Basic Authentication
+### HTTP Basic Authentication
 
 The `authenticate` method on a `Request` will automatically provide a `URLCredential` when challenged with a `URLAuthenticationChallenge` when appropriate:
 
@@ -648,7 +648,7 @@ AF.request("https://httpbin.org/basic-auth/\(user)/\(password)")
     }
 ```
 
-#### Authentication with `URLCredential`
+### Authentication with `URLCredential`
 
 ```swift
 let user = "user"
@@ -665,7 +665,7 @@ AF.request("https://httpbin.org/basic-auth/\(user)/\(password)")
 
 > It is important to note that when using a `URLCredential` for authentication, the underlying `URLSession` will actually end up making two requests if a challenge is issued by the server. The first request will not include the credential which "may" trigger a challenge from the server. The challenge is then received by Alamofire, the credential is appended and the request is retried by the underlying `URLSession`.
 
-#### Manual Authentication
+### Manual Authentication
 
 If you are communicating with an API that always requires an `Authenticate` or similar header without prompting, it can be added manually:
 
@@ -683,7 +683,7 @@ AF.request("https://httpbin.org/basic-auth/user/password", headers: headers)
 
 However, headers that must be part of all requests are often better handled as part of a custom [`URLSessionConfiguration`](AdvancedUsage.md#session-manager), or by using a [`RequestAdapter`](AdvancedUsage.md#request-adapter).
 
-### Downloading Data to a File
+## Downloading Data to a File
 
 In addition to fetching data into memory, Alamofire also provides the `Session.download`, `DownloadRequest`, and `DownloadResponse<Success, Failure: Error>` APIs to facilitate downloading to disk. While downloading into memory works great for small payloads like most JSON API responses, fetching larger assets like images and videos should be downloaded to disk to avoid memory issues with your application.
 
@@ -697,7 +697,7 @@ In addition to having the same response handlers that `DataRequest` does, `Downl
 
 Other response handlers, like `responseDecodable`, involve reading the response `Data` from disk. This may involve reading large amounts of data into memory, so it's important to keep that in mind when using those handlers for downloads.
 
-#### Download File Destination
+### Download File Destination
 
 All downloaded data is initially stored in the system temporary directory. It will eventually be deleted by the system at some point in the future, so if it's something that needs to live longer, it's important to move the file somewhere else.
 
@@ -731,7 +731,7 @@ let destination = DownloadRequest.suggestedDownloadDestination(for: .documentDir
 AF.download("https://httpbin.org/image/png", to: destination)
 ```
 
-#### Download Progress
+### Download Progress
 
 Many times it can be helpful to report download progress to the user. Any `DownloadRequest` can report download progress using the `downloadProgress` API.
 
@@ -765,7 +765,7 @@ AF.download("https://httpbin.org/image/png")
     }
 ```
 
-#### Canceling and Resuming a Download
+### Canceling and Resuming a Download
 
 In addition to the `cancel()` API that all `Request` classes have, `DownloadRequest`s can also produce resume data, which can be used to later resume a download. There are two forms of this API: `cancel(producingResumeData: Bool)`, which allows control over whether resume data is produced, but only makes it available on the `DownloadResponse`; and `cancel(byProducingResumeData: (_ resumeData: Data?) -> Void)`, which performs the same actions but makes the resume data available in the completion handler.
 
@@ -794,11 +794,11 @@ AF.download(resumingWith: resumeData).responseData { response in
 }
 ```
 
-### Uploading Data to a Server
+## Uploading Data to a Server
 
 When sending relatively small amounts of data to a server using JSON or URL encoded parameters, the `request()` APIs are usually sufficient. If you need to send much larger amounts of data from `Data` in memory, a file `URL`, or an `InputStream`, then the `upload()` APIs are what you want to use.
 
-#### Uploading Data
+### Uploading Data
 
 ```swift
 let data = Data("data".utf8)
@@ -808,7 +808,7 @@ AF.upload(data, to: "https://httpbin.org/post").responseDecodable(of: DecodableT
 }
 ```
 
-#### Uploading a File
+### Uploading a File
 
 ```swift
 let fileURL = Bundle.main.url(forResource: "video", withExtension: "mov")
@@ -818,7 +818,7 @@ AF.upload(fileURL, to: "https://httpbin.org/post").responseDecodable(of: Decodab
 }
 ```
 
-#### Uploading Multipart Form Data
+### Uploading Multipart Form Data
 
 ```swift
 AF.upload(multipartFormData: { multipartFormData in
@@ -830,7 +830,7 @@ AF.upload(multipartFormData: { multipartFormData in
     }
 ```
 
-#### Upload Progress
+### Upload Progress
 
 While your user is waiting for their upload to complete, sometimes it can be handy to show the progress of the upload to the user. Any `UploadRequest` can report both upload progress of the upload and download progress of the response data download using the `uploadProgress` and `downloadProgress` APIs.
 
@@ -849,7 +849,7 @@ AF.upload(fileURL, to: "https://httpbin.org/post")
     }
 ```
 
-### Streaming Data from a Server
+## Streaming Data from a Server
 
 Large downloads or long lasting server connections which receive data over time may be better served by streaming rather than accumulating `Data` as it arrives. Alamofire offers the `DataStreamRequest` type and associated APIs to handle this usage. Although it offers much of the same API as other `Request`s, there are several key differences. Most notably, `DataStreamRequest` never accumulates `Data` in memory or saves it to disk. Instead, added `responseStream` closures are repeatedly called as `Data` arrives. The same closures are called again when the connection has completed or received an error.
 
@@ -896,7 +896,7 @@ public struct Completion {
 }
 ```
 
-#### Streaming `Data`
+### Streaming `Data`
 
 Streaming `Data` from a server can be accomplished like other Alamofire requests, but with a `Handler` closure added.
 
@@ -922,7 +922,7 @@ AF.streamRequest(...).responseStream { stream in
 
 > Handling the `.failure` case of the `Result` in the example above is unnecessary, as receiving `Data` can never fail.
 
-#### Streaming `String`s
+### Streaming `String`s
 
 Like `Data` streaming, `String`s can be streamed by adding a `Handler`.
 
@@ -947,7 +947,7 @@ AF.streamRequest(...).responseStreamString { stream in
 }
 ```
 
-#### Streaming `Decodable` Values
+### Streaming `Decodable` Values
 
 Incoming stream `Data` values can be turned into any `Decodable` value using `responseStreamDecodable`.
 
@@ -977,7 +977,7 @@ AF.streamRequest(...).responseStreamDecodable(of: SomeType.self) { stream in
 }
 ```
 
-#### Producing an `InputStream`
+### Producing an `InputStream`
 
 In addition to handling incoming `Data` using `StreamHandler` closures, `DataStreamRequest` can produce an `InputStream` value which can be used to read bytes as they arrive.
 
@@ -995,7 +995,7 @@ let inputStream = AF.streamRequest(...)
     .asInputStream()
 ```
 
-#### Cancellation
+### Cancellation
 
 `DataStreamRequest`s can be cancelled in four ways. First, like all other Alamofire `Request`s, `DataStreamRequest` can have `cancel()` called, canceling the underlying task and completing the stream.
 
@@ -1029,9 +1029,9 @@ AF.streamRequest(...).responseStream { stream in
 }
 ```
 
-### Statistical Metrics
+## Statistical Metrics
 
-#### `URLSessionTaskMetrics`
+### `URLSessionTaskMetrics`
 
 Alamofire gathers `URLSessionTaskMetrics` for every `Request`. `URLSessionTaskMetrics` encapsulate some fantastic statistical information about the underlying network connection and request and response timing.
 
@@ -1043,7 +1043,7 @@ AF.request("https://httpbin.org/get").responseDecodable(of: DecodableType.self) 
 
 > Due to `FB7624529`, collection of `URLSessionTaskMetrics` on watchOS is currently disabled.
 
-### cURL Command Output
+## cURL Command Output
 
 Debugging platform issues can be frustrating. Thankfully, Alamofire's `Request` type can produce the equivalent cURL command for easy debugging. Due to the asynchronous nature of Alamofire's `Request` creation, this API has both synchronous and asynchronous versions. To get the cURL command as soon as possible, you can chain the `cURLDescription` onto a request:
 
