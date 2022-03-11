@@ -385,7 +385,9 @@ let encoder = URLEncodedFormParameterEncoder(encoder: URLEncodedFormEncoder(spac
 
 ### `JSONParameterEncoder`
 
-`JSONParameterEncoder` encodes `Encodable` values using Swift's `JSONEncoder` and sets the result as the `httpBody` of the `URLRequest`. The `Content-Type` HTTP header field of an encoded request is set to `application/json` if not already set.
+`JSONParameterEncoder` encodes `Encodable` values using Swift's `JSONEncoder` and sets the result as the `httpBody` of the `URLRequest`.
+
+The `Content-Type` HTTP header field of an encoded request is set to `application/json` if not already set.
 
 #### POST Request with JSON-Encoded Parameters
 
@@ -429,7 +431,7 @@ let encodedURLRequest = try URLEncodedFormParameterEncoder.default.encode(parame
 
 ## HTTP Headers
 
-Alamofire includes its own `HTTPHeaders` type, an order-preserving and case-insensitive representation of HTTP header name / value pairs. The `HTTPHeader` types encapsulate a single name / value pair and provides a variety of static values for common headers.
+Alamofire includes its own `HTTPHeaders` type, an order-preserving and case-insensitive representation of HTTP header *name / value* pairs. The `HTTPHeader` types encapsulate a single *name / value* pair and provides a variety of static values for common headers.
 
 Adding custom `HTTPHeaders` to a `Request` is as simple as passing a value to one of the `request` methods:
 
@@ -465,11 +467,13 @@ The default Alamofire `Session` provides a default set of headers for every `Req
 - `Accept-Language`, which defaults to up to the top 6 preferred languages on the system, formatted like `en;q=1.0`, per [RFC 7231 §5.3.5](https://tools.ietf.org/html/rfc7231#section-5.3.5).
 - `User-Agent`, which contains versioning information about the current app. For example: `iOS Example/1.0 (com.alamofire.iOS-Example; build:1; iOS 13.0.0) Alamofire/5.0.0`, per [RFC 7231 §5.5.3](https://tools.ietf.org/html/rfc7231#section-5.5.3).
 
-If you need to customize these headers, a custom `URLSessionConfiguration` should be created, the `headers` property updated, and the configuration applied to a new `Session` instance. Use `URLSessionConfiguration.af.default` to customize your configuration while keeping Alamofire's default headers.
+If you need to customize these headers, a custom `URLSessionConfiguration` should be created, the `headers` property updated, and the configuration applied to a new `Session` instance.
+
+Use `URLSessionConfiguration.af.default` to customize your configuration while keeping Alamofire's default headers.
 
 ## Response Validation
 
-By default, Alamofire treats any completed request to be successful, regardless of the content of the response. Calling `validate()` before a response handler causes an error to be generated if the response had an unacceptable status code or MIME type.
+By default, Alamofire treats any completed request to be successful, regardless of the content of the response. Calling `validate()` before a response handler causes an error to be generated if the response had an unacceptable *status code* or *MIME type*.
 
 ### Automatic Validation
 
@@ -499,7 +503,17 @@ AF.request("https://httpbin.org/get")
 
 ## Response Handling
 
-Alamofire's `DataRequest` and `DownloadRequest` both have a corresponding response type: `DataResponse<Success, Failure: Error>` and `DownloadResponse<Success, Failure: Error>`. Both of these are composed of two generics: the serialized type and the error type. By default, all response values will produce the `AFError` error type (i.e. `DataResponse<Success, AFError>`). Alamofire uses the simpler `AFDataResponse<Success>` and `AFDownloadResponse<Success>`, in its public API, which always have `AFError` error types. `UploadRequest`, a subclass of `DataRequest`, uses the same `DataResponse` type.
+Alamofire's `DataRequest` and `DownloadRequest` both have a corresponding response type:
+
+- `DataResponse<Success, Failure: Error>` and
+- `DownloadResponse<Success, Failure: Error>`.
+
+Both of these are composed of two generics: the serialized type and the error type.
+
+- By default, all response values will produce the `AFError` error type (i.e. `DataResponse<Success, AFError>`).
+- Alamofire uses the simpler `AFDataResponse<Success>` and `AFDownloadResponse<Success>`, in its public API, which always have `AFError` error types.
+
+`UploadRequest`, a subclass of `DataRequest`, uses the same `DataResponse` type.
 
 Handling the `DataResponse` of a `DataRequest` or `UploadRequest` made in Alamofire involves chaining a response handler like `responseDecodable` onto the `DataRequest`:
 
@@ -511,9 +525,7 @@ AF.request("https://httpbin.org/get").responseDecodable(of: DecodableType.self) 
 
 In the above example, the `responseDecodable` handler is added to the `DataRequest` to be executed once the `DataRequest` is complete. The closure passed to the handler receives the `DataResponse<DecodableType, AFError>` value produced by the `DecodableResponseSerializer` from the `URLRequest`, `HTTPURLResponse`, `Data`, and `Error` produced by the request.
 
-Rather than blocking execution to wait for a response from the server, this closure is added as a [callback](https://en.wikipedia.org/wiki/Callback_%28computer_programming%29) to handle the response once it's received. The result of a request is only available inside the scope of a response closure. Any execution contingent on the response or data received from the server must be done within a response closure.
-
-> Networking in Alamofire is done _asynchronously_. Asynchronous programming may be a source of frustration to programmers unfamiliar with the concept, but there are [very good reasons](https://developer.apple.com/library/ios/qa/qa1693/_index.html) for doing it this way.
+Rather than blocking execution to wait for a response from the server, this closure is added as a callback to handle the response once it's received. The result of a request is only available inside the scope of a response closure. Any execution contingent on the response or data received from the server must be done within a response closure.
 
 Alamofire contains five different data response handlers by default, including:
 
@@ -570,7 +582,9 @@ AF.request("https://httpbin.org/get").response { response in
 
 ### Response Data Handler
 
-The `responseData` handler uses a `DataResponseSerializer` to extract and validate the `Data` returned by the server. If no errors occur and `Data` is returned, the response `Result` will be a `.success` and the `value` will be the `Data` returned from the server.
+The `responseData` handler uses a `DataResponseSerializer` to extract and validate the `Data` returned by the server.
+
+If no errors occur and `Data` is returned, the response `Result` will be a `.success` and the `value` will be the `Data` returned from the server.
 
 ```swift
 AF.request("https://httpbin.org/get").responseData { response in
@@ -580,7 +594,9 @@ AF.request("https://httpbin.org/get").responseData { response in
 
 ### Response String Handler
 
-The `responseString` handler uses a `StringResponseSerializer` to convert the `Data` returned by the server into a `String` with the specified encoding. If no errors occur and the server data is successfully serialized into a `String`, the response `Result` will be a `.success` and the `value` will be of type `String`.
+The `responseString` handler uses a `StringResponseSerializer` to convert the `Data` returned by the server into a `String` with the specified encoding.
+
+If no errors occur and the server data is successfully serialized into a `String`, the response `Result` will be a `.success` and the `value` will be of type `String`.
 
 ```swift
 AF.request("https://httpbin.org/get").responseString { response in
@@ -592,7 +608,9 @@ AF.request("https://httpbin.org/get").responseString { response in
 
 ### Response `Decodable` Handler
 
-The `responseDecodable` handler uses a `DecodableResponseSerializer` to convert the `Data` returned by the server into the passed `Decodable` type using the specified `DataDecoder` (a protocol abstraction for `Decoder`s which can decode from `Data`). If no errors occur and the server data is successfully decoded into a `Decodable` type, the response `Result` will be a `.success` and the `value` will be of the passed type.
+The `responseDecodable` handler uses a `DecodableResponseSerializer` to convert the `Data` returned by the server into the passed `Decodable` type using the specified `DataDecoder` (a protocol abstraction for `Decoder`s which can decode from `Data`).
+
+If no errors occur and the server data is successfully decoded into a `Decodable` type, the response `Result` will be a `.success` and the `value` will be of the passed type.
 
 ```swift
 struct DecodableType: Decodable { let url: String }
@@ -616,7 +634,7 @@ Alamofire.request("https://httpbin.org/get")
     }
 ```
 
-> It is important to note that using multiple response handlers on the same `Request` requires the server data to be serialized multiple times, once for each response handler. Using multiple response handlers on the same `Request` should generally be avoided as best practice, especially in production environments. They should only be used for debugging or in circumstances where there is no better option.
+> It is important to note that using multiple response handlers on the same `Request` requires the server data to be serialized multiple times, once for each response handler. Using multiple response handlers on the same `Request` should generally be **avoided** as best practice, especially in production environments. They should only be used for debugging or in circumstances where there is no better option.
 
 ### Response Handler Queue
 
