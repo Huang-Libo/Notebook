@@ -1,6 +1,6 @@
 # Blurring the Lines Between MVVM and VIPER
 
-> Digest from [Blurring the Lines Between MVVM and VIPER](https://medium.com/developermind/blurring-the-lines-between-mvvm-and-viper-dcb3dc9815ac)
+> Digest from [Blurring the Lines Between MVVM and VIPER](https://medium.com/developermind/blurring-the-lines-between-mvvm-and-viper-dcb3dc9815ac)  
 > Author: [Göksel Köksal](https://medium.com/@gokselkoksal)
 
 - [Blurring the Lines Between MVVM and VIPER](#blurring-the-lines-between-mvvm-and-viper)
