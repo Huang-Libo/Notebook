@@ -604,7 +604,11 @@ Instead of accessing the downloaded `Data` directly it must be accessed using th
 
 ## Adapting and Retrying Requests with `RequestInterceptor`
 
-Alamofire’s `RequestInterceptor` protocol (composed of the `RequestAdapter` and `RequestRetrier` protocols) enables powerful per-`Session` and per-`Request` capabilities. These include authentication systems, where a common header is added to every `Request` and `Request`s are retried when authorization expires. Additionally, Alamofire includes a built in `RetryPolicy` type, which enables easy retry when requests fail due to a variety of common network errors.
+Alamofire’s `RequestInterceptor` protocol (composed of the `RequestAdapter` and `RequestRetrier` protocols) enables powerful per-`Session` and per-`Request` capabilities.
+
+These include authentication systems, where a common header is added to every `Request` and `Request`s are retried when authorization expires.
+
+Additionally, Alamofire includes a built in `RetryPolicy` type, which enables easy retry when requests fail due to a variety of common network errors.
 
 ### `RequestAdapter`
 
@@ -621,6 +625,7 @@ Its parameters include:
 - `urlRequest`: The `URLRequest` initially created from the parameters or `URLRequestConvertible` value used to create the `Request`.
 - `session`: The `Session` which created the `Request` for which the adapter is being called.
 - `completion`: The asynchronous completion handler that *must* be called to indicate the adapter is finished. It’s asynchronous nature enables `RequestAdapter`s to access asynchronous resources from the network or disk before the `Request` is sent over the network. The `Result` provided to the `completion` closure can either return a `.success` value with the modified `URLRequest` value, or a `.failure` value with an associated `Error` which will then be used to fail the `Request`.
+
 For example, adding an `Authorization` header requires modifying the `URLRequest` and then calling the completion handler.
 
 ```swift
@@ -710,12 +715,18 @@ let adapterAndRetrier = Interceptor(adapter: adapter, retrier: retrier)
 let composite = Interceptor(interceptors: [adapterAndRetrier, interceptor])
 ```
 
-When composed of multiple `RequestAdapter`s, `Interceptor` will call each `RequestAdapter` in succession. If they all succeed, the final `URLRequest` out of the chain of `RequestAdapter`s will be used to perform the request. If one fails, adaptation stops and the `Request` fails with the error returned. Similarly, when composed of multiple `RequestRetrier`s, retries are executed in the same order as the retriers were added to the instance, until either all of them complete or one of them fails with an error.
+When composed of multiple `RequestAdapter`s, `Interceptor` will call each `RequestAdapter` in succession.
+
+- If they all succeed, the final `URLRequest` out of the chain of `RequestAdapter`s will be used to perform the request.
+- If one fails, adaptation stops and the `Request` fails with the error returned.
+- Similarly, when composed of multiple `RequestRetrier`s, retries are executed in the same order as the retriers were added to the instance, until either all of them complete or one of them fails with an error.
 
 ### `AuthenticationInterceptor`
 
 Alamofire's `AuthenticationInterceptor` class is a `RequestInterceptor` designed to handle the queueing and threading complexity involved with authenticating requests.
+
 It leverages an injected `Authenticator` protocol that manages the lifecycle of the matching `AuthenticationCredential`.
+
 Here is a simple example of how an `OAuthAuthenticator` class could be implemented along with an `OAuthCredential`.
 
 **`OAuthCredential`**
@@ -795,7 +806,11 @@ session.request(urlRequest, interceptor: interceptor)
 
 ## Security
 
-Using a secure HTTPS connection when communicating with servers and web services is an important step in securing sensitive data. By default, Alamofire receives the same automatic TLS certificate and certificate chain validation as `URLSession`. While this guarantees the certificate chain is valid, it does not prevent man-in-the-middle (MITM) attacks or other potential vulnerabilities. In order to mitigate MITM attacks, applications dealing with sensitive customer data or financial information should use certificate or public key pinning provided by Alamofire’s `ServerTrustEvaluating` protocol.
+Using a secure HTTPS connection when communicating with servers and web services is an important step in securing sensitive data.
+
+By default, Alamofire receives the same automatic TLS certificate and certificate chain validation as `URLSession`. While this guarantees the certificate chain is valid, it does not prevent *man-in-the-middle (MITM)* attacks or other potential vulnerabilities.
+
+In order to mitigate *MITM* attacks, applications dealing with sensitive customer data or financial information should use *certificate* or *public key pinning* provided by Alamofire’s `ServerTrustEvaluating` protocol.
 
 ### Evaluating Server Trusts with `ServerTrustManager` and `ServerTrustEvaluating`
 
@@ -813,8 +828,8 @@ Alamofire includes many different types of trust evaluators, providing composabl
 
 - `DefaultTrustEvaluator`: Uses the default server trust evaluation while allowing you to control whether to validate the host provided by the challenge.
 - `RevocationTrustEvaluator`: Checks the status of the received certificate to ensure it hasn’t been revoked. This isn’t usually performed on every request due to the network request overhead it entails.
-- `PinnedCertificatesTrustEvaluator`: Uses the provided certificates to validate the server trust. The server trust is considered valid if one of the pinned certificates match one of the server certificates. This evaluator can also accept self-signed certificates.
-- `PublicKeysTrustEvaluator`: Uses the provided public keys to validate the server trust. The server trust is considered valid if one of the pinned public keys match one of the server certificate public keys.
+- `PinnedCertificatesTrustEvaluator`: Uses the provided certificates to validate the server trust. The server trust is considered valid if one of the *pinned certificates* match one of the server certificates. This evaluator can also accept *self-signed certificates*.
+- `PublicKeysTrustEvaluator`: Uses the provided public keys to validate the server trust. The server trust is considered valid if one of the *pinned public keys* match one of the server *certificate public keys*.
 - `CompositeTrustEvaluator`: Evaluates an array of `ServerTrustEvaluating` values, only succeeding if all of them are successful. This type can be used to combine, for example, the `RevocationTrustEvaluator` and the `PinnedCertificatesTrustEvaluator`.
 - `DisabledTrustEvaluator`: This evaluator should only be used in debug scenarios as it disables all evaluation which in turn will always consider any server trust as valid. This evaluator should **never** be used in production environments!
 
@@ -837,12 +852,12 @@ This `ServerTrustManager` will have the following behaviors:
 
 - `cert.example.com` will always use certificate pinning with default and host validation enabled , thus requiring the following criteria to be met in order to allow the TLS handshake to succeed:
   - Certificate chain *must* be valid.
-  - Certificate chain *must* include one of the pinned certificates.
-  - Challenge host *must* match the host in the certificate chain's leaf certificate.
+  - Certificate chain *must* include one of the *pinned certificates*.
+  - Challenge host *must* match the host in the certificate chain's *leaf certificate*.
 - `keys.example.com` will always use public key pinning with default and host validation enabled, thus requiring the following criteria to be met in order to allow the TLS handshake to succeed:
   - Certificate chain *must* be valid.
-  - Certificate chain *must* include one of the pinned public keys.
-  - Challenge host *must* match the host in the certificate chain's leaf certificate.
+  - Certificate chain *must* include one of the *pinned public keys*.
+  - Challenge host *must* match the host in the certificate chain's *leaf certificate*.
 - Requests to other hosts will produce an error, as `ServerTrustManager` requires all hosts to be evaluated by default.
 
 ##### Subclassing `ServerTrustManager`
@@ -863,7 +878,11 @@ final class CustomServerTrustManager: ServerTrustManager {
 
 ### App Transport Security
 
-With the addition of App Transport Security (ATS) in iOS 9, it is possible that using a custom `ServerTrustManager` with several `ServerTrustEvaluating` objects will have no effect. If you continuously see `CFNetwork SSLHandshake failed (-9806)` errors, you have probably run into this problem. Apple's ATS system overrides the entire challenge system unless you configure the ATS settings in your app's plist to disable enough of it to allow your app to evaluate the server trust. If you run into this problem (high probability with self-signed certificates), you can work around this issue by adding [`NSAppTransportSecurity` overrides](https://developer.apple.com/documentation/bundleresources/information_property_list/nsapptransportsecurity) to your `Info.plist`. You can use the `nscurl` tool’s `--ats-diagnostics` option to perform a series of tests against a host to see which ATS overrides might be required.
+With the addition of *App Transport Security (ATS)* in *iOS 9*, it is possible that using a custom `ServerTrustManager` with several `ServerTrustEvaluating` objects will have no effect.
+
+If you continuously see `CFNetwork SSLHandshake failed (-9806)` errors, you have probably run into this problem. Apple's ATS system overrides the entire challenge system unless you configure the ATS settings in your app's plist to disable enough of it to allow your app to evaluate the server trust
+
+If you run into this problem (high probability with *self-signed certificates*), you can work around this issue by adding [`NSAppTransportSecurity` overrides](https://developer.apple.com/documentation/bundleresources/information_property_list/nsapptransportsecurity) to your `Info.plist`. You can use the `nscurl` tool’s `--ats-diagnostics` option to perform a series of tests against a host to see which ATS overrides might be required.
 
 #### Using Self-Signed Certificates with Local Networking
 
