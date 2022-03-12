@@ -301,7 +301,15 @@ let session = Session(session: urlSession, delegate: delegate, rootQueue: rootQu
 
 ## Requests
 
-Each request performed by Alamofire is encapsulated by particular class, `DataRequest`, `UploadRequest`, and `DownloadRequest`. Each of these classes encapsulate functionality unique to each type of request, but `DataRequest` and `DownloadRequest` inherit from a common superclass, `Request` (`UploadRequest` inherits from `DataRequest`). `Request` instances are never created directly, but are instead vended from a `Session` instance through one of the various `request` methods.
+Each request performed by Alamofire is encapsulated by particular class,
+
+- `DataRequest`,
+- `UploadRequest`,
+- `DownloadRequest`.
+
+Each of these classes encapsulate functionality unique to each type of request, but `DataRequest` and `DownloadRequest` inherit from a common superclass, `Request` (`UploadRequest` inherits from `DataRequest`).
+
+`Request` instances are never created directly, but are instead vended from a `Session` instance through one of the various `request` methods.
 
 ### The Request Pipeline
 
@@ -314,12 +322,14 @@ Once a `Request` subclass has been created with it’s initial parameters or `UR
 5. Once the `URLSessionTask` is complete and `URLSessionTaskMetrics` have been gathered, the `Request` executes its `Validator`s.
 6. Request executes any response handlers, such as `responseDecodable`, that have been appended.
 
-At any one of these steps, a failure can be indicated through a created or received `Error` value, which is then passed to the associated `Request`. For example, aside from steps 1 and 4, all of the steps above can create an `Error` which is then passed to the response handlers or available for retry. Here are a few examples of what can or cannot fail throughout the `Request` pipeline.
+At any one of these steps, a failure can be indicated through a created or received `Error` value, which is then passed to the associated `Request`. For example, aside from steps 1 and 4, all of the steps above can create an `Error` which is then passed to the response handlers or available for retry.
 
-1. Parameter encapsulation cannot fail.
+Here are a few examples of what can or cannot fail throughout the `Request` pipeline.
+
+1. Parameter encapsulation *cannot* fail.
 2. Any `URLRequestConvertible` value can create an error when `asURLRequest()` is called. This allows for the initial validation of various `URLRequest` properties or the failure of parameter encoding.
 3. `RequestAdapter`s can fail during adaptation, perhaps due to a missing authorization token.
-4. `URLSessionTask` creation cannot fail.
+4. `URLSessionTask` creation *cannot* fail.
 5. `URLSessionTask`s can complete with errors for a variety of reasons, including network availability and cancellation. These `Error` values are passed back to the `Request`.
 6. Response handlers can produce any `Error`, usually due to an invalid response or other parsing error.
 
@@ -343,16 +353,21 @@ public enum State {
 }
 ```
 
-`Request`s start in the `.initialized` state after their creation. `Request`s can be suspended, resumed, and cancelled by calling the appropriate lifetime method.
+`Request`s start in the `.initialized` state after their creation. `Request`s can be *suspended*, *resumed*, and *cancelled* by calling the appropriate lifetime method.
 
 - `resume()` resumes, or starts, a `Request`’s network traffic. If `startRequestsImmediately` is `true`, this is called automatically once a response handler has been added to the `Request`.
 - `suspend()` suspends, or pauses the `Request` and its network traffic. `Request`s in this state can be resumed, but only `DownloadRequests` may be able continue transferring data. Other `Request`s will start over.
 - `cancel()` cancels a `Request`. Once in this state, a `Request` cannot be resumed or suspended. When `cancel()` is called, the `Request`’s `error` property will be set with an `AFError.explicitlyCancelled` instance.
-If a `Request` is resumed and isn’t later cancelled, it will reach the `.finished` state once all response validators and response serializers have been run. However, if additional response serializers are added to the `Request` after it has reached the `.finished` state, it will transition back to the `.resumed` state and perform the network request again.
+
+If a `Request` is resumed and isn’t later cancelled, it will reach the `.finished` state once all response validators and response serializers have been run.
+
+However, if additional response serializers are added to the `Request` after it has reached the `.finished` state, it will transition back to the `.resumed` state and perform the network request again.
 
 #### Progress
 
-In order to track the progress of a request, `Request` offers a both  `uploadProgress` and `downloadProgress` properties as well as closure-based `uploadProgress` and `downloadProgress` methods. Like all closure-based `Request` APIs, the progress APIs can be chained off of the `Request` with other methods. Also like the other closure-based APIs, they should be added to a request *before* adding any response handlers, like `responseDecodable`.
+In order to track the progress of a request, `Request` offers a both  `uploadProgress` and `downloadProgress` properties as well as closure-based `uploadProgress` and `downloadProgress` methods.
+
+Like all closure-based `Request` APIs, the progress APIs can be chained off of the `Request` with other methods. Also like the other closure-based APIs, they should be added to a request *before* adding any response handlers, like `responseDecodable`.
 
 ```swift
 AF.request(...)
@@ -375,6 +390,7 @@ Importantly, not all `Request` subclasses are able to report their progress accu
   - By the value of the `Content-Length` header on the request, if it has been manually set.
 - For download progress, there is a single requirement:
   - The server response must contain a `Content-Length` header.
+
 Unfortunately there may be other, undocumented requirements for progress reporting from `URLSession` which prevents accurate progress reporting.
 
 #### Handling Redirects
@@ -409,7 +425,7 @@ AF.request(...)
 
 #### Credentials
 
-In order to take advantage of the automatic credential handling provided by `URLSession`, Alamofire provides per-`Request` API to allow the automatic addition of `URLCredential` instances to requests. These include both convenience API for HTTP authentication using a username and password, as well as any `URLCredential` instance.
+In order to take advantage of the automatic credential handling provided by `URLSession`, Alamofire provides per-`Request` API to allow the automatic addition of `URLCredential` instances to requests. These include both convenience API for *HTTP authentication* using a *username* and *password*, as well as any `URLCredential` instance.
 
 Adding a credential to automatically reply to any HTTP authentication challenge is straightforward:
 
@@ -440,7 +456,9 @@ Alamofire creates a variety of underlying values throughout the lifetime of a `R
 
 ##### A `Request`’s `URLRequest`s
 
-Each network request issued by a `Request` is ultimately encapsulated in a `URLRequest` value created from the various parameters passed to one of the `Session` request methods. `Request` will keep a copy of these `URLRequest`s in its `requests` array property. These values include both the initial `URLRequest` created from the passed parameters, as well any `URLRequest`s created by `RequestInterceptor`s. That array does not, however, include the `URLRequest`s performed by the `URLSessionTask`s issued on behalf of the `Request`. To inspect those values, the `tasks` property gives access to all of the `URLSessionTasks` performed by the `Request`.
+Each network request issued by a `Request` is ultimately encapsulated in a `URLRequest` value created from the various parameters passed to one of the `Session` request methods. `Request` will keep a copy of these `URLRequest`s in its `requests` array property. These values include both the initial `URLRequest` created from the passed parameters, as well any `URLRequest`s created by `RequestInterceptor`s.
+
+However, that array does not include the `URLRequest`s performed by the `URLSessionTask`s issued on behalf of the `Request`. To inspect those values, the `tasks` property gives access to all of the `URLSessionTasks` performed by the `Request`.
 
 In addition to accumulating these values, every `Request` has an `onURLRequestCreation` method which calls a closure whenever a `URLRequest` is created for the `Request`. This `URLRequest` is the product of the initial parameters passed to the `Session`'s `request` method, as well as changes applied by any `RequestInterceptor`s. It will be called multiple times if the `Request` is retried and only one closure can be set at a time. `URLRequest` values cannot be modified in this closure; if you need to modify `URLRequest`s before they're issued, use a `RequestInterceptor` or compose your requests using the `URLRequestConvertible` protocol before passing them to Alamofire.
 
@@ -472,7 +490,9 @@ AF.request(...)
 
 #### Response
 
-Each `Request` may have an `HTTPURLResponse` value available once the request is complete. This value is only available if the request wasn’t cancelled and didn’t fail to make the network request. Additionally, if the request is retried, only the *last* response is available. Intermediate responses can be derived from the `URLSessionTask`s in the `tasks` property.
+Each `Request` may have an `HTTPURLResponse` value available once the request is complete. This value is only available if the request wasn’t cancelled and didn’t fail to make the network request.
+
+Additionally, if the request is retried, only the *last* response is available. Intermediate responses can be derived from the `URLSessionTask`s in the `tasks` property.
 
 #### `URLSessionTaskMetrics`
 
@@ -495,7 +515,10 @@ AF.request(...)
 
 #### Additional State
 
-`DataRequest`s have a few properties in addition to those provided by `Request`. These include `data`, which is the accumulated `Data` from the server response, and `convertible`, which is the `URLRequestConvertible` the `DataRequest` was created with, containing the original parameters creating the instance.
+`DataRequest`s have a few properties in addition to those provided by `Request`. These include
+
+- `data`, which is the accumulated `Data` from the server response, and
+- `convertible`, which is the `URLRequestConvertible` the `DataRequest` was created with, containing the original parameters creating the instance.
 
 #### Validation
 
@@ -553,7 +576,10 @@ AF.request(...)
 
 #### Additional State
 
-`DownloadRequest`s have a few properties in addition to those provided by `Request`. These include `resumeData`, the `Data` produced when cancelling a `DownloadRequest`, which may be used to resume the download later, and `fileURL`, the `URL` at which the downloaded file is available once the download completes.
+`DownloadRequest`s have a few properties in addition to those provided by `Request`. These include
+
+- `resumeData`, the `Data` produced when cancelling a `DownloadRequest`, which may be used to resume the download later, and
+- `fileURL`, the `URL` at which the downloaded file is available once the download completes.
 
 #### Cancellation
 
