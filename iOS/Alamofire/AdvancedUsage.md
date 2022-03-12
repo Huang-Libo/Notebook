@@ -134,7 +134,15 @@ This initializer allows the customization of all fundamental `Session` behaviors
 
 #### Creating a `Session` With a `URLSessionConfiguration`
 
-To customize the behavior of the underlying `URLSession`, a customized `URLSessionConfiguration` instance can be provided. Starting from the `URLSessionConfiguration.af.default` instance is recommended, as it adds the default `Accept-Encoding`, `Accept-Language`, and `User-Agent` headers provided by Alamofire, but any `URLSessionConfiguration` can be used.
+To customize the behavior of the underlying `URLSession`, a customized `URLSessionConfiguration` instance can be provided.
+
+Starting from the `URLSessionConfiguration.af.default` instance is recommended, as it adds the default
+
+- `Accept-Encoding`,
+- `Accept-Language`, and
+- `User-Agent`
+
+headers provided by Alamofire, but any `URLSessionConfiguration` can be used.
 
 ```swift
 let configuration = URLSessionConfiguration.af.default
@@ -145,11 +153,16 @@ let session = Session(configuration: configuration)
 
 > `URLSessionConfiguration` is **not** the recommended location to set `Authorization` or `Content-Type` headers. Instead, add them to `Request`s using the provided `headers` APIs, using `ParameterEncoder`s, or a `RequestAdapter`.
 >  
-> As Apple states in their [documentation](https://developer.apple.com/documentation/foundation/urlsessionconfiguration), mutating `URLSessionConfiguration` properties after the instance has been added to a `URLSession` (or, in Alamofire’s case, used to initialize a`Session`) has no effect.
+> **Important**
+> : As Apple states in their [documentation](https://developer.apple.com/documentation/foundation/urlsessionconfiguration), mutating `URLSessionConfiguration` properties after the instance has been added to a `URLSession` (or, in Alamofire’s case, used to initialize a`Session`) has no effect.
 
 ### `SessionDelegate`
 
-A `SessionDelegate` instance encapsulates all handling of the various `URLSessionDelegate` and related protocols callbacks. `SessionDelegate` also acts as the `SessionStateDelegate` for every `Request` produced by Alamofire, allowing the `Request` to indirectly import state from the `Session` instance that created them. `SessionDelegate` can be customized with a specific `FileManager` instance, which will be used for any disk access, like accessing files to be uploaded by `UploadRequest`s or files downloaded by `DownloadRequest`s.
+A `SessionDelegate` instance encapsulates all handling of the various `URLSessionDelegate` and related protocols callbacks.
+
+`SessionDelegate` also acts as the `SessionStateProvider` for every `Request` produced by Alamofire, allowing the `Request` to indirectly import state from the `Session` instance that created them.
+
+`SessionDelegate` can be customized with a specific `FileManager` instance, which will be used for any disk access, like accessing files to be uploaded by `UploadRequest`s or files downloaded by `DownloadRequest`s.
 
 ```swift
 let delegate = SessionDelegate(fileManager: .default)
@@ -165,7 +178,9 @@ let session = Session(startRequestsImmediately: false)
 
 ### A `Session`’s `DispatchQueue`s
 
-By default, `Session` instances use a single `DispatchQueue` for all asynchronous work. This includes the `underlyingQueue` of the `URLSession`’s `delegate` `OperationQueue`, for all `URLRequest` creation, all response serialization work, and all internal `Session` and `Request` state mutation. If performance analysis shows a particular bottleneck around `URLRequest` creation or response serialization, `Session` can be provided with separate `DispatchQueue`s for each area of work.
+By default, `Session` instances use a single `DispatchQueue` for all asynchronous work. This includes the `underlyingQueue` of the `URLSession`’s `delegate` `OperationQueue`, for all `URLRequest` creation, all response serialization work, and all internal `Session` and `Request` state mutation.
+
+If performance analysis shows a particular bottleneck around `URLRequest` creation or response serialization, `Session` can be provided with separate `DispatchQueue`s for each area of work.
 
 ```swift
 let rootQueue = DispatchQueue(label: "com.app.session.rootQueue")
@@ -181,7 +196,9 @@ Any custom `rootQueue` provided **MUST** be a serial queue, but `requestQueue` a
 
 ### Adding a `RequestInterceptor`
 
-Alamofire’s `RequestInterceptor` protocol (`RequestAdapter & RequestRetrier`) provides important and powerful request adaptation and retry features. It can be applied at both the `Session` and `Request` level. For more details on `RequestInterceptor` and the various implementations Alamofire includes, like `RetryPolicy`, see [below](#adapting-and-retrying-requests-with-requestinterceptor).
+Alamofire’s `RequestInterceptor` protocol (`RequestAdapter & RequestRetrier`) provides important and powerful request adaptation and retry features. It can be applied at both the `Session` and `Request` level.
+
+For more details on `RequestInterceptor` and the various implementations Alamofire includes, like `RetryPolicy`, see [below](#adapting-and-retrying-requests-with-requestinterceptor).
 
 ```swift
 let policy = RetryPolicy()
@@ -190,7 +207,11 @@ let session = Session(interceptor: policy)
 
 ### Adding a `ServerTrustManager`
 
-Alamofire’s `ServerTrustManager` class encapsulates mappings between domains and instances of `ServerTrustEvaluating`-conforming types, which provide the ability to customize a `Session`’s handling of TLS security. This includes the use of certificate and public key pinning as well as certificate revocation checking. For more information, see the section about the `ServerTrustManager` and `ServerTrustEvaluating`. Initializing a `ServerTrustManger` is as simple as providing a mapping between the domain and the type of evaluation to be performed:
+Alamofire’s `ServerTrustManager` class encapsulates mappings between domains and instances of `ServerTrustEvaluating`-conforming types, which provide the ability to customize a `Session`’s handling of TLS security. This includes the use of certificate and public key pinning as well as certificate revocation checking.
+
+For more information, see the section about the `ServerTrustManager` and `ServerTrustEvaluating`.
+
+Initializing a `ServerTrustManger` is as simple as providing a mapping between the domain and the type of evaluation to be performed:
 
 ```swift
 let manager = ServerTrustManager(evaluators: ["httpbin.org": PinnedCertificatesTrustEvaluator()])
@@ -201,7 +222,9 @@ For more details on evaluating server trusts, see the detailed documentation [be
 
 ### Adding a `RedirectHandler`
 
-Alamofire’s `RedirectHandler` protocol customizes the handling of HTTP redirect responses. It can be applied at both the `Session` and `Request` level. Alamofire includes the `Redirector` type which conforms to `RedirectHandler` and offers simple control over redirects. For more details on `RedirectHandler`, see the detailed documentation [below](#redirecthandler).
+Alamofire’s `RedirectHandler` protocol customizes the handling of HTTP redirect responses. It can be applied at both the `Session` and `Request` level. Alamofire includes the `Redirector` type which conforms to `RedirectHandler` and offers simple control over redirects.
+
+For more details on `RedirectHandler`, see the detailed documentation [below](#redirecthandler).
 
 ```swift
 let redirector = Redirector(behavior: .follow)
@@ -210,7 +233,9 @@ let session = Session(redirectHandler: redirector)
 
 ### Adding a `CachedResponseHandler`
 
-Alamofire’s `CachedResponseHandler` protocol customizes the caching of responses and can be applied at both the `Session` and `Request` level. Alamofire includes the `ResponseCacher` type which conforms to `CachedResponseHandler` and offers simple control over response caching. For more details, see the detailed documentation [below](#cachedresponsehandler).
+Alamofire’s `CachedResponseHandler` protocol customizes the caching of responses and can be applied at both the `Session` and `Request` level. Alamofire includes the `ResponseCacher` type which conforms to `CachedResponseHandler` and offers simple control over response caching.
+
+For more details, see the detailed documentation [below](#cachedresponsehandler).
 
 ```swift
 let cacher = ResponseCacher(behavior: .cache)
@@ -253,7 +278,9 @@ session.cancelAllRequests(completingOn: .main) { // completingOn uses .main by d
 
 ### Creating Instances From `URLSession`s
 
-In addition to the `convenience` initializer mentioned previously, `Session`s can be initialized directly from `URLSession`s. However, there are several requirements to keep in mind when using this initializer, so using the convenience initializer is recommended. These include:
+In addition to the `convenience` initializer mentioned previously, `Session`s can be initialized directly from `URLSession`s.
+
+However, there are several requirements to keep in mind when using this initializer, so using the *convenience initializer* is recommended. These include:
 
 - Alamofire does not support `URLSession`s configured for background use. This will lead to a runtime error when the `Session` is initialized.
 - A `SessionDelegate` instance must be created and used as the `URLSession`’s `delegate`, as well as passed to the `Session` initializer.
