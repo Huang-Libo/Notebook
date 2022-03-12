@@ -1,6 +1,8 @@
 # Usage
 
-> https://github.com/Alamofire/Alamofire/blob/master/Documentation/Usage.md
+> Version: *Alamofire 5.5.0*  
+> Source: [*Alamofire: Usage*](https://github.com/Alamofire/Alamofire/blob/master/Documentation/Usage.md)  
+> Digest Date: *March 12, 2022*  
 
 - [Usage](#usage)
   - [Introduction](#introduction)

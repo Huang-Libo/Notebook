@@ -1,5 +1,9 @@
 # README
 
+> Version: *Alamofire 5.5.0*  
+> Source: [*Alamofire: README*](https://github.com/Alamofire/Alamofire)  
+> Digest Date: *March 12, 2022*  
+
 [Alamofire](https://github.com/Alamofire/Alamofire) is an HTTP networking library written in Swift.
 
 - [README](#readme)
