@@ -234,7 +234,7 @@ Controlling where the encoded string is set can be done by setting the `destinat
 
 The `Content-Type` HTTP header of an encoded request with HTTP body is set to:
 
-```
+```plaintext
 application/x-www-form-urlencoded; charset=utf-8
 ```
 
@@ -811,7 +811,7 @@ AF.download("https://httpbin.org/image/png")
 
 ### Canceling and Resuming a Download
 
-In addition to the `cancel()` API that all `Request` classes have, `DownloadRequest`s can also produce resume data, which can be used to later resume a download. There are two forms of this API: 
+In addition to the `cancel()` API that all `Request` classes have, `DownloadRequest`s can also produce resume data, which can be used to later resume a download. There are two forms of this API:
 
 - `cancel(producingResumeData: Bool)`, which allows control over whether resume data is produced, but only makes it available on the `DownloadResponse`;
 - and `cancel(byProducingResumeData: (_ resumeData: Data?) -> Void)`, which performs the same actions but makes the resume data available in the completion handler.
