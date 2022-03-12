@@ -698,7 +698,10 @@ AF.request("https://httpbin.org/basic-auth/\(user)/\(password)")
     }
 ```
 
-> It is important to note that when using a `URLCredential` for authentication, the underlying `URLSession` will actually end up making two requests if a challenge is issued by the server. The first request will not include the credential which "may" trigger a challenge from the server. The challenge is then received by Alamofire, the credential is appended and the request is retried by the underlying `URLSession`.
+> It is important to note that when using a `URLCredential` for authentication, the underlying `URLSession` will actually end up making two requests if a challenge is issued by the server:
+>  
+> - The first request will not include the credential which "may" trigger a challenge from the server.
+> - The challenge is then received by Alamofire, the credential is appended and the request is retried by the underlying `URLSession`.
 
 ### Manual Authentication
 
@@ -720,7 +723,9 @@ However, headers that must be part of all requests are often better handled as p
 
 ## Downloading Data to a File
 
-In addition to fetching data into memory, Alamofire also provides the `Session.download`, `DownloadRequest`, and `DownloadResponse<Success, Failure: Error>` APIs to facilitate downloading to disk. While downloading into memory works great for small payloads like most JSON API responses, fetching larger assets like images and videos should be downloaded to disk to avoid memory issues with your application.
+In addition to fetching data into memory, Alamofire also provides the `Session.download`, `DownloadRequest`, and `DownloadResponse<Success, Failure: Error>` APIs to facilitate downloading to disk.
+
+While downloading into memory works great for small payloads like most JSON API responses, fetching larger assets like images and videos should be downloaded to disk to avoid memory issues with your application.
 
 ```swift
 AF.download("https://httpbin.org/image/png").responseURL { response in
@@ -728,9 +733,9 @@ AF.download("https://httpbin.org/image/png").responseURL { response in
 }
 ```
 
-In addition to having the same response handlers that `DataRequest` does, `DownloadRequest` also includes `responseURL`. Unlike the other response handlers, this handler just returns the `URL` containing the location of the downloaded data and does not read the `Data` from disk.
-
-Other response handlers, like `responseDecodable`, involve reading the response `Data` from disk. This may involve reading large amounts of data into memory, so it's important to keep that in mind when using those handlers for downloads.
+- In addition to having the same response handlers that `DataRequest` does, `DownloadRequest` also includes `responseURL`.
+- Unlike the other response handlers, this handler just returns the `URL` containing the location of the downloaded data and does not read the `Data` from disk.
+- Other response handlers, like `responseDecodable`, involve reading the response `Data` from disk. This may involve reading large amounts of data into memory, so it's important to keep that in mind when using those handlers for downloads.
 
 ### Download File Destination
 
@@ -802,7 +807,10 @@ AF.download("https://httpbin.org/image/png")
 
 ### Canceling and Resuming a Download
 
-In addition to the `cancel()` API that all `Request` classes have, `DownloadRequest`s can also produce resume data, which can be used to later resume a download. There are two forms of this API: `cancel(producingResumeData: Bool)`, which allows control over whether resume data is produced, but only makes it available on the `DownloadResponse`; and `cancel(byProducingResumeData: (_ resumeData: Data?) -> Void)`, which performs the same actions but makes the resume data available in the completion handler.
+In addition to the `cancel()` API that all `Request` classes have, `DownloadRequest`s can also produce resume data, which can be used to later resume a download. There are two forms of this API: 
+
+- `cancel(producingResumeData: Bool)`, which allows control over whether resume data is produced, but only makes it available on the `DownloadResponse`;
+- and `cancel(byProducingResumeData: (_ resumeData: Data?) -> Void)`, which performs the same actions but makes the resume data available in the completion handler.
 
 If a `DownloadRequest` is canceled or interrupted, the underlying `URLSessionDownloadTask` *may* generate resume data. If this happens, the resume data can be re-used to restart the `DownloadRequest` where it left off.
 
@@ -886,7 +894,11 @@ AF.upload(fileURL, to: "https://httpbin.org/post")
 
 ## Streaming Data from a Server
 
-Large downloads or long lasting server connections which receive data over time may be better served by streaming rather than accumulating `Data` as it arrives. Alamofire offers the `DataStreamRequest` type and associated APIs to handle this usage. Although it offers much of the same API as other `Request`s, there are several key differences. Most notably, `DataStreamRequest` never accumulates `Data` in memory or saves it to disk. Instead, added `responseStream` closures are repeatedly called as `Data` arrives. The same closures are called again when the connection has completed or received an error.
+Large downloads or long lasting server connections which receive data over time may be better served by streaming rather than accumulating `Data` as it arrives.
+
+Alamofire offers the `DataStreamRequest` type and associated APIs to handle this usage. Although it offers much of the same API as other `Request`s, there are several key differences.
+
+Most notably, `DataStreamRequest` never accumulates `Data` in memory or saves it to disk. Instead, added `responseStream` closures are repeatedly called as `Data` arrives. The same closures are called again when the connection has completed or received an error.
 
 Every `Handler` closure captures a `Stream` value, which contains both the `Event` being processed as well as a `CancellationToken`, which can be used to cancel the request.
 
@@ -1032,7 +1044,9 @@ let inputStream = AF.streamRequest(...)
 
 ### Cancellation
 
-`DataStreamRequest`s can be cancelled in four ways. First, like all other Alamofire `Request`s, `DataStreamRequest` can have `cancel()` called, canceling the underlying task and completing the stream.
+`DataStreamRequest`s can be cancelled in **four** ways.
+
+**First**, like all other Alamofire `Request`s, `DataStreamRequest` can have `cancel()` called, canceling the underlying task and completing the stream.
 
 ```swift
 let request = AF.streamRequest(...).responseStream(...)
@@ -1040,13 +1054,13 @@ let request = AF.streamRequest(...).responseStream(...)
 request.cancel()
 ```
 
-Second, `DataStreamRequest`s can be cancelled automatically when their `DataStreamSerializer` encounters and error. This behavior is disabled by default and can be enabled by passing the `automaticallyCancelOnStreamError` parameter when creating the request.
+**Second**, `DataStreamRequest`s can be cancelled automatically when their `DataStreamSerializer` encounters and error. This behavior is disabled by default and can be enabled by passing the `automaticallyCancelOnStreamError` parameter when creating the request.
 
 ```swift
 AF.streamRequest(..., automaticallyCancelOnStreamError: true).responseStream(...)
 ```
 
-Third, `DataStreamRequest`s will be cancelled if an error is thrown out of the `Handler` closure. This error is then stored on the request and is available in the `Completion` value.
+**Third**, `DataStreamRequest`s will be cancelled if an error is thrown out of the `Handler` closure. This error is then stored on the request and is available in the `Completion` value.
 
 ```swift
 AF.streamRequest(...).responseStream { stream in
@@ -1055,7 +1069,7 @@ AF.streamRequest(...).responseStream { stream in
 }
 ```
 
-Finally, `DataStreamRequest`s can be cancelled by using the `Stream` value's `cancel()` method.
+**Finally**, `DataStreamRequest`s can be cancelled by using the `Stream` value's `cancel()` method.
 
 ```swift
 AF.streamRequest(...).responseStream { stream in 
@@ -1080,7 +1094,7 @@ AF.request("https://httpbin.org/get").responseDecodable(of: DecodableType.self) 
 
 ## cURL Command Output
 
-Debugging platform issues can be frustrating. Thankfully, Alamofire's `Request` type can produce the equivalent cURL command for easy debugging. Due to the asynchronous nature of Alamofire's `Request` creation, this API has both synchronous and asynchronous versions. To get the cURL command as soon as possible, you can chain the `cURLDescription` onto a request:
+Debugging platform issues can be frustrating. Thankfully, Alamofire's `Request` type can produce the equivalent `cURL` command for easy debugging. Due to the asynchronous nature of Alamofire's `Request` creation, this API has both synchronous and asynchronous versions. To get the `cURL` command as soon as possible, you can chain the `cURLDescription` onto a request:
 
 ```swift
 AF.request("https://httpbin.org/get")
