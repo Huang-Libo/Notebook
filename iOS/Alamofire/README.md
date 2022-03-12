@@ -1,8 +1,8 @@
-# Alamofire
+# README
 
-Alamofire is an HTTP networking library written in Swift.
+[Alamofire](https://github.com/Alamofire/Alamofire) is an HTTP networking library written in Swift.
 
-- [Alamofire](#alamofire)
+- [README](#readme)
   - [Installation](#installation)
     - [CocoaPods](#cocoapods)
     - [Carthage](#carthage)

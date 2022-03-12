@@ -11,6 +11,7 @@
 - [Carthage](iOS/Carthage.md)
 - [Alamofire](iOS/Alamofire/README.md)
   - [Usage](iOS/Alamofire/Usage.md)
+  - [Advanced Usage](iOS/Alamofire/AdvancedUsage.md)
 
 ## 🐦 Swift
 

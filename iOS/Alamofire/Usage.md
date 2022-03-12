@@ -1,8 +1,8 @@
-# Using Alamofire
+# Usage
 
-> https://github.com/Alamofire/Alamofire
+> https://github.com/Alamofire/Alamofire/blob/master/Documentation/Usage.md
 
-- [Using Alamofire](#using-alamofire)
+- [Usage](#usage)
   - [Introduction](#introduction)
     - [Aside: The `AF` Namespace and Reference](#aside-the-af-namespace-and-reference)
   - [Example: Making Requests](#example-making-requests)
