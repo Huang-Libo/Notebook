@@ -43,6 +43,8 @@
   - [Chapter 1: SwiftUI Essentials](Swift/SwiftUI-Tutorials/Chapter-1-SwiftUI-Essentials.md)
   - [Chapter 2: Drawing and Animation](Swift/SwiftUI-Tutorials/Chapter-2-Drawing-and-Animation.md)
 - [SwiftUI](Swift/SwiftUI.md)
+- [Using Combine](Swift/UsingCombine/README.md)
+  - [Introduction](Swift/UsingCombine/Introduction.md)
 - [Combine](Swift/Combine.md)
 - [Swift Inbox](Swift/INBOX.md)
 - [Swift Docs](Swift/Swift-Docs.md)
