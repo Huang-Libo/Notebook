@@ -914,7 +914,9 @@ func dataTask(_ task: URLSessionDataTask,
               completion: @escaping (CachedURLResponse?) -> Void)
 ```
 
-As can be seen in the method signature, this control only applies to `Request`s that use an underlying `URLSessionDataTask` for network transfers, which include `DataRequest`s and `UploadRequest`s (since `URLSessionUploadTask` is a subclass of `URLSessionDataTask`). The conditions under which a response will be considered for caching are extensive, so it’s best to review the documentation of the `URLSessionDataDelegate` method [`urlSession(_:dataTask:willCacheResponse:completionHandler:)`](https://developer.apple.com/documentation/foundation/urlsessiondatadelegate/1411612-urlsession). Once a response is considered for caching, there are variety of valuable manipulations that can be made:
+As can be seen in the method signature, this control only applies to `Request`s that use an underlying `URLSessionDataTask` for network transfers, which include `DataRequest`s and `UploadRequest`s (since `URLSessionUploadTask` is a subclass of `URLSessionDataTask`).
+
+The conditions under which a response will be considered for caching are extensive, so it’s best to review the documentation of the `URLSessionDataDelegate` method [`urlSession(_:dataTask:willCacheResponse:completionHandler:)`](https://developer.apple.com/documentation/foundation/urlsessiondatadelegate/1411612-urlsession). Once a response is considered for caching, there are variety of valuable manipulations that can be made:
 
 - Prevent caching the response altogether by returning a `nil` `CachedURLResponse`.
 - Modify the `CachedURLResponse`’s `storagePolicy` to change where the cached value should live.
@@ -947,7 +949,9 @@ func task(_ task: URLSessionTask,
           completion: @escaping (URLRequest?) -> Void)
 ```
 
-This method provides an opportunity to modify the redirected `URLRequest` or pass `nil` to disable the redirect entirely. Alamofire provides the `Redirector`type which conforms to `RedirectHandler`, making it easy to follow, not follow, or modify a redirected request. `Redirector` takes a `Behavior` value to control the redirect behavior.
+This method provides an opportunity to modify the redirected `URLRequest` or pass `nil` to disable the redirect entirely.
+
+Alamofire provides the `Redirector`type which conforms to `RedirectHandler`, making it easy to follow, not follow, or modify a redirected request. `Redirector` takes a `Behavior` value to control the redirect behavior.
 
 ```swift
 public enum Behavior {
@@ -964,7 +968,11 @@ public enum Behavior {
 
 ## Using `EventMonitor`s
 
-The `EventMonitor` protocol allows the observation and inspection of a large number of internal Alamofire events. These include all `URLSessionDelegate`, `URLSessionTaskDelegate`, and `URLSessionDownloadDelegate` methods implemented by Alamofire as well as a large number of internal `Request` events. In addition to these events, which by default are an empty method that does no work, the `EventMonitor` protocol also requires a `DispatchQueue` on which all the events are dispatched in order to maintain performance. This `DispatchQueue` defaults to `.main`, but dedicated serial queues are recommended for any custom conforming types.
+The `EventMonitor` protocol allows the observation and inspection of a large number of internal Alamofire events.
+
+These include all `URLSessionDelegate`, `URLSessionTaskDelegate`, and `URLSessionDownloadDelegate` methods implemented by Alamofire as well as a large number of internal `Request` events.
+
+In addition to these events, which by default are an empty method that does no work, the `EventMonitor` protocol also requires a `DispatchQueue` on which all the events are dispatched in order to maintain performance. This `DispatchQueue` defaults to `.main`, but dedicated serial queues are recommended for any custom conforming types.
 
 ### Logging
 
@@ -1000,11 +1008,17 @@ As a framework, Alamofire has two main goals:
 1. To enable the easy implementation of network requests for prototypes and tools
 2. To serve as the generic foundation of app networking
 
-It accomplishes these goals through the use of powerful abstractions, providing useful defaults, and included implementations of common tasks. However, once use of Alamofire  has gone beyond a few requests, it’s necessary to move beyond the high level, default implementations into behavior customized for particular applications. Alamofire provides the `URLConvertible` and `URLRequestConvertible` protocols to help with this customization.
+It accomplishes these goals through the use of powerful abstractions, providing useful defaults, and included implementations of common tasks.
+
+However, once use of Alamofire  has gone beyond a few requests, it’s necessary to move beyond the high level, default implementations into behavior customized for particular applications.
+
+Alamofire provides the `URLConvertible` and `URLRequestConvertible` protocols to help with this customization.
 
 ### `URLConvertible`
 
-Types adopting the `URLConvertible` protocol can be used to construct URLs, which are then used to construct URL requests internally. `String`, `URL`, and `URLComponents` conform to `URLConvertible` by default, allowing any of them to be passed as `url` parameters to the `request`, `upload`, and `download` methods:
+Types adopting the `URLConvertible` protocol can be used to construct URLs, which are then used to construct URL requests internally.
+
+`String`, `URL`, and `URLComponents` conform to `URLConvertible` by default, allowing any of them to be passed as `url` parameters to the `request`, `upload`, and `download` methods:
 
 ```swift
 let urlString = "https://httpbin.org/get"
@@ -1021,7 +1035,9 @@ Applications interacting with web applications in a significant manner are encou
 
 ### `URLRequestConvertible`
 
-Types adopting the `URLRequestConvertible` protocol can be used to construct `URLRequest`s. `URLRequest` conforms to `URLRequestConvertible` by default, allowing it to be passed into `request`, `upload`, and `download` methods directly. Alamofire uses `URLRequestConvertible` as the foundation of all requests flowing through the request pipeline. Using `URLRequest`s directly is the recommended way to customize `URLRequest` creation outside of the `ParameterEncoder`s that Alamofire provides.
+Types adopting the `URLRequestConvertible` protocol can be used to construct `URLRequest`s. `URLRequest` conforms to `URLRequestConvertible` by default, allowing it to be passed into `request`, `upload`, and `download` methods directly.
+
+Alamofire uses `URLRequestConvertible` as the foundation of all requests flowing through the request pipeline. Using `URLRequest`s directly is the recommended way to customize `URLRequest` creation outside of the `ParameterEncoder`s that Alamofire provides.
 
 ```swift
 let url = URL(string: "https://httpbin.org/post")!
@@ -1142,11 +1158,13 @@ func response(queue: DispatchQueue = .main, completionHandler: @escaping (AFData
 func response(queue: DispatchQueue = .main, completionHandler: @escaping (AFDownloadResponse<URL?>) -> Void) -> Self
 ```
 
-As with all response handlers, all serialization work (in this case none) is performed on an internal queue and the completion handler called on the `queue` passed to the method. This means that it’s not necessary to dispatch back to the `main` queue by default. However, if there is to be any significant work performed in the completion handler, passing a custom queue to the response methods is recommended, with a dispatch back to `main` in the handler itself if necessary.
+As with all response handlers, all serialization work (in this case none) is performed on an internal queue and the completion handler called on the `queue` passed to the method. This means that it’s not necessary to dispatch back to the `main` queue by default.
+
+However, if there is to be any significant work performed in the completion handler, passing a custom queue to the response methods is recommended, with a dispatch back to `main` in the handler itself if necessary.
 
 ### `ResponseSerializer`
 
-The `ResponseSerializer` protocol is composed of the `DataResponseSerializerProtocol` and `DownloadResponseSerializerProtocol` protocols. The combined version of `ResponseSerializer` looks like this:
+The `ResponseSerializer` protocol is composed of the `DataResponseSerializerProtocol` and `DownloadResponseSerializerProtocol` protocols. The *combined version* of `ResponseSerializer` looks like this:
 
 ```swift
 public protocol ResponseSerializer: DataResponseSerializerProtocol & DownloadResponseSerializerProtocol {
@@ -1212,7 +1230,11 @@ In addition to the flexible `ResponseSerializer`s included with Alamofire, there
 
 #### Response Transforms
 
-Using an existing `ResponseSerializer` and then transforming the output is one of the simplest ways of customizing response handlers. Both `DataResponse` and `DownloadResponse` have `map`, `tryMap`, `mapError`, and `tryMapError` methods that can transform responses while preserving the metadata associated with the response. For example, extracting a property from a `Decodable` response can be achieved using `map`, while also preserving any previous parsing errors.
+Using an existing `ResponseSerializer` and then transforming the output is one of the simplest ways of customizing response handlers.
+
+Both `DataResponse` and `DownloadResponse` have `map`, `tryMap`, `mapError`, and `tryMapError` methods that can transform responses while preserving the metadata associated with the response.
+
+For example, extracting a property from a `Decodable` response can be achieved using `map`, while also preserving any previous parsing errors.
 
 ```swift
 AF.request(...).responseDecodable(of: DecodableType.self) { response in
@@ -1234,7 +1256,11 @@ AF.request(..).responseDecodable(of: DecodableType.self) { response in
 
 #### Creating a Custom Response Serializer
 
-When Alamofire’s provided `ResponseSerializer`s or response transforms aren’t flexible enough, or the amount of customization is extensive, creating a `ResponseSerializer` is a good way to encapsulate that logic. There are usually two parts to integrating a custom `ResponseSerializer`: creating the conforming type and extending the relevant `Request` type(s) to make it convenient to use. For example, if a server returned a specially encoded `String`, perhaps values separated by commas, the `ResponseSerializer` for such a format could look something like this:
+When Alamofire’s provided `ResponseSerializer`s or response transforms aren’t flexible enough, or the amount of customization is extensive, creating a `ResponseSerializer` is a good way to encapsulate that logic.
+
+There are usually two parts to integrating a custom `ResponseSerializer`: creating the conforming type and extending the relevant `Request` type(s) to make it convenient to use.
+
+For example, if a server returned a specially encoded `String`, perhaps values separated by commas, the `ResponseSerializer` for such a format could look something like this:
 
 ```swift
 struct CommaDelimitedSerializer: ResponseSerializer {
