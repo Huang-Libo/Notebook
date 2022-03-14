@@ -2,7 +2,7 @@
 
 In Apple’s words, Combine is:
 
-> a declarative Swift API for processing values over time.
+> A unified, declarative API for processing values over time.
 
 Combine is Apple’s take on a functional reactive programming library, akin to [RxSwift](https://github.com/ReactiveX/RxSwift). RxSwift itself is a port of [ReactiveX](http://reactivex.io/). Combine uses many of the same functional reactive concepts that can be found in other languages and libraries, applying the staticly typed nature of Swift to their solution.
 
@@ -10,12 +10,15 @@ Combine is Apple’s take on a functional reactive programming library, akin to 
 
 ## Functional reactive programming
 
-[Functional reactive programming](https://en.wikipedia.org/wiki/Functional_reactive_programming), also known as data-flow programming, builds on the concepts of [functional programming](https://en.wikipedia.org/wiki/Functional_programming).
+[Functional reactive programming](https://en.wikipedia.org/wiki/Functional_reactive_programming), also known as *data-flow programming*, builds on the concepts of [functional programming](https://en.wikipedia.org/wiki/Functional_programming).
 
 - *Functional programming* applies to *lists of elements*
 - *Functional reactive programming* is applied to *streams of elements*
 
-The kinds of functions in *functional programming*, such as `map`, `filter`, and `reduce` have analogues that can be applied to streams. In addition to *functional programming* primitives, *functional reactive programming* includes functions to `split` and `merge` streams. Like *functional programming*, you may create *operations* to transform the data flowing through the stream.
+The kinds of functions in *functional programming*, such as `map`, `filter`, and `reduce` have analogues that can be applied to streams.
+
+- In addition to *functional programming* primitives, *functional reactive programming* includes functions to `split` and `merge` streams.
+- Like *functional programming*, you may create *operations* to transform the data flowing through the stream.
 
 There are many parts of the systems we program that can be viewed as asynchronous streams of information: *events*, *objects*, or *pieces of data*. The *observer pattern* watches a single object, providing notifications of changes and updates. If you view these notifications over time, they make up *a stream of objects*.
 
@@ -27,7 +30,8 @@ Functional reactive programming, Combine in this case, allows you to create code
 
 Handling the flow of these *event streams*, the timing, errors when they happen, and coordinating how a system responds to all those events is at the heart of *functional reactive programming*.
 
-A solution based on *functional reactive programming* **is particularly effective when programming user interfaces**. Or more generally for creating pipelines that process data from external sources or rely on asynchronous APIs.
+- A solution based on *functional reactive programming* **is particularly effective when programming user interfaces**.
+- Or more generally for creating *pipelines* that **process data from external sources or rely on asynchronous APIs**.
 
 ## Combine specifics
 
@@ -69,4 +73,25 @@ Many of the *pipelines* you create with Combine will only be a few operations. E
 
 ## Apple’s Combine Documentation
 
+- [Framework: Combine](https://developer.apple.com/documentation/combine)
+- [Apple’s developer documentation](https://developer.apple.com/documentation/)
 
+## WWDC 2019 content
+
+[WWDC 2019](https://developer.apple.com/videos/play/wwdc2019)
+
+> Combine has evolved since its initial release at WWDC 2019. Some of the content in these presentations are now slightly dated or changed from what currently exists. The majority of this content is still immensely valuable in getting an introduction or feel for what Combine is and can do.
+
+A number of these introduce and go into some depth on Combine:
+
+- [Introducing Combine](https://developer.apple.com/videos/play/wwdc2019/722/)
+  - [PDF](https://devstreaming-cdn.apple.com/videos/wwdc/2019/722l6blhn0efespfgx/722/722_introducing_combine.pdf?dl=1)
+- [Combine in Practice](https://developer.apple.com/videos/play/wwdc2019/721/)
+  - [PDF](https://devstreaming-cdn.apple.com/videos/wwdc/2019/721ga0kflgr4ypfx/721/721_combine_in_practice.pdf?dl=1)
+
+A number of additional WWDC19 sessions mention Combine:
+
+- [Modern Swift API Design](https://developer.apple.com/videos/play/wwdc2019/415/)
+- [Data Flow Through SwiftUI](https://developer.apple.com/videos/play/wwdc2019/226)
+- [Introducing Combine and Advances in Foundation](https://developer.apple.com/videos/play/wwdc2019/711)
+- [Advances in Networking, Part 1](https://developer.apple.com/videos/play/wwdc2019/712/)
