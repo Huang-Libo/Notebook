@@ -6,6 +6,7 @@ These core concepts are: *Publisher*, *Subscriber*, *Operator*, *Subject*.
 
 - [Core Concepts](#core-concepts)
   - [Publisher and Subscriber](#publisher-and-subscriber)
+  - [Describing pipelines with marble diagrams](#describing-pipelines-with-marble-diagrams)
 
 ## Publisher and Subscriber
 
@@ -53,3 +54,54 @@ let _ = Just(5) 1️⃣
 - 1️⃣ The pipeline starts with the *publisher* `Just`, which responds with the value that its defined with (in this case, the Integer `5`). The output type is `<Integer>`, and the failure type is `<Never>`.
 - 2️⃣ The pipeline then has a `map` *operator*, which is transforming the value and its type. In this example it is ignoring the published input and returning a string. This is also transforming the output type to `<String>`, and leaving the failure type still set as `<Never>`.
 - 3️⃣ The pipeline then ends with a `sink` *subscriber*.
+
+When you are thinking about a pipeline you can think of it as a sequence of operations linked by both *output* and *failure* types. This pattern will come in handy when you start constructing your own pipelines.
+
+When creating pipelines, you are often selecting *operators* to help you transform the data, types, or both to achieve your end goal. That end goal might be enabling or disabling a user interface element, or it might be retrieving some piece of data to be displayed. Many Combine *operators* are specifically created to help with these transformations.
+
+There are a number of *operators* that have a similar *operator* prefixed with `try`, which indicates they return an `<Error>` failure type. An example of this is `map` and `tryMap`.
+
+- `map` *operator* allows for any combination of `Output` and `Failure` type and passes them through.
+- `tryMap` accepts any `Input`, `Failure` types, and allows any `Output` type, but will always output an `<Error>` failure type.
+
+Operators like `map` allow you to define the output type being returned by inferring the output type based on what you return in a closure provided to the *operator*. In the example above, the `map` *operator* is returning a `String` output type since that is what the closure returns.
+
+To illustrate the example of changing types more concretely, we expand upon the logic to use the values being passed. This example still starts with a publisher providing the types `<Int, Never>` and end with a subscription taking the types `<String, Never>`.
+
+```swift
+let _ = Just(5)  1️⃣
+    .map { value -> String in 2️⃣
+        switch value {
+        case _ where value < 1:
+            return "none"
+        case _ where value == 1:
+            return "one"
+        case _ where value == 2:
+            return "couple"
+        case _ where value == 3:
+            return "few"
+        case _ where value > 8:
+            return "many"
+        default:
+            return "some"
+        }
+    }
+    .sink { receivedValue in 3️⃣
+        print("The end result was \(receivedValue)")
+    }
+```
+
+- 1️⃣ `Just` is a *publisher* that creates an `<Int, Never>` type combination, provides a single value and then completes.
+- 2️⃣ the closure provided to the `.map()` function takes in an `<Int>` and transforms it into a `<String>`. Since the failure type of `<Never>` is not changed, it is passed through.
+- 3️⃣ `sink`, the *subscriber*, receives the `<String, Never>` combination.
+
+> When you are creating pipelines in Xcode and don’t match the types, the error message from Xcode may include a helpful *fixit*.  
+> In some cases, such as the example above, the compiler is unable to infer the return types of closure provided to `map` without specifying the return type.  
+> *Xcode (11 beta 2 and beta 3)* displays this as the error message: `Unable to infer complex closure return type; add explicit type to disambiguate.` In the example above, we explicitly specified the type being returned with the line *value -> String* in.
+
+You can view Combine publishers, operators, and subscribers as having two parallel types that both need to be aligned: one for the functional case and one for the error case. Designing your pipeline is frequently choosing how to convert one or both of those types and the associated data with it.
+
+## Describing pipelines with marble diagrams
+
+
+
