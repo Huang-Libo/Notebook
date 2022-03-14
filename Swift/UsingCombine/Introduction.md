@@ -8,6 +8,13 @@ Combine is Apple’s take on a functional reactive programming library, akin to 
 
 > If you are already familiar with RxSwift there is [a good collected cheat-sheet](https://github.com/CombineCommunity/rxswift-to-combine-cheatsheet) for how to map concepts and APIs from RxSwift to Combine.
 
+- [Introduction](#introduction)
+  - [Functional reactive programming](#functional-reactive-programming)
+  - [Combine specifics](#combine-specifics)
+  - [When to use Combine](#when-to-use-combine)
+  - [Apple’s Combine Documentation](#apples-combine-documentation)
+    - [WWDC 2019 content](#wwdc-2019-content)
+
 ## Functional reactive programming
 
 [Functional reactive programming](https://en.wikipedia.org/wiki/Functional_reactive_programming), also known as *data-flow programming*, builds on the concepts of [functional programming](https://en.wikipedia.org/wiki/Functional_programming).
@@ -76,7 +83,7 @@ Many of the *pipelines* you create with Combine will only be a few operations. E
 - [Framework: Combine](https://developer.apple.com/documentation/combine)
 - [Apple’s developer documentation](https://developer.apple.com/documentation/)
 
-## WWDC 2019 content
+### WWDC 2019 content
 
 [WWDC 2019](https://developer.apple.com/videos/play/wwdc2019)
 
