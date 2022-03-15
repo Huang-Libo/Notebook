@@ -7,6 +7,9 @@ These core concepts are: *Publisher*, *Subscriber*, *Operator*, *Subject*.
 - [Core Concepts](#core-concepts)
   - [Publisher and Subscriber](#publisher-and-subscriber)
   - [Describing pipelines with marble diagrams](#describing-pipelines-with-marble-diagrams)
+    - [How to read a marble diagram](#how-to-read-a-marble-diagram)
+    - [Marble diagrams for Combine](#marble-diagrams-for-combine)
+  - [Back pressure](#back-pressure)
 
 ## Publisher and Subscriber
 
@@ -102,6 +105,86 @@ let _ = Just(5)  1️⃣
 You can view Combine publishers, operators, and subscribers as having two parallel types that both need to be aligned: one for the functional case and one for the error case. Designing your pipeline is frequently choosing how to convert one or both of those types and the associated data with it.
 
 ## Describing pipelines with marble diagrams
+
+A functional reactive pipeline can be tricky to understand.
+
+- *publisher* is generating and sending data,
+- *operators* are reacting to that data and potentially changing it, and
+- *subscribers* requesting and accepting it.
+
+That in itself would be complicated, but some *operators* in Combine also may change the timing when events happen - introducing delays, collapsing multiple values into one, and so forth.
+
+Because these can be complex to understand, the *functional reactive programming* community illustrates these changes with a visual description called a **marble diagram**.
+
+As you explore the concepts behind Combine, you may find yourself looking at other *functional reactive programming* systems, such as `RxSwift` or `ReactiveExtensions`. The documentation associated with these systems often use marble diagrams.
+
+Marble diagrams focus on describing how a specific pipeline changes the stream of data. It shows data changing over time, as well as the timing of those changes.
+
+![Figure 1. An example marble diagram](../../media/Swift/UsingCombine/marble_diagram.svg)
+
+### How to read a marble diagram
+
+- The diagram centers around whatever element is being described, an operator in this case. The name of the operator is often on the central block.
+- The lines above and below represent data moving through time. The left is earlier and the right is later. The symbols on the line represent discrete bits of data.
+- It is often assumed that data is flowing downward. With this pattern, the top line is indicating the inputs to the operator and the bottom line represents the outputs.
+- In some diagrams, the symbols on the top line may differ from the symbols on the bottom line. When they are different, the diagram is typically implying that the type of the output is different from the type of the input.
+- In other places, you may also see a vertical bar or an `X` on the timeline, or ending the timeline. That is used to indicate the end of a stream. A bar at the end of a line implies the stream has terminated normally. An `X` indicates that an error or exception was thrown.
+
+These diagrams intentionally ignore the setup (or teardown) of a pipeline, preferring to focus on one element to describe how that element works.
+
+### Marble diagrams for Combine
+
+This book uses an expansion of the basic marble diagram, modified slightly to highlight some of the specifics of Combine. The most notable difference are two lines for input and output. Since Combine explicitly types both the *input* and the *failure*, these are represented separately and the types described in the diagram.
+
+![Figure 2. An expanded Combine specific marble diagram](../../media/Swift/UsingCombine/combine_marble_diagram.svg)
+
+If a publisher is being described, the two lines are below the element, following the pattern of "data flows down". An *operator*, which acts as both a *publisher* and *subscriber*, would have two sets - one above and one below. A *subscriber* has the lines above it.
+
+To illustrate how these diagrams relate to code, lets look at a simple example. In this case, we will focus on the map operator and how it can be described with this diagram.
+
+```swift
+let _ = Just(5)
+    .map { value -> String in 1️⃣
+        switch value {
+        case _ where value < 1:
+            return "none"
+        case _ where value == 1:
+            return "one"
+        case _ where value == 2:
+            return "couple"
+        case _ where value == 3:
+            return "few"
+        case _ where value > 8:
+            return "many"
+        default:
+            return "some"
+        }
+    }
+    .sink { receivedValue in
+        print("The end result was \(receivedValue)")
+    }
+```
+
+- 1️⃣ The closure provided to the `.map()` function takes in an `<Int>` and transforms it into a `<String>`. Since the failure type of `<Never> `is not changed, it is passed through.
+
+The following diagram represents this code snippet. This diagram goes further than others in this book; it includes the closure from the sample code in the diagram to show how it relates.
+
+![Figure 3. The example map operator from the code above:](../../media/Swift/UsingCombine/example_map_operator.svg)
+
+Many combine *operators* are configured with code provided by you, written in a closure. Most diagrams will not attempt to include it in the diagram. It is implied that any code you provide through a closure in Combine will be used within the box rather than explicitly detailed.
+
+The input type for this map *operator* is `<Int>`, which is described with generic syntax on the top line. The failure type that is being passed to this *operator* is `<Never>`, described in the same syntax just below the Input type.
+
+The `map` *operator* doesn’t change or interact with the failure type, only passing it along. To represent that, the failure types - both input (above) and output (below) - have been *lightened*.
+
+A single input value provided (`5`) is represented on the top line. The location on the line isn’t meaningful in this case, only representing that it is a single value. If multiple values were on the line, the ones on the left would be presented to the `map` *operator* before any on the right.
+
+When it arrives, the value `5` is passed to the closure as the variable `value`. The return type of the closure (`<String>` in this case), defines the output type for the `map` *operator* when the code within the closure completes and returns its value.
+
+In this case, the string `some` is returned for the input value `5`. **The string `some` is represented on the output line directly below its input value, implying there was no explicit delay.**
+
+## Back pressure
+
 
 
 
