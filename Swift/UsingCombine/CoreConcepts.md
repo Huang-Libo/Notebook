@@ -10,6 +10,10 @@ These core concepts are: *Publisher*, *Subscriber*, *Operator*, *Subject*.
     - [How to read a marble diagram](#how-to-read-a-marble-diagram)
     - [Marble diagrams for Combine](#marble-diagrams-for-combine)
   - [Back pressure](#back-pressure)
+  - [Lifecycle of Publishers and Subscribers](#lifecycle-of-publishers-and-subscribers)
+  - [Publishers](#publishers)
+  - [Operators](#operators)
+  - [Subjects](#subjects)
 
 ## Publisher and Subscriber
 
@@ -184,6 +188,154 @@ When it arrives, the value `5` is passed to the closure as the variable `value`.
 In this case, the string `some` is returned for the input value `5`. **The string `some` is represented on the output line directly below its input value, implying there was no explicit delay.**
 
 ## Back pressure
+
+Combine is designed such that the *subscriber* controls the flow of data, and because of that it also controls what and when processing happens in the pipeline. This is a feature of Combine called **back-pressure**.
+
+This means that the *subscriber* drives the processing within a pipeline by providing information about how much information it wants or can accept. When a *subscriber* is connected to a publisher, it requests data based on a specific [Demand](https://developer.apple.com/documentation/combine/subscribers/demand).
+
+The demand request is propagated up through the composed pipeline. Each *operator* in turn accepts the request for data and in turn requests information from the *publishers* to which it is connected.
+
+> **Warning**:  
+> In the first release of the Combine framework - in iOS 13 prior to iOS 13.3 and macOS prior to 10.15.2 - when the subscriber requested data with a Demand, that call itself was asynchronous. Because this process acted as the driver which triggered attached operators and ultimately the source publisher, it meant that there were scenarios where data might appear to be lost. Due to this, in iOS 13.3 and later Combine releases, the process of requesting demand has been updated to a synchronous/blocking call. In practice, this means that you can be a bit more certain of having any pipelines created and fully engaged prior to a publisher receiving the request to send any data.
+>  
+> There is an [extended thread on the Swift forums](https://forums.swift.org/t/combine-receive-on-runloop-main-loses-sent-value-how-can-i-make-it-work/28631/39) about this topic, if you are interested in reading the history.
+
+With the *subscriber* driving this process, it allows Combine to support cancellation. Subscribers all conform to the [Cancellable](https://developer.apple.com/documentation/combine/cancellable) protocol. This means they all have a function `cancel()` that can be invoked to terminate a pipeline and stop all related processing.
+
+> When a pipeline has been cancelled, the pipeline is not expected to be restarted. Rather than restarting a cancelled pipeline, the developer is expected to create a new pipeline.
+
+## Lifecycle of Publishers and Subscribers
+
+The end to end lifecycle is enabled by subscribers and publishers communicating in a well defined sequence:
+
+![Figure 4. An The lifecycle of a combine pipeline](../../media/Swift/UsingCombine/combine_lifecycle_diagram.svg)
+
+1. When the *subscriber* is attached to a *publisher*, it starts with a call to `.subscribe(_: Subscriber)`.
+2. The *publisher* in turn acknowledges the subscription calling `receive(subscription: Subscription)`.
+3. After the subscription has been acknowledged, the *subscriber* requests *N* values with `request(_: Demand)`.
+4. The *publisher* may then (as it has values) send *N* (or fewer) values using `receive(_: Input)`. A *publisher* should never send more than the demand requested.
+5. Any time after the subscription has been acknowledged, the *subscriber* may send a [cancellation](https://developer.apple.com/documentation/combine/subscribers/completion) with `.cancel()`
+6. A *publisher* may optionally send [completion](https://developer.apple.com/documentation/combine/subscribers/completion): `receive(completion:)`. A completion can be either a normal termination, or may be a `.failure` completion, optionally propagating an error type. A pipeline that has been cancelled will not send any completions.
+
+Included in the above diagram is a stacked up set of the example marble diagrams. This is to highlight where Combine marble diagrams focus in the overall lifecycle of a pipeline. Generally the diagrams infer that all of the setup has been done and data requested. The heart of a combine marble diagram is the series of events between when data was requested and any completions or cancellations are triggered.
+
+## Publishers
+
+The publisher is the provider of data. The `Publisher` protocol has a strict contract returning values when asked from subscribers, and possibly terminating with an explicit completion enumeration.
+
+`Just` and `Future` are common sources to start your own publisher from a value or asynchronous function.
+
+Many publishers will immediately provide data when requested by a subscriber. In some cases, a publisher may have a separate mechanism to enable it to return data after subscription. This is codified by the protocol [ConnectablePublisher](https://developer.apple.com/documentation/combine/connectablepublisher). A publisher conforming to `ConnectablePublisher` will have an additional mechanism to start the flow of data after a subscriber has provided a request. This could be a separate `.connect()` call on the publisher itself. The other option is `.autoconnect()`, which will start the flow of data as soon as a subscriber requests it.
+
+Combine provides a number of additional convenience publishers:
+
+- `Just`
+- `Future`
+- `Deferred`
+- `Empty`
+- `Sequence`
+- `Fail`
+- `Record`
+- `Share`
+- `Multicast`
+- `ObservableObject`
+- `@Published`
+
+A number of Apple API outside of Combine provide publishers as well.
+
+- SwiftUI uses the `@Published` and `@ObservedObject` *property wrappers*, provided by Combine, to implicitly create a *publisher* and support its declarative view mechanisms.
+- Foundation
+  - `URLSession.dataTaskPublisher`
+  - `.publisher` on KVO instance
+  - `NotificationCenter`
+  - `Timer`
+  - `Result`
+
+## Operators
+
+*Operators* are a convenient name for a number of *pre-built functions* that are included under `Publisher` in Apple’s reference documentation. Operators are meant to be composed into pipelines. Many will accept one or more closures from the developer to define the business logic while maintaining the adherence to the *publisher/subscriber* lifecycle.
+
+Some *operators* support bringing together outputs from different pipelines, changing the timing of data, or filtering the data provided. *Operators* may also have constraints on the types they will operate on. *Operators* can also be used to define error handling and retry logic, buffering and prefetch, and supporting debugging.
+
+- **Mapping elements**
+  - `map`
+  - `tryMap`
+  - `scan`
+  - `tryScan`
+  - `flatMap`
+  - `setFailureType`
+- **Filtering elements**
+  - `compactMap`
+  - `tryCompactMap`
+  - `filter`
+  - `tryFilter`
+  - `removeDuplicates`
+  - `tryRemoveDuplicates`
+  - `replaceEmpty`
+  - `replaceError`
+- **Reducing elements**
+  - `collect`
+  - `reduce`
+  - `tryReduce`
+  - `ignoreOutput`
+- **Mathematic operations on elements**
+  - `max`
+  - `tryMax`
+  - `min`
+  - `tryMin`
+  - `count`
+- **Applying matching criteria to elements**
+  - `allSatisfy`
+  - `tryAllSatisfy`
+  - `contains`
+  - `containsWhere`
+  - `tryContainsWhere`
+- **Applying sequence operations to elements**
+  - `first`
+  - `last`
+  - `firstWhere`
+  - `tryFirstWhere`
+  - `lastWhere`
+  - `tryLastWhere`
+  - `dropWhile`
+  - `tryDropWhile`
+  - `dropUntilOutput`
+  - `prepend`
+  - `drop`
+  - `prefixUntilOutput`
+  - `prefixWhile`
+  - `tryPrefixWhile`
+  - `output`
+- **Combining elements from multiple publishers**
+  - `combineLatest`
+  - `merge`
+  - `zip`
+- **Handling errors**
+  - `catch`
+  - `tryCatch`
+  - `assertNoFailure`
+  - `retry`
+  - `mapError`
+- **Adapting publisher types**
+  - `switchToLatest`
+  - `eraseToAnyPublisher`
+- **Controlling timing**
+  - `debounce`
+  - `delay`
+  - `measureInterval`
+  - `throttle`
+  - `timeout`
+- **Encoding and decoding**
+  - `encode`
+  - `decode`
+- **Working with multiple subscribers**
+  - `multicast`
+- **Debugging**
+  - `breakpoint`
+  - `handleEvents`
+  - `print`
+
+## Subjects
 
 
 
