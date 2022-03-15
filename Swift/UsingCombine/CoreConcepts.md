@@ -170,7 +170,7 @@ let _ = Just(5)
     }
 ```
 
-- 1️⃣ The closure provided to the `.map()` function takes in an `<Int>` and transforms it into a `<String>`. Since the failure type of `<Never> `is not changed, it is passed through.
+- 1️⃣ The closure provided to the `.map()` function takes in an `<Int>` and transforms it into a `<String>`. Since the failure type of `<Never>` is not changed, it is passed through.
 
 The following diagram represents this code snippet. This diagram goes further than others in this book; it includes the closure from the sample code in the diagram to show how it relates.
 
