@@ -4,6 +4,7 @@
   - [Reasoning about pipelines](#reasoning-about-pipelines)
   - [Swift types with Combine publishers and subscribers](#swift-types-with-combine-publishers-and-subscribers)
   - [Pipelines and threads](#pipelines-and-threads)
+  - [Leveraging Combine with your development](#leveraging-combine-with-your-development)
 
 ## Reasoning about pipelines
 
@@ -89,8 +90,23 @@ This same technique can be immensely useful when constructing smaller pipelines 
 
 ## Pipelines and threads
 
+Combine is not just a single threaded construct. Operators, as well as publishers, can run on different dispatch queues or runloops. Composed pipelines can run across a single queue, or transfer across a number of queues or threads.
 
+Combine allows for publishers to specify the *scheduler* used when either receiving from an upstream publisher (in the case of operators), or when sending to a downstream subscriber. This is critical when working with a subscriber that updates UI elements, as that should always be called on the main thread.
 
+For example, you may see this in code as an operator:
+
+```swift
+.receive(on: RunLoop.main)
+```
+
+A number of operators can impact what thread or queue is being used to do the relevant processing. `receive` and `subscribe` are the two most common, explicitly moving execution of operators after and prior to their invocation respectively.
+
+A number of additional *operators* have parameters that include a *scheduler*. Examples include `delay`, `debounce`, and `throttle`. These also have an impact on the queue executing the work - both for themselves and then any operators following in a pipeline. These operators all take a `scheduler` parameter, which switches to the relevant thread or queue to do the work. Any operators following them will also be invoked on their scheduler, giving them an impact somewhat like `receive`.
+
+> If you want to be explicit about which thread context an operator or subsequent operation will run within, define it with the `receive` operator.
+
+## Leveraging Combine with your development
 
 
 
