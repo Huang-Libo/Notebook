@@ -340,9 +340,9 @@ Some *operators* support bringing together outputs from different pipelines, cha
 
 Subjects are a special case of publisher that also adhere to the `Subject` protocol. This protocol requires subjects to have a `.send(_:)` method to allow the developer to send specific values to a subscriber (or pipeline).
 
-Subjects can be used to "*inject*" values into a stream, by calling the subject’s `.send(_:)` method. This is useful for integrating existing imperative code with Combine.
-
-A *subject* can also broadcast values to multiple subscribers. If multiple subscribers are connected to a *subject*, it will fan out values to the multiple subscribers when `send(_:)` is invoked. A *subject* is also frequently used to connect or cascade multiple pipelines together, especially to fan out to multiple pipelines.
+- Subjects can be used to "*inject*" values into a stream, by calling the subject’s `.send(_:)` method. This is useful for integrating existing imperative code with Combine.
+- A *subject* can also broadcast values to multiple subscribers. If multiple subscribers are connected to a *subject*, it will fan out values to the multiple subscribers when `send(_:)` is invoked.
+- A *subject* is also frequently used to connect or cascade multiple pipelines together, especially to fan out to multiple pipelines.
 
 A *subject* does not blindly pass through the demand from its subscribers. Instead, it provides an aggregation point for demand. A *subject* will not signal for demand to its connected publishers until it has received at least one subscriber itself. When it receives any demand, it then signals for `unlimited` demand to connected publishers. With the *subject* supporting multiple subscribers, any subscribers that have not requested data with a demand are not provided the data until they do.
 
@@ -355,7 +355,7 @@ Both `CurrentValueSubject` and `PassthroughSubject` are also useful for creating
 While `Subscriber` is the protocol used to receive data throughout a pipeline, *the subscriber* typically refers to the end of a pipeline.
 
 - There are two subscribers built-in to **Combine**: `Assign` and `Sink`.
-- There is a subscriber built in to **SwiftUI**: `onReceive`.
+- There is a subscriber built-in to **SwiftUI**: `onReceive`.
 
 Subscribers can support cancellation, which terminates a subscription and shuts down all the stream processing prior to any Completion sent by the publisher. Both `Assign` and `Sink` conform to the `Cancellable` protocol.
 
