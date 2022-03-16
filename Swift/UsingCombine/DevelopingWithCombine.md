@@ -108,6 +108,18 @@ A number of additional *operators* have parameters that include a *scheduler*. E
 
 ## Leveraging Combine with your development
 
+There are two common paths to developing code leveraging Combine.
 
+- First is simply leveraging *synchronous* calls within a closure to one of the common operators. The two most prevalent operators leveraged for this are `map` and `tryMap`, for when your code needs to throw an Error.
+- Second is integrating your own code that is *asynchronous*, or APIs that provide a completion callback. If the code you are integrating is asynchronous, then you can’t (quite) as easily use it within a closure. You need to wrap the asynchronous code with a structure that the Combine operators can work with and invoke. In practice, this often implies creating a call that returns a *publisher* instance, and then using that within the pipeline.
 
+The `Future` publisher was specifically created to support this kind of integration, and the pattern [Wrapping an asynchronous call with a Future to create a one-shot publisher](https://heckj.github.io/swiftui-notes/#patterns-future) shows an example.
 
+If you want to use data provided by a *publisher* as a parameter or input to creating this publisher, there are two common means of enabling this:
+
+1. Using the `flatMap` operator, using the data passed in to create or return a `Publisher` instance. This is a variation of the pattern illustrated in [Using flatMap with catch to handle errors](https://heckj.github.io/swiftui-notes/#patterns-continual-error-handling).
+2. Alternately, `map` or `tryMap` can be used to create an instance of a *publisher*, followed immediately by chaining `switchToLatest` to resolve that *publisher* into a value (or values) to be passed within the pipeline.
+
+The patterns [Cascading UI updates including a network request](https://heckj.github.io/swiftui-notes/#patterns-cascading-update-interface) and [Declarative UI updates from user input](https://heckj.github.io/swiftui-notes/#patterns-update-interface-userinput) illustrate these patterns.
+
+You may find it worthwhile to create objects which return a publisher. Often this enables your code to encapsulate the details of communicating with a remote or network based API. These can be developed using `URLSession.dataTaskPublisher` or your own code.
