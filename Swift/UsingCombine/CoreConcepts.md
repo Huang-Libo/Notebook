@@ -18,23 +18,23 @@ These core concepts are: *Publisher*, *Subscriber*, *Operator*, *Subject*.
 
 ## Publisher and Subscriber
 
-Two key concepts, [publisher](https://developer.apple.com/documentation/combine/publisher) and [subscriber](https://developer.apple.com/documentation/combine/subscriber), are described in Swift as protocols.
+Two key concepts, `Publisher` and `Subscriber`, are described in Swift as protocols.
 
 Combine is all about defining the process of what you do with many possible values over time. Combine also goes farther than defining the result, it also defines how it can fail.
 
-A **publisher** provides data when available and upon request. A publisher that hasn't had any *subscription* requests will not provide any data. When you are describing a Combine publisher, you describe it with two associated types: one for `Output` and one for `Failure`.
+A **publisher** provides data when available and upon request. A publisher that hasn't had any *subscription* requests will not provide any data. When you are describing a Combine publisher, you describe it with two associated types: `Output` and `Failure`.
 
 ![basic_types.svg](../../media/Swift/UsingCombine/basic_types.svg)
 
 For example, if a publisher returned an instance of `String`, and could return a failure in the form of an instance of `URLError`, then the publisher might be described with the string `<String, URLError>`.
 
-A **subscriber** is responsible for requesting data and accepting the data (and possible failures) provided by a publisher. A subscriber is described with two associated types, one for `Input` and one for `Failure`. The subscriber initiates the request for data, and controls the amount of data it receives. It can be thought of as "driving the action" within Combine, as without a subscriber, the other components stay idle.
+A **subscriber** is responsible for requesting data and accepting the data (and possible failures) provided by a publisher. A subscriber is described with two associated types, `Input` and `Failure`. The subscriber initiates the request for data, and controls the amount of data it receives. It can be thought of as "driving the action" within Combine, as without a subscriber, the other components stay idle.
 
 *Publishers* and *subscribers* are meant to be connected, and make up the core of Combine. When you connect a subscriber to a publisher, both types must match: `Output` to `Input`, and `Failure` to `Failure`. One way to visualize this is as a series of operations on two types in parallel, where both types need to match in order to plug the components together.
 
 ![input_output.svg](../../media/Swift/UsingCombine/input_output.svg)
 
-The third core concept is an **operator**: an object that **acts both like a subscriber and a publisher**. Operators are classes that adopt both the [Subscriber protocol](https://developer.apple.com/documentation/combine/subscriber) and [Publisher protocol](https://developer.apple.com/documentation/combine/publisher). They support subscribing to a publisher, and sending results to any subscribers.
+The third core concept is an **operator**: an object that **acts both like a subscriber and a publisher**. Operators are classes that adopt both the `Subscriber` protocol and `Publisher` protocol. They support subscribing to a publisher, and sending results to any subscribers.
 
 You can create chains of these together, for *processing*, *reacting*, and *transforming* the data provided by a publisher, and requested by the subscriber.
 
@@ -107,7 +107,7 @@ let _ = Just(5)  1️⃣
 > In some cases, such as the example above, the compiler is unable to infer the return types of closure provided to `map` without specifying the return type.  
 > *Xcode (11 beta 2 and beta 3)* displays this as the error message: `Unable to infer complex closure return type; add explicit type to disambiguate.` In the example above, we explicitly specified the type being returned with the line *value -> String* in.
 
-You can view Combine publishers, operators, and subscribers as having two parallel types that both need to be aligned: one for the functional case and one for the error case. Designing your pipeline is frequently choosing how to convert one or both of those types and the associated data with it.
+You can view Combine *publishers*, *operators*, and *subscribers* as having two parallel types that both need to be aligned: one for the functional case and one for the error case. Designing your pipeline is frequently choosing how to convert one or both of those types and the associated data with it.
 
 ## Describing pipelines with marble diagrams
 
@@ -359,7 +359,7 @@ While `Subscriber` is the protocol used to receive data throughout a pipeline, *
 
 Subscribers can support cancellation, which terminates a subscription and shuts down all the stream processing prior to any Completion sent by the publisher. Both `Assign` and `Sink` conform to the `Cancellable` protocol.
 
-When you are storing a reference to your own subscriber in order to clean up later, you generally want a reference to cancel the subscription. `AnyCancellable` provides a type-erased reference that converts any subscriber to the type `AnyCancellable`, allowing the use of `.cancel()` on that reference, but not access to the subscription itself (which could, for instance, request more data). It is important to store a reference to the subscriber, as when the reference is deallocated it will implicitly cancel its operation.
+When you are storing a reference to your own subscriber in order to clean up later, you generally want a reference to cancel the subscription. `AnyCancellable` provides a *type-erased* reference that converts any subscriber to the type `AnyCancellable`, allowing the use of `.cancel()` on that reference, *but not access to the subscription itself (which could, for instance, request more data)*. It is important to store a reference to the subscriber, as when the reference is deallocated it will implicitly cancel its operation.
 
 - `Assign` applies values passed down from the publisher to an object defined by a keypath. The keypath is set when the pipeline is created. An example of this in Swift might look like:
 
