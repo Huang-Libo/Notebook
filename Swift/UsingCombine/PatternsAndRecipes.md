@@ -13,6 +13,8 @@
     - [Using catch to handle errors in a one-shot pipeline](#using-catch-to-handle-errors-in-a-one-shot-pipeline)
     - [Retrying in the event of a temporary failure](#retrying-in-the-event-of-a-temporary-failure)
     - [Using flatMap and catch to handle errors without cancelling the pipeline](#using-flatmap-and-catch-to-handle-errors-without-cancelling-the-pipeline)
+    - [Requesting data from an alternate URL when the network is constrained](#requesting-data-from-an-alternate-url-when-the-network-is-constrained)
+  - [UIKit or AppKit Integration](#uikit-or-appkit-integration)
 
 ## Creating a subscriber with sink
 
@@ -526,7 +528,7 @@ If you want to continue to respond to errors and handle them, see the pattern Us
 
 - The `retry` operator can be included in a pipeline to retry a *subscription* when a `.failure` completion occurs.
 
-When requesting data from a `dataTaskPublisher`, the request may fail. In that case you will receive a `.failure` completion with an error. When it fails, the `retry` operator will let you retry that same request for a set number of attempts. The retry operator passes through the resulting values when the publisher does not send a `.failure` completion. `retry` only reacts within a combine pipeline when a `.failure` completion is sent.
+> When requesting data from a `dataTaskPublisher`, the request may fail. In that case you will receive a `.failure` completion with an error. When it fails, the `retry` operator will let you retry that same request for a set number of attempts. The retry operator passes through the resulting values when the publisher does not send a `.failure` completion. `retry` only reacts within a combine pipeline when a `.failure` completion is sent.
 
 When `retry` receives a `.failure` completion, the way it retries is by recreating the subscription to the operator or publisher to which it was chained.
 
@@ -559,3 +561,85 @@ let remoteDataPublisher = urlSession.dataTaskPublisher(for: self.URL!)
 > When using the `retry` operator with `URLSession.dataTaskPublisher`, verify that the URL you are requesting isn’t going to have negative side effects if requested repeatedly or with a retry. Ideally such requests are be expected to be idempotent. If they are not, the `retry` operator may make multiple requests, with very unexpected side effects.
 
 ### Using flatMap and catch to handle errors without cancelling the pipeline
+
+**Goal**:
+
+- The `flatMap` operator can be used with `catch` to continue to handle errors on new published values.
+
+> The `flatMap` operator is the operator to use in handling errors on a continual flow of events.
+
+You provide a closure to `flatMap` that can read in the value that was provided, and creates a one-shot publisher that does the possibly failing work. An example of this is requesting data from a network and then decoding the returned data. You can include a `catch` operator to capture any errors and provide an appropriate value.
+
+This is a perfect mechanism for when you want to maintain updates up an upstream publisher, as it creates one-shot publisher or short pipelines that send a single value and then complete for every incoming value. The completion from the created one-shot publishers terminates in the `flatMap` and is not passed to downstream subscribers.
+
+An example of this with a dataTaskPublisher:
+
+```swift
+let remoteDataPublisher = Just(self.testURL!) 1️⃣
+    .flatMap { url in 2️⃣
+        URLSession.shared.dataTaskPublisher(for: url) 3️⃣
+        .tryMap { data, response -> Data in 4️⃣
+            guard let httpResponse = response as? HTTPURLResponse,
+                httpResponse.statusCode == 200 else {
+                    throw TestFailureCondition.invalidServerResponse
+            }
+            return data
+        }
+        .decode(type: PostmanEchoTimeStampCheckResponse.self, decoder: JSONDecoder()) 5️⃣
+        .catch {_ in 6️⃣
+            return Just(PostmanEchoTimeStampCheckResponse(valid: false))
+        }
+    }
+    .eraseToAnyPublisher()
+```
+
+- 1️⃣ Just starts this publisher as an example by passing in a URL.
+- 2️⃣ `flatMap` takes the URL as input and the closure goes on to create a *one-shot* publisher pipeline.
+- 3️⃣ `dataTaskPublisher` uses the input url to make the request.
+- 4️⃣ The result output ( a tuple of `(Data, URLResponse)` ) flows into `tryMap` to be parsed for additional errors.
+- 5️⃣ `decode` attempts to refine the returned data into a locally defined type.
+- 6️⃣ If any of this has failed, catch will convert the error into a placeholder sample. In this case an object with a preset `valid = false` property.
+
+### Requesting data from an alternate URL when the network is constrained
+
+**Goal**:
+
+- From Apple’s WWDC 2019 presentation [Advances in Networking, Part 1](https://developer.apple.com/videos/play/wwdc2019/712/), a sample pattern was provided using `tryCatch` and `tryMap` operators to react to the specific error of the network being constrained.
+
+```swift
+// Generalized Publisher for Adaptive URL Loading
+func adaptiveLoader(regularURL: URL, lowDataURL: URL) -> AnyPublisher<Data, Error> {
+    var request = URLRequest(url: regularURL) 
+    request.allowsConstrainedNetworkAccess = false 
+    return URLSession.shared.dataTaskPublisher(for: request) 
+        .tryCatch { error -> URLSession.DataTaskPublisher in 
+            guard error.networkUnavailableReason == .constrained else {
+               throw error
+            }
+            return URLSession.shared.dataTaskPublisher(for: lowDataURL) 
+        .tryMap { data, response -> Data in
+            guard let httpResponse = response as? HTTPUrlResponse, 
+                   httpResponse.statusCode == 200 else {
+                       throw MyNetworkingError.invalidServerResponse
+            }
+            return data
+}
+.eraseToAnyPublisher()
+```
+
+This example, from Apple’s WWDC, provides a function that takes two URLs - a primary and a fallback. It returns a publisher that will request data and fall back requesting a secondary URL when the network is constrained.
+
+- 1️⃣ The request starts with an attempt requesting data.
+- 2️⃣ Setting `request.allowsConstrainedNetworkAccess` will cause the `dataTaskPublisher` to error if the network is constrained.
+- 3️⃣ Invoke the `dataTaskPublisher` to make the request.
+- 4️⃣ `tryCatch` is used to capture the immediate error condition and check for a specific error (the *constrained network*).
+- 5️⃣ If it finds an error, it creates a new *one-shot* publisher with the fall-back URL.
+- 6️⃣ The resulting publisher can still fail, and `tryMap` can map this a failure by throwing an error on HTTP response codes that map to error conditions
+- 7️⃣ `eraseToAnyPublisher` enables type erasure on the chain of operators so the resulting signature of the adaptiveLoader function is `AnyPublisher<Data, Error>`
+
+In the sample, if the error returned from the original request wasn’t an issue of the network being constrained, it passes on the `.failure` completion down the pipeline. If the error is that the network is constrained, then the `tryCatch` operator creates a new request to an alternate URL.
+
+## UIKit or AppKit Integration
+
+
+
