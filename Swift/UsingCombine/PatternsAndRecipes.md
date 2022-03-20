@@ -8,6 +8,11 @@
     - [Normalizing errors from a dataTaskPublisher](#normalizing-errors-from-a-datataskpublisher)
   - [Wrapping an asynchronous call with a Future to create a one-shot publisher](#wrapping-an-asynchronous-call-with-a-future-to-create-a-one-shot-publisher)
   - [Sequencing asynchronous operations](#sequencing-asynchronous-operations)
+  - [Error Handling](#error-handling)
+    - [Verifying a failure hasn’t happened using assertNoFailure](#verifying-a-failure-hasnt-happened-using-assertnofailure)
+    - [Using catch to handle errors in a one-shot pipeline](#using-catch-to-handle-errors-in-a-one-shot-pipeline)
+    - [Retrying in the event of a temporary failure](#retrying-in-the-event-of-a-temporary-failure)
+    - [Using flatMap and catch to handle errors without cancelling the pipeline](#using-flatmap-and-catch-to-handle-errors-without-cancelling-the-pipeline)
 
 ## Creating a subscriber with sink
 
@@ -449,6 +454,108 @@ class AsyncCoordinatorViewController: UIViewController {
 - 6️⃣ The `map` operator is used to create this specific side effect of updating the a `UIButton` to show the step has been completed.
 - 7️⃣ The creation of the overall pipeline and its structure of serial and parallel tasks is created from the combination of calls to `createFuturePublisher` using the operators `flatMap` and `zip`.
 
+## Error Handling
 
+Previous examples above expect that the *subscriber* would handle the error conditions, if they occurred. However, you are not always able to control what the *subscriber* requires - as might be the case if you are using SwiftUI. In these cases, you need to build your pipeline so that the output types match the subscriber types. This implies that you are handling any errors within the pipeline.
 
+For example, if you are working with SwiftUI and the you want to use `assign` to set the `isEnabled` property on a button, the *subscriber* will have a few requirements:
 
+- the subscriber should match the type output of `<Bool, Never>`
+- the subscriber should be called on the *main thread*
+
+With a publisher that can throw an error (such as `URLSession.dataTaskPublisher`), you need to construct a pipeline to convert the output type, but also handle the error within the pipeline to match a failure type of `<Never>`.
+
+How you handle the errors within a pipeline is dependent on how the pipeline is defined.
+
+- If the pipeline is set up to return a *single* result and terminate, a good example is [Using catch to handle errors in a one-shot pipeline](#using-catch-to-handle-errors-in-a-one-shot-pipeline).
+- If the pipeline is set up to *continually* update, the error handling needs to be a little more complex. In this case, look at the example [Using flatMap with catch to handle errors](#using-flatmap-and-catch-to-handle-errors-without-cancelling-the-pipeline).
+
+### Verifying a failure hasn’t happened using assertNoFailure
+
+**Goal**:
+
+- Verify no error has occurred within a pipeline
+
+`assertNoFailure` *operator* also converts the failure type to `<Never>`. The operator will cause the application to terminate (or tests to crash to a debugger) if the assertion is triggered.
+
+This is useful for verifying the invariant of having dealt with an error. If you are sure you handled the errors and need to map a pipeline which technically can generate a failure type of `<Error>` to a subscriber that requires a failure type of `<Never>`.
+
+### Using catch to handle errors in a one-shot pipeline
+
+**Goal**:
+
+- If you need to handle a failure within a pipeline, for example before using the `assign` operator or another operator that requires the failure type to be `<Never>`, you can use catch to provide the appropriate logic.
+
+`catch` handles errors by replacing the upstream publisher with another publisher that you provide as a return in a closure.
+
+> **Warning**: Be aware that this effectively terminates the pipeline. If you’re using a one-shot publisher (one that doesn’t create more than a single event), then this is fine.
+
+For example, `URLSession.dataTaskPublisher` is a one-shot publisher and you might use catch with it to ensure that you get a response, returning a placeholder in the event of an error. Extending our previous example to provide a default response:
+
+```swift
+struct IPInfo: Codable {
+    // matching the data structure returned from ip.jsontest.com
+    var ip: String
+}
+let myURL = URL(string: "http://ip.jsontest.com")
+// NOTE(heckj): you'll need to enable insecure downloads in your Info.plist for this example, since the URL scheme is 'http'
+
+let remoteDataPublisher = URLSession.shared.dataTaskPublisher(for: myURL!)
+    // the dataTaskPublisher output combination is (data: Data, response: URLResponse)
+    .map({ (inputTuple) -> Data in
+        return inputTuple.data
+    })
+    .decode(type: IPInfo.self, decoder: JSONDecoder()) 1️⃣
+    .catch { err in 2️⃣
+        return Publishers.Just(IPInfo(ip: "8.8.8.8")) 3️⃣
+    }
+    .eraseToAnyPublisher()
+```
+
+- 1️⃣ Often, a `catch` operator will be placed after several operators that could fail, in order to provide a fallback or placeholder in the event that any of the possible previous operations failed.
+- 2️⃣ When using `catch`, you get the error type in and can inspect it to choose how you provide a response.
+- 3️⃣ The `Just` publisher is frequently used to either start another *one-shot* pipeline or to directly provide a placeholder response in the event of failure.
+
+A possible problem with this technique is that the if the original *publisher* generates more values to which you wish to react, the original pipeline has been ended. If you are creating a pipeline that reacts to a `@Published` property, then after any failed value that activates the `catch` operator, the pipeline will cease to react further. See [catch](https://heckj.github.io/swiftui-notes/#reference-catch) for more details of how this works.
+
+If you want to continue to respond to errors and handle them, see the pattern Using flatMap with catch to handle errors.
+
+### Retrying in the event of a temporary failure
+
+**Goal**:
+
+- The `retry` operator can be included in a pipeline to retry a *subscription* when a `.failure` completion occurs.
+
+When requesting data from a `dataTaskPublisher`, the request may fail. In that case you will receive a `.failure` completion with an error. When it fails, the `retry` operator will let you retry that same request for a set number of attempts. The retry operator passes through the resulting values when the publisher does not send a `.failure` completion. `retry` only reacts within a combine pipeline when a `.failure` completion is sent.
+
+When `retry` receives a `.failure` completion, the way it retries is by recreating the subscription to the operator or publisher to which it was chained.
+
+The `retry` operator is commonly desired when attempting to request network resources with an unstable connection, or other situations where the request might succeed if the request happens again. If the number of retries specified all fail, then the `.failure` completion is passed down to the subscriber.
+
+In our example below, we are using `retry` in combination with a `delay` operator. Our use of the delay operator puts a small random delay before the next request. This spaces out the retry attempts, so that the retries do not happen in quick succession.
+
+This example also includes the use of the `tryMap` operator to more fully inspect any `URLResponse` returned from the `dataTaskPublisher`. Any response from the server is encapsulated by `URLSession`, and passed forward as a valid response. `URLSession` does not treat a *404 Not Found* http response as an error response, nor any of the *50x* error codes. Using `tryMap` lets us inspect the response code that was sent, and verify that it was a `200` response code. In this example, if the response code is anything but a `200` response, it throws an exception - which in turn causes the `tryMap` operator to pass down a `.failure` completion rather than data. This example sets the `tryMap` **after** the retry operator so that `retry` will only re-attempt the request when the site didn’t respond.
+
+```swift
+let remoteDataPublisher = urlSession.dataTaskPublisher(for: self.URL!)
+    .delay(for: DispatchQueue.SchedulerTimeType.Stride(integerLiteral: Int.random(in: 1..<5)), scheduler: backgroundQueue) 1️⃣
+    .retry(3) 2️⃣
+    .tryMap { data, response -> Data in 3️⃣
+        guard let httpResponse = response as? HTTPURLResponse,
+            httpResponse.statusCode == 200 else {
+                throw TestFailureCondition.invalidServerResponse
+        }
+        return data
+    }
+    .decode(type: PostmanEchoTimeStampCheckResponse.self, decoder: JSONDecoder())
+    .subscribe(on: backgroundQueue)
+    .eraseToAnyPublisher()
+```
+
+- 1️⃣ The `delay` operator will hold the results flowing through the pipeline for a short duration, in this case for a random selection of `1` to `5` seconds. By adding delay here in the pipeline, it will always occur, even if the original request is successful.
+- 2️⃣ Retry is specified as trying `3` times. This will result in a total of `4` attempts if each fails - the original request and `3` additional attempts.
+- 3️⃣ `tryMap` is being used to inspect the data result from `dataTaskPublisher` and return a `.failure` completion if the response from the server is valid, but not a `200` HTTP response code.
+
+> When using the `retry` operator with `URLSession.dataTaskPublisher`, verify that the URL you are requesting isn’t going to have negative side effects if requested repeatedly or with a retry. Ideally such requests are be expected to be idempotent. If they are not, the `retry` operator may make multiple requests, with very unexpected side effects.
+
+### Using flatMap and catch to handle errors without cancelling the pipeline
