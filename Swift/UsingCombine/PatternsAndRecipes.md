@@ -15,6 +15,8 @@
     - [Using flatMap and catch to handle errors without cancelling the pipeline](#using-flatmap-and-catch-to-handle-errors-without-cancelling-the-pipeline)
     - [Requesting data from an alternate URL when the network is constrained](#requesting-data-from-an-alternate-url-when-the-network-is-constrained)
   - [UIKit or AppKit Integration](#uikit-or-appkit-integration)
+    - [Declarative UI updates from user input](#declarative-ui-updates-from-user-input)
+    - [Cascading multiple UI updates, including a network request](#cascading-multiple-ui-updates-including-a-network-request)
 
 ## Creating a subscriber with sink
 
@@ -641,5 +643,82 @@ In the sample, if the error returned from the original request wasn’t an issue
 
 ## UIKit or AppKit Integration
 
+### Declarative UI updates from user input
+
+**Goal**:
+
+- Querying a API and returning the data to be displayed in your UI
+
+A pattern for integrating Combine with UIKit is setting up a variable which will hold a reference to the updated state, and linking the controls using `IBAction`.
+
+The sample is a portion of the code at in a larger view controller implementation.
+
+This example overlaps with the next pattern [Cascading UI updates including a network request](#cascading-multiple-ui-updates-including-a-network-request), which builds upon the initial publisher.
+
+[UIKit-Combine/GithubAPI.swift](https://github.com/heckj/swiftui-notes/blob/master/UIKit-Combine/GithubAPI.swift)
+
+```swift
+import UIKit
+import Combine
+
+class ViewController: UIViewController {
+
+    @IBOutlet weak var github_id_entry: UITextField! 1️⃣
+
+    var usernameSubscriber: AnyCancellable?
+
+    // username from the github_id_entry field, updated via IBAction
+    // @Published is creating a publisher $username of type <String, Never>
+    @Published var username: String = "" 2️⃣
+
+    // github user retrieved from the API publisher. As it's updated, it
+    // is "wired" to update UI elements
+    @Published private var githubUserData: [GithubAPIUser] = []
+
+    // MARK - Actions
+
+    @IBAction func githubIdChanged(_ sender: UITextField) {
+        username = sender.text ?? "" 3️⃣
+        print("Set username to ", username)
+    }
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        // Do any additional setup after loading the view.
+
+        usernameSubscriber = $username 4️⃣
+            .throttle(for: 0.5, scheduler: myBackgroundQueue, latest: true) 5️⃣
+            // ^^ scheduler myBackGroundQueue publishes resulting elements
+            // into that queue, resulting on this processing moving off the
+            // main runloop.
+            .removeDuplicates() 6️⃣
+            .print("username pipeline: ") // debugging output for pipeline
+            .map { username -> AnyPublisher<[GithubAPIUser], Never> in 7️⃣
+                return GithubAPI.retrieveGithubUser(username: username)
+            }
+            // ^^ type returned by retrieveGithubUser is a Publisher, so we use
+            // switchToLatest to resolve the publisher to its value
+            // to return down the chain, rather than returning a
+            // publisher down the pipeline.
+            .switchToLatest() 8️⃣
+            // using a sink to get the results from the API search lets us
+            // get not only the user, but also any errors attempting to get it.
+            .receive(on: RunLoop.main)
+            .assign(to: \.githubUserData, on: self) 9️⃣
+```
+
+- 1️⃣ The `UITextField` is the interface element which is driving the updates from user interaction.
+- 2️⃣ We defined a `@Published` property to both hold the data and reflect updates when they happen. Because its a `@Published` property, it provides a publisher that we can use with Combine pipelines to update other variables or elements of the interface.
+- 3️⃣ We set the variable `*username*` from within an `IBAction`, which in turn triggers a data flow if the publisher `$username` has any subscribers.
+- 4️⃣ We in turn set up a subscriber on the publisher `$username` that does further actions. In this case it uses updated values of username to retrieves an instance of a `GithubAPIUser` from *Github’s REST API*. It will make a new HTTP request to the every time the *username* value is updated.
+- 5️⃣ The `throttle` is there to keep from triggering a network request on every possible edit of the text field. The throttle keeps it to a maximum of 1 request every half-second.
+- 6️⃣ `removeDuplicates` collapses events from the changing *username* so that API requests are not made on the same value twice in a row. The `removeDuplicates` prevents redundant requests from being made, should the user edit and the return the previous value.
+- 7️⃣ `map` is used similarly to `flatMap` in error handling here, returning an instance of a publisher. The API object returns a publisher, which this map is invoking. This doesn’t return the value from the call, but the publisher itself.
+- 8️⃣ `switchToLatest` operator takes the instance of the publisher and resolves out the data. `switchToLatest` resolves a publisher into a value and passes that value down the pipeline, in this case an instance of `[GithubAPIUser]`.
+- 9️⃣ And `assign` at the end up the pipeline is the subscriber, which assigns the value into another variable: `githubUserData`.
+
+The pattern [Cascading UI updates including a network request](#cascading-multiple-ui-updates-including-a-network-request) expands upon this code to multiple cascading updates of various UI elements.
+
+### Cascading multiple UI updates, including a network request
 
 
