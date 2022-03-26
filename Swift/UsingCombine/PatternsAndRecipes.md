@@ -753,7 +753,93 @@ The pipelines have been explicitly configured to work on a background queue usin
 [UIKit-Combine/GithubAPI.swift](https://github.com/heckj/swiftui-notes/blob/master/UIKit-Combine/GithubAPI.swift)
 
 ```swift
+import Foundation
+import Combine
 
+enum APIFailureCondition: Error {
+    case invalidServerResponse
+}
+
+struct GithubAPIUser: Decodable { 1️⃣
+    // A very *small* subset of the content available about
+    //  a github API user for example:
+    // https://api.github.com/users/heckj
+    let login: String
+    let public_repos: Int
+    let avatar_url: String
+}
+
+struct GithubAPI { 2️⃣
+    // NOTE(heckj): I've also seen this kind of API access
+    // object set up with with a class and static methods on the class.
+    // I don't know that there's a specific benefit to make this a value
+    // type/struct with a function on it.
+
+    /// externally accessible publsher that indicates that network activity is happening in the API proxy
+    static let networkActivityPublisher = PassthroughSubject<Bool, Never>() 3️⃣
+
+    /// creates a one-shot publisher that provides a GithubAPI User
+    /// object as the end result. This method was specifically designed to
+    /// return a list of 1 object, as opposed to the object itself to make
+    /// it easier to distinguish a "no user" result (empty list)
+    /// representation that could be dealt with more easily in a Combine
+    /// pipeline than an optional value. The expected return types is a
+    /// Publisher that returns either an empty list, or a list of one
+    /// GithubAPUser, and with a failure return type of Never, so it's
+    /// suitable for recurring pipeline updates working with a @Published
+    /// data source.
+    /// - Parameter username: username to be retrieved from the Github API
+    static func retrieveGithubUser(username: String) -> AnyPublisher<[GithubAPIUser], Never> { 4️⃣
+
+        if username.count < 3 { 5️⃣
+            return Just([]).eraseToAnyPublisher()
+            // return Publishers.Empty<GithubAPIUser, Never>()
+            //    .eraseToAnyPublisher()
+        }
+        let assembledURL = String("https://api.github.com/users/\(username)")
+        let publisher = URLSession.shared.dataTaskPublisher(for: URL(string: assembledURL)!)
+            .handleEvents(receiveSubscription: { _ in 6️⃣
+                networkActivityPublisher.send(true)
+            }, receiveCompletion: { _ in
+                networkActivityPublisher.send(false)
+            }, receiveCancel: {
+                networkActivityPublisher.send(false)
+            })
+            .tryMap { data, response -> Data in 7️⃣
+                guard let httpResponse = response as? HTTPURLResponse,
+                    httpResponse.statusCode == 200 else {
+                        throw APIFailureCondition.invalidServerResponse
+                }
+                return data
+        }
+        .decode(type: GithubAPIUser.self, decoder: JSONDecoder()) 8️⃣
+        .map {
+                [$0] 9️⃣
+        }
+        .replaceError(with: []) 🔟
+            // ^^ when I originally wrote this method, I was returning
+            // a GithubAPIUser? optional, and then a GithubAPIUser without
+            // optional. I ended up converting this to return an empty
+            // list as the "error output replacement" so that I could
+            // represent that the current value requested didn't *have* a
+            // correct github API response.
+        .eraseToAnyPublisher() 1️⃣1️⃣
+        return publisher
+    }
+
+}
 ```
+
+- 1️⃣ The decodable struct created here is a subset of what’s returned from the GitHub API. Any pieces not defined in the struct are simply ignored when processed by the `decode` operator.
+- 2️⃣ The code to interact with the GitHub API was broken out into its own object, which I would normally have in a separate file. The functions on the API struct return *publishers*, and are then mixed and merged with other pipelines in the `ViewController`.
+- 3️⃣ This struct also exposes a publisher using `passthroughSubject` to reflect *Boolean* values when it is actively making network requests.
+- 4️⃣ I first created the pipelines to return an optional `GithubAPIUser` instance, but found that there wasn’t a convenient way to propagate "`nil`" or empty objects on failure conditions. The code was then recreated to return a list, even though only a single instance was ever expected, to conveniently represent an "empty" object. This was important for the use case of wanting to erase existing values in following pipelines reacting to the `GithubAPIUser` object "disappearing" - removing the repository count and avatar images in this case.
+- 5️⃣ The logic here is simply to prevent extraneous network requests, returning an empty result if the username being requested has less than 3 characters.
+- 6️⃣ the `handleEvents` operator is how we are triggering updates for the network activity publisher. We define closures that trigger on subscription and finalization (both completion and cancel) that invoke `send()` on the `passthroughSubject`. This is an example of how we can provide metadata about a pipeline’s operation as a separate publisher.
+- 7️⃣ `tryMap` adds additional checking on the API response from github to convert correct responses from the API that aren’t valid User instances into a pipeline failure condition.
+- 8️⃣ `decode` takes the Data from the response and decodes it into a single instance of `GithubAPIUser`
+- 9️⃣ `map` is used to take the single instance and convert it into a list of `1` item, changing the type to a list of `GithubAPIUser`: `[GithubAPIUser]`.
+- 🔟 `catch` operator captures the error conditions within this pipeline, and returns an empty list on failure while also converting the failure type to `Never`.
+- 1️⃣1️⃣ `eraseToAnyPublisher` collapses the complex types of the chained operators and exposes the whole pipeline as an instance of AnyPublisher.
 
 
