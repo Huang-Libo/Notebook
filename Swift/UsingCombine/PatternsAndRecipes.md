@@ -17,6 +17,7 @@
   - [UIKit or AppKit Integration](#uikit-or-appkit-integration)
     - [Declarative UI updates from user input](#declarative-ui-updates-from-user-input)
     - [Cascading multiple UI updates, including a network request](#cascading-multiple-ui-updates-including-a-network-request)
+    - [Merging multiple pipelines to update UI elements](#merging-multiple-pipelines-to-update-ui-elements)
 
 ## Creating a subscriber with sink
 
@@ -841,5 +842,186 @@ struct GithubAPI { 2️⃣
 - 9️⃣ `map` is used to take the single instance and convert it into a list of `1` item, changing the type to a list of `GithubAPIUser`: `[GithubAPIUser]`.
 - 🔟 `catch` operator captures the error conditions within this pipeline, and returns an empty list on failure while also converting the failure type to `Never`.
 - 1️⃣1️⃣ `eraseToAnyPublisher` collapses the complex types of the chained operators and exposes the whole pipeline as an instance of AnyPublisher.
+
+[UIKit-Combine/GithubViewController.swift](https://github.com/heckj/swiftui-notes/blob/master/UIKit-Combine/GithubViewController.swift)
+
+```swift
+import UIKit
+import Combine
+
+class GithubViewController: UIViewController {
+    @IBOutlet weak var github_id_entry: UITextField!
+    @IBOutlet weak var activityIndicator: UIActivityIndicatorView!
+    @IBOutlet weak var repositoryCountLabel: UILabel!
+    @IBOutlet weak var githubAvatarImageView: UIImageView!
+
+    var repositoryCountSubscriber: AnyCancellable?
+    var avatarViewSubscriber: AnyCancellable?
+    var usernameSubscriber: AnyCancellable?
+    var apiNetworkActivitySubscriber: AnyCancellable?
+
+    // username from the github_id_entry field, updated via IBAction
+    @Published var username: String = ""
+
+    // github user retrieved from the API publisher. As it's updated, it
+    // is "wired" to update UI elements
+    @Published private var githubUserData: [GithubAPIUser] = []
+
+    var myBackgroundQueue: DispatchQueue = DispatchQueue(label: "myBackgroundQueue")
+    let coreLocationProxy = LocationHeadingProxy()
+
+    // MARK - Actions
+
+    @IBAction func githubIdChanged(_ sender: UITextField) {
+        username = sender.text ?? ""
+        print("Set username to ", username)
+    }
+
+    @IBAction func poke(_ sender: Any) {
+    }
+    // MARK - lifecycle methods
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        // Do any additional setup after loading the view.
+
+        apiNetworkActivitySubscriber = GithubAPI.networkActivityPublisher 1️⃣
+            .receive(on: RunLoop.main)
+            .sink { doingSomethingNow in
+                if (doingSomethingNow) {
+                    self.activityIndicator.startAnimating()
+                } else {
+                    self.activityIndicator.stopAnimating()
+                }
+            }
+
+        usernameSubscriber = $username 2️⃣
+            .throttle(for: 0.5, scheduler: myBackgroundQueue, latest: true)
+            // ^^ scheduler myBackGroundQueue publishes resulting elements
+            // into that queue, resulting on this processing moving off the
+            // main runloop.
+            .removeDuplicates()
+            .print("username pipeline: ") // debugging output for pipeline
+            .map { username -> AnyPublisher<[GithubAPIUser], Never> in
+                return GithubAPI.retrieveGithubUser(username: username)
+            }
+            // ^^ type returned in the pipeline is a Publisher, so we use
+            // switchToLatest to flatten the values out of that
+            // pipeline to return down the chain, rather than returning a
+            // publisher down the pipeline.
+            .switchToLatest()
+            // using a sink to get the results from the API search lets us
+            // get not only the user, but also any errors attempting to get it.
+            .receive(on: RunLoop.main)
+            .assign(to: \.githubUserData, on: self)
+
+        // using .assign() on the other hand (which returns an
+        // AnyCancellable) *DOES* require a Failure type of <Never>
+        repositoryCountSubscriber = $githubUserData 3️⃣
+            .print("github user data: ")
+            .map { userData -> String in
+                if let firstUser = userData.first {
+                    return String(firstUser.public_repos)
+                }
+                return "unknown"
+            }
+            .receive(on: RunLoop.main)
+            .assign(to: \.text, on: repositoryCountLabel)
+
+        let avatarViewSub = $githubUserData 4️⃣
+            // When I first wrote this publisher pipeline, the type I was
+            // aiming for was <GithubAPIUser?, Never>, where the value was an
+            // optional. The commented out .filter below was to prevent a `nil` // GithubAPIUser object from propagating further and attempting to
+            // invoke the dataTaskPublisher which retrieves the avatar image.
+            //
+            // When I updated the type to be non-optional (<GithubAPIUser?,
+            // Never>) the filter expression was no longer needed, but possibly
+            // interesting.
+            // .filter({ possibleUser -> Bool in
+            //     possibleUser != nil
+            // })
+            // .print("avatar image for user") // debugging output
+            .map { userData -> AnyPublisher<UIImage, Never> in
+                guard let firstUser = userData.first else {
+                    // my placeholder data being returned below is an empty
+                    // UIImage() instance, which simply clears the display.
+                    // Your use case may be better served with an explicit
+                    // placeholder image in the event of this error condition.
+                    return Just(UIImage()).eraseToAnyPublisher()
+                }
+                return URLSession.shared.dataTaskPublisher(for: URL(string: firstUser.avatar_url)!)
+                    // ^^ this hands back (Data, response) objects
+                    .handleEvents(receiveSubscription: { _ in
+                        DispatchQueue.main.async {
+                            self.activityIndicator.startAnimating()
+                        }
+                    }, receiveCompletion: { _ in
+                        DispatchQueue.main.async {
+                            self.activityIndicator.stopAnimating()
+                        }
+                    }, receiveCancel: {
+                        DispatchQueue.main.async {
+                            self.activityIndicator.stopAnimating()
+                        }
+                    })
+                    .map { $0.data }
+                    // ^^ pare down to just the Data object
+                    .map { UIImage(data: $0)!}
+                    // ^^ convert Data into a UIImage with its initializer
+                    .subscribe(on: self.myBackgroundQueue)
+                    // ^^ do this work on a background Queue so we don't screw
+                    // with the UI responsiveness
+                    .catch { err in
+                        return Just(UIImage())
+                    }
+                    // ^^ deal the failure scenario and return my "replacement"
+                    // image for when an avatar image either isn't available or
+                    // fails somewhere in the pipeline here.
+                    .eraseToAnyPublisher()
+                    // ^^ match the return type here to the return type defined
+                    // in the .map() wrapping this because otherwise the return
+                    // type would be terribly complex nested set of generics.
+            }
+            .switchToLatest()
+            // ^^ Take the returned publisher that's been passed down the chain
+            // and "subscribe it out" to the value within in, and then pass
+            // that further down.
+            .subscribe(on: myBackgroundQueue)
+            // ^^ do the above processing as well on a background Queue rather
+            // than potentially impacting the UI responsiveness
+            .receive(on: RunLoop.main)
+            // ^^ and then switch to receive and process the data on the main
+            // queue since we're messing with the UI
+            .map { image -> UIImage? in
+                image
+            }
+            // ^^ this converts from the type UIImage to the type UIImage?
+            // which is key to making it work correctly with the .assign()
+            // operator, which must map the type *exactly*
+            .assign(to: \.image, on: self.githubAvatarImageView)
+
+        // convert the .sink to an `AnyCancellable` object that we have
+        // referenced from the implied initializers
+        avatarViewSubscriber = AnyCancellable(avatarViewSub)
+
+        // KVO publisher of UIKit interface element
+        let _ = repositoryCountLabel.publisher(for: \.text) 5️⃣
+            .sink { someValue in
+                print("repositoryCountLabel Updated to \(String(describing: someValue))")
+            }
+    }
+}
+```
+
+- 1️⃣ We add a subscriber to our previous controller from that connects notifications of activity from the GithubAPI object to our activity indicator.
+- 2️⃣ Where the `username` is updated from the `IBAction` (from our earlier example [Declarative UI updates from user input](#declarative-ui-updates-from-user-input)) we have the subscriber make the network request and put the results in a new variable (also `@Published`) on our `ViewController`.
+- 3️⃣ The first subscriber is on the publisher `$githubUserData`. This pipeline extracts the count of repositories and updates the UI label instance. There is a bit of logic in the middle of the pipeline to return the string "unknown" when the list is empty.
+- 4️⃣ The second subscriber is connected to the publisher `$githubUserData`. This triggers a network request to request the image data for the github avatar. This is a more complex pipeline, extracting the data from `githubUser`, assembling a URL, and then requesting it. We also use `handleEvents` operator to trigger updates to the `activityIndicator` in our view. We use `receive` to make the requests on a background queue and later to push the results back onto the *main thread* in order to update UI elements. The `catch` and failure handling returns an empty `UIImage` instance in the event of failure.
+- 5️⃣ A final subscriber is attached to the `UILabel` itself. Any *Key-Value Observable object* from `Foundation` can produce a publisher. In this example, we attach a publisher that triggers a print statement that the UI element was updated.
+
+> Info: While we could simply attach pipelines to UI elements as we’re updating them, it more closely couples interactions to the actual UI elements themselves. While easy and direct, it is often a good idea to make explicit state and updates to separate out actions and data for debugging and understandability. In the example above, we use two `@Published` properties to hold the state associated with the current view. One of which is updated by an `IBAction`, and the second updated declaratively using a Combine publisher pipeline. All other UI elements are updated publishers hanging from those properties getting updated.
+
+### Merging multiple pipelines to update UI elements
+
 
 
