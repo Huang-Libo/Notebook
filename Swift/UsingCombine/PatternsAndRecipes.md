@@ -22,7 +22,6 @@
     - [Responding to updates from NotificationCenter](#responding-to-updates-from-notificationcenter)
   - [SwiftUI Integration](#swiftui-integration)
     - [Using ObservableObject with SwiftUI models as a publisher source](#using-observableobject-with-swiftui-models-as-a-publisher-source)
-  - [Testing and Debugging](#testing-and-debugging)
 
 ## Creating a subscriber with sink
 
@@ -1529,7 +1528,3 @@ struct ReactiveForm_Previews: PreviewProvider {
 - 3️⃣ The *projected value* from the *property wrapper* (`$model.firstEntry` and `$model.secondEntry`) are used to pass a `Binding` to the `TextField` view element. The `Binding` will trigger updates back on the reference model when the user changes a value, and will let SwiftUI’s components know that changes are about to happen if the exposed model is changing.
 - 4️⃣ The validation messages, which are generated and assigned within the `model` is invisible to SwiftUI here as a combine publisher pipeline. Instead this only reacts to the model changes being exposed by those values changing, irregardless of what mechanism changed them.
 - 5️⃣ As an example of how to use a published with `onReceive`, an `onReceive` *subscriber* is used to listen to a *publisher* which is exposed from the model reference. In this case, we take the value and store is locally as `@State` within the SwiftUI view, but it could also be used after some transformation if that logic were more relevant to just the view display of the resulting values. In this case, we use it with `disabled` on `Button` to enabled SwiftUI to enable or disable that UI element based on the value stored in the `@State`.
-
-## Testing and Debugging
-
-
