@@ -20,6 +20,8 @@
     - [Merging multiple pipelines to update UI elements](#merging-multiple-pipelines-to-update-ui-elements)
     - [Creating a repeating publisher by wrapping a delegate based API](#creating-a-repeating-publisher-by-wrapping-a-delegate-based-api)
     - [Responding to updates from NotificationCenter](#responding-to-updates-from-notificationcenter)
+  - [SwiftUI Integration](#swiftui-integration)
+    - [Using ObservableObject with SwiftUI models as a publisher source](#using-observableobject-with-swiftui-models-as-a-publisher-source)
 
 ## Creating a subscriber with sink
 
@@ -1319,5 +1321,63 @@ class HeadingViewController: UIViewController {
 - 5️⃣ The heading data is received in this `sink` subscriber, where in this example we write it to a text label.
 
 ### Responding to updates from NotificationCenter
+
+**Goal**:
+
+- Receiving notifications from `NotificationCenter` as a publisher to declaratively react to the information provided.
+
+> A large number of frameworks and user interface components provide information about their state and interactions via Notifications from `NotificationCenter`. Apple’s documentation includes an article on [receiving and handling events with Combine](https://developer.apple.com/documentation/combine/receiving_and_handling_events_with_combine) specifically referencing `NotificationCenter`.
+
+`Notification`s flowing through `NotificationCenter` provide a common, central location for events within your application.
+
+You can also add your own notifications to your application, and upon sending them may include an additional dictionary in their `userInfo` property. An example of defining your own notification `.myExampleNotification`:
+
+```swift
+extension Notification.Name {
+    static let myExampleNotification = Notification.Name("an-example-notification")
+}
+```
+
+Notification names are structured, and based on Strings. Object references can be passed when a notification is posted to the `NotificationCenter`, indicating which object sent the notification. Additionally, Notifications may include a `userInfo`, which has a type of `[AnyHashable : Any]?`. This allows for arbitrary dictionaries, either reference or value typed, to be included with a notification.
+
+```swift
+let myUserInfo = ["foo": "bar"]
+let note = Notification(name: .myExampleNotification, userInfo: myUserInfo)
+NotificationCenter.default.post(note)
+```
+
+When creating the `NotificationCenter` publisher, you provide the name of the notification for which you want to receive, and optionally an object reference to filter to specific types of objects. A number of AppKit components that are subclasses of NSControl share a set of notifications, and filtering can be critical to getting the right notification.
+
+An example of subscribing to AppKit generated notifications:
+
+```swift
+let sub = NotificationCenter.default.publisher(for: NSControl.textDidChangeNotification, 1️⃣ object: filterField) 2️⃣
+    .map { ($0.object as! NSTextField).stringValue } 3️⃣
+    .assign(to: \MyViewModel.filterString, on: myViewModel) 4️⃣
+```
+
+- 1️⃣ TextFields within AppKit generate a `textDidChangeNotification` when the values are updated.
+- 2️⃣ An AppKit application can frequently have a large number of text fields that may be changed. Including a reference to the sending control can be used to filter to text changed notifications to which you are specifically interested in responding.
+- 3️⃣ the `map` operator can be used to get into the object references included with the notification, in this case the `.stringValue` property of the text field that sent the notification, providing its updated value
+- 4️⃣ The resulting string can be assigned using a writable `KeyValue` path.
+
+An example of subscribing to your own notifications:
+
+```swift
+let cancellable = NotificationCenter.default.publisher(for: .myExampleNotification, object: nil)
+    // can't use the object parameter to filter on a value reference, only class references, but
+    // filtering on 'nil' only constrains to notification name, so value objects *can* be passed
+    // in the notification itself.
+    .sink { receivedNotification in
+        print("passed through: ", receivedNotification)
+        // receivedNotification.name
+        // receivedNotification.object - object sending the notification (sometimes nil)
+        // receivedNotification.userInfo - often nil
+    }
+```
+
+## SwiftUI Integration
+
+### Using ObservableObject with SwiftUI models as a publisher source
 
 
