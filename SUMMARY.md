@@ -48,6 +48,7 @@
   - [Core Concepts](Swift/UsingCombine/CoreConcepts.md)
   - [Developing with Combine](Swift/UsingCombine/DevelopingWithCombine.md)
   - [Patterns and Recipes](Swift/UsingCombine/PatternsAndRecipes.md)
+  - [UIKit and SwiftUI Integration](Swift/UsingCombine/UIKitAndSwiftUI.md)
   - [Testing and Debugging](Swift/UsingCombine/TestingAndDebugging.md)
 - [Combine](Swift/Combine.md)
 - [Swift Inbox](Swift/INBOX.md)
