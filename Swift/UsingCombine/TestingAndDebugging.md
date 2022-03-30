@@ -8,6 +8,7 @@
   - [Using EntwineTest to create a testable publisher and subscriber](#using-entwinetest-to-create-a-testable-publisher-and-subscriber)
   - [Debugging pipelines with the print operator](#debugging-pipelines-with-the-print-operator)
   - [Debugging pipelines with the handleEvents operator](#debugging-pipelines-with-the-handleevents-operator)
+  - [Debugging pipelines with the debugger](#debugging-pipelines-with-the-debugger)
 
 ## Introduction
 
@@ -464,5 +465,84 @@ Test Suite 'Selected tests' passed at 2022-03-30 23:16:33.832.
 While very effective, the `print` operator can be a blunt tool, generating a lot of output that you have to parse and review. If you want to be more selective with what you identify and print, or if you need to process the data passing through for it to be used more meaningfully, then you look at the `handleEvents` operator.
 
 ## Debugging pipelines with the handleEvents operator
+
+**Goal**:
+
+- To get more targeted understanding of what is happening within a pipeline, employing breakpoints, *print* or *logging* statements, or additional logic.
+
+> `handleEvents` passes data through, making no modifications to the output and failure types, or the data. When you put in the operator, you can specify a number of optional closures, allowing you to focus on the aspect of what you want to see. The `handleEvents` operator with specific closures can be a great way to get a window to see what is happening when a pipeline is cancelling, erroring, or otherwise terminating expectedly.
+
+The closures you can provide include:
+
+- `receiveSubscription`
+- `receiveRequest`
+- `receiveCancel`
+- `receiveOutput`
+- `receiveCompletion`
+
+The power of `handleEvents` for debugging is in selecting what you want to view, reducing the amount of output, or manipulating the data to get a better understanding of it.
+
+In the example viewcontroller at [UIKit-Combine/GithubViewController.swift](https://github.com/heckj/swiftui-notes/blob/master/UIKit-Combine/GithubViewController.swift), the subscription, cancellation, and completion handlers are used to provide a side effect of starting, or stopping, an activity indicator.
+
+If you only wanted to see the data being passed on the pipeline, and didn’t care about the control messages, then providing a single closure for `receiveOutput` and ignoring the other closures can let you focus on just that detail.
+
+The unit test example showing `handleEvents` has all options active with comments:
+
+[UsingCombineTests/HandleEventsPublisherTests.swift](https://github.com/heckj/swiftui-notes/blob/master/UsingCombineTests/HandleEventsPublisherTests.swift)
+
+```swift
+func testHandleEvents() {
+
+    let publisher = PassthroughSubject<String?, Never>()
+
+    // this sets up the chain of whatever it's going to do
+    let cancellable = publisher
+        .handleEvents(receiveSubscription: { aValue in
+            print("receiveSubscription event called with \(String(describing: aValue))") 2️⃣
+            // this happened second:
+            // receiveSubscription event called with PassthroughSubject
+            XCTAssertNotNil(aValue) // type returned is a Subscription
+        }, receiveOutput: { aValue in 3️⃣
+            // third:
+            // handle events gives us an interesting window into all the flow mechanisms that
+            // can happen during the Publish/Subscribe conversation, including capturing when
+            // we receive completions, values, etc
+            print("receiveOutput was invoked with \(String(describing: aValue))")
+            XCTAssertEqual(aValue, "DATA IN")
+        }, receiveCompletion: { aValue in 4️⃣
+            // completion .finished were sent in this test
+            print("receiveCompletion event called with \(String(describing: aValue))")
+        }, receiveCancel: { 5️⃣
+            // no cancellations sent in this test
+            print("receiveCancel event invoked")
+            XCTFail("cancel should not be received in this test")
+        }, receiveRequest: { aValue in 1️⃣
+            print("receiveRequest event called with \(String(describing: aValue))")
+            // this happened first:
+            // receiveRequest event called with unlimited
+            XCTAssertEqual(aValue, Subscribers.Demand.unlimited)
+        })
+        .sink(receiveValue: { aValue in
+            // sink captures and terminates the pipeline of operators
+            print("sink captured the result of \(String(describing: aValue))")
+        })
+
+    publisher.send("DATA IN")
+    publisher.send(completion: .finished)
+    XCTAssertNotNil(cancellable)
+}
+```
+
+- 1️⃣ The first closure called is `receiveRequest`, which will have the *demand value* passed into it.
+- 2️⃣ The second closure `receiveSubscription` is commonly the returning subscription from the publisher, which passes in a reference to the publisher. At this point, the pipeline is operational, and the publisher will provide data based on the amount of data requested in the original request.
+- 3️⃣ This data is passed into `receiveOutput` as the publisher makes it available, invoking the closure for each value passed. This will repeat for as many values as the publisher sends.
+- 4️⃣ If the pipeline is closed - either normally or terminated due to a failure - the `receiveCompletion` closure will get the completion. Just the like the `sink` closure, you can switch on the `completion` provided, and if it is a `.failure` completion, then you can inspect the enclosed error.
+- 5️⃣ If the pipeline is cancelled, then the `receiveCancel` closure will be called. No data is passed into the cancellation closure.
+
+> While you can also use `breakpoint` and `breakpointOnError` operators to break into a debugger (as shown in [Debugging pipelines with the debugger](#debugging-pipelines-with-the-debugger)), the `handleEvents()` operator with closures allows you to set breakpoints within Xcode. This allows you to immediately jump into the debugger to inspect the data flowing through the pipeline, or to get references to the subscriber, or the error in the case of a failed completion.
+
+## Debugging pipelines with the debugger
+
+
 
 
