@@ -7,6 +7,7 @@
   - [Testing a subscriber with scheduled sends from PassthroughSubject](#testing-a-subscriber-with-scheduled-sends-from-passthroughsubject)
   - [Using EntwineTest to create a testable publisher and subscriber](#using-entwinetest-to-create-a-testable-publisher-and-subscriber)
   - [Debugging pipelines with the print operator](#debugging-pipelines-with-the-print-operator)
+  - [Debugging pipelines with the handleEvents operator](#debugging-pipelines-with-the-handleevents-operator)
 
 ## Introduction
 
@@ -315,5 +316,153 @@ If this test sequence had been done with `asyncAfter`, then the test would have 
 > **Info**: A side effect of `EntwineTest` is that tests using the *virtual time scheduler* can run much faster than a real time clock. The same tests being created using real time scheduling mechanisms to delay data sending values can take significantly longer to complete.
 
 ## Debugging pipelines with the print operator
+
+**Goal**:
+
+- To gain understanding of what is happening in a pipeline, seeing all control and data interactions.
+
+> I have found the greatest detail of information comes from selectively using the `print` operator. The downside is that it prints quite a lot of information, so the output can quickly become overwhelming. For understanding a simple pipeline, using the `.print()` as an operator without any parameters is very straightforward. As soon as you want to add more than one print operator, you will likely want to use the string parameter, which is puts in as a prefix to the output.
+
+The example [Cascading UI updates including a network request](https://heckj.github.io/swiftui-notes/#patterns-cascading-update-interface) uses it in several places, with long descriptive prefixes to make it clear which pipeline is providing the information.
+
+The two pipelines cascade together by connecting through a private published variable - the github user data. The two relevant pipelines from that example code:
+
+[UIKit-Combine/GithubViewController.swift](https://github.com/heckj/swiftui-notes/blob/master/UIKit-Combine/GithubViewController.swift)
+
+```swift
+usernameSubscriber = $username
+    .throttle(for: 0.5, scheduler: myBackgroundQueue, latest: true)
+    // ^^ scheduler myBackGroundQueue publishes resulting elements
+    // into that queue, resulting on this processing moving off the
+    // main runloop.
+    .removeDuplicates()
+    .print("username pipeline: ") // debugging output for pipeline
+    .map { username -> AnyPublisher<[GithubAPIUser], Never> in
+        return GithubAPI.retrieveGithubUser(username: username)
+    }
+    // ^^ type returned in the pipeline is a Publisher, so we use
+    // switchToLatest to flatten the values out of that
+    // pipeline to return down the chain, rather than returning a
+    // publisher down the pipeline.
+    .switchToLatest()
+    // using a sink to get the results from the API search lets us
+    // get not only the user, but also any errors attempting to get it.
+    .receive(on: RunLoop.main)
+    .assign(to: \.githubUserData, on: self)
+
+// using .assign() on the other hand (which returns an
+// AnyCancellable) *DOES* require a Failure type of <Never>
+repositoryCountSubscriber = $githubUserData
+    .print("github user data: ")
+    .map { userData -> String in
+        if let firstUser = userData.first {
+            return String(firstUser.public_repos)
+        }
+        return "unknown"
+    }
+    .receive(on: RunLoop.main)
+    .assign(to: \.text, on: repositoryCountLabel)
+```
+
+When you run the UIKit-Combine example code, the terminal shows the following output as I slowly enter the username `heckj`. In the course of doing these lookups, two other github accounts are found and retrieved (hec and heck) before the final one.
+
+```plaintext
+username pipeline: : receive subscription: (RemoveDuplicates)
+username pipeline: : request unlimited
+github user data: : receive subscription: (CurrentValueSubject)
+github user data: : request unlimited
+github user data: : receive value: ([])
+username pipeline: : receive value: ()
+github user data: : receive value: ([])
+
+Set username to  h
+username pipeline: : receive value: (h)
+github user data: : receive value: ([])
+
+Set username to  he
+username pipeline: : receive value: (he)
+github user data: : receive value: ([])
+
+Set username to  hec
+username pipeline: : receive value: (hec)
+
+Set username to  heck
+github user data: : receive value: ([UIKit_Combine.GithubAPIUser(login: "hec", public_repos: 3, avatar_url: "https://avatars3.githubusercontent.com/u/53656?v=4")])
+
+username pipeline: : receive value: (heck)
+github user data: : receive value: ([UIKit_Combine.GithubAPIUser(login: "heck", public_repos: 6, avatar_url: "https://avatars3.githubusercontent.com/u/138508?v=4")])
+
+Set username to  heckj
+username pipeline: : receive value: (heckj)
+github user data: : receive value: ([UIKit_Combine.GithubAPIUser(login: "heckj", public_repos: 69, avatar_url: "https://avatars0.githubusercontent.com/u/43388?v=4")])
+```
+
+Some of the extraneous `print` statements placed in `sink` closures to see final results have been removed.
+
+You see the initial subscription setup at the very beginning, and then notifications, including the debug representation of the value passed through the `print` operator. Although it is not shown in the example content above, you will also see cancellations when an error occurs, or completions when they emit from a publisher reporting no further data is available.
+
+It can also be beneficial to use a `print` operator on either side of an operator to understand how it is operating.
+
+An example of doing this, leveraging the prefix to show the `retry` operator and how it works:
+
+[UsingCombineTests/RetryPublisherTests.swift](https://github.com/heckj/swiftui-notes/blob/master/UsingCombineTests/RetryPublisherTests.swift)
+
+```swift
+func testRetryWithOneShotFailPublisher() {
+    // setup
+    let cancellable = Fail(outputType: String.self, failure: TestFailureCondition.invalidServerResponse)
+        .print("(1)>") 1️⃣
+        .retry(3)
+        .print("(2)>") 2️⃣
+        .sink(receiveCompletion: { fini in
+            print(" ** .sink() received the completion:", String(describing: fini))
+        }, receiveValue: { stringValue in
+            XCTAssertNotNil(stringValue)
+            print(" ** .sink() received \(stringValue)")
+        })
+    XCTAssertNotNil(cancellable)
+}
+```
+
+- 1️⃣ The `(1)` prefix is to show the interactions above the `retry` operator
+- 2️⃣ The `(2)` prefix shows the interactions after the `retry` operator
+
+**output from unit test**:
+
+```plaintext
+Test Suite 'UsingCombineTests.xctest' started at 2022-03-30 23:16:33.824
+Test Suite 'RetryPublisherTests' started at 2022-03-30 23:16:33.824
+Test Case '-[UsingCombineTests.RetryPublisherTests testRetryWithOneShotFailPublisher]' started.
+(1)>: receive subscription: (Empty) 1️⃣
+(2)>: receive subscription: (Retry)
+(2)>: request unlimited
+(1)>: request unlimited
+(1)>: receive error: (invalidServerResponse)
+(1)>: receive subscription: (Empty)
+(1)>: request unlimited
+(1)>: receive error: (invalidServerResponse)
+(1)>: receive subscription: (Empty)
+(1)>: request unlimited
+(1)>: receive error: (invalidServerResponse)
+(1)>: receive subscription: (Empty)
+(1)>: request unlimited
+(1)>: receive error: (invalidServerResponse)
+(2)>: receive error: (invalidServerResponse) 2️⃣
+ ** .sink() received the completion: failure(UsingCombineTests.RetryPublisherTests.TestFailureCondition.invalidServerResponse)
+Test Case '-[UsingCombineTests.RetryPublisherTests testRetryWithOneShotFailPublisher]' passed (0.004 seconds).
+Test Suite 'RetryPublisherTests' passed at 2022-03-30 23:16:33.828.
+	 Executed 1 test, with 0 failures (0 unexpected) in 0.004 (0.004) seconds
+Test Suite 'UsingCombineTests.xctest' passed at 2022-03-30 23:16:33.832.
+	 Executed 1 test, with 0 failures (0 unexpected) in 0.004 (0.008) seconds
+Test Suite 'Selected tests' passed at 2022-03-30 23:16:33.832.
+	 Executed 1 test, with 0 failures (0 unexpected) in 0.004 (0.009) seconds
+```
+
+- 1️⃣ In the test sample, the publisher always reports a failure, resulting in seeing the prefix (1) receiving the error, and then the resubscription from the retry operator.
+- 2️⃣ And after 4 of those attempts (3 "retries"), then you see the error falling through the pipeline. After the error hits the sink, you see the cancel signal propagated back up, which stops at the retry operator.
+
+While very effective, the `print` operator can be a blunt tool, generating a lot of output that you have to parse and review. If you want to be more selective with what you identify and print, or if you need to process the data passing through for it to be used more meaningfully, then you look at the `handleEvents` operator.
+
+## Debugging pipelines with the handleEvents operator
 
 
