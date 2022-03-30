@@ -51,6 +51,7 @@
   - [Error Handling](Swift/UsingCombine/ErrorHandling.md)
   - [UIKit and SwiftUI Integration](Swift/UsingCombine/UIKitAndSwiftUI.md)
   - [Testing and Debugging](Swift/UsingCombine/TestingAndDebugging.md)
+  - [Publishers](Swift/UsingCombine/Publishers.md)
 - [Combine](Swift/Combine.md)
 - [Swift Inbox](Swift/INBOX.md)
 - [Swift Docs](Swift/Swift-Docs.md)
