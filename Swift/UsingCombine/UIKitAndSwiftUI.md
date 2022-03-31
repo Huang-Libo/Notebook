@@ -20,13 +20,13 @@ The sample is a portion of the code at in a larger view controller implementatio
 
 This example overlaps with the next pattern [Cascading UI updates including a network request](#cascading-multiple-ui-updates-including-a-network-request), which builds upon the initial publisher.
 
-[UIKit-Combine/GithubAPI.swift](https://github.com/heckj/swiftui-notes/blob/master/UIKit-Combine/GithubAPI.swift)
+[UIKit-Combine/GithubViewController.swift](https://github.com/heckj/swiftui-notes/blob/master/UIKit-Combine/GithubViewController.swift)
 
 ```swift
 import UIKit
 import Combine
 
-class ViewController: UIViewController {
+class GithubViewController: UIViewController {
 
     @IBOutlet weak var github_id_entry: UITextField! 1️⃣
 
