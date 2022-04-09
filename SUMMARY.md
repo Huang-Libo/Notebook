@@ -2,7 +2,11 @@
 
 - [README](README.md)
 
-##  iOS
+##  Apple Documents
+
+- [Encoding and Decoding Custom Types](AppleDocuments/encoding_and_decoding_custom_types.md)
+
+## 📱 iOS
 
 - [Block](iOS/Block.md)
 - [fishhook & PIC](iOS/fishhook.md)
@@ -39,7 +43,6 @@
   - [Memory Safety](Swift/LanguageGuide/MemorySafety.md)
   - [Access Control](Swift/LanguageGuide/AccessControl.md)
   - [Advanced Operators](Swift/LanguageGuide/AdvancedOperators.md)
-- [SwiftUI](Swift/SwiftUI.md)
 - [Using Combine](Swift/UsingCombine/README.md)
   - [Introduction](Swift/UsingCombine/Introduction.md)
   - [Core Concepts](Swift/UsingCombine/CoreConcepts.md)
@@ -50,6 +53,7 @@
   - [Testing and Debugging](Swift/UsingCombine/TestingAndDebugging.md)
   - [Publishers](Swift/UsingCombine/Publishers.md)
 - [Combine](Swift/Combine.md)
+- [SwiftUI](Swift/SwiftUI.md)
 - [Swift Inbox](Swift/INBOX.md)
 - [Swift Docs](Swift/Swift-Docs.md)
 
@@ -78,7 +82,7 @@
 
 - [安装](React/installation.md)
 
-## 📱 React Native
+## 🌐 React Native
 
 - [React Native: Docs](ReactNative/Docs/README.md)
   - [配置开发环境](ReactNative/Docs/environment-setup.md)
