@@ -397,9 +397,9 @@ The call to the `someFunctionWithEscapingClosure` function in the example above 
 
 ## Autoclosures
 
-An *autoclosure* is a closure that’s automatically created to wrap an expression that’s being passed as an argument to a function. It doesn’t take any arguments, and **when it’s called, it returns the value of the expression that’s wrapped inside of it**. This syntactic convenience lets you omit braces around a function’s parameter by writing a normal expression instead of an explicit closure.
+An *autoclosure* is a closure that’s automatically created to wrap an expression that’s being passed as an argument to a function. **It doesn’t take any arguments**, and **when it’s called, it returns the value of the expression that’s wrapped inside of it**. This syntactic convenience lets you omit braces around a function’s parameter by writing a normal expression instead of an explicit closure.
 
-It’s common to *call* functions that take autoclosures, but it’s not common to implement that kind of function. For example, the `assert(condition:message:file:line:)` function takes an autoclosure for its `condition` and `message` parameters; its condition parameter is evaluated only in debug builds and its `message` parameter is evaluated only if `condition` is `false`.
+It’s common to *call* functions that take autoclosures, but it’s not common to implement that kind of function. For example, the `assert(condition:message:file:line:)` function takes an autoclosure for its `condition` and `message` parameters; its `condition` parameter is evaluated only in debug builds and its `message` parameter is evaluated only if `condition` is `false`.
 
 An autoclosure lets you *delay* evaluation, because the code inside isn’t run until you call the closure. Delaying evaluation is useful for code that has side effects or is computationally expensive, because it lets you control when that code is evaluated. The code below shows how a closure delays evaluation.
 
@@ -433,7 +433,7 @@ serve(customer: { customersInLine.remove(at: 0) } )
 
 The `serve(customer:)` function in the listing *above* takes an explicit closure that returns a customer’s name.
 
-The version of `serve(customer:)` *below* performs the same operation but, instead of taking an explicit closure, it takes an autoclosure by marking its parameter’s type with the `@autoclosure` attribute.
+The version of `serve(customer:)` *below* performs the same operation but, instead of taking an explicit closure, it takes an *autoclosure* by marking its parameter’s type with the `@autoclosure` attribute.
 
 Now you can call the function as if it took a `String` argument instead of a closure. The argument is automatically converted to a closure, because the `customerProvider` parameter’s type is marked with the `@autoclosure` attribute.
 
@@ -446,7 +446,7 @@ serve(customer: customersInLine.remove(at: 0))
 // Prints "Now serving Ewa!"
 ```
 
-> **NOTE**: Overusing autoclosures can make your code hard to understand. The context and function name should make it clear that evaluation is being deferred.
+> **NOTE**: **Overusing autoclosures can make your code hard to understand.** The context and function name should make it clear that evaluation is being deferred.
 
 If you want an autoclosure that’s allowed to escape, use both the `@autoclosure` and `@escaping` attributes.
 
