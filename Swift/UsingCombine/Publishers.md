@@ -6,9 +6,12 @@ For general information about publishers see [Publishers](https://heckj.github.i
   - [`enum Publishers`](#enum-publishers)
   - [Just](#just)
   - [Future](#future)
+  - [Deferred](#deferred)
   - [Empty](#empty)
   - [Fail](#fail)
+  - [Record](#record)
   - [Publishers.Sequence](#publisherssequence)
+  - [Publishers.MakeConnectable](#publishersmakeconnectable)
 
 ## `enum Publishers`
 
@@ -114,6 +117,22 @@ let deferredPublisher = Deferred { 1️⃣
 - 1️⃣ The closure provided in to `Deferred` will be invoked as demand requests come to the publisher.
 - 2️⃣ This in turn resolves the underlying api call to generate the result as a `Promise`, with internal closures to resolve the promise.
 
+## Deferred
+
+A publisher that awaits subscription before running the supplied closure to create a publisher for the new subscriber.
+
+**Declaration**:
+
+```swift
+struct Deferred<DeferredPublisher> where DeferredPublisher : Publisher
+```
+
+**Overview**:
+
+`Deferred` is useful when creating an API to return a publisher, where creating the publisher is an expensive effort, either computationally or in the time it takes to set up. Deferred holds off on setting up any publisher data structures until a subscription is requested. This provides a means of deferring the setup of the publisher until it is actually needed.
+
+The `Deferred` publisher is particularly useful with `Future`, which does not wait on demand to start the resolution of underlying (wrapped) asynchronous APIs.
+
 ## Empty
 
 A publisher that never publishes any values, and optionally finishes immediately.
@@ -172,6 +191,81 @@ Initializing `Fail` by providing types as parameters:
 let cancellable = Fail(outputType: String.self, failure: TestFailureCondition.exampleFailure)
 ```
 
+## Record
+
+A publisher that allows for recording a series of inputs and a completion, for later playback to each subscriber.
+
+**Declaration**:
+
+```swift
+struct Record<Output, Failure> where Failure : Error
+```
+
+**Overview**:
+
+> `Record` allows you to create a publisher with pre-recorded values for repeated playback. `Record` acts very similarly to `Publishers.Sequence` if you want to publish a sequence of values and then send a `.finished` completion. It goes beyond that allowing you to specify a `.failure` completion to be sent from the recording. `Record` does not allow you to control the timing of the values being returned, only the order and the eventual completion following them.
+
+`Record` can also be serialized (encoded and decoded) as long as the output and failure values can be serialized as well.
+
+An example of a simple recording that sends several string values and then a `.finished` completion:
+
+```swift
+// creates a recording
+let recordedPublisher = Record<String, Never> { example in
+    // example : type is Record<String, Never>.Recording
+    example.receive("one")
+    example.receive("two")
+    example.receive("three")
+    example.receive(completion: .finished)
+}
+```
+
+The resulting instance can be used as a publisher immediately:
+
+```swift
+let cancellable = recordedPublisher.sink(receiveCompletion: { err in
+    print(".sink() received the completion: ", String(describing: err))
+    expectation.fulfill()
+}, receiveValue: { value in
+    print(".sink() received value: ", value)
+})
+```
+
+`Record` also has a property `recording` that can be inspected, with its own properties of output and completion. `Record` and `recording` do not conform to `Equatable`, so can’t be easily compared within tests. It is fairly easy to compare the properties of `output` or `completion`, which are `Equatable` if the underlying contents (output type and failure type) are equatable.
+
+> **Note**: No convenience methods exist for creating a recording as a subscriber. You can use the receive methods to create one, wrapping a `sink` subscriber.
+
 ## Publishers.Sequence
+
+A publisher that publishes a given sequence of elements.
+
+**Declaration**:
+
+```swift
+struct Sequence<Elements, Failure> where Elements : Sequence, Failure : Error
+```
+
+**Overview**:
+
+> `Sequence` provides a way to return values as subscribers demand them initialized from a collection. Formally, it provides elements from any type conforming to the `Sequence` protocol.
+
+If a subscriber requests unlimited demand, all elements will be sent, and then a `.finished` completion will terminate the output. If the subscribe requests a single element at a time, then individual elements will be returned based on demand.
+
+If the type within the sequence is denoted as `optional`, and a `nil` value is included within the sequence, that will be sent as an instance of the optional type.
+
+Combine provides an extension onto the `Sequence` protocol so that anything that corresponds to it can act as a sequence publisher. It does so by making a `.publisher` property available, which implicitly creates a `Publishers.Sequence` publisher.
+
+```swift
+let initialSequence = ["one", "two", "red", "blue"]
+_ = initialSequence.publisher
+    .sink {
+        print($0)
+    }
+}
+```
+
+## Publishers.MakeConnectable
+
+
 
 
