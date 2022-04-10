@@ -13,6 +13,9 @@ For general information about publishers see [Publishers](https://heckj.github.i
   - [Publishers.Sequence](#publisherssequence)
   - [Publishers.MakeConnectable](#publishersmakeconnectable)
   - [SwiftUI](#swiftui)
+    - [Binding](#binding)
+    - [SwiftUI and Combine](#swiftui-and-combine)
+  - [ObservableObject](#observableobject)
 
 ## `enum Publishers`
 
@@ -329,5 +332,61 @@ publisher.sink { value in
 Both `Timer` and `multicast` are examples of connectable publishers.
 
 ## SwiftUI
+
+The SwiftUI framework is based upon displaying views from explicit state; as the state changes, the view updates.
+
+SwiftUI uses a variety of *property wrappers* within its `View`s to reference and display content from outside of those views. `@ObservedObject`, `@EnvironmentObject`, and `@Published` are the most common that relate to Combine. SwiftUI uses these *property wrappers* to create a publisher that will inform SwiftUI when those models have changed, creating a `objectWillChange` publisher. Having an object conform to `ObservableObject` will also get a default `objectWillChange` publisher.
+
+SwiftUI uses `ObservableObject`, which has a default concrete class implementation called `ObservableObjectPublisher` that exposes a publisher for reference objects (classes) marked with `@ObservedObject`.
+
+### Binding
+
+SwiftUI does this primarily by tracking the state and changes to the state using the SwiftUI struct `Binding`. A binding is **not** a Combine pipeline, or even usable as one. A `Binding` is based on closures that are used when you get or set data through the binding. When creating a `Binding`, you can specify the closures, or use the defaults, which handles the needs of SwiftUI elements to react when data is set or request data when a view requires it.
+
+There are a number of SwiftUI *property wrappers* that create bindings:
+
+`@State`: creates a binding to a local view property, and is intended to be used only in one view.
+
+when you create:
+
+```swift
+@State private var exampleString = ""
+```
+
+then: `exampleString` is the state itself and the *property wrapper* creates *$exampleString* (also known as *property wrapper*’s *projected value*) which is of type `Binding<String>`.
+
+- `@Binding`: is used to reference an externally provided binding that the view wants to use to present itself. You will see there upon occasion when a view is expected to be component, and it is watching for its relevant state data from an enclosing view.
+- `@EnvironmentObject`: make state visible and usable across a set of views. `@EnvironmentObject` is used to inject your own objects or state models into the environment, making them available to be used by any of the views within the current view hierarchy.
+
+> **Info**: The exception to `@EnvironmentObject` cascading across the view hierarchy in SwiftUI is notably when using sheets. **Sheets don’t inherit the environment from the view through which they are presented.**
+
+- `@Environment is` used to expose environmental information already available from within the frameworks, for example:
+
+```swift
+@Environment(\.horizontalSizeClass) var horizontalSizeClass
+```
+
+### SwiftUI and Combine
+
+All of this detail on Binding is important to how SwiftUI works, but irrelevant to Combine - *Bindings* are not combine pipelines or structures, and the classes and structs that SwiftUI uses are directly transformable from Combine publishers or subscribers.
+
+SwiftUI does, however, use combine in coordination with *Bindings*. Combine fits in to SwiftUI when the state has been externalized into a reference to a model object, most often using the *property wrappers* `@ObservedObject` to reference a class conforming to the `ObservableObject` protocol.
+
+The core of the `ObservableObject` protocol is a combine publisher `objectWillChange`, which is used by the SwiftUI framework to know when it needs to invalidate a view based on a model changing. The `objectWillChange` publisher only provides an indicator that **something** has changed on the model, not which property, or what changed about it.
+
+The author of the model class can "opt-in" properties into triggering that change using the `@Published` *property wrapper*. If a model has properties that aren’t wrapped with `@Published`, then the automatic `objectWillChange` notification won’t get triggered when those values are modified. Typically the model properties will be referenced directly within the View elements. When the view is invalidated by a value being published through the `objectWillChange` publisher, the SwiftUI View will request the data it needs, as it needs it, directly from the various model references.
+
+---
+
+The other way that Combine fits into SwiftUI is the method `onReceive`, which is a generic instance method on SwiftUI views.
+
+`onReceive` can be used when a view needs to be updated based on some external event that isn’t directly reflected in a model’s state being updated. 
+
+While there is no explicit guidance from Apple on how to use `onReceive` vs. *models*,
+
+- as a general guideline it will be a cleaner pattern to update the model using Combine, keeping the combine publishers and pipelines external to SwiftUI views. In this mode, you would generally let the `@ObservedObject` SwiftUI declaration automatically invalidate and update the view, which separates the model updating from the presentation of the view itself.
+- The alternative ends up having the view bound fairly tightly to the combine publishers providing asynchronous updates, rather than a coherent view of the end state. There are still some edge cases and needs where you want to trigger a view update directly from a publishers output, and that is where `onReceive` is most effectively used.
+
+## ObservableObject
 
 
