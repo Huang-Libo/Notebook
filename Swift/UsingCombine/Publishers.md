@@ -12,6 +12,7 @@ For general information about publishers see [Publishers](https://heckj.github.i
   - [Record](#record)
   - [Publishers.Sequence](#publisherssequence)
   - [Publishers.MakeConnectable](#publishersmakeconnectable)
+  - [SwiftUI](#swiftui)
 
 ## `enum Publishers`
 
@@ -266,6 +267,67 @@ _ = initialSequence.publisher
 
 ## Publishers.MakeConnectable
 
+A publisher that provides explicit connectability to another publisher.
 
+Creates a or converts a publisher to one that explicitly conforms to the `ConnectablePublisher` protocol. The failure type of the publisher must be `<Never>`.
+
+**Declaration**:
+
+```swift
+struct MakeConnectable<Upstream> where Upstream : Publisher
+```
+
+**Overview**:
+
+`Publishers.MakeConnectable` is a `ConnectablePublisher`, which allows you to perform configuration before publishing any elements. Call `connect()` on this publisher when you want to attach to its upstream publisher and start producing elements.
+Use the `makeConnectable()` *operator* to wrap an upstream publisher with an instance of this publisher.
+
+> A connectable publisher has an explicit mechanism for enabling when a subscription and the flow of demand from subscribers will be allowed to the publisher. By conforming to the `ConnectablePublisher` protocol, a publisher will have two additional methods exposed for this control: `connect()` and `autoconnect()`. Both of these methods return a `Cancellable`.
+
+When using `connect()`, the receipt of subscription will be under imperative control. Normally when a subscriber is linked to a publisher, the connection is made automatically, subscriptions get sent, and demand gets negotiated per the [Lifecycle of Publishers and Subscribers](https://heckj.github.io/swiftui-notes/#coreconcepts-lifecycle). With a connectable publisher, in addition to setting up the subscription `connect()` needs to be explicitly invoked. Until `connect()` is invoked, the subscription won’t be received by the publisher.
+
+```swift
+var cancellables = Set<AnyCancellable>()
+let publisher = Just("woot")
+    .makeConnectable()
+
+publisher.sink { value in
+    print("Value received in sink: ", value)
+}
+.store(in: &cancellables)
+```
+
+The above code will not activate the subscription, and in turn show any results. In order to enable the subscription, an explicit `connect()` is required:
+
+```swift
+publisher
+    .connect()
+    .store(in: &cancellables)
+```
+
+One of the primary uses of having a connectable publisher is to coordinate the timing of connecting multiple subscribers with `multicast`. Because `multicast` only shares existing events and does not replay anything, a subscription joining late could miss some data. **By explicitly enabling the `connect()`, all subscribers can be attached before any upstream processing begins.**
+
+In comparison, `autoconnect()` makes a Connectable publisher act like a non-connectable one. **When you enabled `autoconnect()` on a Connectable publisher, it will automate the connection such that the first subscription will activate upstream publishers.**
+
+```swift
+var cancellables = Set<AnyCancellable>()
+let publisher = Just("woot")
+    .makeConnectable() 1️⃣
+    .autoconnect() 2️⃣
+
+publisher.sink { value in
+    print("Value received in sink: ", value)
+}
+.store(in: &cancellables)
+```
+
+- 1️⃣ `makeConnectable()` wraps an existing publisher and makes it explicitly connectable.
+- 2️⃣ `autoconnect()` automates the process of establishing the connection for you; The *first* subscriber will establish the connection, subscriptions will be forwards and demand negotiated.
+
+> **Info**: Making a publisher connectable and then immediately enabling `autoconnect` is an odd example, as you typically want one explicit pattern of behavior or the other. The two mechanisms allow you to choose which you want for the needs of your code. As such, it is extremely unlikely that you would ever want to use `makeConnectable()` followed immediately by `autoconnect()`.
+
+Both `Timer` and `multicast` are examples of connectable publishers.
+
+## SwiftUI
 
 
