@@ -17,6 +17,8 @@ For general information about publishers see [Publishers](https://heckj.github.i
     - [SwiftUI and Combine](#swiftui-and-combine)
   - [ObservableObject](#observableobject)
   - [@Published](#published)
+  - [Foundation](#foundation)
+    - [NotificationCenter](#notificationcenter)
 
 ## `enum Publishers`
 
@@ -439,5 +441,78 @@ Classes implementing `ObservableObject` are also expected to use `@Published` to
 It can also be used locally to watch for updates to a reference-type model.
 
 ## @Published
+
+A *property wrapper* that adds a Combine publisher to any property.
+
+**Declaration**:
+
+```swift
+@propertyWrapper struct Published<Value>
+```
+
+**Overview**:
+
+Publishing a property with the `@Published` attribute creates a *publisher* of this type. You access the *publisher* with the `$` operator, as shown here:
+
+```swift
+class Weather {
+    @Published var temperature: Double
+    init(temperature: Double) {
+        self.temperature = temperature
+    }
+}
+
+let weather = Weather(temperature: 20)
+cancellable = weather.$temperature
+    .sink() {
+        print ("Temperature now: \($0)")
+}
+weather.temperature = 25
+
+// Prints:
+// Temperature now: 20.0
+// Temperature now: 25.0
+```
+
+When the property changes, publishing occurs in the property’s `willSet` block, meaning subscribers receive the new value before it’s actually set on the property. In the above example, the second time the sink executes its closure, it receives the parameter value `25`. However, if the closure evaluated `weather.temperature`, the value returned would be `20`.
+
+> **Important**: The `@Published` attribute is class constrained. Use it with properties of classes, not with non-class types like structures.
+
+`@Published` is part of Combine, but allows you to wrap a property, enabling you to get a publisher that triggers data updates whenever the property is changed. The publisher’s output type is inferred from the type of the property, and the error type of the provided publisher is `<Never>`.
+
+A smaller examples of how it can be used:
+
+```swift
+@Published var username: String = "" 1️⃣
+
+$username 2️⃣
+    .sink { someString in
+        print("value of username updated to: ", someString)
+    }
+
+$username 3️⃣
+    .assign(\.text, on: myLabel)
+
+@Published private var githubUserData: [GithubAPIUser] = [] 4️⃣
+```
+
+- 1️⃣ `@Published` wraps the property, `username`, and will generate events whenever the property is changed. **If there is a subscriber at initialization time, the subscriber will also receive the initial value being set.** The publisher for the property is available at the same scope, and with the same permissions, as the property itself.
+- 2️⃣ The publisher is accessible as `$username`, of type `Published<String>.publisher`.
+- 3️⃣ A Published property can have more than one subscriber pipeline triggering from it.
+- 4️⃣ **If you are publishing your own type, you may find it convenient to publish an array of that type as the property, even if you only reference a single value.** This allows you represent an "Empty" result that is still a concrete result within Combine pipelines, as `assign` and `sink` subscribers will only trigger updates on non-`nil` values.
+
+If the publisher generated from `@Published` receives a cancellation from any subscriber, it is expected to, and will cease, reporting property changes. Because of this expectation, it is common to arrange pipelines from these publishers that have an error type of `<Never>` and do all error handling within the pipelines.
+
+For example, if a `sink` subscriber is set up to capture errors from a pipeline originating from a `@Published` property, when the error is received, the sink will send a `cancel` message, causing the publisher to cease generating any updates on change. This is illustrated in the test `testPublishedSinkWithError` at [UsingCombineTests/PublisherTests.swift](https://github.com/heckj/swiftui-notes/blob/master/UsingCombineTests/PublisherTests.swift).
+
+Additional examples of how to arrange error handling for a continuous publisher like `@Published` can be found at [Using flatMap with catch to handle errors](https://heckj.github.io/swiftui-notes/#patterns-continual-error-handling).
+
+## Foundation
+
+### NotificationCenter
+
+Foundation’s `NotificationCenter` added the capability to act as a publisher, providing `Notification`s to pipelines.
+
+
 
 
