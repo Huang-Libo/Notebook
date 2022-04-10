@@ -16,6 +16,7 @@ For general information about publishers see [Publishers](https://heckj.github.i
     - [Binding](#binding)
     - [SwiftUI and Combine](#swiftui-and-combine)
   - [ObservableObject](#observableobject)
+  - [@Published](#published)
 
 ## `enum Publishers`
 
@@ -388,5 +389,55 @@ While there is no explicit guidance from Apple on how to use `onReceive` vs. *mo
 - The alternative ends up having the view bound fairly tightly to the combine publishers providing asynchronous updates, rather than a coherent view of the end state. There are still some edge cases and needs where you want to trigger a view update directly from a publishers output, and that is where `onReceive` is most effectively used.
 
 ## ObservableObject
+
+A type of object with a publisher that emits before the object has changed.
+
+**Declaration**:
+
+```swift
+protocol ObservableObject : AnyObject
+```
+
+**Overview**:
+
+By default an `ObservableObject` synthesizes an `objectWillChange` publisher that emits the changed value before any of its `@Published` properties changes.
+
+```swift
+class Contact: ObservableObject {
+    @Published var name: String
+    @Published var age: Int
+
+    init(name: String, age: Int) {
+        self.name = name
+        self.age = age
+    }
+
+    func haveBirthday() -> Int {
+        age += 1
+        return age
+    }
+}
+
+let john = Contact(name: "John Appleseed", age: 24)
+cancellable = john.objectWillChange
+    .sink { _ in
+        print("\(john.age) will change")
+}
+print(john.haveBirthday())
+// Prints "24 will change"
+// Prints "25"
+```
+
+> When a class includes a `@Published` property and conforms to the `ObservableObject` protocol, this class instances will get a `objectWillChange` publisher endpoint providing this publisher. The `objectWillChange` publisher will not return any of the changed data, only an indicator that the referenced object has changed.
+
+The output type of `ObservableObject.Output` is type aliased to `Void`, so while it is not `nil`, it will not provide any meaningful data. Because the output type does not include what changes on the referenced object, the best method for responding to changes is probably best done using `sink`.
+
+In practice, this method is most frequently used by the SwiftUI framework. SwiftUI views use the `@ObservedObject` *property wrapper* to know when to invalidate and refresh views that reference classes implementing `ObservableObject`.
+
+Classes implementing `ObservableObject` are also expected to use `@Published` to provide notifications of changes on specific properties, or to optionally provide a custom announcement that indicates the object has changed.
+
+It can also be used locally to watch for updates to a reference-type model.
+
+## @Published
 
 
