@@ -7,6 +7,8 @@ For general information about publishers see [Publishers](https://heckj.github.i
   - [Just](#just)
   - [Future](#future)
   - [Empty](#empty)
+  - [Fail](#fail)
+  - [Publishers.Sequence](#publisherssequence)
 
 ## `enum Publishers`
 
@@ -113,5 +115,63 @@ let deferredPublisher = Deferred { 1️⃣
 - 2️⃣ This in turn resolves the underlying api call to generate the result as a `Promise`, with internal closures to resolve the promise.
 
 ## Empty
+
+A publisher that never publishes any values, and optionally finishes immediately.
+
+**Declaration**:
+
+```swift
+struct Empty<Output, Failure> where Failure : Error
+```
+
+**Overview**:
+
+You can create a ”Never” publisher — one which never sends values and never finishes or fails — with the initializer `Empty(completeImmediately: false)`.
+
+> `Empty` is useful in error handling scenarios where the value is an *optional*, or where you want to resolve an *error* by simply not sending anything. `Empty` can be invoked to be a publisher of any output and failure type combination.
+
+`Empty` is most commonly used where you need to return a publisher, but don’t want to propagate any values (a possible error handling scenario). If you want a publisher that provides a single value, then look at `Just` or `Deferred` publishers as alternatives.
+
+When subscribed to, an instance of the `Empty` publisher will not return any values (or errors) and will immediately return a finished completion message to the subscriber.
+
+An example of using `Empty`:
+
+```swift
+let myEmptyPublisher = Empty<String, Never>() 
+```
+
+Because the types are not be able to be inferred, expect to define the types you want to return.
+
+## Fail
+
+A publisher that immediately terminates with the specified error.
+
+**Declaration**:
+
+```swift
+struct Fail<Output, Failure> where Failure : Error
+```
+
+**Overview**:
+
+> `Fail` is commonly used when implementing an API that returns a publisher. In the case where you want to return an immediate failure, `Fail` provides a publisher that immediately triggers a failure on subscription. One way this might be used is to provide a failure response when invalid parameters are passed. The `Fail` publisher lets you generate a publisher of the correct type that provides a failure completion when demand is requested.
+
+Initializing a `Fail` publisher can be done two ways: with the type notation specifying the output and failure types or with the types implied by handing parameters to the initializer.
+
+For example:
+
+Initializing `Fail` by specifying the types:
+
+```swift
+let cancellable = Fail<String, Error>(error: TestFailureCondition.exampleFailure)
+```
+
+Initializing `Fail` by providing types as parameters:
+
+```swift
+let cancellable = Fail(outputType: String.self, failure: TestFailureCondition.exampleFailure)
+```
+
+## Publishers.Sequence
 
 
