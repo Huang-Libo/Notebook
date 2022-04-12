@@ -8,6 +8,7 @@
     - [Overview](#overview)
     - [Using Enumerations as Errors](#using-enumerations-as-errors)
     - [Including More Data in Errors](#including-more-data-in-errors)
+  - [JSONEncoder](#jsonencoder)
 
 ## pending
 
@@ -118,3 +119,37 @@ do {
 }
 // Prints "Parsing error: mismatchedTag [19:5]"
 ```
+
+## JSONEncoder
+
+An object that encodes instances of a data type as JSON objects.
+
+```swift
+class JSONEncoder
+```
+
+```swift
+struct GroceryProduct: Codable {
+    var name: String
+    var points: Int
+    var description: String?
+}
+
+let pear = GroceryProduct(name: "Pear", points: 250, description: "A ripe pear.")
+
+let encoder = JSONEncoder()
+encoder.outputFormatting = .prettyPrinted
+
+let data = try encoder.encode(pear)
+print(String(data: data, encoding: .utf8)!)
+
+/* Prints:
+ {
+   "name" : "Pear",
+   "points" : 250,
+   "description" : "A ripe pear."
+ }
+*/
+```
+
+
