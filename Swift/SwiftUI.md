@@ -2,6 +2,14 @@
 
 - [SwiftUI](#swiftui)
   - [UIViewControllerRepresentable](#uiviewcontrollerrepresentable)
+  - [Environment](#environment)
+    - [`environment(_:_:)`](#environment__)
+    - [`EnvironmentKey`](#environmentkey)
+    - [`EnvironmentValues`](#environmentvalues)
+    - [`@Environment`](#environment-1)
+    - [`@EnvironmentObject`](#environmentobject)
+    - [`environmentObject(_:)`](#environmentobject_)
+  - [viewBuilder?](#viewbuilder)
 
 ## UIViewControllerRepresentable
 
@@ -31,8 +39,8 @@ For example, you use a coordinator to forward *target-action* and *delegate mess
 
 ---
 
-- `makeUIViewController(context:)` 
-    
+- `makeUIViewController(context:)`
+
     Creates the view controller object and configures its initial state.
 
     **Declaration**:
@@ -82,3 +90,31 @@ For example, you use a coordinator to forward *target-action* and *delegate mess
     For example, you might provide an instance that binds its variables to SwiftUI properties, causing the two to remain synchronized. If your view controller doesn’t interact with other parts of your app, providing a coordinator is unnecessary.
 
     SwiftUI calls this method before calling the `makeUIViewController(context:)` method. The system provides your coordinator either directly or as part of a context structure when calling the other methods of your representable instance.
+
+## Environment
+
+### `environment(_:_:)`
+
+- [`environment(_:_:)`](https://developer.apple.com/documentation/swiftui/view/environment(_:_:))
+
+(View) Sets the environment value of the specified key path to the given value.
+
+**Declaration**:
+
+```swift
+func environment<V>(_ keyPath: WritableKeyPath<EnvironmentValues, V>, _ value: V) -> some View
+```
+
+### `EnvironmentKey`
+
+### `EnvironmentValues`
+
+### `@Environment`
+
+### `@EnvironmentObject`
+
+### `environmentObject(_:)`
+
+## viewBuilder?
+
+
