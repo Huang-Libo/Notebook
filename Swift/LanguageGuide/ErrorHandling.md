@@ -4,6 +4,18 @@
 > Source: [*swift-book: Error Handling*](https://docs.swift.org/swift-book/LanguageGuide/ErrorHandling.html)  
 > Digest Date: *February 27, 2022*  
 
+- [Error Handling](#error-handling)
+  - [Overview](#overview)
+  - [Representing and Throwing Errors](#representing-and-throwing-errors)
+  - [Handling Errors](#handling-errors)
+    - [Propagating Errors Using Throwing Functions](#propagating-errors-using-throwing-functions)
+    - [Handling Errors Using Do-Catch](#handling-errors-using-do-catch)
+    - [Converting Errors to Optional Values](#converting-errors-to-optional-values)
+    - [Disabling Error Propagation](#disabling-error-propagation)
+  - [Specifying Cleanup Actions](#specifying-cleanup-actions)
+
+## Overview
+
 *Error handling* is the process of responding to and recovering from error conditions in your program. Swift provides first-class support for *throwing*, *catching*, *propagating*, and *manipulating* recoverable errors at runtime.
 
 Some operations aren’t guaranteed to always complete execution or produce a useful output. Optionals are used to represent the absence of a value, but when an operation fails, it’s often useful to understand what caused the failure, so that your code can respond accordingly.
@@ -17,15 +29,6 @@ As an example, consider the task of reading and processing data from a file on d
 Distinguishing among these different situations allows a program to resolve some errors and to communicate to the user any errors it can’t resolve.
 
 > **NOTE**: Error handling in Swift interoperates with error handling patterns that use the `NSError` class in Cocoa and Objective-C. For more information about this class, see [Handling Cocoa Errors in Swift](https://developer.apple.com/documentation/swift/cocoa_design_patterns/handling_cocoa_errors_in_swift).
-
-- [Error Handling](#error-handling)
-  - [Representing and Throwing Errors](#representing-and-throwing-errors)
-  - [Handling Errors](#handling-errors)
-    - [Propagating Errors Using Throwing Functions](#propagating-errors-using-throwing-functions)
-    - [Handling Errors Using Do-Catch](#handling-errors-using-do-catch)
-    - [Converting Errors to Optional Values](#converting-errors-to-optional-values)
-    - [Disabling Error Propagation](#disabling-error-propagation)
-  - [Specifying Cleanup Actions](#specifying-cleanup-actions)
 
 ## Representing and Throwing Errors
 
@@ -287,7 +290,7 @@ For example, you can use a `defer` statement to ensure that file descriptors are
 
 A `defer` statement defers execution until the current scope is exited. This statement consists of the `defer` keyword and the statements to be executed later. The deferred statements may not contain any code that would transfer control out of the statements, such as a `break` or a `return` statement, or by throwing an error.
 
-Deferred actions are executed in the **reverse of the order** that they’re written in your source code. That is, 
+Deferred actions are executed in the **reverse of the order** that they’re written in your source code. That is,
 
 - the code in the first defer statement executes last,
 - the code in the second defer statement executes second to last, and so on.
