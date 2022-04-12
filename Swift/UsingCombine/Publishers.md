@@ -19,6 +19,7 @@ For general information about publishers see [Publishers](https://heckj.github.i
   - [@Published](#published)
   - [Foundation](#foundation)
     - [NotificationCenter](#notificationcenter)
+  - [Timer](#timer)
 
 ## `enum Publishers`
 
@@ -383,7 +384,7 @@ The author of the model class can "opt-in" properties into triggering that chang
 
 The other way that Combine fits into SwiftUI is the method `onReceive`, which is a generic instance method on SwiftUI views.
 
-`onReceive` can be used when a view needs to be updated based on some external event that isn’t directly reflected in a model’s state being updated. 
+`onReceive` can be used when a view needs to be updated based on some external event that isn’t directly reflected in a model’s state being updated.
 
 While there is no explicit guidance from Apple on how to use `onReceive` vs. *models*,
 
@@ -513,6 +514,33 @@ Additional examples of how to arrange error handling for a continuous publisher 
 
 Foundation’s `NotificationCenter` added the capability to act as a publisher, providing `Notification`s to pipelines.
 
+`NotificationCenter` provides a *publisher* upon which you may create pipelines to declaratively react to application or system notifications. The *publisher* optionally takes an object reference which further filters notifications to those provided by the specific reference.
 
+A number of AppKit controls provide notifications when the control has been updated. For example, AppKit’s `TextField` triggers a number of notifications including:
+
+- `textDidBeginEditingNotification`
+- `textDidChangeNotification`
+- `textDidEndEditingNotification`
+
+```swift
+extension Notification.Name {
+    static let yourNotification = Notification.Name("your-notification") 1️⃣
+}
+
+let cancellable = NotificationCenter.default.publisher(for: .yourNotification, object: nil) 2️⃣
+    .sink {
+        print ($0) 3️⃣
+    }
+```
+
+- 1️⃣ Notifications are defined by a string for their name. If defining your own, be careful to define the strings uniquely.
+- 2️⃣ A `NotificationCenter` publisher can be created for a single type of notification, `.yourNotification` in this case, defined previously in your code.
+- 3️⃣ Notifications are received from the publisher. These include at least their `name`, and optionally a `object` reference from the sending object - most commonly provided from Apple frameworks. Notifications may also include a `userInfo` dictionary of arbitrary values, which can be used to pass additional information within your application.
+
+## Timer
+
+Foundation’s `Timer` added the capability to act as a publisher, providing a publisher to repeatedly send values to pipelines based on a `Timer` instance.
+
+> `Timer.publish` returns an instance of `Timer.TimerPublisher`. This publisher is a connectable publisher, conforming to `ConnectablePublisher`. This means that even when subscribers are connected to it, it will **not** start producing values until `connect()` or `autoconnect()` is invoked on the publisher.
 
 
