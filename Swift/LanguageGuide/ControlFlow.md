@@ -5,7 +5,7 @@
 > Digest Date: *March 4, 2022*  
 
 - [ControlFlow](#controlflow)
-  - [Introduction](#introduction)
+  - [Overview](#overview)
   - [For-In Loops](#for-in-loops)
   - [While Loops](#while-loops)
     - [While](#while)
@@ -29,7 +29,7 @@
   - [Early Exit](#early-exit)
   - [Checking API Availability](#checking-api-availability)
 
-## Introduction
+## Overview
 
 Swift provides a variety of control flow statements. These include
 

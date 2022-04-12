@@ -5,10 +5,10 @@
 > Digest Date: *March 6, 2022*  
 
 - [Advanced Operators](#advanced-operators)
-  - [Introduction](#introduction)
+  - [Overview](#overview)
   - [Bitwise Operators](#bitwise-operators)
 
-## Introduction
+## Overview
 
 In addition to the operators described in [Basic Operators](https://docs.swift.org/swift-book/LanguageGuide/BasicOperators.html), Swift provides several advanced operators that perform more complex value manipulation. These include all of the bitwise and bit shifting operators you will be familiar with from C and Objective-C.
 

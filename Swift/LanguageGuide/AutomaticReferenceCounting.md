@@ -5,7 +5,7 @@
 > Digest Date: *March 5, 2022*  
 
 - [Automatic Reference Counting](#automatic-reference-counting)
-  - [Introduction](#introduction)
+  - [Overview](#overview)
   - [How ARC Works](#how-arc-works)
   - [ARC in Action](#arc-in-action)
   - [Strong Reference Cycles Between Class Instances](#strong-reference-cycles-between-class-instances)
@@ -19,7 +19,7 @@
     - [Defining a Capture List](#defining-a-capture-list)
     - [Weak and Unowned References](#weak-and-unowned-references)
 
-## Introduction
+## Overview
 
 Swift uses *Automatic Reference Counting* (ARC) to track and manage your app’s memory usage. In most cases, this means that memory management “just works” in Swift, and you don’t need to think about memory management yourself. ARC automatically frees up the memory used by class instances when those instances are no longer needed.
 

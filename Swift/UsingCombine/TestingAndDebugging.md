@@ -1,7 +1,7 @@
 # Testing and Debugging
 
 - [Testing and Debugging](#testing-and-debugging)
-  - [Introduction](#introduction)
+  - [Overview](#overview)
   - [Testing a publisher with XCTestExpectation](#testing-a-publisher-with-xctestexpectation)
   - [Testing a subscriber with a PassthroughSubject](#testing-a-subscriber-with-a-passthroughsubject)
   - [Testing a subscriber with scheduled sends from PassthroughSubject](#testing-a-subscriber-with-scheduled-sends-from-passthroughsubject)
@@ -10,7 +10,7 @@
   - [Debugging pipelines with the handleEvents operator](#debugging-pipelines-with-the-handleevents-operator)
   - [Debugging pipelines with the debugger](#debugging-pipelines-with-the-debugger)
 
-## Introduction
+## Overview
 
 The `Publisher`/`Subscriber` interface in Combine is beautifully suited to be an easily testable interface.
 

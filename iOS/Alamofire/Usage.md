@@ -5,7 +5,7 @@
 > Digest Date: *March 12, 2022*  
 
 - [Usage](#usage)
-  - [Introduction](#introduction)
+  - [Overview](#overview)
     - [Aside: The `AF` Namespace and Reference](#aside-the-af-namespace-and-reference)
   - [Example: Making Requests](#example-making-requests)
   - [HTTP Methods](#http-methods)
@@ -60,7 +60,7 @@
     - [`URLSessionTaskMetrics`](#urlsessiontaskmetrics)
   - [cURL Command Output](#curl-command-output)
 
-## Introduction
+## Overview
 
 Alamofire provides an elegant and composable interface to HTTP network requests. It does not implement its own HTTP networking functionality. Instead it builds on top of Apple's [URL Loading System](https://developer.apple.com/documentation/foundation/url_loading_system/) provided by the Foundation framework. At the core of the system is [`URLSession`](https://developer.apple.com/documentation/foundation/urlsession) and the [`URLSessionTask`](https://developer.apple.com/documentation/foundation/urlsessiontask) subclasses.
 

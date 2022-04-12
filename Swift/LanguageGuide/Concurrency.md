@@ -5,7 +5,7 @@
 > Digest Date: *February 27, 2022*  
 
 - [Concurrency](#concurrency)
-  - [Introduction](#introduction)
+  - [Overview](#overview)
   - [Defining and Calling Asynchronous Functions](#defining-and-calling-asynchronous-functions)
   - [Asynchronous Sequences](#asynchronous-sequences)
   - [Calling Asynchronous Functions in Parallel](#calling-asynchronous-functions-in-parallel)
@@ -14,7 +14,7 @@
     - [Task Cancellation](#task-cancellation)
   - [Actors](#actors)
 
-## Introduction
+## Overview
 
 Swift has built-in support for writing asynchronous and parallel code in a structured way.
 

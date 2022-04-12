@@ -7,7 +7,7 @@
 *Closures* in Swift are similar to *blocks* in C and Objective-C and to *lambdas* in other programming languages.
 
 - [Closures](#closures)
-  - [Introduction](#introduction)
+  - [Overview](#overview)
   - [Closure Expressions](#closure-expressions)
     - [The Sorted Method](#the-sorted-method)
     - [Closure Expression Syntax](#closure-expression-syntax)
@@ -21,7 +21,7 @@
   - [Escaping Closures](#escaping-closures)
   - [Autoclosures](#autoclosures)
 
-## Introduction
+## Overview
 
 Closures can *capture* and *store* references to any constants and variables from the *context* in which they’re defined. This is known as *closing over* those constants and variables. Swift handles all of the memory management of capturing for you.
 

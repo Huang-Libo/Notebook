@@ -5,14 +5,14 @@
 > Digest Date: *March 6, 2022*  
 
 - [Memory Safety](#memory-safety)
-  - [Introduction](#introduction)
+  - [Overview](#overview)
   - [Understanding Conflicting Access to Memory](#understanding-conflicting-access-to-memory)
     - [Characteristics of Memory Access](#characteristics-of-memory-access)
   - [Conflicting Access to In-Out Parameters](#conflicting-access-to-in-out-parameters)
   - [Conflicting Access to self in Methods](#conflicting-access-to-self-in-methods)
   - [Conflicting Access to Properties](#conflicting-access-to-properties)
 
-## Introduction
+## Overview
 
 By default, Swift prevents unsafe behavior from happening in your code. For example, Swift ensures that variables are initialized before they’re used, memory isn’t accessed after it’s been deallocated, and array indices are checked for out-of-bounds errors.
 

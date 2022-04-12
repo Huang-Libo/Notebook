@@ -5,7 +5,7 @@
 > Digest Date: *March 2, 2022*  
 
 - [Functions](#functions)
-  - [Introduction](#introduction)
+  - [Overview](#overview)
   - [Defining and Calling Functions](#defining-and-calling-functions)
   - [Function Parameters and Return Values](#function-parameters-and-return-values)
     - [Functions Without Parameters](#functions-without-parameters)
@@ -26,7 +26,7 @@
     - [Function Types as Return Types](#function-types-as-return-types)
   - [Nested Functions](#nested-functions)
 
-## Introduction
+## Overview
 
 *Functions* are self-contained chunks of code that perform a specific task.
 

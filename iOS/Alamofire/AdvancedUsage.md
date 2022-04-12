@@ -5,7 +5,7 @@
 > Digest Date: *March 12, 2022*  
 
 - [Advanced Usage](#advanced-usage)
-  - [Introduction](#introduction)
+  - [Overview](#overview)
   - [`Session`](#session)
     - [Creating Custom `Session` Instances](#creating-custom-session-instances)
       - [Creating a `Session` With a `URLSessionConfiguration`](#creating-a-session-with-a-urlsessionconfiguration)
@@ -86,7 +86,7 @@
     - [Value Stream Handlers](#value-stream-handlers)
   - [Network Reachability](#network-reachability)
 
-## Introduction
+## Overview
 
 Alamofire is built on top of `URLSession` and the `Foundation` *URL Loading System*. To make the most of this framework, it is recommended that you be familiar with the concepts and capabilities of the underlying networking stack.
 

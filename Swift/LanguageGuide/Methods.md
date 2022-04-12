@@ -5,14 +5,14 @@
 > Digest Date: *March 1, 2022*  
 
 - [Methods](#methods)
-  - [Introduction](#introduction)
+  - [Overview](#overview)
   - [Instance Methods](#instance-methods)
     - [The self Property](#the-self-property)
     - [Modifying Value Types from Within Instance Methods](#modifying-value-types-from-within-instance-methods)
     - [Assigning to self Within a Mutating Method](#assigning-to-self-within-a-mutating-method)
   - [Type Methods](#type-methods)
 
-## Introduction
+## Overview
 
 *Methods* are functions that are associated with a particular type.
 
