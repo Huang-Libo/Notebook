@@ -22,6 +22,7 @@ For general information about publishers see [Publishers](https://heckj.github.i
     - [Timer](#timer)
     - [publisher from a KeyValueObserving instance](#publisher-from-a-keyvalueobserving-instance)
     - [URLSession.dataTaskPublisher](#urlsessiondatataskpublisher)
+    - [Result](#result)
 
 ## `enum Publishers`
 
@@ -595,4 +596,19 @@ let _ = foo.publisher(for: \.intValue)
 
 ### URLSession.dataTaskPublisher
 
+`Foundation`’s `URLSession` has a publisher specifically for requesting data from URLs: `dataTaskPublisher`
 
+`dataTaskPublisher`, on `URLSession`, has two variants for creating a publisher. The first takes an instance of `URL`, the second `URLRequest`. The data returned from the publisher is a *tuple* of `(data: Data, response: URLResponse)`.
+
+```swift
+let request = URLRequest(url: regularURL)
+return URLSession.shared.dataTaskPublisher(for: request)
+```
+
+### Result
+
+`Foundation` also adds `Result` as a publisher.
+
+Combine augments `Result` from the swift standard library with a `.publisher` property, returning a publisher with an output type of `Success` and a failure type of `Failure`, defined by the `Result` instance.
+
+Any method that returns an instance of `Result` can use this property to get a publisher that will provide the resulting value and followed by a `.finished` completion, or a `.failure` completion with the relevant Error.
