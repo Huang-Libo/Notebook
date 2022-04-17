@@ -52,6 +52,7 @@
   - [UIKit and SwiftUI Integration](Swift/UsingCombine/UIKitAndSwiftUI.md)
   - [Testing and Debugging](Swift/UsingCombine/TestingAndDebugging.md)
   - [Publishers](Swift/UsingCombine/Publishers.md)
+  - [Operators](Swift/UsingCombine/Operators.md)
 - [Combine](Swift/Combine.md)
 - [SwiftUI](Swift/SwiftUI.md)
 - [Swift Inbox](Swift/INBOX.md)
