@@ -8,6 +8,8 @@ The chapter on [Core Concepts](https://heckj.github.io/swiftui-notes/#coreconcep
     - [tryScan](#tryscan)
     - [map](#map)
     - [tryMap](#trymap)
+    - [flatMap](#flatmap)
+    - [setFailureType](#setfailuretype)
 
 ## Mapping elements
 
@@ -138,5 +140,88 @@ Just(MyStruct())
 - A single line is an implicit return, in this case it is pulling the `isValid` property off the struct and passing it down.
 
 ### tryMap
+
+`tryMap` is similar to `map`, except that it also allows you to provide a closure that throws additional errors if your conversion logic is unsuccessful.
+
+`tryMap` is useful when you have more complex business logic around your `map` and you want to indicate that the data passed in is an error, possibly handling that error later in the pipeline. If you are looking at `tryMap` to decode JSON, you may want to consider using the `decode` operator instead, which is set up for that common task.
+
+```swift
+enum MyFailure: Error {
+    case notBigEnough
+}
+
+Just(5)
+.tryMap {
+  if inValue < 5 { 
+      throw MyFailure.notBigEnough 
+  }
+  return inValue 
+}
+```
+
+### flatMap
+
+Used with error recovery or async operations that might fail (for example `Future`), `flatMap` will replace any incoming values with another publisher.
+
+**Declaration**:
+
+```swift
+func flatMap<T, P>(maxPublishers: Subscribers.Demand = .unlimited, _ transform: @escaping (Self.Output) -> P) -> Publishers.FlatMap<P, Self> where T == P.Output, P : Publisher, Self.Failure == P.Failure
+```
+
+Typically used in error handling scenarios, `flatMap` takes a closure that allows you to read the incoming data value, and provide a publisher that returns a value to the pipeline.
+
+In error handling, this is most frequently used to take the incoming value and create a *one-shot* pipeline that does some potentially failing operation, and then handling the error condition with a `catch` operator.
+
+A simple example `flatMap`, arranged to show recovering from a decoding error and returning a placeholder value:
+
+```swift
+.flatMap { data in
+    return Just(data)
+        .decode(YourType.self, JSONDecoder())
+        .catch {
+            return Just(YourType.placeholder)
+        }
+}
+```
+
+A diagram version of this pipeline construct:
+
+![flatmap.svg](../../media/Swift/UsingCombine/flatmap.svg)
+
+> `flatMap` expects to create a new pipeline within its closure for every input value that it receives. The expected result of this internal pipeline is a Publisher with its own output and failure type. The output type of the publisher resulting from the internal pipeline defines the output type of the `flatMap` operator. The error type of the internal publisher is often expected to be `<Never>`.
+
+**Discussion**:
+
+Use `flatMap(maxPublishers:_:)` when you want to create a new series of events for downstream subscribers based on the received value. The closure creates the new Publisher based on the received value. The new Publisher can emit more than one event, and successful completion of the new Publisher does not complete the overall stream. Failure of the new Publisher causes the overall stream to fail.
+
+In the example below, a `PassthroughSubject` publishes `WeatherStation` elements. The `flatMap(maxPublishers:_:)` receives each element, creates a `URL` from it, and produces a new `URLSession.DataTaskPublisher`, which will publish the data loaded from that `URL`.
+
+```swift
+public struct WeatherStation {
+    public let stationID: String
+}
+
+var weatherPublisher = PassthroughSubject<WeatherStation, URLError>()
+
+cancellable = weatherPublisher.flatMap { station -> URLSession.DataTaskPublisher in
+    let url = URL(string:"https://weatherapi.example.com/stations/\(station.stationID)/observations/latest")!
+    return URLSession.shared.dataTaskPublisher(for: url)
+}
+.sink(
+    receiveCompletion: { completion in
+        // Handle publisher completion (normal or error).
+    },
+    receiveValue: {
+        // Process the received data.
+    }
+ )
+
+weatherPublisher.send(WeatherStation(stationID: "KSFO")) // San Francisco, CA
+weatherPublisher.send(WeatherStation(stationID: "EGLC")) // London, UK
+weatherPublisher.send(WeatherStation(stationID: "ZBBB")) // Beijing, CN
+```
+
+### setFailureType
 
 
