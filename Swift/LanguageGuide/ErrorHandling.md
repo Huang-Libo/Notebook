@@ -161,7 +161,7 @@ struct PurchasedSnack {
 
 ### Handling Errors Using Do-Catch
 
-You use a `do-catch` statement to handle errors by running a block of code. If an error is thrown by the code in the do clause, it’s matched against the catch clauses to determine which one of them can handle the error.
+You use a `do-catch` statement to handle errors by running a block of code. If an error is thrown by the code in the `do` clause, it’s matched against the `catch` clauses to determine which one of them can handle the error.
 
 Here is the general form of a `do-catch` statement:
 
@@ -195,7 +195,7 @@ In the above example, the `buyFavoriteSnack(person:vendingMachine:)` function is
 - If no pattern is matched, the error gets caught by the final `catch` clause and is bound to a local `error` constant.
 - If no error is thrown, the remaining statements in the `do` statement are executed.
 
-The catch clauses don’t have to handle every possible error that the code in the do clause can throw. If none of the `catch` clauses handle the error, the error propagates to the surrounding scope.
+The catch clauses don’t have to handle every possible error that the code in the `do` clause can throw. If none of the `catch` clauses handle the error, the error propagates to the surrounding scope.
 
 However, the propagated error must be handled by *some* surrounding scope.
 
@@ -223,7 +223,10 @@ do {
 // Prints "Couldn't buy that from the vending machine."
 ```
 
-In the `nourish(with:)` function, if `vend(itemNamed:)` throws an error that’s one of the cases of the `VendingMachineError` enumeration, `nourish(with:)` handles the error by printing a message. Otherwise, `nourish(with:)` propagates the error to its call site. The error is then caught by the general catch clause.
+In the `nourish(with:)` function,
+
+- if `vend(itemNamed:)` throws an error that’s one of the cases of the `VendingMachineError` enumeration, `nourish(with:)` handles the error by printing a message.
+- Otherwise, `nourish(with:)` propagates the error to its call site. The error is then caught by the general catch clause.
 
 Another way to catch several related errors is to list them after `catch`, separated by commas. For example:
 
@@ -258,7 +261,10 @@ do {
 }
 ```
 
-If `someThrowingFunction()` throws an error, the value of `x` and `y` is `nil`. Otherwise, the value of `x` and `y` is the value that the function returned. Note that `x` and `y` are an optional of whatever type `someThrowingFunction()` returns. Here the function returns an integer, so `x` and `y` are optional integers.
+- If `someThrowingFunction()` throws an error, the value of `x` and `y` is `nil`.
+- Otherwise, the value of `x` and `y` is the value that the function returned.
+
+Note that `x` and `y` are an optional of whatever type `someThrowingFunction()` returns. Here the function returns an integer, so `x` and `y` are optional integers.
 
 Using `try?` lets you write concise error handling code when you want to handle all errors in the same way.
 
