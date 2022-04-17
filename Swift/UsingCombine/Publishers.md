@@ -20,6 +20,7 @@ For general information about publishers see [Publishers](https://heckj.github.i
   - [Foundation](#foundation)
     - [NotificationCenter](#notificationcenter)
   - [Timer](#timer)
+  - [publisher from a KeyValueObserving instance](#publisher-from-a-keyvalueobserving-instance)
 
 ## `enum Publishers`
 
@@ -542,5 +543,36 @@ let cancellable = NotificationCenter.default.publisher(for: .yourNotification, o
 Foundation’s `Timer` added the capability to act as a publisher, providing a publisher to repeatedly send values to pipelines based on a `Timer` instance.
 
 > `Timer.publish` returns an instance of `Timer.TimerPublisher`. This publisher is a connectable publisher, conforming to `ConnectablePublisher`. This means that even when subscribers are connected to it, it will **not** start producing values until `connect()` or `autoconnect()` is invoked on the publisher.
+
+Creating the timer publisher requires an `interval` in seconds, and a `RunLoop` and `mode` upon which to run. The publisher may optionally take an additional parameter `tolerance`, which defines a variance allowed in the generation of timed events. The default for `tolerance` is `nil`, **allowing any variance**.
+
+The publisher has an output type of `Date` and a failure type of `<Never>`.
+
+If you want the publisher to automatically connect and start receiving values **as soon as subscribers are connected** and make requests for values, then you may include `autoconnect()` in the pipeline to have it automatically start to generate values as soon as a subscriber requests data.
+
+```swift
+let cancellable = Timer.publish(every: 1.0, on: RunLoop.main, in: .common)
+    .autoconnect()
+    .sink { receivedTimeStamp in
+        print("passed through: ", receivedTimeStamp)
+    }
+```
+
+Alternatively, you can connect up the subscribers, which will receive no values until you invoke `connect()` on the publisher, which also returns a `Cancellable` reference.
+
+```swift
+let timerPublisher = Timer.publish(every: 1.0, on: RunLoop.main, in: .default)
+let cancellableSink = timerPublisher
+    .sink { receivedTimeStamp in
+        print("passed through: ", receivedTimeStamp)
+    }
+// no values until the following is invoked elsewhere/later:
+let cancellablePublisher = timerPublisher.connect()
+```
+
+## publisher from a KeyValueObserving instance
+
+
+
 
 
