@@ -19,8 +19,9 @@ For general information about publishers see [Publishers](https://heckj.github.i
   - [@Published](#published)
   - [Foundation](#foundation)
     - [NotificationCenter](#notificationcenter)
-  - [Timer](#timer)
-  - [publisher from a KeyValueObserving instance](#publisher-from-a-keyvalueobserving-instance)
+    - [Timer](#timer)
+    - [publisher from a KeyValueObserving instance](#publisher-from-a-keyvalueobserving-instance)
+    - [URLSession.dataTaskPublisher](#urlsessiondatataskpublisher)
 
 ## `enum Publishers`
 
@@ -513,7 +514,7 @@ Additional examples of how to arrange error handling for a continuous publisher 
 
 ### NotificationCenter
 
-Foundation’s `NotificationCenter` added the capability to act as a publisher, providing `Notification`s to pipelines.
+`Foundation`’s `NotificationCenter` added the capability to act as a publisher, providing `Notification`s to pipelines.
 
 `NotificationCenter` provides a *publisher* upon which you may create pipelines to declaratively react to application or system notifications. The *publisher* optionally takes an object reference which further filters notifications to those provided by the specific reference.
 
@@ -538,9 +539,9 @@ let cancellable = NotificationCenter.default.publisher(for: .yourNotification, o
 - 2️⃣ A `NotificationCenter` publisher can be created for a single type of notification, `.yourNotification` in this case, defined previously in your code.
 - 3️⃣ Notifications are received from the publisher. These include at least their `name`, and optionally a `object` reference from the sending object - most commonly provided from Apple frameworks. Notifications may also include a `userInfo` dictionary of arbitrary values, which can be used to pass additional information within your application.
 
-## Timer
+### Timer
 
-Foundation’s `Timer` added the capability to act as a publisher, providing a publisher to repeatedly send values to pipelines based on a `Timer` instance.
+`Foundation`’s `Timer` added the capability to act as a publisher, providing a publisher to repeatedly send values to pipelines based on a `Timer` instance.
 
 > `Timer.publish` returns an instance of `Timer.TimerPublisher`. This publisher is a connectable publisher, conforming to `ConnectablePublisher`. This means that even when subscribers are connected to it, it will **not** start producing values until `connect()` or `autoconnect()` is invoked on the publisher.
 
@@ -570,9 +571,28 @@ let cancellableSink = timerPublisher
 let cancellablePublisher = timerPublisher.connect()
 ```
 
-## publisher from a KeyValueObserving instance
+### publisher from a KeyValueObserving instance
 
+`Foundation` added the ability to get a publisher on any `NSObject` that can be watched with `Key Value Observing`. To create this publisher, you call the function `publisher` on the object, providing it with a single (required) `KeyPath` value.
 
+For example:
 
+```swift
+private final class KVOAbleNSObject: NSObject {
+    @objc dynamic var intValue: Int = 0
+    @objc dynamic var boolValue: Bool = false
+}
+
+let foo = KVOAbleNSObject()
+
+let _ = foo.publisher(for: \.intValue)
+    .sink { someValue in
+        print("value updated to: >>\(someValue)<<")
+    }
+```
+
+> Relying on the interface element’s state to trigger updates into pipelines can lead to your state being very tightly bound to the interface elements, rather than your model. You may be better served by explicitly creating your own state to react to from a `@Published` property wrapper.
+
+### URLSession.dataTaskPublisher
 
 
