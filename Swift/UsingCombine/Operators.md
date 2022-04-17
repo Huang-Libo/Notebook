@@ -6,6 +6,8 @@ The chapter on [Core Concepts](https://heckj.github.io/swiftui-notes/#coreconcep
   - [Mapping elements](#mapping-elements)
     - [scan](#scan)
     - [tryScan](#tryscan)
+    - [map](#map)
+    - [tryMap](#trymap)
 
 ## Mapping elements
 
@@ -90,3 +92,51 @@ cancellable = numbers.publisher
 
 // Prints: "11 6 3 1 1 failure(DivisionByZeroError())".
 ```
+
+### map
+
+`map` is most commonly used to convert one data type into another along a pipeline.
+
+![map.svg](../../media/Swift/UsingCombine/map.svg)
+
+**Declaration**:
+
+```swift
+func map<T>(_ transform: @escaping (Self.Output) -> T) -> Publishers.Map<Self, T>
+```
+
+**Discussion**:
+
+The `map` operator does not allow for any additional failures to be thrown and does not transform the failure type. If you want to throw an error within your closure, use the `tryMap` operator.
+
+`map` takes a single closure where you provide the logic for the map operation.
+
+> `map` is the all purpose workhorse operator in Combine. It provides the ability to manipulate the data, or the type of data, and is the **most** commonly used operator in pipelines.
+
+For example, the `URLSession.dataTaskPublisher` provides a *tuple* of `(data: Data, response: URLResponse)` as its output. You can use `map` to pass along the data, for example to use with `decode`:
+
+```swift
+.map { $0.data } 1️⃣
+```
+
+- 1️⃣ the `$0` indicates to grab the first parameter passed in, which is a tuple of `data` and `response`.
+
+In some cases, the closure may not be able to infer what data type you are returning, so you may need to provide a definition to help the compiler. For example, if you have an object getting passed down that has a boolean property `isValid` on it, and you want the boolean for your pipeline, you might set that up like:
+
+```swift
+struct MyStruct {
+    isValid: bool = true
+}
+
+Just(MyStruct())
+.map { inValue -> Bool in 1️⃣
+  inValue.isValid 2️⃣
+}
+```
+
+- `inValue` is named as the parameter coming in, and the return type is being explicitly specified to Bool
+- A single line is an implicit return, in this case it is pulling the `isValid` property off the struct and passing it down.
+
+### tryMap
+
+
