@@ -5,6 +5,7 @@ The chapter on [Core Concepts](https://heckj.github.io/swiftui-notes/#coreconcep
 - [Operators](#operators)
   - [Mapping elements](#mapping-elements)
     - [scan](#scan)
+    - [tryScan](#tryscan)
 
 ## Mapping elements
 
@@ -48,4 +49,44 @@ For example, the following `scan` operator implementation counts the number of c
 .scan(0, { prevVal, newValueFromPublisher -> Int in
     return prevVal + newValueFromPublisher.count
 })
+```
+
+### tryScan
+
+`tryScan` is a variant of the `scan` operator which allows for the provided closure to throw an error and cancel the pipeline. The closure provided updates and modifies a value based on any inputs from an upstream publisher and publishing intermediate results.
+
+![tryscan.svg](../../media/Swift/UsingCombine/tryscan.svg)
+
+**Declaration**:
+
+```swift
+func tryScan<T>(_ initialResult: T, _ nextPartialResult: @escaping (T, Self.Output) throws -> T) -> Publishers.TryScan<Self, T>
+```
+
+**Discussion**:
+
+Use `tryScan(_:_:)` to accumulate all previously-published values into a single value, which you then combine with each newly-published value. If your accumulator closure throws an error, the publisher terminates with the error.
+
+In the example below, `tryScan(_:_:)` calls a division function on elements of a collection publisher. The `Publishers.TryScan` publisher publishes each result until the function encounters a `DivisionByZeroError`, which terminates the publisher.
+
+If the closure throws an error, the publisher fails with the error:
+
+```swift
+struct DivisionByZeroError: Error {}
+
+/// A function that throws a DivisionByZeroError if `current` provided by the TryScan publisher is zero.
+func myThrowingFunction(_ lastValue: Int, _ currentValue: Int) throws -> Int {
+    guard currentValue != 0 else { throw DivisionByZeroError() }
+    return (lastValue + currentValue) / currentValue
+ }
+
+let numbers = [1,2,3,4,5,0,6,7,8,9]
+cancellable = numbers.publisher
+    .tryScan(10) { try myThrowingFunction($0, $1) }
+    .sink(
+        receiveCompletion: { print ("\($0)") },
+        receiveValue: { print ("\($0)", terminator: " ") }
+     )
+
+// Prints: "11 6 3 1 1 failure(DivisionByZeroError())".
 ```
