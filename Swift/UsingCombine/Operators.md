@@ -131,9 +131,9 @@ struct MyStruct {
 }
 
 Just(MyStruct())
-.map { inValue -> Bool in 1️⃣
-  inValue.isValid 2️⃣
-}
+    .map { inValue -> Bool in 1️⃣
+    inValue.isValid 2️⃣
+    }
 ```
 
 - `inValue` is named as the parameter coming in, and the return type is being explicitly specified to Bool
@@ -151,12 +151,12 @@ enum MyFailure: Error {
 }
 
 Just(5)
-.tryMap {
-  if inValue < 5 { 
-      throw MyFailure.notBigEnough 
-  }
-  return inValue 
-}
+    .tryMap {
+    if inValue < 5 { 
+        throw MyFailure.notBigEnough 
+    }
+    return inValue 
+    }
 ```
 
 ### flatMap
