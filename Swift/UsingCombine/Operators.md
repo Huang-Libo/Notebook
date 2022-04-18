@@ -12,6 +12,7 @@ The chapter on [Core Concepts](https://heckj.github.io/swiftui-notes/#coreconcep
     - [setFailureType](#setfailuretype)
   - [Filtering elements](#filtering-elements)
     - [compactMap](#compactmap)
+    - [tryCompactMap](#trycompactmap)
 
 ## Mapping elements
 
@@ -245,5 +246,49 @@ If you want to return a `.failure` completion of a specific type into a pipeline
 ## Filtering elements
 
 ### compactMap
+
+Calls a closure with each received element and publishes any returned optional that has a value.
+
+**Declaration**:
+
+```swift
+func compactMap<T>(_ transform: @escaping (Self.Output) -> T?) -> Publishers.CompactMap<Self, T>
+```
+
+![compactMap.svg](../../media/Swift/UsingCombine/compactMap.svg)
+
+**Discussion**:
+
+Combine’s `compactMap(_:)` operator performs a function similar to that of `compactMap(_:)` in the Swift standard library: the `compactMap(_:)` operator in Combine removes `nil` elements in a publisher’s stream and republishes non-`nil` elements to the downstream subscriber.
+
+The example below uses a range of `numbers` as the source for a collection based publisher. The `compactMap(_:)` operator consumes each element from the `numbers` publisher attempting to access the dictionary using the element as the key. If the example’s dictionary returns a `nil`, due to a non-existent key, `compactMap(_:)` filters out the `nil` (missing) elements.
+
+```swift
+let numbers = (0...5)
+let romanNumeralDict: [Int : String] =
+    [1: "I", 2: "II", 3: "III", 5: "V"]
+
+cancellable = numbers.publisher
+    .compactMap { romanNumeralDict[$0] }
+    .sink { print("\($0)", terminator: " ") }
+
+// Prints: "I II III V"
+```
+
+> `compactMap` is very similar to the `map` operator, with the exception that it expects the closure to return an optional value, and drops any `nil` values from published responses. This is the combine equivalent of the `compactMap` function which iterates through a `Sequence` and returns a sequence of any non-`nil` values.
+
+It can also be used to process results from an upstream publisher that produces an optional Output type, and collapse those into an unwrapped type. The simplest version of this just returns the incoming value directly, which will filter out the `nil` values.
+
+```swift
+.compactMap {
+    return $0
+}
+```
+
+There is also a variation of this operator, `tryCompactMap`, which allows the provided closure to throw an Error and cancel the stream on invalid conditions.
+
+If you want to convert an optional type into a concrete type, always replacing the `nil` with an explicit value, you should likely use the `replaceNil` operator.
+
+### tryCompactMap
 
 
