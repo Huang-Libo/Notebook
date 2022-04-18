@@ -10,6 +10,8 @@ The chapter on [Core Concepts](https://heckj.github.io/swiftui-notes/#coreconcep
     - [tryMap](#trymap)
     - [flatMap](#flatmap)
     - [setFailureType](#setfailuretype)
+  - [Filtering elements](#filtering-elements)
+    - [compactMap](#compactmap)
 
 ## Mapping elements
 
@@ -223,5 +225,25 @@ weatherPublisher.send(WeatherStation(stationID: "ZBBB")) // Beijing, CN
 ```
 
 ### setFailureType
+
+`setFailureType` does not send a `.failure` completion, it just changes the `Failure` type associated with the pipeline. Use this publisher type when you need to match the error types for two otherwise mismatched publishers.
+
+**Declaration**:
+
+```swift
+struct SetFailureType<Upstream, Failure> where Upstream : Publisher, Failure : Error, Upstream.Failure == Never
+```
+
+![setFailureType.svg](../../media/Swift/UsingCombine/setFailureType.svg)
+
+`setFailureType` is an operator for transforming the error type within a pipeline, often from `<Never>` to some error type you may want to produce. `setFailureType` does not induce an error, but changes the types of the pipeline.
+
+This can be especially convenient if you need to match an operator or subscriber that expects a failure type other than `<Never>` when you are working with a test or single-value publisher such as `Just` or `Sequence`.
+
+If you want to return a `.failure` completion of a specific type into a pipeline, use the `Fail` operator.
+
+## Filtering elements
+
+### compactMap
 
 
