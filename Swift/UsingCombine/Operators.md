@@ -14,6 +14,8 @@ The chapter on [Core Concepts](https://heckj.github.io/swiftui-notes/#coreconcep
     - [compactMap](#compactmap)
     - [tryCompactMap](#trycompactmap)
     - [filter](#filter)
+    - [tryFilter](#tryfilter)
+    - [removeDuplicates](#removeduplicates)
 
 ## Mapping elements
 
@@ -308,5 +310,45 @@ If you want to convert an optional type into a concrete type, always replacing t
 If you want to convert an optional type into a concrete type, always replacing the nil with an explicit value, you should likely use the `replaceNil` operator.
 
 ### filter
+
+`Filter` passes through all instances of the output type that match a provided closure, dropping any that don’t match.
+
+**Declaration**：
+
+```swift
+func filter(_ isIncluded: @escaping (Self.Output) -> Bool) -> Publishers.Filter<Self>
+```
+
+![filter.svg](../../media/Swift/UsingCombine/filter.svg)
+
+`Filter` takes a single closure as a parameter that is provided the value from the previous publisher and returns a `Bool` value. If the return from the closure is true, then the operator republishes the value further down the chain. If the return from the closure is false, then the operator drops the value.
+
+If you need a variation of this that will generate an error condition in the pipeline to be handled use the `tryFilter` operator, which allows the closure to throw an error in the evaluation.
+
+**Discussion**:
+
+Combine’s `filter(_:)` operator performs an operation similar to that of `filter(_:)` in the Swift Standard Library: it uses a closure to test each element to determine whether to republish the element to the downstream subscriber.
+
+The following example, uses a filter operation that receives an `Int` and only republishes a value if it’s even.
+
+```swift
+let numbers: [Int] = [1, 2, 3, 4, 5]
+cancellable = numbers.publisher
+    .filter { $0 % 2 == 0 }
+    .sink { print("\($0)", terminator: " ") }
+
+// Prints: "2 4"
+```
+
+### tryFilter
+
+`tryFilter` passes through all instances of the output type that match a provided closure, dropping any that don’t match, and allows generating an error during the evaluation of that closure.
+
+Like filter, `tryFilter` takes a single closure as a parameter that is provided the value from the previous publisher and returns a `Bool` value. If the return from the closure is `true`, then the operator republishes the value further down the chain. If the return from the closure is `false`, then the operator drops the value.
+
+You can additionally throw an error during the evaluation of `tryFilter`, which will then be propagated as the failure type down the pipeline.
+
+### removeDuplicates
+
 
 
