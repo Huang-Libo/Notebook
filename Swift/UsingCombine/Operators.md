@@ -13,6 +13,7 @@ The chapter on [Core Concepts](https://heckj.github.io/swiftui-notes/#coreconcep
   - [Filtering elements](#filtering-elements)
     - [compactMap](#compactmap)
     - [tryCompactMap](#trycompactmap)
+    - [filter](#filter)
 
 ## Mapping elements
 
@@ -290,5 +291,22 @@ There is also a variation of this operator, `tryCompactMap`, which allows the pr
 If you want to convert an optional type into a concrete type, always replacing the `nil` with an explicit value, you should likely use the `replaceNil` operator.
 
 ### tryCompactMap
+
+`tryCompactMap` is a variant of the `compactMap` operator, allowing the values processed to throw an `Error` condition.
+
+```swift
+.tryCompactMap { someVal -> String? in 1️⃣
+    if (someVal == "boom") {
+        throw TestExampleError.example
+    }
+    return someVal
+}
+```
+
+- 1️⃣ If you specify the return type within the closure, it should be an optional value. The operator that invokes the closure is responsible for filtering the non-`nil` values it publishes.
+
+If you want to convert an optional type into a concrete type, always replacing the nil with an explicit value, you should likely use the `replaceNil` operator.
+
+### filter
 
 
