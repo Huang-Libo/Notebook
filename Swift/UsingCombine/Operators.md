@@ -16,6 +16,8 @@ The chapter on [Core Concepts](https://heckj.github.io/swiftui-notes/#coreconcep
     - [filter](#filter)
     - [tryFilter](#tryfilter)
     - [removeDuplicates](#removeduplicates)
+    - [tryRemoveDuplicates](#tryremoveduplicates)
+    - [replaceEmpty](#replaceempty)
 
 ## Mapping elements
 
@@ -350,5 +352,69 @@ You can additionally throw an error during the evaluation of `tryFilter`, which 
 
 ### removeDuplicates
 
+Publishes only elements that don’t match the *previous* element.
+
+**Declaration**:
+
+`removeDuplicates()`:
+
+```swift
+func removeDuplicates() -> Publishers.RemoveDuplicates<Self>
+```
+
+`removeDuplicates(by:)`:
+
+```swift
+func removeDuplicates(by predicate: @escaping (Self.Output, Self.Output) -> Bool) -> Publishers.RemoveDuplicates<Self>
+```
+
+![removeDuplicates.svg](../../media/Swift/UsingCombine/removeDuplicates.svg)
+
+The default usage of removeDuplicates doesn’t require any parameters, and the operator will publish only elements that don’t match the previously sent element.
+
+```swift
+.removeDuplicates()
+```
+
+A second usage of `removeDuplicates` takes a single parameter by that accepts a closure that allows you to determine the logic of what will be removed. The parameter version does not have the constraint on the Output type being equatable, but requires you to provide the relevant logic. If the closure returns true, the `removeDuplicates` predicate will consider the values matched and not forward a the duplicate value.
+
+```swift
+.removeDuplicates(by: { first, second -> Bool in
+    // your logic is required if the output type doesn't conform to equatable.
+    first.id == second.id
+})
+```
+
+A variation of removeDuplicates exists that allows the predicate closure to throw an error exists: `tryRemoveDuplicates`
+
+**Discussion**:
+
+Use `removeDuplicates()` to remove repeating elements from an upstream publisher. This operator has a **two-element memory**: the operator uses the current and *previously* published elements as the basis for its comparison.
+
+In the example below, `removeDuplicates()` triggers on the doubled, tripled, and quadrupled occurrences of `1`, `3`, and `4` respectively. Because the *two-element memory* considers only the *current* element and the *previous* element, the operator prints the final `0` in the example data since its immediate predecessor is `4`.
+
+```swift
+let numbers = [0, 1, 2, 2, 3, 3, 3, 4, 4, 4, 4, 0]
+cancellable = numbers.publisher
+    .removeDuplicates()
+    .sink { print("\($0)", terminator: " ") }
+
+// Prints: "0 1 2 3 4 0"
+```
+
+### tryRemoveDuplicates
+
+`tryRemoveDuplicates` is a variant of `removeDuplicates` that allows the predicate testing equality to throw an error, resulting in an `Error` completion type.
+
+The parameter is a closure that allows you to determine the logic of what will be removed. If the closure throws an `error`, a failure completion will be propagated down the chain, and no value is sent.
+
+```swift
+.removeDuplicates(by: { first, second -> Bool throws in
+    // your logic is required if the output type doesn't conform to equatable.
+
+})
+```
+
+### replaceEmpty
 
 
