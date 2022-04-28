@@ -22,6 +22,9 @@ The chapter on [Core Concepts](https://heckj.github.io/swiftui-notes/#coreconcep
     - [replaceNil](#replacenil)
   - [Reducing elements](#reducing-elements)
     - [collect](#collect)
+    - [ignoreOutput](#ignoreoutput)
+    - [reduce](#reduce)
+    - [tryReduce](#tryreduce)
 
 ## Mapping elements
 
@@ -532,6 +535,64 @@ let queue = DispatchQueue(label: self.debugDescription)
 let cancellable = publisher
     .collect(.byTimeOrCount(queue, 1.0, 5))
 ```
+
+### ignoreOutput
+
+A publisher that ignores all upstream elements, but passes along a completion state (finish or failed).
+
+If you only want to know if a stream has finished (or failed), then `ignoreOutput` may be what you want.
+
+```swift
+.ignoreOutput()
+.sink(receiveCompletion: { completion in
+    print(".sink() received the completion", String(describing: completion))
+    switch completion {
+    case .finished: 2️⃣
+        finishReceived = true
+        break
+    case .failure(let anError): 3️⃣
+        print("received error: ", anError)
+        failureReceived = true
+        break
+    }
+}, receiveValue: { _ in 1️⃣
+    print(".sink() data received")
+})
+```
+
+- 1️⃣ No data will ever be presented to a downstream subscriber of `ignoreOutput`, so the `receiveValue` closure will never be invoked.
+- 2️⃣ When the stream completes, it will invoke `receiveCompletion`. You can switch on the case from that completion to respond to the success.
+- 3️⃣ Or you can do further processing based on receiving a failure.
+
+### reduce
+
+A publisher that applies a closure to all received elements and produces an accumulated value when the upstream publisher finishes.
+
+![reduce.svg](../../media/Swift/UsingCombine/reduce.svg)
+
+Very similar in function to the [scan](#scan) operator, reduce collects values produced within a stream. **The big difference between `scan` and `reduce` is that `reduce` does not trigger any values until the upstream publisher completes successfully.**
+
+When you create a `reduce` operator, you provide an initial value (of the type determined by the upstream publisher) and a closure that takes two parameters - the result returned from the previous invocation of the closure and a new value from the upstream publisher.
+
+Like `scan`, you don’t need to maintain the type of the upstream publisher, but can convert the type in your closure, returning whatever is appropriate to your needs.
+
+An example of `reduce` that collects strings and appends them together:
+
+```swift
+.reduce("", { prevVal, newValueFromPublisher -> String in
+    return prevVal+newValueFromPublisher
+})
+```
+
+The `reduce` operator is excellent at converting a stream that provides many values over time into one that provides a single value upon completion.
+
+### tryReduce
+
+A publisher that applies a closure to all received elements and produces an accumulated value when the upstream publisher finishes, while also allowing the closure to throw an exception, terminating the pipeline.
+
+`tryReduce` is a variation of the `reduce` operator that allows for the closure to throw an error. If the exception path is taken, the `tryReduce` operator will *not* publish any output values to downstream subscribers.
+
+Like `reduce`, the `tryReduce` will only publish a *single* downstream result upon a `.finished` completion from the upstream publisher.
 
 
 
