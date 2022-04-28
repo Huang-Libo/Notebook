@@ -18,6 +18,9 @@ The chapter on [Core Concepts](https://heckj.github.io/swiftui-notes/#coreconcep
     - [removeDuplicates](#removeduplicates)
     - [tryRemoveDuplicates](#tryremoveduplicates)
     - [replaceEmpty](#replaceempty)
+    - [replaceError](#replaceerror)
+    - [replaceNil](#replacenil)
+  - [Reducing elements](#reducing-elements)
 
 ## Mapping elements
 
@@ -416,5 +419,53 @@ The parameter is a closure that allows you to determine the logic of what will b
 ```
 
 ### replaceEmpty
+
+Replaces an empty stream with the provided element. If the upstream publisher finishes without producing any elements, this publisher emits the provided element, then finishes normally.
+
+`replaceEmpty` will only produce a result if it has not received any values before it receives a `.finished` completion. This operator will not trigger on an error passing through it, so if no value has been received with a `.failure` completion is triggered, it will simply not provide a value. The operator takes a single parameter, `with` where you specify the replacement value.
+
+```swift
+.replaceEmpty(with: "-replacement-")
+```
+
+This operator is useful specifically when you want a stream to always provide a value, even if an upstream publisher may not propagate one.
+
+### replaceError
+
+A publisher that replaces any errors with an output value that matches the upstream Output type.
+
+Where `mapError` transforms an error, `replaceError` captures the error and returns a value that matches the Output type of the upstream publisher. If you don’t care about the specifics of the error itself, it can be a more convenient operator than using `catch` to handle an error condition.
+
+```swift
+.replaceError(with: "foo")
+```
+
+is more compact than
+
+```swift
+.catch { err in
+    return Just("foo")
+}
+```
+
+`catch` would be the preferable error handler if you wanted to return *another publisher* rather than a singular value.
+
+### replaceNil
+
+Replaces `nil` elements in the stream with the provided element.
+
+![replace_nil.svg](../../media/Swift/UsingCombine/replace_nil.svg)
+
+Used when the output type is an optional type, the `replaceNil` operator replaces any nil instances provided by the upstream publisher with a value provided by the user. The operator takes a single parameter, `with` where you specify the replacement value. The type of the replacement should be a *non-optional* version of the type provided by the upstream publisher.
+
+```swift
+.replaceNil(with: "-replacement-")
+```
+
+This operator can also be viewed as a way of converting an optional type to an explicit type, where optional values have a pre-determined placeholder. Put another way, the `replaceNil` operator is a Combine specific variant of the swift coalescing operator that you might use when unwrapping an optional.
+
+If you want to convert an optional type into a concrete type, simply ignoring or collapsing the nil values, you should likely use the `compactMap` (or `tryCompactMap`) operator.
+
+## Reducing elements
 
 
