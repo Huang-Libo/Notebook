@@ -25,6 +25,12 @@ The chapter on [Core Concepts](https://heckj.github.io/swiftui-notes/#coreconcep
     - [ignoreOutput](#ignoreoutput)
     - [reduce](#reduce)
     - [tryReduce](#tryreduce)
+  - [Mathematic operations on elements](#mathematic-operations-on-elements)
+    - [max](#max)
+    - [tryMax](#trymax)
+    - [min](#min)
+    - [tryMin](#trymin)
+    - [count](#count)
 
 ## Mapping elements
 
@@ -528,7 +534,7 @@ let cancellable = publisher
 If either of the count or time interval provided are elapsed, the `collect` operator will forward the currently collected set to its subscribers.
 
 - If a `.finished` completion is received, the currently collected set will be immediately sent to it’s subscribers.
-- If a `.failure` completion is received, any currently buffered values are dropped and the `failure` completion is forwarded to collect’s subscribers.
+- If a `.failure` completion is received, any currently buffered values are dropped and the `.failure` completion is forwarded to collect’s subscribers.
 
 ```swift
 let queue = DispatchQueue(label: self.debugDescription)
@@ -594,6 +600,80 @@ A publisher that applies a closure to all received elements and produces an accu
 
 Like `reduce`, the `tryReduce` will only publish a *single* downstream result upon a `.finished` completion from the upstream publisher.
 
+## Mathematic operations on elements
 
+### max
+
+Publishes the max value of all values received upon completion of the upstream publisher.
+
+![max.svg](../../media/Swift/UsingCombine/max.svg)
+
+`max` can be set up with either no parameters, or taking a closure. If defined as an operator with no parameters, the Output type of the upstream publisher must conform to `Comparable`.
+
+```swift
+.max()
+```
+
+If what you are publishing doesn’t conform to `Comparable`, then you may specify a closure to provide the ordering for the operator.
+
+```swift
+.max { (struct1, struct2) -> Bool in
+    return struct1.property1 < struct2.property1
+    // returning boolean true to order struct2 greater than struct1
+    // the underlying method parameter for this closure hints to it:
+    // `areInIncreasingOrder`
+}
+```
+
+The parameter name of the closure hints to how it should be provided, being named `areInIncreasingOrder`. The closure will take two values of the output type of the upstream publisher, and within it you should provide a `boolean` result indicating if they are in increasing order.
+
+The operator will not provide any results under the upstream published has sent a `.finished` completion. If the upstream publisher sends a `.failure` completion, then no values will be published and the `.failure` completion will be forwarded.
+
+### tryMax
+
+Publishes the `max` value of all values received upon completion of the upstream publisher.
+
+A variation of the `max` operator that takes a closure to define ordering, and it also allowed to throw an error.
+
+### min
+
+Publishes the minimum value of all values received upon completion of the upstream publisher.
+
+![min.svg](../../media/Swift/UsingCombine/min.svg)
+
+`min` can be set up with either no parameters, or taking a closure. If defined as an operator with no parameters, the Output type of the upstream publisher must conform to `Comparable`.
+
+```swift
+.min()
+```
+
+If what you are publishing doesn’t conform to `Comparable`, then you may specify a closure to provide the ordering for the operator.
+
+```swift
+.min { (struct1, struct2) -> Bool in
+    return struct1.property1 < struct2.property1
+    // returning boolean true to order struct2 greater than struct1
+    // the underlying method parameter for this closure hints to it:
+    // `areInIncreasingOrder`
+}
+```
+
+The parameter name of the closure hints to how it should be provided, being named `areInIncreasingOrder`. The closure will take two values of the output type of the upstream publisher, and within it you should provide a `boolean` result indicating if they are in increasing order.
+
+The operator will not provide any results under the upstream published has sent a `.finished` completion. If the upstream publisher sends a `.failure` completion, then no values will be published and the `.failure` completion will be forwarded.
+
+### tryMin
+
+Publishes the minimum value of all values received upon completion of the upstream publisher.
+
+A variation of the `min` operator that takes a closure to define ordering, and it also allowed to throw an error.
+
+### count
+
+`count` publishes the number of items received from the upstream publisher
+
+![count.svg](../../media/Swift/UsingCombine/count.svg)
+
+The operator will not provide any results under the upstream published has sent a `.finished` completion. If the upstream publisher sends a `.failure` completion, then no values will be published and the `.failure` completion will be forwarded.
 
 
