@@ -31,6 +31,12 @@ The chapter on [Core Concepts](https://heckj.github.io/swiftui-notes/#coreconcep
     - [min](#min)
     - [tryMin](#trymin)
     - [count](#count)
+  - [Applying matching criteria to elements](#applying-matching-criteria-to-elements)
+    - [allSatisfy](#allsatisfy)
+    - [tryAllSatisfy](#tryallsatisfy)
+    - [contains](#contains)
+    - [containsWhere](#containswhere)
+    - [tryContainsWhere](#trycontainswhere)
 
 ## Mapping elements
 
@@ -675,5 +681,58 @@ A variation of the `min` operator that takes a closure to define ordering, and i
 ![count.svg](../../media/Swift/UsingCombine/count.svg)
 
 The operator will not provide any results under the upstream published has sent a `.finished` completion. If the upstream publisher sends a `.failure` completion, then no values will be published and the `.failure` completion will be forwarded.
+
+## Applying matching criteria to elements
+
+### allSatisfy
+
+A publisher that publishes a *single* `Boolean` value that indicates whether all received elements pass a provided predicate.
+
+![allSatisfy.svg](../../media/Swift/UsingCombine/allSatisfy.svg)
+
+The operator will compare any incoming values, only responding when the upstream publisher sends a `.finished` completion. At that point, the `allSatisfies` operator will return a *single* `boolean` value indicating if *all* the values received matched (or not) based on processing through the provided closure.
+
+If the operator receives a `.failure` completion from the upstream publisher, or throws an error itself, then *no* data values will be published to subscribers. In those cases, the operator will only return (or forward) the `.failure` completion.
+
+### tryAllSatisfy
+
+A publisher that publishes a *single* `Boolean` value that indicates whether all received elements pass a given throwing predicate.
+
+### contains
+
+A publisher that emits a `Boolean` value when a specified element is received from its upstream publisher.
+
+![contains.svg](../../media/Swift/UsingCombine/contains.svg)
+
+The simplest form of `contains` accepts a single parameter. The type of this parameter must match the Output type of the upstream publisher.
+
+The operator will compare any incoming values, only responding when the incoming value is equatable to the parameter provided.
+
+- When it does find a match, the operator returns a single boolean value (`true`) and then terminates the stream. **Any further values published from the upstream provider are then ignored.**
+- If the upstream published sends a `.finished` completion before any values do match, the operator will publish a *single* boolean (`false`) and then terminate the stream.
+
+### containsWhere
+
+A publisher that emits a `Boolean` value upon receiving an element that satisfies the predicate closure.
+
+![containsWhere.svg](../../media/Swift/UsingCombine/containsWhere.svg)
+
+A more flexible version of the [contains](#contains) operator. Instead of taking a single parameter value to match, you provide a closure which takes in a single value (of the type provided by the upstream publisher) and returns a boolean.
+
+Like `contains`, it will compare multiple incoming values, only responding when the incoming value is equatable to the parameter provided. When it does find a match, the operator returns a single `boolean` value and terminates the stream. **Any further values published from the upstream provider are ignored.**
+
+If the upstream published sends a `.finished` completion before any values do match, the operator will publish a *single* boolean (`false`) and terminates the stream.
+
+If you want a variant of this functionality that checks multiple incoming values to determine if *all* of them match, consider using the [allSatisfy](#allsatisfy) operator.
+
+### tryContainsWhere
+
+A publisher that emits a `Boolean` value upon receiving an element that satisfies the throwing predicate closure.
+
+If the operator receives a `.failure` completion from the upstream publisher, or throws an error itself, *no* data values will be published to subscribers. In those cases, the operator will only return (or forward) the `.failure` completion.
+
+
+
+
 
 
