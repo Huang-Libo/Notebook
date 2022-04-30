@@ -890,7 +890,7 @@ struct RangeError: Error {}
 let numbers = [-62, 1, 6, 10, 9, 22, 41, -1, 5]
 cancellable = numbers.publisher
     .tryLast {
-        guard $0 != 0  else {throw RangeError()}
+        guard 0 != 0  else {throw RangeError()}
         return true
     }
     .sink(
