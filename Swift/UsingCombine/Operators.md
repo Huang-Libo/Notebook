@@ -3,50 +3,216 @@
 The chapter on [Core Concepts](https://heckj.github.io/swiftui-notes/#coreconcepts) includes an overview of all available [Operators](https://heckj.github.io/swiftui-notes/#coreconcepts-operators).
 
 - [Operators](#operators)
-  - [Mapping elements](#mapping-elements)
-    - [scan](#scan)
-    - [tryScan](#tryscan)
+  - [Mapping Elements](#mapping-elements)
     - [map](#map)
     - [tryMap](#trymap)
+    - [mapError](#maperror)
     - [flatMap](#flatmap)
+    - [scan](#scan)
+    - [tryScan](#tryscan)
     - [setFailureType](#setfailuretype)
-  - [Filtering elements](#filtering-elements)
-    - [compactMap](#compactmap)
-    - [tryCompactMap](#trycompactmap)
+  - [Filtering Elements](#filtering-elements)
     - [filter](#filter)
     - [tryFilter](#tryfilter)
+    - [compactMap](#compactmap)
+    - [tryCompactMap](#trycompactmap)
     - [removeDuplicates](#removeduplicates)
     - [tryRemoveDuplicates](#tryremoveduplicates)
     - [replaceEmpty](#replaceempty)
     - [replaceError](#replaceerror)
-    - [replaceNil](#replacenil)
-  - [Reducing elements](#reducing-elements)
+    - [replaceNil(with:)](#replacenilwith)
+  - [Reducing Elements](#reducing-elements)
     - [collect](#collect)
     - [ignoreOutput](#ignoreoutput)
     - [reduce](#reduce)
     - [tryReduce](#tryreduce)
-  - [Mathematic operations on elements](#mathematic-operations-on-elements)
+  - [Applying Mathematical Operations on Elements](#applying-mathematical-operations-on-elements)
     - [max](#max)
     - [tryMax](#trymax)
     - [min](#min)
     - [tryMin](#trymin)
     - [count](#count)
-  - [Applying matching criteria to elements](#applying-matching-criteria-to-elements)
+  - [Applying Matching Criteria to Elements](#applying-matching-criteria-to-elements)
     - [allSatisfy](#allsatisfy)
     - [tryAllSatisfy](#tryallsatisfy)
     - [contains](#contains)
-    - [containsWhere](#containswhere)
-    - [tryContainsWhere](#trycontainswhere)
-  - [Applying sequence operations to elements](#applying-sequence-operations-to-elements)
+    - [contains(where:)](#containswhere)
+    - [tryContains(where:)](#trycontainswhere)
+  - [Applying Sequence Operations to Elements](#applying-sequence-operations-to-elements)
+    - [drop(untilOutputFrom:)](#dropuntiloutputfrom)
+  - [Selecting Specific Elements](#selecting-specific-elements)
     - [first](#first)
     - [first(where:)](#firstwhere)
     - [tryFirst(where:)](#tryfirstwhere)
     - [last](#last)
     - [last(where:)](#lastwhere)
     - [tryLast(where:)](#trylastwhere)
-    - [drop(untilOutputFrom:)](#dropuntiloutputfrom)
 
-## Mapping elements
+## Mapping Elements
+
+### map
+
+`map` is most commonly used to convert one data type into another along a pipeline.
+
+![map.svg](../../media/Swift/UsingCombine/map.svg)
+
+**Declaration**:
+
+```swift
+func map<T>(_ transform: @escaping (Self.Output) -> T) -> Publishers.Map<Self, T>
+```
+
+**Discussion**:
+
+The `map` operator does not allow for any additional failures to be thrown and does not transform the failure type. If you want to throw an error within your closure, use the `tryMap` operator.
+
+`map` takes a single closure where you provide the logic for the map operation.
+
+> `map` is the all purpose workhorse operator in Combine. It provides the ability to manipulate the data, or the type of data, and is the **most** commonly used operator in pipelines.
+
+For example, the `URLSession.dataTaskPublisher` provides a *tuple* of `(data: Data, response: URLResponse)` as its output. You can use `map` to pass along the data, for example to use with `decode`:
+
+```swift
+.map { $0.data } 1️⃣
+```
+
+- 1️⃣ the `$0` indicates to grab the first parameter passed in, which is a tuple of `data` and `response`.
+
+In some cases, the closure may not be able to infer what data type you are returning, so you may need to provide a definition to help the compiler. For example, if you have an object getting passed down that has a boolean property `isValid` on it, and you want the boolean for your pipeline, you might set that up like:
+
+```swift
+struct MyStruct {
+    isValid: bool = true
+}
+
+Just(MyStruct())
+    .map { inValue -> Bool in 1️⃣
+    inValue.isValid 2️⃣
+    }
+```
+
+- `inValue` is named as the parameter coming in, and the return type is being explicitly specified to Bool
+- A single line is an implicit return, in this case it is pulling the `isValid` property off the struct and passing it down.
+
+### tryMap
+
+`tryMap` is similar to `map`, except that it also allows you to provide a closure that throws additional errors if your conversion logic is unsuccessful.
+
+`tryMap` is useful when you have more complex business logic around your `map` and you want to indicate that the data passed in is an error, possibly handling that error later in the pipeline. If you are looking at `tryMap` to decode JSON, you may want to consider using the `decode` operator instead, which is set up for that common task.
+
+```swift
+enum MyFailure: Error {
+    case notBigEnough
+}
+
+Just(5)
+    .tryMap {
+    if inValue < 5 { 
+        throw MyFailure.notBigEnough 
+    }
+    return inValue 
+    }
+```
+
+### mapError
+
+Converts any failure from the upstream publisher into a new error.
+
+**Declaration**:
+
+```swift
+func mapError<E>(_ transform: @escaping (Self.Failure) -> E) -> Publishers.MapError<Self, E> where E : Error
+```
+
+**Discussion**:
+
+Use the `mapError(_:)` operator when you need to replace one error type with another, or where a downstream operator needs the error types of its inputs to match.
+
+The following example uses a `tryMap(_:)` operator to divide `1` by each element produced by a sequence publisher. When the publisher produces a `0`, the `tryMap(_:)` fails with a `DivisionByZeroError`. The `mapError(_:)` operator converts this into a `MyGenericError`.
+
+```swift
+struct DivisionByZeroError: Error {}
+struct MyGenericError: Error { var wrappedError: Error }
+
+func myDivide(_ dividend: Double, _ divisor: Double) throws -> Double {
+       guard divisor != 0 else { throw DivisionByZeroError() }
+       return dividend / divisor
+   }
+
+let divisors: [Double] = [5, 4, 3, 2, 1, 0]
+divisors.publisher
+    .tryMap { try myDivide(1, $0) }
+    .mapError { MyGenericError(wrappedError: $0) }
+    .sink(
+        receiveCompletion: { print ("completion: \($0)") ,
+        receiveValue: { print ("value: \($0)", terminator: " ") }
+     )
+
+// Prints: "0.2 0.25 0.3333333333333333 0.5 1.0 completion: failure(MyGenericError(wrappedError: DivisionByZeroError()))"
+```
+
+### flatMap
+
+Used with error recovery or async operations that might fail (for example `Future`), `flatMap` will replace any incoming values with another publisher.
+
+**Declaration**:
+
+```swift
+func flatMap<T, P>(maxPublishers: Subscribers.Demand = .unlimited, _ transform: @escaping (Self.Output) -> P) -> Publishers.FlatMap<P, Self> where T == P.Output, P : Publisher, Self.Failure == P.Failure
+```
+
+Typically used in error handling scenarios, `flatMap` takes a closure that allows you to read the incoming data value, and provide a publisher that returns a value to the pipeline.
+
+In error handling, this is most frequently used to take the incoming value and create a *one-shot* pipeline that does some potentially failing operation, and then handling the error condition with a `catch` operator.
+
+A simple example `flatMap`, arranged to show recovering from a decoding error and returning a placeholder value:
+
+```swift
+.flatMap { data in
+    return Just(data)
+        .decode(YourType.self, JSONDecoder())
+        .catch {
+            return Just(YourType.placeholder)
+        }
+}
+```
+
+A diagram version of this pipeline construct:
+
+![flatmap.svg](../../media/Swift/UsingCombine/flatmap.svg)
+
+> `flatMap` expects to create a new pipeline within its closure for every input value that it receives. The expected result of this internal pipeline is a Publisher with its own output and failure type. The output type of the publisher resulting from the internal pipeline defines the output type of the `flatMap` operator. The error type of the internal publisher is often expected to be `<Never>`.
+
+**Discussion**:
+
+Use `flatMap(maxPublishers:_:)` when you want to create a new series of events for downstream subscribers based on the received value. The closure creates the new Publisher based on the received value. The new Publisher can emit more than one event, and successful completion of the new Publisher does not complete the overall stream. Failure of the new Publisher causes the overall stream to fail.
+
+In the example below, a `PassthroughSubject` publishes `WeatherStation` elements. The `flatMap(maxPublishers:_:)` receives each element, creates a `URL` from it, and produces a new `URLSession.DataTaskPublisher`, which will publish the data loaded from that `URL`.
+
+```swift
+public struct WeatherStation {
+    public let stationID: String
+}
+
+var weatherPublisher = PassthroughSubject<WeatherStation, URLError>()
+
+cancellable = weatherPublisher.flatMap { station -> URLSession.DataTaskPublisher in
+    let url = URL(string:"https://weatherapi.example.com/stations/\(station.stationID)/observations/latest")!
+    return URLSession.shared.dataTaskPublisher(for: url)
+}
+.sink(
+    receiveCompletion: { completion in
+        // Handle publisher completion (normal or error).
+    },
+    receiveValue: {
+        // Process the received data.
+    }
+ )
+
+weatherPublisher.send(WeatherStation(stationID: "KSFO")) // San Francisco, CA
+weatherPublisher.send(WeatherStation(stationID: "EGLC")) // London, UK
+weatherPublisher.send(WeatherStation(stationID: "ZBBB")) // Beijing, CN
+```
 
 ### scan
 
@@ -130,133 +296,6 @@ cancellable = numbers.publisher
 // Prints: "11 6 3 1 1 failure(DivisionByZeroError())".
 ```
 
-### map
-
-`map` is most commonly used to convert one data type into another along a pipeline.
-
-![map.svg](../../media/Swift/UsingCombine/map.svg)
-
-**Declaration**:
-
-```swift
-func map<T>(_ transform: @escaping (Self.Output) -> T) -> Publishers.Map<Self, T>
-```
-
-**Discussion**:
-
-The `map` operator does not allow for any additional failures to be thrown and does not transform the failure type. If you want to throw an error within your closure, use the `tryMap` operator.
-
-`map` takes a single closure where you provide the logic for the map operation.
-
-> `map` is the all purpose workhorse operator in Combine. It provides the ability to manipulate the data, or the type of data, and is the **most** commonly used operator in pipelines.
-
-For example, the `URLSession.dataTaskPublisher` provides a *tuple* of `(data: Data, response: URLResponse)` as its output. You can use `map` to pass along the data, for example to use with `decode`:
-
-```swift
-.map { $0.data } 1️⃣
-```
-
-- 1️⃣ the `$0` indicates to grab the first parameter passed in, which is a tuple of `data` and `response`.
-
-In some cases, the closure may not be able to infer what data type you are returning, so you may need to provide a definition to help the compiler. For example, if you have an object getting passed down that has a boolean property `isValid` on it, and you want the boolean for your pipeline, you might set that up like:
-
-```swift
-struct MyStruct {
-    isValid: bool = true
-}
-
-Just(MyStruct())
-    .map { inValue -> Bool in 1️⃣
-    inValue.isValid 2️⃣
-    }
-```
-
-- `inValue` is named as the parameter coming in, and the return type is being explicitly specified to Bool
-- A single line is an implicit return, in this case it is pulling the `isValid` property off the struct and passing it down.
-
-### tryMap
-
-`tryMap` is similar to `map`, except that it also allows you to provide a closure that throws additional errors if your conversion logic is unsuccessful.
-
-`tryMap` is useful when you have more complex business logic around your `map` and you want to indicate that the data passed in is an error, possibly handling that error later in the pipeline. If you are looking at `tryMap` to decode JSON, you may want to consider using the `decode` operator instead, which is set up for that common task.
-
-```swift
-enum MyFailure: Error {
-    case notBigEnough
-}
-
-Just(5)
-    .tryMap {
-    if inValue < 5 { 
-        throw MyFailure.notBigEnough 
-    }
-    return inValue 
-    }
-```
-
-### flatMap
-
-Used with error recovery or async operations that might fail (for example `Future`), `flatMap` will replace any incoming values with another publisher.
-
-**Declaration**:
-
-```swift
-func flatMap<T, P>(maxPublishers: Subscribers.Demand = .unlimited, _ transform: @escaping (Self.Output) -> P) -> Publishers.FlatMap<P, Self> where T == P.Output, P : Publisher, Self.Failure == P.Failure
-```
-
-Typically used in error handling scenarios, `flatMap` takes a closure that allows you to read the incoming data value, and provide a publisher that returns a value to the pipeline.
-
-In error handling, this is most frequently used to take the incoming value and create a *one-shot* pipeline that does some potentially failing operation, and then handling the error condition with a `catch` operator.
-
-A simple example `flatMap`, arranged to show recovering from a decoding error and returning a placeholder value:
-
-```swift
-.flatMap { data in
-    return Just(data)
-        .decode(YourType.self, JSONDecoder())
-        .catch {
-            return Just(YourType.placeholder)
-        }
-}
-```
-
-A diagram version of this pipeline construct:
-
-![flatmap.svg](../../media/Swift/UsingCombine/flatmap.svg)
-
-> `flatMap` expects to create a new pipeline within its closure for every input value that it receives. The expected result of this internal pipeline is a Publisher with its own output and failure type. The output type of the publisher resulting from the internal pipeline defines the output type of the `flatMap` operator. The error type of the internal publisher is often expected to be `<Never>`.
-
-**Discussion**:
-
-Use `flatMap(maxPublishers:_:)` when you want to create a new series of events for downstream subscribers based on the received value. The closure creates the new Publisher based on the received value. The new Publisher can emit more than one event, and successful completion of the new Publisher does not complete the overall stream. Failure of the new Publisher causes the overall stream to fail.
-
-In the example below, a `PassthroughSubject` publishes `WeatherStation` elements. The `flatMap(maxPublishers:_:)` receives each element, creates a `URL` from it, and produces a new `URLSession.DataTaskPublisher`, which will publish the data loaded from that `URL`.
-
-```swift
-public struct WeatherStation {
-    public let stationID: String
-}
-
-var weatherPublisher = PassthroughSubject<WeatherStation, URLError>()
-
-cancellable = weatherPublisher.flatMap { station -> URLSession.DataTaskPublisher in
-    let url = URL(string:"https://weatherapi.example.com/stations/\(station.stationID)/observations/latest")!
-    return URLSession.shared.dataTaskPublisher(for: url)
-}
-.sink(
-    receiveCompletion: { completion in
-        // Handle publisher completion (normal or error).
-    },
-    receiveValue: {
-        // Process the received data.
-    }
- )
-
-weatherPublisher.send(WeatherStation(stationID: "KSFO")) // San Francisco, CA
-weatherPublisher.send(WeatherStation(stationID: "EGLC")) // London, UK
-weatherPublisher.send(WeatherStation(stationID: "ZBBB")) // Beijing, CN
-```
-
 ### setFailureType
 
 `setFailureType` does not send a `.failure` completion, it just changes the `Failure` type associated with the pipeline. Use this publisher type when you need to match the error types for two otherwise mismatched publishers.
@@ -275,7 +314,46 @@ This can be especially convenient if you need to match an operator or subscriber
 
 If you want to return a `.failure` completion of a specific type into a pipeline, use the `Fail` operator.
 
-## Filtering elements
+## Filtering Elements
+
+### filter
+
+`Filter` passes through all instances of the output type that match a provided closure, dropping any that don’t match.
+
+**Declaration**：
+
+```swift
+func filter(_ isIncluded: @escaping (Self.Output) -> Bool) -> Publishers.Filter<Self>
+```
+
+![filter.svg](../../media/Swift/UsingCombine/filter.svg)
+
+`Filter` takes a single closure as a parameter that is provided the value from the previous publisher and returns a `Bool` value. If the return from the closure is true, then the operator republishes the value further down the chain. If the return from the closure is false, then the operator drops the value.
+
+If you need a variation of this that will generate an error condition in the pipeline to be handled use the `tryFilter` operator, which allows the closure to throw an error in the evaluation.
+
+**Discussion**:
+
+Combine’s `filter(_:)` operator performs an operation similar to that of `filter(_:)` in the Swift Standard Library: it uses a closure to test each element to determine whether to republish the element to the downstream subscriber.
+
+The following example, uses a filter operation that receives an `Int` and only republishes a value if it’s even.
+
+```swift
+let numbers: [Int] = [1, 2, 3, 4, 5]
+cancellable = numbers.publisher
+    .filter { $0 % 2 == 0 }
+    .sink { print("\($0)", terminator: " ") }
+
+// Prints: "2 4"
+```
+
+### tryFilter
+
+`tryFilter` passes through all instances of the output type that match a provided closure, dropping any that don’t match, and allows generating an error during the evaluation of that closure.
+
+Like filter, `tryFilter` takes a single closure as a parameter that is provided the value from the previous publisher and returns a `Bool` value. If the return from the closure is `true`, then the operator republishes the value further down the chain. If the return from the closure is `false`, then the operator drops the value.
+
+You can additionally throw an error during the evaluation of `tryFilter`, which will then be propagated as the failure type down the pipeline.
 
 ### compactMap
 
@@ -337,45 +415,6 @@ If you want to convert an optional type into a concrete type, always replacing t
 - 1️⃣ If you specify the return type within the closure, it should be an optional value. The operator that invokes the closure is responsible for filtering the non-`nil` values it publishes.
 
 If you want to convert an optional type into a concrete type, always replacing the nil with an explicit value, you should likely use the `replaceNil` operator.
-
-### filter
-
-`Filter` passes through all instances of the output type that match a provided closure, dropping any that don’t match.
-
-**Declaration**：
-
-```swift
-func filter(_ isIncluded: @escaping (Self.Output) -> Bool) -> Publishers.Filter<Self>
-```
-
-![filter.svg](../../media/Swift/UsingCombine/filter.svg)
-
-`Filter` takes a single closure as a parameter that is provided the value from the previous publisher and returns a `Bool` value. If the return from the closure is true, then the operator republishes the value further down the chain. If the return from the closure is false, then the operator drops the value.
-
-If you need a variation of this that will generate an error condition in the pipeline to be handled use the `tryFilter` operator, which allows the closure to throw an error in the evaluation.
-
-**Discussion**:
-
-Combine’s `filter(_:)` operator performs an operation similar to that of `filter(_:)` in the Swift Standard Library: it uses a closure to test each element to determine whether to republish the element to the downstream subscriber.
-
-The following example, uses a filter operation that receives an `Int` and only republishes a value if it’s even.
-
-```swift
-let numbers: [Int] = [1, 2, 3, 4, 5]
-cancellable = numbers.publisher
-    .filter { $0 % 2 == 0 }
-    .sink { print("\($0)", terminator: " ") }
-
-// Prints: "2 4"
-```
-
-### tryFilter
-
-`tryFilter` passes through all instances of the output type that match a provided closure, dropping any that don’t match, and allows generating an error during the evaluation of that closure.
-
-Like filter, `tryFilter` takes a single closure as a parameter that is provided the value from the previous publisher and returns a `Bool` value. If the return from the closure is `true`, then the operator republishes the value further down the chain. If the return from the closure is `false`, then the operator drops the value.
-
-You can additionally throw an error during the evaluation of `tryFilter`, which will then be propagated as the failure type down the pipeline.
 
 ### removeDuplicates
 
@@ -474,7 +513,7 @@ is more compact than
 
 `catch` would be the preferable error handler if you wanted to return *another publisher* rather than a singular value.
 
-### replaceNil
+### replaceNil(with:)
 
 Replaces `nil` elements in the stream with the provided element.
 
@@ -490,7 +529,7 @@ This operator can also be viewed as a way of converting an optional type to an e
 
 If you want to convert an optional type into a concrete type, simply ignoring or collapsing the nil values, you should likely use the `compactMap` (or `tryCompactMap`) operator.
 
-## Reducing elements
+## Reducing Elements
 
 ### collect
 
@@ -614,7 +653,7 @@ A publisher that applies a closure to all received elements and produces an accu
 
 Like `reduce`, the `tryReduce` will only publish a *single* downstream result upon a `.finished` completion from the upstream publisher.
 
-## Mathematic operations on elements
+## Applying Mathematical Operations on Elements
 
 ### max
 
@@ -690,7 +729,7 @@ A variation of the `min` operator that takes a closure to define ordering, and i
 
 The operator will not provide any results under the upstream published has sent a `.finished` completion. If the upstream publisher sends a `.failure` completion, then no values will be published and the `.failure` completion will be forwarded.
 
-## Applying matching criteria to elements
+## Applying Matching Criteria to Elements
 
 ### allSatisfy
 
@@ -719,7 +758,7 @@ The operator will compare any incoming values, only responding when the incoming
 - When it does find a match, the operator returns a single boolean value (`true`) and then terminates the stream. **Any further values published from the upstream provider are then ignored.**
 - If the upstream published sends a `.finished` completion before any values do match, the operator will publish a *single* boolean (`false`) and then terminate the stream.
 
-### containsWhere
+### contains(where:)
 
 A publisher that emits a `Boolean` value upon receiving an element that satisfies the predicate closure.
 
@@ -733,13 +772,19 @@ If the upstream published sends a `.finished` completion before any values do ma
 
 If you want a variant of this functionality that checks multiple incoming values to determine if *all* of them match, consider using the [allSatisfy](#allsatisfy) operator.
 
-### tryContainsWhere
+### tryContains(where:)
 
 A publisher that emits a `Boolean` value upon receiving an element that satisfies the throwing predicate closure.
 
 If the operator receives a `.failure` completion from the upstream publisher, or throws an error itself, *no* data values will be published to subscribers. In those cases, the operator will only return (or forward) the `.failure` completion.
 
-## Applying sequence operations to elements
+## Applying Sequence Operations to Elements
+
+### drop(untilOutputFrom:)
+
+A publisher that ignores elements from the upstream publisher until it receives an element from second publisher.
+
+## Selecting Specific Elements
 
 ### first
 
@@ -901,9 +946,7 @@ cancellable = numbers.publisher
 // If instead the numbers array had contained a `0`, the `tryLast` operator would terminate publishing with a RangeError."
 ```
 
-### drop(untilOutputFrom:)
 
-A publisher that ignores elements from the upstream publisher until it receives an element from second publisher.
 
 
 
