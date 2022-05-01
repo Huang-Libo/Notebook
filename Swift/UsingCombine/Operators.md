@@ -58,6 +58,8 @@ The chapter on [Core Concepts](https://heckj.github.io/swiftui-notes/#coreconcep
     - [last](#last)
     - [last(where:)](#lastwhere)
     - [tryLast(where:)](#trylastwhere)
+    - [output(at:)](#outputat)
+    - [output(in:)](#outputin)
 
 ## Mapping Elements
 
@@ -1271,6 +1273,56 @@ cancellable = numbers.publisher
     )
 // Prints: "5 completion: finished"
 // If instead the numbers array had contained a `0`, the `tryLast` operator would terminate publishing with a RangeError."
+```
+
+### output(at:)
+
+Publishes a specific element, indicated by its index in the sequence of published elements.
+
+**Declaration**:
+
+```swift
+func output(at index: Int) -> Publishers.Output<Self>
+```
+
+**Discussion**:
+
+Use `output(at:)` when you need to republish a specific element specified by its position in the stream. If the publisher completes normally or with an error before publishing the specified element, then the publisher doesn’t produce any elements.
+
+In the example below, the array publisher emits the *fifth* element in the sequence of published elements:
+
+```swift
+let numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+numbers.publisher
+    .output(at: 5)
+    .sink { print("\($0)") }
+
+// Prints: "6"
+```
+
+### output(in:)
+
+Publishes elements specified by their range in the sequence of published elements.
+
+**Declaration**:
+
+```swift
+func output<R>(in range: R) -> Publishers.Output<Self> where R : RangeExpression, R.Bound == Int
+```
+
+**Discussion**:
+
+Use `output(in:)` to republish a range indices you specify in the published stream. After publishing all elements, the publisher finishes normally. If the publisher completes normally or with an error before producing all the elements in the range, it doesn’t publish the remaining elements.
+
+In the example below, an array publisher emits the subset of elements at the indices in the specified range:
+
+```swift
+let numbers = [1, 1, 2, 2, 2, 3, 4, 5, 6]
+numbers.publisher
+    .output(in: (3...5))
+    .sink { print("\($0)", terminator: " ") }
+
+// Prints: "2 2 3"
 ```
 
 
