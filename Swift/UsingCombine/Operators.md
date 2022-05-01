@@ -40,6 +40,9 @@ The chapter on [Core Concepts](https://heckj.github.io/swiftui-notes/#coreconcep
     - [tryContains(where:)](#trycontainswhere)
   - [Applying Sequence Operations to Elements](#applying-sequence-operations-to-elements)
     - [drop(untilOutputFrom:)](#dropuntiloutputfrom)
+    - [dropFirst](#dropfirst)
+    - [drop(while:)](#dropwhile)
+    - [tryDrop(while:)](#trydropwhile)
   - [Selecting Specific Elements](#selecting-specific-elements)
     - [first](#first)
     - [first(where:)](#firstwhere)
@@ -782,7 +785,122 @@ If the operator receives a `.failure` completion from the upstream publisher, or
 
 ### drop(untilOutputFrom:)
 
-A publisher that ignores elements from the upstream publisher until it receives an element from second publisher.
+Ignores elements from the upstream publisher until it receives an element from a second publisher.
+
+**Declaration**:
+
+```swift
+func drop<P>(untilOutputFrom publisher: P) -> Publishers.DropUntilOutput<Self, P> where P : Publisher, Self.Failure == P.Failure
+```
+
+**Discussion**:
+
+Use `drop(untilOutputFrom:)` to ignore elements from the upstream publisher until another, second, publisher delivers its first element. This publisher requests a single value from the second publisher, and it ignores (drops) all elements from the upstream publisher until the second publisher produces a value.
+
+**After the second publisher produces an element, `drop(untilOutputFrom:)` cancels its subscription to the second publisher, and allows events from the upstream publisher to pass through.**
+
+After this publisher receives a subscription from the upstream publisher, it passes through backpressure requests from downstream to the upstream publisher. If the upstream publisher acts on those requests before the other publisher produces an item, this publisher drops the elements it receives from the upstream publisher.
+
+In the example below, the `pub1` publisher defers publishing its elements until the `pub2` publisher delivers its first element:
+
+```swift
+let upstream = PassthroughSubject<Int,Never>()
+let second = PassthroughSubject<String,Never>()
+cancellable = upstream
+    .drop(untilOutputFrom: second)
+    .sink { print("\($0)", terminator: " ") }
+
+upstream.send(1)
+upstream.send(2)
+second.send("A")
+upstream.send(3)
+upstream.send(4)
+// Prints "3 4"
+```
+
+### dropFirst
+
+Omits the specified number of elements before republishing subsequent elements.
+
+**Declaration**:
+
+```swift
+func dropFirst(_ count: Int = 1) -> Publishers.Drop<Self>
+```
+
+**Discussion**:
+
+Use `dropFirst(_:)` when you want to drop the first `n` elements from the upstream publisher, and republish the remaining elements.
+
+The example below drops the first five elements from the stream:
+
+```swift
+let numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+cancellable = numbers.publisher
+    .dropFirst(5)
+    .sink { print("\($0)", terminator: " ") }
+
+// Prints: "6 7 8 9 10 "
+```
+
+### drop(while:)
+
+Omits elements from the upstream publisher until a given closure returns `false`, before republishing all remaining elements.
+
+**Declaration**:
+
+```swift
+func drop(while predicate: @escaping (Self.Output) -> Bool) -> Publishers.DropWhile<Self>
+```
+
+**Discussion**:
+
+In the example below, the operator omits all elements in the stream until the first element arrives that’s a positive integer, after which the operator publishes all remaining elements:
+
+```swift
+let numbers = [-62, -1, 0, 10, 0, 22, 41, -1, 5]
+cancellable = numbers.publisher
+    .drop { $0 <= 0 }
+    .sink { print("\($0)") }
+
+// Prints: "10 0, 22 41 -1 5"
+```
+
+### tryDrop(while:)
+
+Omits elements from the upstream publisher until an error-throwing closure returns `false`, before republishing all remaining elements.
+
+**Declaration**:
+
+```swift
+func tryDrop(while predicate: @escaping (Self.Output) throws -> Bool) -> Publishers.TryDropWhile<Self>
+```
+
+**Discussion**:
+
+If the closure throws, no elements are emitted and the publisher fails with an error.
+
+In the example below, elements are ignored until `-1` is encountered in the stream and the closure returns `false`. The publisher then republishes the remaining elements and finishes normally. Conversely, if the `guard` value in the closure had been encountered, the closure would throw and the publisher would fail with an error.
+
+```swift
+struct RangeError: Error {}
+var numbers = [1, 2, 3, 4, 5, 6, -1, 7, 8, 9, 10]
+let range: CountableClosedRange<Int> = (1...100)
+cancellable = numbers.publisher
+    .tryDrop {
+        guard $0 != 0 else { throw RangeError() }
+        return range.contains($0)
+    }
+    .sink(
+        receiveCompletion: { print ("completion: \($0)") },
+        receiveValue: { print ("value: \($0)") }
+    )
+
+// Prints: "-1 7 8 9 10 completion: finished"
+// 
+// If instead numbers was [1, 2, 3, 4, 5, 6, 0, -1, 7, 8, 9, 10], 
+// tryDrop(while:) would fail with a RangeError.
+```
 
 ## Selecting Specific Elements
 
