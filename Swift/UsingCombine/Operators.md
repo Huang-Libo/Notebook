@@ -43,6 +43,9 @@ The chapter on [Core Concepts](https://heckj.github.io/swiftui-notes/#coreconcep
     - [dropFirst](#dropfirst)
     - [drop(while:)](#dropwhile)
     - [tryDrop(while:)](#trydropwhile)
+    - [append](#append)
+    - [`append<S>`](#appends)
+    - [`append<P>`](#appendp)
   - [Selecting Specific Elements](#selecting-specific-elements)
     - [first](#first)
     - [first(where:)](#firstwhere)
@@ -900,6 +903,79 @@ cancellable = numbers.publisher
 // 
 // If instead numbers was [1, 2, 3, 4, 5, 6, 0, -1, 7, 8, 9, 10], 
 // tryDrop(while:) would fail with a RangeError.
+```
+
+### append
+
+Appends a publisher’s output with the specified elements.
+
+**Declaration**:
+
+```swift
+func append(_ elements: Self.Output...) -> Publishers.Concatenate<Self, Publishers.Sequence<[Self.Output], Self.Failure>>
+```
+
+**Discussion**:
+
+In the example below, the `append(_:)` operator publishes the provided elements after republishing all elements from `dataElements`:
+
+```swift
+let dataElements = (0...10)
+cancellable = dataElements.publisher
+    .append(0, 1, 255)
+    .sink { print("\($0)", terminator: " ") }
+
+// Prints: "0 1 2 3 4 5 6 7 8 9 10 0 1 255"
+```
+
+### `append<S>`
+
+Appends a publisher’s output with the specified sequence.
+
+**Declaration**:
+
+```swift
+func append<S>(_ elements: S) -> Publishers.Concatenate<Self, Publishers.Sequence<S, Self.Failure>> where S : Sequence, Self.Output == S.Element
+```
+
+**Discussion**:
+
+In the example below, the `append(_:)` publisher republishes all elements from `groundTransport` until it finishes, then publishes the members of `airTransport`:
+
+```swift
+let groundTransport = ["car", "bus", "truck", "subway", "bicycle"]
+let airTransport = ["parasail", "jet", "helicopter", "rocket"]
+cancellable = groundTransport.publisher
+    .append(airTransport)
+    .sink { print("\($0)", terminator: " ") }
+
+// Prints: "car bus truck subway bicycle parasail jet helicopter rocket"
+```
+
+### `append<P>`
+
+Appends the output of this publisher with the elements emitted by the given publisher.
+
+**Declaration**:
+
+```swift
+func append<P>(_ publisher: P) -> Publishers.Concatenate<Self, P> where P : Publisher, Self.Failure == P.Failure, Self.Output == P.Output
+```
+
+**Discussion**:
+
+If this publisher fails with an error, the given publishers elements aren’t published.
+
+In the example below, the `append` publisher republishes all elements from the `numbers` publisher until it finishes, then publishes all elements from the `otherNumbers` publisher:
+
+```swift
+let numbers = (0...10)
+let otherNumbers = (25...35)
+cancellable = numbers.publisher
+    .append(otherNumbers.publisher)
+    .sink { print("\($0)", terminator: " ") }
+
+// Prints: "0 1 2 3 4 5 6 7 8 9 10 25 26 27 28 29 30 31 32 33 34 35 "
 ```
 
 ## Selecting Specific Elements
