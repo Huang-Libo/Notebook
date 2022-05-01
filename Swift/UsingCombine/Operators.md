@@ -60,7 +60,7 @@ The chapter on [Core Concepts](https://heckj.github.io/swiftui-notes/#coreconcep
     - [output(at:)](#outputat)
     - [output(in:)](#outputin)
   - [Mixing Elements from Multiple Publishers](#mixing-elements-from-multiple-publishers)
-    - [combineLatest](#combinelatest)
+    - [`combineLatest<P>`](#combinelatestp)
     - [`combineLatest<P, T>`](#combinelatestp-t)
     - [merge(with:)](#mergewith)
     - [`zip<P>`](#zipp)
@@ -68,6 +68,11 @@ The chapter on [Core Concepts](https://heckj.github.io/swiftui-notes/#coreconcep
   - [Republishing Elements by Subscribing to New Publishers](#republishing-elements-by-subscribing-to-new-publishers)
     - [flatMap](#flatmap)
     - [switchToLatest](#switchtolatest)
+  - [Handling Errors](#handling-errors)
+    - [assertNoFailure](#assertnofailure)
+    - [catch](#catch)
+    - [tryCatch](#trycatch)
+    - [retry](#retry)
 
 ## Mapping Elements
 
@@ -1272,7 +1277,7 @@ numbers.publisher
 
 ## Mixing Elements from Multiple Publishers
 
-### combineLatest
+### `combineLatest<P>`
 
 `CombineLatest` merges two pipelines into a single output, converting the output type to a `tuple` of values from the upstream pipelines, and providing an update when *any* of the upstream publishers provide a new value.
 
@@ -1574,5 +1579,164 @@ for index in 1...5 {
 // Prints "URL: https://example.org/get?index=5"
 ```
 
+## Handling Errors
 
+### assertNoFailure
+
+Raises a fatal error when its upstream publisher fails, and otherwise republishes all received input.
+
+**Declaration**:
+
+```swift
+func assertNoFailure(_ prefix: String = "", file: StaticString = #file, line: UInt = #line) -> Publishers.AssertNoFailure<Self>
+```
+
+**Discussion**:
+
+Use `assertNoFailure()` for internal integrity checks that are active during testing. However, it is important to note that, like its Swift counterpart `fatalError(_:)`, the `assertNoFailure()` operator asserts a fatal exception when triggered during development and testing, *and* in shipping versions of code.
+
+In the example below, a `CurrentValueSubject` publishes the initial and second values successfully. The third value, containing a `genericSubjectError`, causes the `assertNoFailure()` operator to assert a fatal exception stopping the process:
+
+```swift
+public enum SubjectError: Error {
+    case genericSubjectError
+}
+
+let subject = CurrentValueSubject<String, Error>("initial value")
+subject
+    .assertNoFailure()
+    .sink(receiveCompletion: { print ("completion: \($0)") },
+          receiveValue: { print ("value: \($0).") }
+    )
+
+subject.send("second value")
+subject.send(completion: Subscribers.Completion<Error>.failure(SubjectError.genericSubjectError))
+
+// Prints:
+//  value: initial value.
+//  value: second value.
+//  The process then terminates in the debugger as the assertNoFailure operator catches the genericSubjectError.
+```
+
+### catch
+
+Handles errors from an upstream publisher by replacing it with another publisher.
+
+**Declaration**:
+
+```swift
+func `catch`<P>(_ handler: @escaping (Self.Failure) -> P) -> Publishers.Catch<Self, P> where P : Publisher, Self.Output == P.Output
+```
+
+**Discussion**:
+
+Use `catch()` to replace an error from an upstream publisher with a new publisher.
+
+In the example below, the `catch()` operator handles the `SimpleError` thrown by the upstream publisher by replacing the error with a `Just` publisher. This continues the stream by publishing a single value and completing normally.
+
+> Backpressure note: This publisher passes through `request` and `cancel` to the upstream. After receiving an error, the publisher sends sends any unfulfilled demand to the new `Publisher`. SeeAlso: `replaceError`
+
+```swift
+struct SimpleError: Error {}
+let numbers = [5, 4, 3, 2, 1, 0, 9, 8, 7, 6]
+cancellable = numbers.publisher
+    .tryLast(where: {
+        guard $0 != 0 else {throw SimpleError()}
+        return true
+    })
+    .catch({ (error) in
+        Just(-1)
+    })
+    .sink { print("\($0)") }
+    // Prints: -1
+```
+
+### tryCatch
+
+Handles errors from an upstream publisher by either replacing it with another publisher or throwing a new error.
+
+**Declaration**:
+
+```swift
+func tryCatch<P>(_ handler: @escaping (Self.Failure) throws -> P) -> Publishers.TryCatch<Self, P> where P : Publisher, Self.Output == P.Output
+```
+
+**Discussion**:
+
+Use `tryCatch(_:)` to decide how to handle from an upstream publisher by either replacing the publisher with a new publisher, or throwing a new error.
+
+In the example below, an array publisher emits values that a `tryMap(_:)` operator evaluates to ensure the values are greater than `0`. If the values aren’t greater than `0`, the operator throws an error to the downstream subscriber to let it know there was a problem. The subscriber, `tryCatch(_:)`, replaces the error with a new publisher using `Just` to publish a final value before the stream ends normally.
+
+```swift
+enum SimpleError: Error { case error }
+var numbers = [5, 4, 3, 2, 1, -1, 7, 8, 9, 10]
+
+cancellable = numbers.publisher
+   .tryMap { v in
+        if v > 0 {
+            return v
+        } else {
+            throw SimpleError.error
+        }
+}
+  .tryCatch { error in
+      Just(0) // Send a final value before completing normally.
+              // Alternatively, throw a new error to terminate the stream.
+}
+  .sink(receiveCompletion: { print ("Completion: \($0).") },
+        receiveValue: { print ("Received \($0).") }
+  )
+//    Received 5.
+//    Received 4.
+//    Received 3.
+//    Received 2.
+//    Received 1.
+//    Received 0.
+//    Completion: finished.
+```
+
+### retry
+
+Attempts to recreate a failed subscription with the upstream publisher up to the number of times you specify.
+
+**Declaration**:
+
+```swift
+
+```
+
+**Discussion**:
+
+Use `retry(_:)` to try a connecting to an upstream publisher after a failed connection attempt.
+
+In the example below, a `URLSession.DataTaskPublisher` attempts to connect to a remote URL.
+
+- If the connection attempt succeeds, it publishes the remote service’s HTML to the downstream publisher and completes normally.
+- Otherwise, the retry operator attempts to reestablish the connection.
+- If after three attempts the publisher still can’t connect to the remote URL, the `catch(_:)` operator replaces the error with a new publisher that publishes a “connection timed out” HTML page. After the downstream subscriber receives the timed out message, the stream completes normally.
+
+> After exceeding the specified number of retries, the publisher passes the failure to the downstream receiver.
+
+```swift
+struct WebSiteData: Codable {
+    var rawHTML: String
+}
+
+let myURL = URL(string: "https://www.example.com")
+
+cancellable = URLSession.shared.dataTaskPublisher(for: myURL!)
+    .retry(3)
+    .map({ (page) -> WebSiteData in
+        return WebSiteData(rawHTML: String(decoding: page.data, as: UTF8.self))
+    })
+    .catch { error in
+        return Just(WebSiteData(rawHTML: "<HTML>Unable to load page - timed out.</HTML>"))
+}
+.sink(receiveCompletion: { print ("completion: \($0)") },
+      receiveValue: { print ("value: \($0)") }
+ )
+
+// Prints: The HTML content from the remote URL upon a successful connection,
+//         or returns "<HTML>Unable to load page - timed out.</HTML>" if the number of retries exceeds the specified value.
+```
 
