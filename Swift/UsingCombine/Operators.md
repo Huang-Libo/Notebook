@@ -60,6 +60,12 @@ The chapter on [Core Concepts](https://heckj.github.io/swiftui-notes/#coreconcep
     - [tryLast(where:)](#trylastwhere)
     - [output(at:)](#outputat)
     - [output(in:)](#outputin)
+  - [Mixing Elements from Multiple Publishers](#mixing-elements-from-multiple-publishers)
+    - [combineLatest](#combinelatest)
+    - [`combineLatest<P, T>`](#combinelatestp-t)
+    - [merge(with:)](#mergewith)
+    - [`zip<P>`](#zipp)
+    - [`zip<P, T>`](#zipp-t)
 
 ## Mapping Elements
 
@@ -1325,8 +1331,195 @@ numbers.publisher
 // Prints: "2 2 3"
 ```
 
+## Mixing Elements from Multiple Publishers
 
+### combineLatest
 
+`CombineLatest` merges two pipelines into a single output, converting the output type to a `tuple` of values from the upstream pipelines, and providing an update when *any* of the upstream publishers provide a new value.
+
+**Declaration**:
+
+```swift
+func combineLatest<P>(_ other: P) -> Publishers.CombineLatest<Self, P> where P : Publisher, Self.Failure == P.Failure
+```
+
+**Discussion**:
+
+- Use `combineLatest(_:)` when you want the downstream subscriber to receive a tuple of the most-recent element from multiple publishers when *any* of them emit a value.
+- To *pair* elements from multiple publishers, use `zip(_:)` instead.
+- To receive just the most-recent element from multiple publishers rather than tuples, use `merge(with:)`.
+
+> **Tip**: The combined publisher doesn’t produce elements until each of its upstream publishers publishes at least one element.
+
+The combined publisher passes through any requests to all upstream publishers. However, it still obeys the demand-fulfilling rule of only sending the request amount downstream. If the demand isn’t `unlimited`, it drops values from upstream publishers. It implements this by using a buffer size of `1` for each upstream, and holds the most-recent value in each buffer.
+
+In this example, `PassthroughSubject` `pub1` and also `pub2` emit values; as `combineLatest(_:)` receives input from either upstream publisher, it combines the latest value from each publisher into a tuple and publishes it.
+
+```swift
+let pub1 = PassthroughSubject<Int, Never>()
+let pub2 = PassthroughSubject<Int, Never>()
+
+cancellable = pub1
+    .combineLatest(pub2)
+    .sink { print("Result: \($0).") }
+
+pub1.send(1)
+pub1.send(2)
+pub2.send(2)
+pub1.send(3)
+pub1.send(45)
+pub2.send(22)
+
+// Prints:
+//    Result: (2, 2).    // pub1 latest = 2, pub2 latest = 2
+//    Result: (3, 2).    // pub1 latest = 3, pub2 latest = 2
+//    Result: (45, 2).   // pub1 latest = 45, pub2 latest = 2
+//    Result: (45, 22).  // pub1 latest = 45, pub2 latest = 22
+```
+
+### `combineLatest<P, T>`
+
+Similar to `combineLatest`, but take a closure that receives the most-recent value from each publisher and returns a new value to publish.
+
+**Declaration**:
+
+```swift
+func combineLatest<P, T>(_ other: P, _ transform: @escaping (Self.Output, P.Output) -> T) -> Publishers.Map<Publishers.CombineLatest<Self, P>, T> where P : Publisher, Self.Failure == P.Failure
+```
+
+**Discussion**:
+
+All upstream publishers need to finish for this publisher to finish. If an upstream publisher never publishes a value, this publisher never finishes. If any of the combined publishers terminates with a failure, this publisher also fails.
+
+```swift
+cancellable = pub1
+    .combineLatest(pub2) { (first, second) in
+        return first * second
+    }
+    .sink { print("Result: \($0)") }
+
+pub1.send(1)
+pub1.send(2)
+pub2.send(2)
+pub1.send(9)
+pub1.send(3)
+pub2.send(12)
+pub1.send(13)
+
+// Prints:
+//Result: 4. (pub1 latest = 2, pub2 latest = 2)
+//Result: 18. (pub1 latest = 9, pub2 latest = 2)
+//Result: 6. (pub1 latest = 3, pub2 latest = 2)
+//Result: 36. (pub1 latest = 3, pub2 latest = 12)
+//Result: 156. (pub1 latest = 13, pub2 latest = 12)
+```
+
+### merge(with:)
+
+Combines elements from this publisher with those from another publisher, delivering an interleaved sequence of elements.
+
+**Declaration**:
+
+```swift
+func merge<P>(with other: P) -> Publishers.Merge<Self, P> where P : Publisher, Self.Failure == P.Failure, Self.Output == P.Output
+```
+
+**Discussion**:
+
+The merged publisher continues to emit elements until all upstream publishers finish. If an upstream publisher produces an error, the merged publisher fails with that error.
+
+In this example, as `merge(with:)` receives input from either upstream publisher, it republishes it to the downstream:
+
+```swift
+let publisher = PassthroughSubject<Int, Never>()
+let pub2 = PassthroughSubject<Int, Never>()
+
+cancellable = publisher
+    .merge(with: pub2)
+    .sink { print("\($0)", terminator: " " )}
+
+publisher.send(2)
+pub2.send(2)
+publisher.send(3)
+pub2.send(22)
+publisher.send(45)
+pub2.send(22)
+publisher.send(17)
+
+// Prints: "2 2 3 22 45 22 17"
+```
+
+### `zip<P>`
+
+Combines elements from another publisher and deliver pairs of elements as tuples.
+
+**Declaration**:
+
+```swift
+func zip<P>(_ other: P) -> Publishers.Zip<Self, P> where P : Publisher, Self.Failure == P.Failure
+```
+
+**Discussion**:
+
+Use `zip(_:)` to combine the latest elements from two publishers and emit a tuple to the downstream. The returned publisher waits until both publishers have emitted an event, then delivers the oldest unconsumed event from each publisher together as a tuple to the subscriber.
+
+Much like a zipper or zip fastener on a piece of clothing pulls together rows of teeth to link the two sides, `zip(_:)` combines streams from two different publishers by linking pairs of elements from each side.
+
+In this example, numbers and letters are PassthroughSubjects that emit values; once `zip(_:)` receives one value from each, it publishes the pair as a tuple to the downstream subscriber. It then waits for the next pair of values.
+
+```swift
+let numbersPub = PassthroughSubject<Int, Never>()
+ let lettersPub = PassthroughSubject<String, Never>()
+
+ cancellable = numbersPub
+     .zip(lettersPub)
+     .sink { print("\($0)") }
+ numbersPub.send(1)    // numbersPub: 1      lettersPub:        zip output: <none>
+ numbersPub.send(2)    // numbersPub: 1,2    lettersPub:        zip output: <none>
+ letters.send("A")     // numbers: 1,2       letters:"A"        zip output: <none>
+ numbers.send(3)       // numbers: 1,2,3     letters:           zip output: (1,"A")
+ letters.send("B")     // numbers: 1,2,3     letters: "B"       zip output: (2,"B")
+
+ // Prints:
+ //  (1, "A")
+ //  (2, "B")
+```
+
+### `zip<P, T>`
+
+Combines elements from another publisher and delivers a transformed output.
+
+**Declaration**:
+
+```swift
+func zip<P, T>(_ other: P, _ transform: @escaping (Self.Output, P.Output) -> T) -> Publishers.Map<Publishers.Zip<Self, P>, T> where P : Publisher, Self.Failure == P.Failure
+```
+
+**Discussion**:
+
+Use `zip(_:_:)` to return a new publisher that combines the elements from two publishers using a transformation you specify to publish a new value to the downstream. The returned publisher waits until both publishers have emitted an event, then delivers the oldest unconsumed event from each publisher together that the operator uses in the transformation.
+
+In this example, `PassthroughSubject` instances numbersPub and `lettersPub` emit values; `zip(_:_:)` receives the oldest value from each publisher, uses the `Int` from `numbersPub` and publishes a string that repeats the `String` from `lettersPub` that many times.
+
+> If either upstream publisher finishes successfully or fails with an error, the zipped publisher does the same.
+
+```swift
+let numbersPub = PassthroughSubject<Int, Never>()
+let lettersPub = PassthroughSubject<String, Never>()
+cancellable = numbersPub
+    .zip(lettersPub) { anInt, aLetter in
+        String(repeating: aLetter, count: anInt)
+    }
+    .sink { print("\($0)") }
+numbersPub.send(1)     // numbersPub: 1      lettersPub:       zip output: <none>
+numbersPub.send(2)     // numbersPub: 1,2    lettersPub:       zip output: <none>
+numbersPub.send(3)     // numbersPub: 1,2,3  lettersPub:       zip output: <none>
+lettersPub.send("A")   // numbersPub: 1,2,3  lettersPub: "A"   zip output: "A"
+lettersPub.send("B")   // numbersPub: 2,3    lettersPub: "B"   zip output: "BB"
+// Prints:
+//  A
+//  BB
+```
 
 
 
