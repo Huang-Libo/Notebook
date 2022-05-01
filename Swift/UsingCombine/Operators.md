@@ -46,6 +46,11 @@ The chapter on [Core Concepts](https://heckj.github.io/swiftui-notes/#coreconcep
     - [append](#append)
     - [`append<S>`](#appends)
     - [`append<P>`](#appendp)
+    - [prepend](#prepend)
+    - [prefix](#prefix)
+    - [prefix(while:)](#prefixwhile)
+    - [tryPrefix(while:)](#tryprefixwhile)
+    - [prefix(untilOutputFrom:)](#prefixuntiloutputfrom)
   - [Selecting Specific Elements](#selecting-specific-elements)
     - [first](#first)
     - [first(where:)](#firstwhere)
@@ -977,6 +982,134 @@ cancellable = numbers.publisher
 
 // Prints: "0 1 2 3 4 5 6 7 8 9 10 25 26 27 28 29 30 31 32 33 34 35 "
 ```
+
+### prepend
+
+A publisher that emits all of one publisher’s elements before those from another publisher.
+
+The `prepend` operator will act as a merging of two pipelines. Also known as `Publishers.Concatenate`, it accepts all values from one publisher, publishing them to subscribers. Once the first publisher is complete, the second publisher is used to provide values until it is complete.
+
+The most general form of this can be invoked directly as:
+
+```swift
+Publishers.Concatenate(prefix: firstPublisher, suffix: secondPublisher)
+```
+
+This is equivalent to the form directly in a pipeline:
+
+```swift
+secondPublisher
+    .prepend(firstPublisher)
+```
+
+The `prepend` operator also has convenience operators to send a sequence. For example:
+
+```swift
+secondPublisher
+    .prepend(["one", "two"])
+```
+
+Another convenience operator exists to send a single value:
+
+```swift
+secondPublisher
+    .prepend("one")
+```
+
+### prefix
+
+Republishes elements up to the specified *maximum* count.
+
+**Declaration**:
+
+```swift
+func prefix(_ maxLength: Int) -> Publishers.Output<Self>
+```
+
+**Discussion**:
+
+In the example below, the `prefix(_:)` operator limits its output to the first two elements before finishing normally:
+
+```swift
+let numbers = (0...10)
+cancellable = numbers.publisher
+    .prefix(2)
+    .sink { print("\($0)", terminator: " ") }
+
+// Prints: "0 1"
+```
+
+### prefix(while:)
+
+Republishes elements while a predicate closure indicates publishing should continue.
+
+**Declaration**:
+
+```swift
+func prefix(while predicate: @escaping (Self.Output) -> Bool) -> Publishers.PrefixWhile<Self>
+```
+
+**Discussion**:
+
+Use `prefix(while:)` to emit values while elements from the upstream publisher meet a condition you specify. The publisher finishes when the closure returns `false`.
+
+In the example below, the `prefix(while:)` operator emits values while the element it receives is less than `5`:
+
+```swift
+let numbers = (0...10)
+numbers.publisher
+    .prefix { $0 < 5 }
+    .sink { print("\($0)", terminator: " ") }
+
+// Prints: "0 1 2 3 4"
+```
+
+### tryPrefix(while:)
+
+Republishes elements while an error-throwing predicate closure indicates publishing should continue.
+
+**Declaration**:
+
+```swift
+func tryPrefix(while predicate: @escaping (Self.Output) throws -> Bool) -> Publishers.TryPrefixWhile<Self>
+```
+
+**Discussion**:
+
+Use `tryPrefix(while:)` to emit values from the upstream publisher that meet a condition you specify in an error-throwing closure. The publisher finishes when the closure returns `false`.
+
+If the closure throws an error, the publisher fails with that error.
+
+```swift
+struct OutOfRangeError: Error {}
+
+let numbers = (0...10).reversed()
+cancellable = numbers.publisher
+    .tryPrefix {
+        guard $0 != 0 else {throw OutOfRangeError()}
+        return $0 <= numbers.max()!
+    }
+    .sink(
+        receiveCompletion: { print ("completion: \($0)", terminator: " ") },
+        receiveValue: { print ("\($0)", terminator: " ") }
+    )
+
+// Prints: "10 9 8 7 6 5 4 3 2 1 completion: failure(OutOfRangeError()) "
+```
+
+### prefix(untilOutputFrom:)
+
+Republishes elements until another publisher emits an element.
+
+**Declaration**:
+
+```swift
+func prefix<P>(untilOutputFrom publisher: P) -> Publishers.PrefixUntilOutput<Self, P> where P : Publisher
+```
+
+**Discussion**:
+
+After the second publisher publishes an element, the publisher returned by this method finishes.
 
 ## Selecting Specific Elements
 
