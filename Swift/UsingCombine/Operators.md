@@ -7,7 +7,6 @@ The chapter on [Core Concepts](https://heckj.github.io/swiftui-notes/#coreconcep
     - [map](#map)
     - [tryMap](#trymap)
     - [mapError](#maperror)
-    - [flatMap](#flatmap)
     - [scan](#scan)
     - [tryScan](#tryscan)
     - [setFailureType](#setfailuretype)
@@ -66,6 +65,9 @@ The chapter on [Core Concepts](https://heckj.github.io/swiftui-notes/#coreconcep
     - [merge(with:)](#mergewith)
     - [`zip<P>`](#zipp)
     - [`zip<P, T>`](#zipp-t)
+  - [Republishing Elements by Subscribing to New Publishers](#republishing-elements-by-subscribing-to-new-publishers)
+    - [flatMap](#flatmap)
+    - [switchToLatest](#switchtolatest)
 
 ## Mapping Elements
 
@@ -168,69 +170,6 @@ divisors.publisher
      )
 
 // Prints: "0.2 0.25 0.3333333333333333 0.5 1.0 completion: failure(MyGenericError(wrappedError: DivisionByZeroError()))"
-```
-
-### flatMap
-
-Used with error recovery or async operations that might fail (for example `Future`), `flatMap` will replace any incoming values with another publisher.
-
-**Declaration**:
-
-```swift
-func flatMap<T, P>(maxPublishers: Subscribers.Demand = .unlimited, _ transform: @escaping (Self.Output) -> P) -> Publishers.FlatMap<P, Self> where T == P.Output, P : Publisher, Self.Failure == P.Failure
-```
-
-Typically used in error handling scenarios, `flatMap` takes a closure that allows you to read the incoming data value, and provide a publisher that returns a value to the pipeline.
-
-In error handling, this is most frequently used to take the incoming value and create a *one-shot* pipeline that does some potentially failing operation, and then handling the error condition with a `catch` operator.
-
-A simple example `flatMap`, arranged to show recovering from a decoding error and returning a placeholder value:
-
-```swift
-.flatMap { data in
-    return Just(data)
-        .decode(YourType.self, JSONDecoder())
-        .catch {
-            return Just(YourType.placeholder)
-        }
-}
-```
-
-A diagram version of this pipeline construct:
-
-![flatmap.svg](../../media/Swift/UsingCombine/flatmap.svg)
-
-> `flatMap` expects to create a new pipeline within its closure for every input value that it receives. The expected result of this internal pipeline is a Publisher with its own output and failure type. The output type of the publisher resulting from the internal pipeline defines the output type of the `flatMap` operator. The error type of the internal publisher is often expected to be `<Never>`.
-
-**Discussion**:
-
-Use `flatMap(maxPublishers:_:)` when you want to create a new series of events for downstream subscribers based on the received value. The closure creates the new Publisher based on the received value. The new Publisher can emit more than one event, and successful completion of the new Publisher does not complete the overall stream. Failure of the new Publisher causes the overall stream to fail.
-
-In the example below, a `PassthroughSubject` publishes `WeatherStation` elements. The `flatMap(maxPublishers:_:)` receives each element, creates a `URL` from it, and produces a new `URLSession.DataTaskPublisher`, which will publish the data loaded from that `URL`.
-
-```swift
-public struct WeatherStation {
-    public let stationID: String
-}
-
-var weatherPublisher = PassthroughSubject<WeatherStation, URLError>()
-
-cancellable = weatherPublisher.flatMap { station -> URLSession.DataTaskPublisher in
-    let url = URL(string:"https://weatherapi.example.com/stations/\(station.stationID)/observations/latest")!
-    return URLSession.shared.dataTaskPublisher(for: url)
-}
-.sink(
-    receiveCompletion: { completion in
-        // Handle publisher completion (normal or error).
-    },
-    receiveValue: {
-        // Process the received data.
-    }
- )
-
-weatherPublisher.send(WeatherStation(stationID: "KSFO")) // San Francisco, CA
-weatherPublisher.send(WeatherStation(stationID: "EGLC")) // London, UK
-weatherPublisher.send(WeatherStation(stationID: "ZBBB")) // Beijing, CN
 ```
 
 ### scan
@@ -1519,6 +1458,120 @@ lettersPub.send("B")   // numbersPub: 2,3    lettersPub: "B"   zip output: "BB"
 // Prints:
 //  A
 //  BB
+```
+
+## Republishing Elements by Subscribing to New Publishers
+
+### flatMap
+
+Transforms all elements from an upstream publisher into a new publisher up to a maximum number of publishers you specify.
+
+**Declaration**:
+
+```swift
+func flatMap<T, P>(maxPublishers: Subscribers.Demand = .unlimited, _ transform: @escaping (Self.Output) -> P) -> Publishers.FlatMap<P, Self> where T == P.Output, P : Publisher, Self.Failure == P.Failure
+```
+
+Typically used in error handling scenarios, `flatMap` takes a closure that allows you to read the incoming data value, and provide a publisher that returns a value to the pipeline.
+
+In error handling, this is most frequently used to take the incoming value and create a *one-shot* pipeline that does some potentially failing operation, and then handling the error condition with a `catch` operator.
+
+A simple example `flatMap`, arranged to show recovering from a decoding error and returning a placeholder value:
+
+```swift
+.flatMap { data in
+    return Just(data)
+        .decode(YourType.self, JSONDecoder())
+        .catch {
+            return Just(YourType.placeholder)
+        }
+}
+```
+
+A diagram version of this pipeline construct:
+
+![flatmap.svg](../../media/Swift/UsingCombine/flatmap.svg)
+
+> `flatMap` expects to create a new pipeline within its closure for every input value that it receives. The expected result of this internal pipeline is a Publisher with its own output and failure type. The output type of the publisher resulting from the internal pipeline defines the output type of the `flatMap` operator. The error type of the internal publisher is often expected to be `<Never>`.
+
+**Discussion**:
+
+Use `flatMap(maxPublishers:_:)` when you want to create a new series of events for downstream subscribers based on the received value. The closure creates the new Publisher based on the received value. The new Publisher can emit more than one event, and successful completion of the new Publisher does not complete the overall stream. Failure of the new Publisher causes the overall stream to fail.
+
+In the example below, a `PassthroughSubject` publishes `WeatherStation` elements. The `flatMap(maxPublishers:_:)` receives each element, creates a `URL` from it, and produces a new `URLSession.DataTaskPublisher`, which will publish the data loaded from that `URL`.
+
+```swift
+public struct WeatherStation {
+    public let stationID: String
+}
+
+var weatherPublisher = PassthroughSubject<WeatherStation, URLError>()
+
+cancellable = weatherPublisher.flatMap { station -> URLSession.DataTaskPublisher in
+    let url = URL(string:"https://weatherapi.example.com/stations/\(station.stationID)/observations/latest")!
+    return URLSession.shared.dataTaskPublisher(for: url)
+}
+.sink(
+    receiveCompletion: { completion in
+        // Handle publisher completion (normal or error).
+    },
+    receiveValue: {
+        // Process the received data.
+    }
+ )
+
+weatherPublisher.send(WeatherStation(stationID: "KSFO")) // San Francisco, CA
+weatherPublisher.send(WeatherStation(stationID: "EGLC")) // London, UK
+weatherPublisher.send(WeatherStation(stationID: "ZBBB")) // Beijing, CN
+```
+
+### switchToLatest
+
+Republishes elements sent by the most recently received publisher.
+
+**Declaration**:
+
+```swift
+func switchToLatest() -> Publishers.SwitchToLatest<Self.Output, Self>
+```
+
+> Available when `Failure` is `Self.Output.Failure`.
+
+**Discussion**:
+
+This operator works with an upstream publisher of publishers, flattening the stream of elements to appear as if they were coming from a single stream of elements. It switches the inner publisher as new ones arrive but keeps the outer publisher constant for downstream subscribers.
+
+For example, given the type `AnyPublisher<URLSession.DataTaskPublisher, NSError>`, calling `switchToLatest()` results in the type `SwitchToLatest<(Data, URLResponse), URLError>`. The downstream subscriber sees a continuous stream of `(Data, URLResponse)` elements from what looks like a single `URLSession.DataTaskPublisher` even though the elements are coming from different upstream publishers.
+
+When this operator receives a new publisher from the upstream publisher, it cancels its previous subscription. Use this feature to prevent earlier publishers from performing unnecessary work, such as creating network request publishers from frequently updating user interface publishers.
+
+The following example updates a `PassthroughSubject` with a new value every `0.1` seconds. A `map(_:)` operator receives the new value and uses it to create a new `URLSession.DataTaskPublisher`. By using the `switchToLatest()` operator, the downstream `sink` subscriber receives the `(Data, URLResponse)` output type from the data task publishers, rather than the `URLSession.DataTaskPublisher` type produced by the `map(_:)` operator. Furthermore, creating each new data task publisher cancels the previous data task publisher.
+
+> The exact behavior of this example depends on the value of `asyncAfter` and the speed of the network connection. If the delay value is longer, or the network connection is fast, the earlier data tasks may complete before `switchToLatest()` can cancel them. If this happens, the output includes multiple URLs whose tasks complete before cancellation.
+
+```swift
+let subject = PassthroughSubject<Int, Never>()
+
+cancellable = subject
+    .setFailureType(to: URLError.self)
+    .map() { index -> URLSession.DataTaskPublisher in
+        let url = URL(string: "https://example.org/get?index=\(index)")!
+        return URLSession.shared.dataTaskPublisher(for: url)
+    }
+    .switchToLatest()
+    .sink(receiveCompletion: { print("Complete: \($0)") },
+          receiveValue: { (data, response) in
+            guard let url = response.url else { print("Bad response."); return }
+            print("URL: \(url)")
+    })
+
+for index in 1...5 {
+    DispatchQueue.main.asyncAfter(deadline: .now() + TimeInterval(index/10)) {
+        subject.send(index)
+    }
+}
+
+// Prints "URL: https://example.org/get?index=5"
 ```
 
 
