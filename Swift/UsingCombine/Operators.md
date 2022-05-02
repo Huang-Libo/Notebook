@@ -73,6 +73,12 @@ The chapter on [Core Concepts](https://heckj.github.io/swiftui-notes/#coreconcep
     - [catch](#catch)
     - [tryCatch](#trycatch)
     - [retry](#retry)
+  - [Controlling Timing](#controlling-timing)
+    - [measureInterval](#measureinterval)
+    - [debounce](#debounce)
+    - [throttle](#throttle)
+    - [delay](#delay)
+    - [timeout](#timeout)
 
 ## Mapping Elements
 
@@ -1739,4 +1745,235 @@ cancellable = URLSession.shared.dataTaskPublisher(for: myURL!)
 // Prints: The HTML content from the remote URL upon a successful connection,
 //         or returns "<HTML>Unable to load page - timed out.</HTML>" if the number of retries exceeds the specified value.
 ```
+
+## Controlling Timing
+
+### measureInterval
+
+Measures and emits the time interval between events received from an upstream publisher.
+
+**Declaration**:
+
+```swift
+func measureInterval<S>(using scheduler: S, options: S.SchedulerOptions? = nil) -> Publishers.MeasureInterval<Self, S> where S : Scheduler
+```
+
+**Discussion**:
+
+Use `measureInterval(using:options:)` to measure the time between events delivered from an upstream publisher.
+In the example below, a 1-second `Timer` is used as the data source for an event publisher; the `measureInterval(using:options:)` operator reports the elapsed time between the reception of events on the main run loop:
+
+```swift
+cancellable = Timer.publish(every: 1, on: .main, in: .default)
+    .autoconnect()
+    .measureInterval(using: RunLoop.main)
+    .sink { print("\($0)", terminator: "\n") }
+
+// Prints:
+//      Stride(magnitude: 1.0013610124588013)
+//      Stride(magnitude: 0.9992760419845581)
+//      ...
+```
+
+### debounce
+
+Publishes elements only after a specified time interval elapses between events.
+
+**Declaration**:
+
+```swift
+func debounce<S>(for dueTime: S.SchedulerTimeType.Stride, scheduler: S, options: S.SchedulerOptions? = nil) -> Publishers.Debounce<Self, S> where S : Scheduler
+```
+
+- **Sample 1**:
+
+    ![debounce_1](../../media/Swift/UsingCombine/debounce_1.svg)
+
+- **Sample 2**:
+
+    ![debounce_2](../../media/Swift/UsingCombine/debounce_2.svg)
+
+**Discussion**:
+
+Use the `debounce(for:scheduler:options:)` operator to control the number of values and time between delivery of values from the upstream publisher. This operator is useful to process bursty or high-volume event streams where you need to reduce the number of values delivered to the downstream to a rate you specify.
+
+In this example, a `PassthroughSubject` publishes elements on a schedule defined by the `bounces` array. The array is composed of *tuples* representing a value sent by the `PassthroughSubject`, and a `TimeInterval` ranging from one-quarter second up to 2 seconds that drives a delivery timer. As the queue builds, elements arriving faster than one-half second `debounceInterval` are discarded, while elements arriving at a rate slower than `debounceInterval` are passed through to the `sink(receiveValue:)` operator.
+
+```swift
+let bounces:[(Int,TimeInterval)] = [
+    (0, 0),
+    (1, 0.25),  // 0.25s interval since last index
+    (2, 1),     // 0.75s interval since last index
+    (3, 1.25),  // 0.25s interval since last index
+    (4, 1.5),   // 0.25s interval since last index
+    (5, 2)      // 0.5s interval since last index
+]
+
+let subject = PassthroughSubject<Int, Never>()
+
+cancellable = subject
+    .debounce(for: .seconds(0.5), scheduler: RunLoop.main)
+    .sink { index in
+        print ("Received index \(index)")
+    }
+
+for bounce in bounces {
+    DispatchQueue.main.asyncAfter(deadline: .now() + bounce.1) {
+        subject.send(bounce.0)
+    }
+}
+
+// Prints:
+//  Received index 1
+//  Received index 4
+//  Received index 5
+
+//  Here is the event flow shown from the perspective of time, showing value delivery through the `debounce()` operator:
+
+//  Time 0: Send index 0.
+//  Time 0.25: Send index 1. Index 0 was waiting and is discarded.
+//  Time 0.75: Debounce period ends, publish index 1.
+//  Time 1: Send index 2.
+//  Time 1.25: Send index 3. Index 2 was waiting and is discarded.
+//  Time 1.5: Send index 4. Index 3 was waiting and is discarded.
+//  Time 2: Debounce period ends, publish index 4. Also, send index 5.
+//  Time 2.5: Debounce period ends, publish index 5.
+```
+
+The operator will collapse any values received within the timeframe provided to a single, last value received from the upstream publisher within the time window. If any value is received within the specified time window, it will collapse it. It will not return a result until the entire time window has elapsed with no additional values appearing.
+
+This operator is frequently used with `removeDuplicates` when the publishing source is bound to UI interactions, primarily to **prevent an "edit and revert" style of interaction from triggering unnecessary work**.
+
+If you wish to control the value returned within the time window, or if you want to simply control the volume of events by time, you may prefer to use `throttle`, which allows you to choose the first or last value provided.
+
+### throttle
+
+Publishes either the most-recent or first element published by the upstream publisher in the specified time interval.
+
+- `latest == true`:
+
+    ![throttle_true.svg](../../media/Swift/UsingCombine/throttle_true.svg)
+
+- `latest == false`:
+
+    ![throttle_false.svg](../../media/Swift/UsingCombine/throttle_false.svg)
+
+**Declaration**:
+
+```swift
+func throttle<S>(for interval: S.SchedulerTimeType.Stride, scheduler: S, latest: Bool) -> Publishers.Throttle<Self, S> where S : Scheduler
+```
+
+**Discussion**:
+
+Use `throttle(for:scheduler:latest:)` to selectively republish elements from an upstream publisher during an interval you specify. Other elements received from the upstream in the throttling interval aren’t republished.
+
+In the example below, a `Timer.TimerPublisher` produces elements on one-second intervals; the `throttle(for:scheduler:latest:)` operator delivers the first event, then republishes only the latest event in the following ten second intervals:
+
+```swift
+cancellable = Timer.publish(every: 3.0, on: .main, in: .default)
+    .autoconnect()
+    .print("\(Date().description)")
+    .throttle(for: 10.0, scheduler: RunLoop.main, latest: true)
+    .sink(
+        receiveCompletion: { print ("Completion: \($0).") },
+        receiveValue: { print("Received Timestamp \($0).") }
+     )
+
+// Prints:
+ //    Publish at: 2020-03-19 18:26:54 +0000: receive value: (2020-03-19 18:26:57 +0000)
+ //    Received Timestamp 2020-03-19 18:26:57 +0000.
+ //    Publish at: 2020-03-19 18:26:54 +0000: receive value: (2020-03-19 18:27:00 +0000)
+ //    Publish at: 2020-03-19 18:26:54 +0000: receive value: (2020-03-19 18:27:03 +0000)
+ //    Publish at: 2020-03-19 18:26:54 +0000: receive value: (2020-03-19 18:27:06 +0000)
+ //    Publish at: 2020-03-19 18:26:54 +0000: receive value: (2020-03-19 18:27:09 +0000)
+ //    Received Timestamp 2020-03-19 18:27:09 +0000.
+```
+
+### delay
+
+Delays delivery of all output to the downstream receiver by a specified amount of time on a particular scheduler.
+
+**Declaration**:
+
+```swift
+func delay<S>(for interval: S.SchedulerTimeType.Stride, tolerance: S.SchedulerTimeType.Stride? = nil, scheduler: S, options: S.SchedulerOptions? = nil) -> Publishers.Delay<Self, S> where S : Scheduler
+```
+
+**Discussion**:
+
+Use `delay(for:tolerance:scheduler:options:)` when you need to delay the delivery of elements to a downstream by a specified amount of time.
+
+In this example, a `Timer` publishes an event every second. The `delay(for:tolerance:scheduler:options:)` operator holds the delivery of the initial element for `3` seconds (`±0.5` seconds), after which each element is delivered to the downstream on the main run loop after the specified delay:
+
+```swift
+let df = DateFormatter()
+df.dateStyle = .none
+df.timeStyle = .long
+cancellable = Timer.publish(every: 1.0, on: .main, in: .default)
+    .autoconnect()
+    .handleEvents(receiveOutput: { date in
+        print ("Sending Timestamp \'\(df.string(from: date))\' to delay()")
+    })
+    .delay(for: .seconds(3), scheduler: RunLoop.main, options: .none)
+    .sink(
+        receiveCompletion: { print ("completion: \($0)", terminator: "\n") },
+        receiveValue: { value in
+            let now = Date()
+            print ("At \(df.string(from: now)) received  Timestamp \'\(df.string(from: value))\' sent: \(String(format: "%.2f", now.timeIntervalSince(value))) secs ago", terminator: "\n")
+        }
+    )
+
+// Prints:
+//    Sending Timestamp '5:02:33 PM PDT' to delay()
+//    Sending Timestamp '5:02:34 PM PDT' to delay()
+//    Sending Timestamp '5:02:35 PM PDT' to delay()
+//    Sending Timestamp '5:02:36 PM PDT' to delay()
+//    At 5:02:36 PM PDT received  Timestamp '5:02:33 PM PDT' sent: 3.00 secs ago
+//    Sending Timestamp '5:02:37 PM PDT' to delay()
+//    At 5:02:37 PM PDT received  Timestamp '5:02:34 PM PDT' sent: 3.00 secs ago
+//    Sending Timestamp '5:02:38 PM PDT' to delay()
+//    At 5:02:38 PM PDT received  Timestamp '5:02:35 PM PDT' sent: 3.00 secs ago
+```
+
+### timeout
+
+Terminates publishing if the upstream publisher exceeds the specified time interval without producing an element.
+
+**Declaration**:
+
+```swift
+func timeout<S>(_ interval: S.SchedulerTimeType.Stride, scheduler: S, options: S.SchedulerOptions? = nil, customError: (() -> Self.Failure)? = nil) -> Publishers.Timeout<Self, S> where S : Scheduler
+```
+
+**Discussion**:
+
+Use `timeout(_:scheduler:options:customError:)` to terminate a publisher if an element isn’t delivered within a timeout interval you specify.
+
+In the example below, a `PassthroughSubject` publishes `String` elements and is configured to time out if no new elements are received within its TIME_OUT window of 5 seconds. A single value is published after the specified 2-second WAIT_TIME, after which no more elements are available; the publisher then times out and completes normally.
+
+```swift
+let WAIT_TIME : Int = 2
+let TIMEOUT_TIME : Int = 5
+
+let subject = PassthroughSubject<String, Never>()
+
+cancellable = subject
+    .timeout(.seconds(TIMEOUT_TIME), scheduler: DispatchQueue.main, options: nil, customError:nil)
+    .sink(
+          receiveCompletion: { print ("completion: \($0) at \(Date())") },
+          receiveValue: { print ("value: \($0) at \(Date())") }
+     )
+
+DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(WAIT_TIME),
+                              execute: { subject.send("Some data - sent after a delay of \(WAIT_TIME) seconds") } )
+
+// Prints: 
+// value: Some data - sent after a delay of 2 seconds at 2020-03-10 23:47:59 +0000
+// completion: finished at 2020-03-10 23:48:04 +0000
+```
+
+- If `customError` is `nil`, the publisher completes normally;
+- if you provide a closure for the `customError` argument, the upstream publisher is instead terminated upon timeout, and the error is delivered to the downstream.
+
 
