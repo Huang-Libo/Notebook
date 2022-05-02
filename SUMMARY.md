@@ -53,6 +53,7 @@
   - [Testing and Debugging](Swift/UsingCombine/TestingAndDebugging.md)
   - [Publishers](Swift/UsingCombine/Publishers.md)
   - [Operators](Swift/UsingCombine/Operators.md)
+  - [Subjects](Swift/UsingCombine/Subjects.md)
 - [Combine](Swift/Combine.md)
 - [SwiftUI](Swift/SwiftUI.md)
 - [Swift Inbox](Swift/INBOX.md)
