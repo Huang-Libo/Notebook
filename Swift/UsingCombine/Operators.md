@@ -2,6 +2,8 @@
 
 The chapter on [Core Concepts](https://heckj.github.io/swiftui-notes/#coreconcepts) includes an overview of all available [Operators](https://heckj.github.io/swiftui-notes/#coreconcepts-operators).
 
+> Note: Operators are defined in [`Publisher` protocol](https://developer.apple.com/documentation/combine/publisher#).
+
 - [Operators](#operators)
   - [Mapping Elements](#mapping-elements)
     - [map](#map)
