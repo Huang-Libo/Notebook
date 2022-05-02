@@ -95,6 +95,11 @@ The chapter on [Core Concepts](https://heckj.github.io/swiftui-notes/#coreconcep
     - [`receive(on:options:)`](#receiveonoptions)
   - [Adding Explicit Connectability](#adding-explicit-connectability)
     - [makeConnectable](#makeconnectable)
+  - [Connecting Simple Subscribers](#connecting-simple-subscribers)
+    - [`assign(to:on:)`](#assigntoon)
+    - [`assign(to:)`](#assignto)
+    - [`sink(receiveCompletion:receiveValue:)`](#sinkreceivecompletionreceivevalue)
+    - [`sink(receiveValue:)`](#sinkreceivevalue)
   - [Debugging](#debugging)
     - [breakpoint](#breakpoint)
     - [breakpointOnError](#breakpointonerror)
@@ -2400,6 +2405,147 @@ DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
 ```
 
 > **Note**: The `connect()` operator returns a `Cancellable` instance that you must retain. You can also use this instance to cancel publishing.
+
+## Connecting Simple Subscribers
+
+### `assign(to:on:)`
+
+Assigns each element from a publisher to a property on an object.
+
+**Declaration**:
+
+```swift
+func assign<Root>(to keyPath: ReferenceWritableKeyPath<Root, Self.Output>, on object: Root) -> AnyCancellable
+```
+
+> Available when Failure is Never.
+
+**Discussion**:
+
+Use the `assign(to:on:)` subscriber when you want to set a given property each time a publisher produces a value.
+
+In this example, the `assign(to:on:)` sets the value of the `anInt` property on an instance of `MyClass`:
+
+```swift
+class MyClass {
+    var anInt: Int = 0 {
+        didSet {
+            print("anInt was set to: \(anInt)", terminator: "\n")
+        }
+    }
+}
+
+let myObject = MyClass()
+let myRange = (0...2)
+cancellable = myRange.publisher
+    .assign(to: \.anInt, on: myObject)
+
+// Prints:
+// anInt was set to: 0
+// anInt was set to: 1
+// anInt was set to: 2
+```
+
+> **Important**: The `Subscribers.Assign` instance created by this operator maintains a strong reference to `object`, and sets it to `nil` when the upstream publisher completes (either normally or with an error).
+
+### `assign(to:)`
+
+Republishes elements received from a publisher, by assigning them to a property marked as a publisher.
+
+**Declaration**:
+
+```swift
+func assign(to published: inout Published<Self.Output>.Publisher)
+```
+
+**Discussion**:
+
+Use this operator when you want to receive elements from a publisher and republish them through a property marked with the `@Published` attribute. **The `assign(to:)` operator manages the life cycle of the subscription, canceling the subscription automatically when the `Published` instance deinitializes.** Because of this, the `assign(to:)` operator doesn’t return an `AnyCancellable` that you’re responsible for like `assign(to:on:)` does.
+
+The example below shows a model class that receives elements from an internal `Timer.TimerPublisher`, and assigns them to a `@Published` property called `lastUpdated`. Because the `to` parameter has the `inout` keyword, you need to use the `&` operator when calling this method.
+
+```swift
+class MyModel: ObservableObject {
+    @Published var lastUpdated: Date = Date()
+    
+    init() {
+         Timer.publish(every: 1.0, on: .main, in: .common)
+             .autoconnect()
+             .assign(to: &$lastUpdated)
+    }
+}
+```
+
+> **Warning**: If you instead implemented `MyModel` with `assign(to: lastUpdated, on: self)`, storing the returned `AnyCancellable` instance could cause a **reference cycle**, because the `Subscribers.Assign` subscriber would hold a strong reference to `self`. Using `assign(to:)` solves this problem.
+
+While the `to` parameter uses the `inout` keyword, this method doesn’t replace a reference type passed to it. Instead, this notation indicates that the operator may modify members of the assigned object, as seen in the following example:
+
+```swift
+class MyModel2: ObservableObject {
+    @Published var id: Int = 0
+}
+
+let model2 = MyModel2()
+
+Just(100)
+    .assign(to: &model2.$id)
+```
+
+### `sink(receiveCompletion:receiveValue:)`
+
+Attaches a subscriber with closure-based behavior.
+
+**Declaration**:
+
+```swift
+func sink(receiveCompletion: @escaping ((Subscribers.Completion<Self.Failure>) -> Void), receiveValue: @escaping ((Self.Output) -> Void)) -> AnyCancellable
+```
+
+> **Warning**: The return value is a cancellable instance, which you use when you end assignment of the received value. **Deallocation of the result will tear down the subscription stream.**
+
+**Discussion**:
+
+```swift
+let myRange = (0...3)
+cancellable = myRange.publisher
+    .sink(receiveCompletion: { print ("completion: \($0)") },
+          receiveValue: { print ("value: \($0)") })
+
+// Prints:
+//  value: 0
+//  value: 1
+//  value: 2
+//  value: 3
+//  completion: finished
+```
+
+> This method creates the subscriber and immediately requests an unlimited number of values, prior to returning the subscriber. **The return value should be held, otherwise the stream will be canceled.**
+
+### `sink(receiveValue:)`
+
+Attaches a subscriber with closure-based behavior to a publisher that never fails.
+
+**Declaration**:
+
+```swift
+func sink(receiveValue: @escaping ((Self.Output) -> Void)) -> AnyCancellable
+```
+
+**Discussion**:
+
+This operator can only be used when the stream doesn’t fail, that is, when the publisher’s `Failure` type is `Never`.
+
+```swift
+let integers = (0...3)
+integers.publisher
+    .sink { print("Received \($0)") }
+
+// Prints:
+//  Received 0
+//  Received 1
+//  Received 2
+//  Received 3
+```
 
 ## Debugging
 
