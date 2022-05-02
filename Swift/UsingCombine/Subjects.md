@@ -4,7 +4,7 @@ General information on [Subjects](https://heckj.github.io/swiftui-notes/#corecon
 
 - [Subjects](#subjects)
   - [CurrentValueSubject](#currentvaluesubject)
-    - [PassthroughSubject](#passthroughsubject)
+  - [PassthroughSubject](#passthroughsubject)
 
 ## CurrentValueSubject
 
@@ -22,7 +22,7 @@ Unlike `PassthroughSubject`, `CurrentValueSubject` maintains a *buffer* of the m
 
 Calling `send(_:)` on a `CurrentValueSubject` also updates the current value, making it equivalent to updating the `value` directly.
 
-### PassthroughSubject
+## PassthroughSubject
 
 A subject that broadcasts elements to downstream subscribers.
 
