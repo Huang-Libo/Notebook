@@ -100,6 +100,7 @@ The chapter on [Core Concepts](https://heckj.github.io/swiftui-notes/#coreconcep
     - [`assign(to:)`](#assignto)
     - [`sink(receiveCompletion:receiveValue:)`](#sinkreceivecompletionreceivevalue)
     - [`sink(receiveValue:)`](#sinkreceivevalue)
+    - [onReceive](#onreceive)
   - [Debugging](#debugging)
     - [breakpoint](#breakpoint)
     - [breakpointOnError](#breakpointonerror)
@@ -2546,6 +2547,14 @@ integers.publisher
 //  Received 2
 //  Received 3
 ```
+
+### onReceive
+
+`onReceive` is a subscriber built into **SwiftUI** that allows publishers to be linked into local views to trigger relevant state changes.
+
+`onReceive` is a subscriber, taking a reference to a publisher, a closure which is invoked when the publisher provided to `onReceive` receives data. This acts very similarly to the `sink` subscriber with a single closure, including requiring that the failure type of the publisher be `<Never>`.
+
+**`onReceive` does not automatically invalidate the SwiftUI's `View`**, but allows the developers to react to the published data in whatever way is appropriate - this could be updating some local view property (`@State`) with the value directly, or first transforming the data in some fashion.
 
 ## Debugging
 
