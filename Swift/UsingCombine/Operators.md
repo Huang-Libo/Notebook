@@ -91,6 +91,13 @@ The chapter on [Core Concepts](https://heckj.github.io/swiftui-notes/#coreconcep
   - [Specifying Schedulers](#specifying-schedulers)
     - [`subscribe(on:options:)`](#subscribeonoptions)
     - [`receive(on:options:)`](#receiveonoptions)
+  - [Adding Explicit Connectability](#adding-explicit-connectability)
+    - [makeConnectable](#makeconnectable)
+  - [Debugging](#debugging)
+    - [breakpoint](#breakpoint)
+    - [breakpointOnError](#breakpointonerror)
+    - [handleEvents](#handleevents)
+    - [print](#print)
 
 ## Mapping Elements
 
@@ -2343,3 +2350,189 @@ myPublisher
 ```
 
 > **Note**: `receive(on:options:)` doesn’t affect the scheduler used to call the subscriber’s `receive(subscription:)` method.
+
+## Adding Explicit Connectability
+
+### makeConnectable
+
+Creates a connectable wrapper around the publisher.
+
+**Declaration**:
+
+```swift
+func makeConnectable() -> Publishers.MakeConnectable<Self>
+```
+
+> Available when Failure is Never.
+
+**Discussion**:
+
+In the following example, `makeConnectable()` wraps its upstream publisher (an instance of `Publishers.Share`) with a `ConnectablePublisher`. Without this, the first sink subscriber would receive all the elements from the sequence publisher and cause it to complete before the second subscriber attaches. By making the publisher connectable, the publisher doesn’t produce any elements until after the `connect()` call.
+
+```swift
+/* propertier */
+var cancellable: Cancellable?
+var cancellable1: Cancellable?
+var cancellable2: Cancellable?
+var connectable:  Cancellable?
+
+//
+let subject = Just("Sent")
+let pub = subject
+    .share()
+    .makeConnectable()
+
+cancellable1 = pub.sink { print ("Stream 1 received: \($0)")  }
+
+// For example purposes, use DispatchQueue to add a second subscriber
+// a second later, and then connect to the publisher a second after that.
+DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+    self.cancellable2 = pub.sink { print ("Stream 2 received: \($0)") }
+}
+DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+    self.connectable = pub.connect()
+}
+// Prints:
+// Stream 2 received: Sent
+// Stream 1 received: Sent
+```
+
+> **Note**: The `connect()` operator returns a `Cancellable` instance that you must retain. You can also use this instance to cancel publishing.
+
+## Debugging
+
+### breakpoint
+
+Raises a debugger signal when a provided closure needs to stop the process in the debugger.
+
+**Declaration**:
+
+```swift
+func breakpoint(receiveSubscription: ((Subscription) -> Bool)? = nil, receiveOutput: ((Self.Output) -> Bool)? = nil, receiveCompletion: ((Subscribers.Completion<Self.Failure>) -> Bool)? = nil) -> Publishers.Breakpoint<Self>
+```
+
+**Discussion**:
+
+Use `breakpoint(receiveSubscription:receiveOutput:receiveCompletion:)` to examine one or more stages of the subscribe/publish/completion process and stop in the debugger, based on conditions you specify. When any of the provided closures returns `true`, this operator raises the `SIGTRAP` signal to stop the process in the debugger. Otherwise, this publisher passes through values and completions as-is.
+In the example below, a `PassthroughSubject` publishes strings to a breakpoint republisher. When the breakpoint receives the string “`DEBUGGER`”, it returns `true`, which stops the app in the debugger.
+
+```swift
+let publisher = PassthroughSubject<String?, Never>()
+
+cancellable = publisher
+    .breakpoint(
+        receiveOutput: {$0 == "DEBUGGER" }
+    )
+    .sink { print("\(String(describing: $0))" , terminator: " ") }
+
+publisher.send("DEBUGGER")
+
+// Prints: "error: Execution was interrupted, reason: signal SIGTRAP."
+// Depending on your specific environment, the console messages may
+// also include stack trace information, which is not shown here.
+```
+
+### breakpointOnError
+
+Raises a debugger signal upon receiving a failure.
+
+**Declaration**:
+
+```swift
+func breakpointOnError() -> Publishers.Breakpoint<Self>
+```
+
+**Discussion**:
+
+When the upstream publisher fails with an error, this publisher raises the `SIGTRAP` signal, which stops the process in the debugger. Otherwise, this publisher passes through values and completions as-is.
+
+In this example a `PassthroughSubject` publishes strings, but its downstream `tryMap(_:)` operator throws an error. This sends the error downstream as a `Subscribers.Completion.failure(_:)`. The `breakpointOnError()` operator receives this completion and stops the app in the debugger.
+
+```swift
+cancellable = publisher
+    .tryMap { stringValue in
+        throw CustomError()
+    }
+    .breakpointOnError()
+    .sink(
+        receiveCompletion: { completion in print("Completion: \(String(describing: completion))") },
+        receiveValue: { aValue in print("Result: \(String(describing: aValue))") }
+    )
+
+ publisher.send("TEST DATA")
+
+ // Prints: "error: Execution was interrupted, reason: signal SIGTRAP."
+ // Depending on your specific environment, the console messages may
+ // also include stack trace information, which is not shown here.
+```
+
+### handleEvents
+
+Performs the specified closures when publisher events occur.
+
+**Declaration**:
+
+```swift
+func handleEvents(receiveSubscription: ((Subscription) -> Void)? = nil, receiveOutput: ((Self.Output) -> Void)? = nil, receiveCompletion: ((Subscribers.Completion<Self.Failure>) -> Void)? = nil, receiveCancel: (() -> Void)? = nil, receiveRequest: ((Subscribers.Demand) -> Void)? = nil) -> Publishers.HandleEvents<Self>
+```
+
+**Discussion**:
+
+Use `handleEvents(receiveSubscription:receiveOutput:receiveCompletion:receiveCancel:receiveRequest:)` when you want to examine elements as they progress through the stages of the publisher’s lifecycle.
+
+In the example below, a publisher of integers shows the effect of printing debugging information at each stage of the element-processing lifecycle:
+
+```swift
+let integers = (0...2)
+
+cancellable = integers.publisher
+    .handleEvents(receiveSubscription: { subs in
+        print("Subscription: \(subs.combineIdentifier)")
+    }, receiveOutput: { anInt in
+        print("in output handler, received \(anInt)")
+    }, receiveCompletion: { _ in
+        print("in completion handler")
+    }, receiveCancel: {
+        print("received cancel")
+    }, receiveRequest: { (demand) in
+        print("received demand: \(demand.description)")
+    })
+    .sink { _ in return }
+
+// Prints:
+//   received demand: unlimited
+//   Subscription: 0x7f81284734c0
+//   in output handler, received 0
+//   in output handler, received 1
+//   in output handler, received 2
+//   in completion handler
+```
+
+### print
+
+Prints log messages for all publishing events.
+
+**Declaration**:
+
+```swift
+func print(_ prefix: String = "", to stream: TextOutputStream? = nil) -> Publishers.Print<Self>
+```
+
+**Discussion**:
+
+Use `print(_:to:)` to log messages the console.
+
+In the example below, log messages are printed on the console:
+
+```swift
+let integers = (1...2)
+cancellable = integers.publisher
+   .print("Logged a message", to: nil)
+   .sink { _ in }
+
+// Prints:
+//  Logged a message: receive subscription: (1..<2)
+//  Logged a message: request unlimited
+//  Logged a message: receive value: (1)
+//  Logged a message: receive finished
+```
