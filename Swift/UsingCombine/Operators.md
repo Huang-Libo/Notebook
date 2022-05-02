@@ -86,6 +86,11 @@ The chapter on [Core Concepts](https://heckj.github.io/swiftui-notes/#coreconcep
     - [`multicast(_:)`](#multicast_)
     - [`multicast(subject:)`](#multicastsubject)
     - [share](#share)
+  - [Performing Type-Erasure](#performing-type-erasure)
+    - [eraseToAnyPublisher](#erasetoanypublisher)
+  - [Specifying Schedulers](#specifying-schedulers)
+    - [`subscribe(on:options:)`](#subscribeonoptions)
+    - [`receive(on:options:)`](#receiveonoptions)
 
 ## Mapping Elements
 
@@ -2221,3 +2226,120 @@ pub
 Without the `share()` operator, *stream 1* receives `3` random values, followed by *stream 2* receiving `3` different random values.
 
 Also note that `Publishers.Share` is a `class` rather than a `structure` like most other publishers. This means you can use this operator to create a publisher instance that uses reference semantics.
+
+## Performing Type-Erasure
+
+### eraseToAnyPublisher
+
+Wraps this publisher with a type eraser.
+
+**Declaration**:
+
+```swift
+func eraseToAnyPublisher() -> AnyPublisher<Self.Output, Self.Failure>
+```
+
+**Discussion**:
+
+Use `eraseToAnyPublisher()` to expose an instance of `AnyPublisher` to the downstream subscriber, rather than this publisher’s actual type. This form of *type erasure* preserves abstraction across API boundaries, such as different modules. When you expose your publishers as the `AnyPublisher` type, you can change the underlying implementation over time without affecting existing clients.
+
+The following example shows two types that each have a publisher property. TypeWithSubject exposes this property as its actual type, PassthroughSubject, while TypeWithErasedSubject uses eraseToAnyPublisher() to expose it as an `AnyPublisher`. As seen in the output, a caller from another module can access TypeWithSubject.publisher as its native type. This means you can’t change your publisher to a different type without breaking the caller. By comparison, TypeWithErasedSubject.publisher appears to callers as an `AnyPublisher`, so you can change the underlying publisher type at will.
+
+```swift
+public class TypeWithSubject {
+    public let publisher: some Publisher = PassthroughSubject<Int,Never>()
+}
+public class TypeWithErasedSubject {
+    public let publisher: some Publisher = PassthroughSubject<Int,Never>()
+        .eraseToAnyPublisher()
+}
+
+/* In another module: */
+let nonErased = TypeWithSubject()
+if nonErased.publisher is PassthroughSubject<Int,Never> {
+    print("Successfully cast nonErased.publisher.")
+}
+let erased = TypeWithErasedSubject()
+if erased.publisher is PassthroughSubject<Int,Never> {
+    print("Successfully cast erased.publisher.")
+}
+```
+
+## Specifying Schedulers
+
+### `subscribe(on:options:)`
+
+Specifies the scheduler on which to perform subscribe, cancel, and request operations.
+
+**Declaration**:
+
+```swift
+func subscribe<S>(on scheduler: S, options: S.SchedulerOptions? = nil) -> Publishers.SubscribeOn<Self, S> where S : Scheduler
+```
+
+**Discussion**:
+
+In contrast with `receive(on:options:)`, which affects downstream messages, `subscribe(on:options:)` changes the execution context of upstream messages.
+
+In the following example, the `subscribe(on:options:)` operator causes `ioPerformingPublisher` to receive requests on `backgroundQueue`, while the `receive(on:options:)` causes `uiUpdatingSubscriber` to receive elements and completion on `RunLoop.main`.
+
+```swift
+let ioPerformingPublisher == // Some publisher.
+let uiUpdatingSubscriber == // Some subscriber that updates the UI.
+
+ioPerformingPublisher
+    .subscribe(on: backgroundQueue)
+    .receive(on: RunLoop.main)
+    .subscribe(uiUpdatingSubscriber)
+```
+
+Using `subscribe(on:options:)` also causes the upstream publisher to perform `cancel()` using the specfied scheduler.
+
+### `receive(on:options:)`
+
+Specifies the scheduler on which to receive elements from the publisher.
+
+**Declaration**:
+
+```swift
+func receive<S>(on scheduler: S, options: S.SchedulerOptions? = nil) -> Publishers.ReceiveOn<Self, S> where S : Scheduler
+```
+
+**Discussion**:
+
+You use the `receive(on:options:)` operator to receive results and completion on a specific scheduler, such as performing UI work on the main run loop. In contrast with `subscribe(on:options:)`, which affects upstream messages, `receive(on:options:)` changes the execution context of downstream messages.
+
+In the following example, the `subscribe(on:options:)` operator causes `jsonPublisher` to receive requests on `backgroundQueue`, while the `receive(on:options:)` causes `labelUpdater` to receive elements and completion on `RunLoop.main`.
+
+```swift
+let jsonPublisher = MyJSONLoaderPublisher() // Some publisher.
+let labelUpdater = MyLabelUpdateSubscriber() // Some subscriber that updates the UI.
+
+jsonPublisher
+    .subscribe(on: backgroundQueue)
+    .receive(on: RunLoop.main)
+    .subscribe(labelUpdater)
+```
+
+Prefer `receive(on:options:)` over explicit use of dispatch queues when performing work in subscribers. For example, instead of the following pattern:
+
+```swift
+myPublisher
+    .sink {
+        DispatchQueue.main.async {
+            // Do something.
+        }
+    }
+```
+
+Use this pattern instead:
+
+```swift
+myPublisher
+    .receive(on: DispatchQueue.main)
+    .sink {
+        // Do something.
+    }
+```
+
+> **Note**: `receive(on:options:)` doesn’t affect the scheduler used to call the subscriber’s `receive(subscription:)` method.
