@@ -1806,11 +1806,11 @@ func debounce<S>(for dueTime: S.SchedulerTimeType.Stride, scheduler: S, options:
 
 - **Sample 1**:
 
-    ![debounce_1](../../media/Swift/UsingCombine/debounce_1.svg)
+![debounce_1](../../media/Swift/UsingCombine/debounce_1.svg)
 
 - **Sample 2**:
 
-    ![debounce_2](../../media/Swift/UsingCombine/debounce_2.svg)
+![debounce_2](../../media/Swift/UsingCombine/debounce_2.svg)
 
 **Discussion**:
 
@@ -1871,11 +1871,11 @@ Publishes either the most-recent or first element published by the upstream publ
 
 - `latest == true`:
 
-    ![throttle_true.svg](../../media/Swift/UsingCombine/throttle_true.svg)
+![throttle_true.svg](../../media/Swift/UsingCombine/throttle_true.svg)
 
 - `latest == false`:
 
-    ![throttle_false.svg](../../media/Swift/UsingCombine/throttle_false.svg)
+![throttle_false.svg](../../media/Swift/UsingCombine/throttle_false.svg)
 
 **Declaration**:
 
