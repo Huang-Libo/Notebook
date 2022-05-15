@@ -1,9 +1,13 @@
 {
     "cSpell.words": [
-        "Podfile",
-        "CocoaPods",
-        "prepended",
+        "Alamofire",
+        "Autorelease",
         "centralised",
-        "discoverability"
+        "CocoaPods",
+        "Deinitialization",
+        "discoverability",
+        "MVVM",
+        "Podfile",
+        "prepended"
     ]
 }
