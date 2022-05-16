@@ -1,9 +1,5 @@
 # CocoaPods
 
-- [CocoaPods](#cocoapods)
-  - [Overview](#overview)
-  - [Resource](#resource)
-
 ## Overview
 
 CocoaPods manages library dependencies for your Xcode projects.
@@ -15,5 +11,9 @@ Ultimately the goal is to improve discoverability of, and engagement in, third p
 ## Resource
 
 - [https://cocoapods.org/](https://cocoapods.org/)
-- [GitHub: CocoaPods](https://github.com/CocoaPods/CocoaPods)
+  - [GUIDES](https://guides.cocoapods.org/)
+  - [BLOG](https://blog.cocoapods.org/)
+- GitHub
+  - [Repo - CocoaPods](https://github.com/CocoaPods/CocoaPods)
+  - [Specs - Master](https://github.com/CocoaPods/Specs)
 - [Google Developers: An Introduction to CocoaPods (Route 85)](https://www.youtube.com/watch?v=iEAjvNRdZa0)
