@@ -9,6 +9,9 @@
         "MVVM",
         "Podfile",
         "PODNAME",
-        "prepended"
+        "podspec",
+        "prepended",
+        "xcodeproj",
+        "xcworkspace"
     ]
 }
