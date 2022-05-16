@@ -9,6 +9,17 @@
     - [3. Use Ruby Version Manager](#3-use-ruby-version-manager)
     - [Updating CocoaPods](#updating-cocoapods)
     - [Using a CocoaPods Fork](#using-a-cocoapods-fork)
+  - [Adding Pods to an Xcode project](#adding-pods-to-an-xcode-project)
+    - [Installation](#installation-1)
+    - [Creating a new Xcode project with CocoaPods](#creating-a-new-xcode-project-with-cocoapods)
+    - [Integration with an existing workspace](#integration-with-an-existing-workspace)
+    - [Should I check the Pods directory into source control?](#should-i-check-the-pods-directory-into-source-control)
+      - [Benefits of checking in the Pods directory](#benefits-of-checking-in-the-pods-directory)
+      - [Benefits of ignoring the Pods directory](#benefits-of-ignoring-the-pods-directory)
+    - [What is `Podfile.lock`?](#what-is-podfilelock)
+    - [What is happening behind the scenes?](#what-is-happening-behind-the-scenes)
+    - [Pods vs. Submodules](#pods-vs-submodules)
+    - [Switching from submodules to CocoaPods](#switching-from-submodules-to-cocoapods)
   - [pod install vs. pod update](#pod-install-vs-pod-update)
     - [Introduction](#introduction)
     - [Detailed presentation of the commands](#detailed-presentation-of-the-commands)
@@ -108,6 +119,140 @@ If you originally installed the cocoapods gem using `sudo`, you should use that 
 ### Using a CocoaPods Fork
 
 There are two ways to do this, [using a Gemfile](https://guides.cocoapods.org/using/a-gemfile.html) (recommended) or using a [development build](https://guides.cocoapods.org/using/unreleased-features) that are in discussion or in implementation stage.
+
+## Adding Pods to an Xcode project
+
+Before you begin:
+
+1. Check the [Specs](https://github.com/CocoaPods/Specs) repository or [cocoapods.org](https://cocoapods.org) to make sure the libraries you would like to use are available.
+2. [Install CocoaPods](#installation) on your computer.
+
+### Installation
+
+- Create a [Podfile](#podfile), and add your dependencies:
+
+```ruby
+platform :ios, '9.0'
+
+target 'MyApp' do
+  pod 'AFNetworking', '~> 3.0'
+  pod 'FBSDKCoreKit', '~> 4.9'
+end
+```
+
+- Run `pod install` in your project directory.
+- Open `MyApp.xcworkspace` and build.
+
+### Creating a new Xcode project with CocoaPods
+
+To create a new project with CocoaPods, follow these simple steps:
+
+- Create a new project in Xcode as you would normally.
+- Open a terminal window, and `cd` into your project directory.
+- Create a `Podfile`. This can be done by running `pod init`.
+- Open your `Podfile`. The first line should specify the platform and version supported.
+
+```ruby
+platform :ios, '9.0'
+````
+
+- In order to use CocoaPods you need to define the Xcode target to link them to. So for example if you are writing an iOS App, it would be the name of your app. Create a target section by writing `target '$TARGET_NAME' do` and an `end` a few lines after.
+- Add a CocoaPod by specifying `pod '$PODNAME'` on a single line inside your target block.
+
+```ruby
+target 'MyApp' do
+  pod 'ObjectiveSugar'
+end
+```
+
+- Save your Podfile.
+- Run `pod install`
+- Open the `MyApp.xcworkspace` that was created. This should be the file you use everyday to create your app.
+
+### Integration with an existing workspace
+
+Integrating CocoaPods with an existing workspace requires one extra line in your Podfile. Simply specify the `.xcworkspace` filename in outside your target blocks like so:
+
+```ruby
+workspace 'MyWorkspace'
+```
+
+### Should I check the Pods directory into source control?
+
+Whether or not you check in your `Pods` folder is up to you, as workflows vary from project to project. We recommend that you keep the `Pods` directory under source control, and don't add it to your `.gitignore`. But ultimately this decision is up to you:
+
+#### Benefits of checking in the Pods directory
+
+- After cloning the repo, the project can immediately build and run, even without having CocoaPods installed on the machine. There is no need to run `pod install`, and no Internet connection is necessary.
+- The Pod artifacts (code/libraries) are always available, even if the source of a Pod (e.g. GitHub) were to go down.
+- The Pod artifacts are guaranteed to be identical to those in the original installation after cloning the repo.
+
+#### Benefits of ignoring the Pods directory
+
+- The source control repo will be smaller and take up less space.
+- As long as the sources (e.g. GitHub) for all Pods are available, CocoaPods is generally able to recreate the same installation. (Technically there is no guarantee that running `pod install` will fetch and recreate identical artifacts when not using a commit `SHA` in the `Podfile`. This is especially true when using zip files in the `Podfile`.)
+- There won't be any conflicts to deal with when performing source control operations, such as merging branches with different Pod versions.
+
+Whether or not you check in the `Pods` directory, the `Podfile` and `Podfile.lock` should always be kept under version control.
+
+### What is `Podfile.lock`?
+
+This file is generated after the first run of `pod install`, and tracks the version of each Pod that was installed. For example, imagine the following dependency specified in the Podfile:
+
+```ruby
+pod 'RestKit'
+```
+
+Running `pod install` will install the current version of RestKit, causing a `Podfile.lock` to be generated that indicates the exact version installed (e.g. `RestKit 0.10.3`).
+
+Thanks to the `Podfile.lock`, running `pod install` on this hypothetical project at a later point in time on a different machine will still install RestKit `0.10.3` even if a newer version is available. CocoaPods will honour the Pod version in `Podfile.lock` unless the dependency is updated in the `Podfile` or `pod update` is called (which will cause a new `Podfile.lock` to be generated). In this way CocoaPods avoids headaches caused by unexpected changes to dependencies.
+
+### What is happening behind the scenes?
+
+In Xcode, with references directly from the [source code of CocoaPods (ruby)][user_project_integrator.rb], it:
+
+1. Creates or updates a [workspace][user_project_integrator.rb].
+2. [Adds your project to the workspace][user_project_integrator.rb] if needed.
+3. Adds the [CocoaPods static library project to the workspace][target_installer.rb] if needed.
+4. Adds `libPods.a` to: [targets => build phases => link with libraries][installer.rb].
+5. Adds the CocoaPods [Xcode configuration file][target_integrator.rb] to your app’s project.
+6. Changes your app's [target configurations](https://github.com/CocoaPods/CocoaPods/blob/master/lib/cocoapods/generator/xcconfig/aggregate_xcconfig.rb) to be based on CocoaPods's.
+7. Adds a build phase to [copy resources from any pods][target_integrator.rb] you installed to your app bundle. i.e. a `Script build phase` after all other build phases with the following:
+   1. Shell: `/bin/sh`
+   2. Script: `${SRCROOT}/Pods/PodsResources.sh`
+
+Reference for source code:
+
+- [user_project_integrator.rb](https://github.com/CocoaPods/CocoaPods/blob/master/lib/cocoapods/installer/user_project_integrator.rb)
+- [target_installer.rb](https://github.com/CocoaPods/CocoaPods/blob/master/lib/cocoapods/installer/xcode/pods_project_generator/target_installer.rb)
+- [installer.rb](https://github.com/CocoaPods/CocoaPods/blob/master/lib/cocoapods/installer.rb)
+- [target_integrator.rb](https://github.com/CocoaPods/CocoaPods/blob/master/lib/cocoapods/installer/user_project_integrator/target_integrator.rb)
+
+[user_project_integrator.rb]: https://github.com/CocoaPods/CocoaPods/blob/master/lib/cocoapods/installer/user_project_integrator.rb
+
+[target_installer.rb]: https://github.com/CocoaPods/CocoaPods/blob/master/lib/cocoapods/installer/xcode/pods_project_generator/target_installer.rb
+
+[installer.rb]: https://github.com/CocoaPods/CocoaPods/blob/master/lib/cocoapods/installer.rb
+
+[target_integrator.rb]: https://github.com/CocoaPods/CocoaPods/blob/master/lib/cocoapods/installer/user_project_integrator/target_integrator.rb
+
+Note that steps 3 onwards are skipped if the CocoaPods static library is already in your project. This is largely based on Jonah Williams' work on [Static Libraries](http://blog.carbonfive.com/2011/04/04/using-open-source-static-libraries-in-xcode-4).
+
+### Pods vs. Submodules
+
+CocoaPods and git submodules attempt to solve very similar problems. Both strive to simplify the process of including 3rd party code in your project.
+
+Submodules link to a specific commit of that project, while a CocoaPod is tied to a versioned developer release.
+
+### Switching from submodules to CocoaPods
+
+Before you decide to make the full switch to CocoaPods, make sure that the libraries you are currently using are all available. It is also a good idea to record the versions of the libraries you are currently using, so that you can setup CocoaPods to use the same ones. It's also a good idea to do this incrementally, going dependency by dependency instead of one big move.
+
+1. Install CocoaPods, if you have not done so already
+2. Create your [Podfile](#podfile)
+3. [Remove the submodule reference](http://davidwalsh.name/git-remove-submodule)
+4. Add a reference to the removed library in your `Podfile`
+5. Run `pod install`
 
 ## pod install vs. pod update
 

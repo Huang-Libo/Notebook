@@ -8,6 +8,15 @@ The dependencies for your projects are specified in a single text file called a 
 
 Ultimately the goal is to improve discoverability of, and engagement in, third party open-source libraries by creating a more *centralised* ecosystem.
 
+## Frequently used commands
+
+```bash
+pod init
+pod install
+pod outdated
+pod update
+```
+
 ## Resource
 
 - [https://cocoapods.org/](https://cocoapods.org/)
