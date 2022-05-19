@@ -34,6 +34,12 @@
       - [Stage 3: User2 joins the project](#stage-3-user2-joins-the-project)
       - [Stage 4: Checking for new versions of a pod](#stage-4-checking-for-new-versions-of-a-pod)
     - [Using exact versions in the Podfile is not enough](#using-exact-versions-in-the-podfile-is-not-enough)
+  - [Podfile](#podfile)
+    - [What is a Podfile?](#what-is-a-podfile)
+      - [Examples](#examples)
+      - [Specifying pod versions](#specifying-pod-versions)
+    - [Using the files from a folder local to the machine](#using-the-files-from-a-folder-local-to-the-machine)
+    - [From a podspec in the root of a library repo](#from-a-podspec-in-the-root-of-a-library-repo)
 
 ## Installation
 
@@ -355,3 +361,176 @@ One typical example is if the pod `A` has a dependency on pod `A2` — declared 
 - while when *user2* runs `pod install` when joining the project later, they might get pod `A2` in version `3.5` (because the maintainer of `A2` might have released a new version in the meantime).
 
 That's why the only way to ensure every team member work with the same versions of all the pod on each's computer is to use the `Podfile.lock` and properly use `pod install` vs. `pod update`.
+
+## Podfile
+
+### What is a Podfile?
+
+#### Examples
+
+The `Podfile` is a specification that describes the dependencies of the
+targets of one or more Xcode projects. The file should simply be named `Podfile`.
+
+All the examples in the guides are based on CocoaPods version `1.0` and onwards.
+
+> A Podfile can be very simple, this adds Alamofire to a single target:
+
+```ruby
+target 'MyApp' do
+  use_frameworks!
+  pod 'Alamofire', '~> 3.0'
+end
+```
+
+> An example of a more complex Podfile linking an app and its test bundle:
+
+```ruby
+source 'https://cdn.cocoapods.org/'
+source 'https://github.com/Artsy/Specs.git'
+
+platform :ios, '9.0'
+inhibit_all_warnings!
+
+target 'MyApp' do
+  pod 'GoogleAnalytics', '~> 3.1'
+
+  # Has its own copy of OCMock
+  # and has access to GoogleAnalytics via the app
+  # that hosts the test target
+
+  target 'MyAppTests' do
+    inherit! :search_paths
+    pod 'OCMock', '~> 2.0.1'
+  end
+end
+
+post_install do |installer|
+  installer.pods_project.targets.each do |target|
+    puts target.name
+  end
+end
+ ```
+
+> If you want multiple targets to share the same pods, use an `abstract_target`.
+
+```ruby
+# There are no targets called "Shows" in any Xcode projects
+abstract_target 'Shows' do
+  pod 'ShowsKit'
+  pod 'Fabric'
+
+  # Has its own copy of ShowsKit + ShowWebAuth
+  target 'ShowsiOS' do
+    pod 'ShowWebAuth'
+  end
+
+  # Has its own copy of ShowsKit + ShowTVAuth
+  target 'ShowsTV' do
+    pod 'ShowTVAuth'
+  end
+end
+```
+
+There is implicit abstract target at the root of the Podfile, so you could write the above example as:
+
+``` ruby
+pod 'ShowsKit'
+pod 'Fabric'
+
+# Has its own copy of ShowsKit + ShowWebAuth
+target 'ShowsiOS' do
+  pod 'ShowWebAuth'
+end
+
+# Has its own copy of ShowsKit + ShowTVAuth
+target 'ShowsTV' do
+  pod 'ShowTVAuth'
+end
+```
+
+#### Specifying pod versions
+
+> When starting out with a project it is likely that you will want to use the latest version of a Pod. If this is the case, simply omit the version requirements.
+
+```ruby
+pod 'SSZipArchive'
+```
+
+> Later on in the project you may want to freeze to a specific version of a Pod, in which case you can specify that version number.
+
+```ruby
+pod 'Objection', '0.9'
+```
+
+Besides no version, or a specific one, it is also possible to use logical operators:
+
+- `'> 0.1'`    Any version higher than 0.1
+- `'>= 0.1'`   Version 0.1 and any higher version
+- `'< 0.1'`    Any version lower than 0.1
+- `'<= 0.1'`   Version 0.1 and any lower version
+
+In addition to the logic operators CocoaPods has an optimistic operator `~>`:
+
+- `'~> 0.1.2'` Version 0.1.2 and the versions up to 0.2, not including 0.2 and higher
+- `'~> 0.1'` Version 0.1 and the versions up to 1.0, not including 1.0 and higher
+- `'~> 0'` Version 0 and the versions up to 1.0, not including 1.0 and higher
+
+For more information, regarding versioning policy, see:
+
+- [Semantic Versioning](http://semver.org)
+- [RubyGems Versioning Policies](http://guides.rubygems.org/patterns/#semantic-versioning)
+- There's a great video from Google about how this works: ["CocoaPods and the Case of the Squiggly Arrow (Route 85)"](https://www.youtube.com/watch?v=x4ARXyovvPc).
+  - Note that the information about `~> 1` in the video is incorrect.
+
+### Using the files from a folder local to the machine
+
+> If you would like to develop a Pod in tandem with its client
+project you can use `:path`.
+
+```ruby
+pod 'Alamofire', :path => '~/Documents/Alamofire'
+```
+
+Using this option CocoaPods will assume the given folder to be the
+root of the Pod and will link the files directly from there in the
+Pods project. This means that your edits will persist between CocoaPods
+installations. **The referenced folder can be a checkout of your favourite *SCM(Source Control Manager)* or even a *git submodule* of the current repo**.
+
+<aside>Note that the `podspec` of the Pod file is expected to be in that the designated folder.</aside>
+
+### From a podspec in the root of a library repo
+
+Sometimes you may want to use the bleeding edge version of a Pod, a
+specific revision or your own fork. If this is the case, you can specify that with your
+pod declaration.
+
+> To use the `master` branch of the repo:
+
+```ruby
+pod 'Alamofire', :git => 'https://github.com/Alamofire/Alamofire.git'
+````
+
+> To use a different branch of the repo:
+
+```ruby
+pod 'Alamofire', :git => 'https://github.com/Alamofire/Alamofire.git', :branch => 'dev'
+```
+
+> To use a `tag` of the repo:
+
+```ruby
+pod 'Alamofire', :git => 'https://github.com/Alamofire/Alamofire.git', :tag => '3.1.1'
+```
+
+> Or specify a `commit`:
+
+```ruby
+pod 'Alamofire', :git => 'https://github.com/Alamofire/Alamofire.git', :commit => '0f506b1c45'
+```
+
+It is important to note, though, that this means that the version will
+have to satisfy any other dependencies on the Pod by other Pods.
+
+The `podspec` file is expected to be in the root of the repo, if this
+library does not have a `podspec` file in its repo yet, you will have
+to use one of the approaches outlined in the sections below.
