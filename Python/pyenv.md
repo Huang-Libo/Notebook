@@ -7,11 +7,13 @@
     - [Getting pyenv](#getting-pyenv)
       - [1. Homebrew in macOS](#1-homebrew-in-macos)
       - [2. Automatic installer](#2-automatic-installer)
+    - [Upgrading](#upgrading)
     - [Set up your shell environment for pyenv](#set-up-your-shell-environment-for-pyenv)
   - [Usage](#usage)
     - [Install additional Python versions](#install-additional-python-versions)
     - [Switch between Python versions](#switch-between-python-versions)
     - [Uninstall Python versions](#uninstall-python-versions)
+  - [Uninstalling pyenv](#uninstalling-pyenv)
 
 ## Overview
 
@@ -49,6 +51,14 @@ brew install openssl readline sqlite3 xz zlib tcl-tk
 #### 2. Automatic installer
 
 Visit our other project [pyenv-installer](https://github.com/pyenv/pyenv-installer).
+
+### Upgrading
+
+If you've installed pyenv using Homebrew, upgrade using:
+
+```sh
+brew upgrade pyenv
+```
 
 ### Set up your shell environment for pyenv
 
@@ -113,3 +123,23 @@ As time goes on, you will accumulate Python versions in your `$(pyenv root)/vers
 - To remove old Python versions, use `pyenv uninstall <version>`.
 - Alternatively, you can simply `rm -rf` the directory of the version you want to remove. You can find the directory of a particular Python version with the `pyenv prefix` command, e.g. `pyenv prefix 2.6.8`. Note however that plugins may run additional operations on uninstall which you would need to do by hand as well. E.g. pyenv-Virtualenv also removes any virtual environments linked to the version being uninstalled.
 
+## Uninstalling pyenv
+
+The simplicity of pyenv makes it easy to temporarily disable it, or uninstall from the system.
+
+1. To **disable** pyenv managing your Python versions, simply remove the
+  `pyenv init` invocations from your shell startup configuration. This will remove *pyenv shims* directory from `PATH`, and future invocations like `python` will execute the system Python version, as it was before pyenv.
+
+    (`pyenv` will still be accessible on the command line, but your Python apps won't be affected by version switching.)
+
+2. To completely **uninstall** pyenv, remove *all* pyenv configuration lines from your shell startup configuration, and then remove its root directory. This will **delete all Python versions** that were installed under the `$(pyenv root)/versions/` directory:
+
+    ```sh
+    rm -rf $(pyenv root)
+    ```
+
+    If you've installed pyenv using a package manager, as a final step, perform the pyenv package removal. For instance, for Homebrew:
+
+    ```sh
+    brew uninstall pyenv
+    ```
