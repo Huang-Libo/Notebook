@@ -89,7 +89,7 @@ Skip this section unless you must know what every line in your shell profile is 
 
 1. Sets up your shims path. This is the only requirement for rbenv to function properly. You can do this by hand by prepending `~/.rbenv/shims` to your `$PATH`.
 
-2. Installs autocompletion. This is entirely optional but pretty useful. Sourcing `~/.rbenv/completions/rbenv.bash` will set that up. There is also a `~/.rbenv/completions/rbenv.zsh` for Zsh users.
+2. Installs autocompletion. This is entirely optional but pretty useful. Sourcing `~/.rbenv/completions/rbenv.bash` will set that up. There is also a `~/.rbenv/completions/rbenv.zsh` for Zsh users. (For m1 devices, the path is `/opt/homebrew/Cellar/rbenv/<version>/libexec/../completions/rbenv.zsh`)
 
 3. Rehashes shims. From time to time you'll need to rebuild your shim files. Doing this automatically makes sure everything is up to date. You can always run `rbenv rehash` manually.
 
@@ -142,9 +142,8 @@ gem env home
 
 As time goes on, Ruby versions you install will accumulate in your `~/.rbenv/versions` directory.
 
-To remove old Ruby versions, simply `rm -rf` the directory of the version you want to remove. You can find the directory of a particular Ruby version with the `rbenv prefix` command, e.g. `rbenv prefix 1.8.7-p357`.
-
-The [ruby-build][] plugin provides an `rbenv uninstall` command to automate the removal process.
+- To remove old Ruby versions, simply `rm -rf` the directory of the version you want to remove. You can find the directory of a particular Ruby version with the `rbenv prefix` command, e.g. `rbenv prefix 1.8.7-p357`.
+- The [ruby-build][] plugin provides an **`rbenv uninstall`** command to automate the removal process.
 
 ### Uninstalling rbenv
 
