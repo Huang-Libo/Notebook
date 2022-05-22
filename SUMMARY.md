@@ -1,6 +1,10 @@
 # 目录
 
-- [README](README.md)
+- [About Notebook](README.md)
+
+## 🕹️ *NIX
+
+- [FAQ](UNIX/FAQ.md)
 
 ## 💎 Ruby
 
