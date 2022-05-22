@@ -50,10 +50,15 @@ Use rbenv to pick a Ruby version for your application and guarantee that your de
 2. Set up rbenv in your shell.
 
     ```sh
-    rbenv init
+    $ rbenv init
+    # Load rbenv automatically by appending
+    # the following to ~/.zshrc:
+    eval "$(rbenv init - zsh)"
     ```
 
     Follow the printed instructions to [set up rbenv shell integration](#how-rbenv-hooks-into-your-shell).
+
+    (e.g. For zsh, you need to add `eval "$(rbenv init - zsh)"` to `~/.zshrc`)
 
 3. Close your Terminal window and open a new one so your changes take effect.
 
