@@ -10,6 +10,11 @@
 
 - [rbenv](Ruby/rbenv.md)
 
+## 🐍 Python
+
+- [pyenv](Python/pyenv.md)
+- [Flask Web 开发](Python/Flask-Web.md)
+
 ##  Apple Documents
 
 - [Encoding and Decoding Custom Types](AppleDocuments/encoding_and_decoding_custom_types.md)
@@ -105,10 +110,6 @@
   - [原生模块](ReactNative/Docs/native-modules.md)
   - [原生组件](ReactNative/Docs/native-components.md)
   - [FAQ](ReactNative/Docs/faq.md)
-
-## 🐍 Python
-
-- [Flask Web 开发](Python/Flask-Web.md)
 
 ## 🌲 git
 

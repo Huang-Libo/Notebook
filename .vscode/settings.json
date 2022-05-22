@@ -15,8 +15,11 @@
         "PODNAME",
         "podspec",
         "prepended",
+        "pyenv",
+        "readline",
         "SRCROOT",
         "sunnyxx",
+        "virtualenv",
         "xcodeproj",
         "xcworkspace",
         "Yilong"
