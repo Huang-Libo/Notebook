@@ -2,6 +2,10 @@
 
 - [README](README.md)
 
+## 💎 Ruby
+
+- [rbenv](Ruby/rbenv.md)
+
 ##  Apple Documents
 
 - [Encoding and Decoding Custom Types](AppleDocuments/encoding_and_decoding_custom_types.md)
