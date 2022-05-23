@@ -15,6 +15,7 @@
         "PODNAME",
         "podspec",
         "prepended",
+        "prepending",
         "pyenv",
         "readline",
         "SRCROOT",
