@@ -17,6 +17,15 @@
   - [Advanced Configuration](#advanced-configuration)
     - [Using pyenv without shims](#using-pyenv-without-shims)
     - [Environment variables](#environment-variables)
+  - [How It Works](#how-it-works)
+    - [Understanding PATH](#understanding-path)
+    - [Understanding Shims](#understanding-shims)
+    - [Understanding Python version selection](#understanding-python-version-selection)
+    - [Locating pyenv-provided Python installations](#locating-pyenv-provided-python-installations)
+  - [Compare with other version tools](#compare-with-other-version-tools)
+    - [What pyenv *does...*](#what-pyenv-does)
+    - [In contrast with pythonbrew and pythonz, pyenv *does not...*](#in-contrast-with-pythonbrew-and-pythonz-pyenv-does-not)
+  - [Development](#development)
 
 ## Overview
 
@@ -191,3 +200,105 @@ name | default | description
 `PYENV_HOOK_PATH` | [*see wiki*][hooks] | Colon-separated list of paths searched for pyenv hooks.
 `PYENV_DIR` | `$PWD` | Directory to start searching for `.python-version` files.
 `PYTHON_BUILD_ARIA2_OPTS` | | Used to pass additional parameters to [`aria2`](https://aria2.github.io/).<br><br>If the `aria2c` binary is available on `PATH`, pyenv uses `aria2c` instead of `curl` or `wget` to download the Python Source code. If you have an unstable internet connection, you can use this variable to instruct `aria2` to accelerate the download.<br><br>In most cases, you will only need to use `-x 10 -k 1M` as value to `PYTHON_BUILD_ARIA2_OPTS` environment variable
+
+## How It Works
+
+At a high level, pyenv intercepts Python commands using shim executables injected into your `PATH`, determines which Python version has been specified by your application, and passes your commands along to the correct Python installation.
+
+### Understanding PATH
+
+When you run a command like `python` or `pip`, your operating system searches through a list of directories to find an executable file with that name. This list of directories lives in an environment variable called `PATH`, with each directory in the list separated by a colon:
+
+```plaintext
+/usr/local/bin:/usr/bin:/bin
+```
+
+**Directories in `PATH` are searched from left to right**, so a matching executable in a directory at the beginning of the list takes precedence over another one at the end. In this example, the `/usr/local/bin` directory will be searched first, then `/usr/bin`, then `/bin`.
+
+### Understanding Shims
+
+pyenv works by inserting a directory of *shims* at the **front** of your `PATH`:
+
+```plaintext
+$(pyenv root)/shims:/usr/local/bin:/usr/bin:/bin
+```
+
+Through a process called *rehashing*, pyenv maintains shims in that directory to match every Python command across every installed version of Python—`python`, `pip`, and so on.
+
+Shims are lightweight executables that simply pass your command along to pyenv. So with pyenv installed, when you run, say, `pip`, your operating system will do the following:
+
+- Search your `PATH` for an executable file named `pip`
+- Find the pyenv shim named `pip` at the beginning of your `PATH`
+- Run the shim named `pip`, which in turn passes the command along to   pyenv
+
+### Understanding Python version selection
+
+When you execute a shim, pyenv determines which Python version to use by reading it from the following sources, in this order:
+
+1. The `PYENV_VERSION` environment variable (if specified). You can use the [`pyenv shell`](https://github.com/pyenv/pyenv/blob/master/COMMANDS.md#pyenv-shell) command to set this environment variable in your *current shell session*.
+
+2. The *application-specific* `.python-version` file in the current directory (if present). You can modify the current directory's `.python-version` file with the [`pyenv local`](https://github.com/pyenv/pyenv/blob/master/COMMANDS.md#pyenv-local) command.
+
+3. The first `.python-version` file found (if any) by searching each parent directory, until reaching the root of your filesystem.
+
+4. The *global* `$(pyenv root)/version` file. You can modify this file using the [`pyenv global`](https://github.com/pyenv/pyenv/blob/master/COMMANDS.md#pyenv-global) command. If the global version file is not present, pyenv assumes you want to use the "`system`" Python (see below).
+
+A special version name "`system`" means to use whatever Python is found on `PATH` after the shims `PATH` entry (in other words, whatever would be run if pyenv shims weren't on `PATH`). Note that pyenv considers those installations outside its control and does not attempt to inspect or distinguish them in any way.
+
+So e.g. if you are on MacOS and have *OS-bundled Python 3.8.9* and *Homebrew-installed Python 3.9.12 and 3.10.2* -- for pyenv, this is still a single "`system`" version, and **whichever of those is first on `PATH` under the executable name you specified will be run.**
+
+**NOTE:**
+
+- **You can activate multiple versions at the same time**, including multiple versions of Python2 or Python3 simultaneously. This allows for parallel usage of Python2 and Python3, and is required with tools like `tox`.
+- For example, to instruct pyenv to first use your system Python and Python3 (which are e.g. 2.7.9 and 3.4.2) but also have Python 3.3.6, 3.2.1, and 2.5.2 available, you first `pyenv install` the missing versions,
+  - then set **`pyenv global system 3.3.6 3.2.1 2.5.2`**. Then you'll be able to invoke any of those versions with an appropriate `pythonX` or `pythonX.Y` name.
+  - **You can also specify multiple versions in a `.python-version` file by hand, separated by newlines.** Lines starting with a `#` are ignored.
+
+`pyenv which <command>` displays which real executable would be run when you invoke `<command>` via a shim. E.g. if you have 3.3.6, 3.2.1 and 2.5.2 installed of which 3.3.6 and 2.5.2 are selected and your system Python is 3.2.5, `pyenv which python2.5` should display `$(pyenv root)/versions/2.5.2/bin/python2.5`, `pyenv which python3` -- `$(pyenv root)/versions/3.3.6/bin/python3` and `pyenv which python3.2` -- path to your system Python due to the fall-through (see below).
+
+Shims also fall through to anything further on `PATH` if the corresponding executable is not present in any of the selected Python installations.
+
+This allows you to use any programs installed elsewhere on the system as long as they are not shadowed by a selected Python installation.
+
+### Locating pyenv-provided Python installations
+
+Once pyenv has determined which version of Python your application has specified, it passes the command along to the corresponding Python installation.
+
+Each Python version is installed into its own directory under `$(pyenv root)/versions`.
+
+For example, you might have these versions installed:
+
+- `$(pyenv root)/versions/2.7.8/`
+- `$(pyenv root)/versions/3.4.2/`
+- `$(pyenv root)/versions/pypy-2.4.0/`
+
+As far as pyenv is concerned, version names are simply directories under `$(pyenv root)/versions`.
+
+## Compare with other version tools
+
+### What pyenv *does...*
+
+- Lets you **change the global Python version** on a per-user basis.
+- Provides support for **per-project Python versions**.
+- Allows you to **override the Python version** with an environment   variable.
+- Searches for commands from **multiple versions of Python at a time**. This may be helpful to test across Python versions with [tox](https://pypi.python.org/pypi/tox).
+
+### In contrast with pythonbrew and pythonz, pyenv *does not...*
+
+- **Depend on Python itself.** pyenv was made from pure shell scripts. There is no bootstrap problem of Python.
+- **Need to be loaded into your shell.** Instead, pyenv's shim approach works by adding a directory to your `PATH`.
+- **Manage virtualenv.** Of course, you can create [virtualenv](https://pypi.python.org/pypi/virtualenv) yourself, or [pyenv-virtualenv](https://github.com/pyenv/pyenv-virtualenv) to automate the process.
+
+## Development
+
+The pyenv source code is [hosted on GitHub](https://github.com/pyenv/pyenv).  It's clean, modular, and easy to understand, even if you're not a shell hacker.
+
+Tests are executed using [Bats](https://github.com/bats-core/bats-core):
+
+```sh
+bats test
+bats/test/<file>.bats
+```
+
+[pyenv-virtualenv]: https://github.com/pyenv/pyenv-virtualenv#readme
+[hooks]: https://github.com/pyenv/pyenv/wiki/Authoring-plugins#pyenv-hooks
