@@ -21,6 +21,7 @@
         "readline",
         "SRCROOT",
         "sunnyxx",
+        "venv",
         "virtualenv",
         "xcodeproj",
         "xcworkspace",
