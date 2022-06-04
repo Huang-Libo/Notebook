@@ -15,10 +15,12 @@ The `gem` command allows you to interact with RubyGems. *Ruby 1.9* and newer shi
     - [`gem environment remotesources`](#gem-environment-remotesources)
     - [`gem environment -h`](#gem-environment--h)
   - [`gem -h`](#gem--h)
-  - [`gem <command> -h`](#gem-command--h)
-  - [Requiring code](#requiring-code)
-  - [Viewing Documentation](#viewing-documentation)
-  - [Fetching and Unpacking Gems](#fetching-and-unpacking-gems)
+  - [`gem help <COMMAND>`](#gem-help-command)
+  - [`require` gem](#require-gem)
+  - [`ri`: Viewing Documentation](#ri-viewing-documentation)
+  - [`fetch` and `unpack` gems](#fetch-and-unpack-gems)
+  - [Structure of a gem](#structure-of-a-gem)
+  - [The `gemspec`](#the-gemspec)
 
 ## `gem search`
 
@@ -268,9 +270,9 @@ basic help message containing pointers to more information.
     https://guides.rubygems.org
 ```
 
-## `gem <command> -h`
+## `gem help <COMMAND>`
 
-> You can also use `gem help <command>`
+> You can also use `gem <COMMAND> -h`
 
 Display help information for a *command*. e.g.
 
@@ -303,7 +305,7 @@ Usage: gem install GEMNAME [GEMNAME ...] [options] -- --build-flags [options]
     -N, --no-document                Disable documentation generation
 ```
 
-## Requiring code
+## `require` gem
 
 RubyGems modifies your Ruby *load path*, which controls how your Ruby code is found by the `require` statement. When you `require` a gem, really you're just placing that gem's `lib` directory onto your `$LOAD_PATH`.
 
@@ -365,7 +367,7 @@ freewill/
     └── freewill.rb
 ```
 
-## Viewing Documentation
+## `ri`: Viewing Documentation
 
 You can view the documentation for your installed gems with `ri`:
 
@@ -381,7 +383,7 @@ subclass of MultiRBTree.
 -------------------------------------------
 ```
 
-## Fetching and Unpacking Gems
+## `fetch` and `unpack` gems
 
 If you wish to audit a gem's contents without installing it you can use the `fetch` command to download the `.gem` file then extract its contents with the `unpack` command.
 
@@ -417,3 +419,68 @@ $ ruby -I rake-10.1.0/lib -S rake some_rake_task
 
 - The `-I` argument adds your unpacked rake to the ruby `$LOAD_PATH` which prevents RubyGems from loading the gem version (or the default version).
 - The `-S` argument finds `rake` in the shell's `$PATH` so you don't have to type out the full path.
+
+## Structure of a gem
+
+Each gem has a *name*, *version*, and *platform*.
+
+For example, the [rake](https://rubygems.org/gems/rake) gem has a `13.0.6` version (Released on July 09, 2021). `rake`'s *platform* is `ruby`, which means it works on *any* platform Ruby runs on.
+
+Platforms are based on the *CPU architecture*, *operating system type* and sometimes the *operating system version*.  Examples include "x86-mingw32" or "java".  The platform indicates the gem only works with a ruby built for the same platform.
+
+RubyGems will automatically download the correct version for your platform.  See `gem help platform` for full details.
+
+Inside gems are the following components:
+
+- Code (including tests and supporting utilities)
+- Documentation
+- gemspec
+
+Each gem follows the same standard structure of code organization:
+
+```sh
+$ tree freewill
+freewill/
+├── bin/
+│   └── freewill
+├── lib/
+│   └── freewill.rb
+├── test/
+│   └── test_freewill.rb
+├── README
+├── Rakefile
+└── freewill.gemspec
+```
+
+Here, you can see the major components of a gem:
+
+- The `lib` directory contains the code for the gem
+- The `test` or `spec` directory contains tests, depending on which test framework the developer uses
+- A gem usually has a `Rakefile`, which the [rake](https://rubygems.org/gems/rake) program uses to automate tests, generate code, and perform other tasks.
+- This gem also includes an executable file in the `bin` directory, which will be loaded into the user's `PATH` when the gem is installed.
+- Documentation is usually included in the `README` and inline with the code.
+  - When you install a gem, documentation is generated automatically for you.
+  - Most gems include [RDoc](https://ruby.github.io/rdoc/) documentation, but some use [YARD](https://yardoc.org/) docs instead.
+- The final piece is the `gemspec`, which contains information about the gem.
+  - The gem's files, test information, platform, version number and more are all laid out here along with the author's email and name.
+
+## The `gemspec`
+
+The `gemspec` specifies the information about a gem such as its name, version, description, authors and homepage.
+
+Here's an example of a `gemspec` file.
+
+```sh
+$ cat freewill.gemspec
+
+Gem::Specification.new do |s|
+    s.name        = 'freewill'
+    s.version     = '1.0.0'
+    s.summary     = "Freewill!"
+    s.description = "I will choose Freewill!"
+    s.authors     = ["Nick Quaranto"]
+    s.email       = 'nick@quaran.to'
+    s.homepage    = 'http://example.com/freewill'
+    s.files       = ["lib/freewill.rb", ...]
+end
+```
