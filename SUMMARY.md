@@ -9,6 +9,8 @@
 ## 💎 Ruby
 
 - [rbenv](Ruby/rbenv.md)
+- [RubyGems](Ruby/RubyGems/README.md)
+  - [Basics](Ruby/RubyGems/Basics.md)
 
 ## 🐍 Python
 
