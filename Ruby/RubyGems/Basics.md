@@ -9,6 +9,8 @@ The `gem` command allows you to interact with RubyGems. *Ruby 1.9* and newer shi
   - [`gem install`](#gem-install)
   - [`gem uninstall`](#gem-uninstall)
   - [`gem list`](#gem-list)
+  - [`gem which <FILE>`](#gem-which-file)
+  - [`gem info <GEMNAME>`](#gem-info-gemname)
   - [`gem environment`](#gem-environment)
     - [`gem environment gemdir`](#gem-environment-gemdir)
     - [`gem environment gempath`](#gem-environment-gempath)
@@ -16,8 +18,8 @@ The `gem` command allows you to interact with RubyGems. *Ruby 1.9* and newer shi
     - [`gem environment -h`](#gem-environment--h)
   - [`gem -h`](#gem--h)
   - [`gem help <COMMAND>`](#gem-help-command)
-  - [`require` gem](#require-gem)
-  - [`ri`: Viewing Documentation](#ri-viewing-documentation)
+  - [`require` gem in code](#require-gem-in-code)
+  - [`ri`: viewing Documentation](#ri-viewing-documentation)
   - [`fetch` and `unpack` gems](#fetch-and-unpack-gems)
   - [Structure of a gem](#structure-of-a-gem)
   - [The `gemspec`](#the-gemspec)
@@ -138,6 +140,45 @@ test-unit (2.0.0.0)
 
 > Ruby ships with some gems by default, bigdecimal, io-console, json, minitest, psych, rake, rdoc, test-unit for ruby 2.0.0.
 
+## `gem which <FILE>`
+
+Find the location of a library file you can require.
+
+```sh
+$ gem which cocoapods
+$HOME/.rbenv/versions/2.7.6/lib/ruby/gems/2.7.0/gems/cocoapods-1.11.3/lib/cocoapods.rb
+```
+
+Differences from `which` and `rbenv which`:
+
+```sh
+$ which pod
+$HOME/.rbenv/shims/pod
+
+~
+$ rbenv which pod
+$HOME/.rbenv/versions/2.7.6/bin/pod
+```
+
+## `gem info <GEMNAME>`
+
+Prints information about the gem such as name, description, website, license and installed paths
+
+```sh
+$ gem info cocoapods
+
+*** LOCAL GEMS ***
+
+cocoapods (1.11.3, 1.11.2)
+    Authors: Eloy Duran, Fabio Pelosin, Kyle Fuller, Samuel Giddins
+    Homepage: https://github.com/CocoaPods/CocoaPods
+    License: MIT
+    Installed at (1.11.3): $HOME/.rbenv/versions/2.7.6/lib/ruby/gems/2.7.0
+                 (1.11.2): $HOME/.rbenv/versions/2.7.6/lib/ruby/gems/2.7.0
+
+    The Cocoa library package manager.
+```
+
 ## `gem environment`
 
 Display information about the RubyGems environment.
@@ -241,7 +282,7 @@ Usage: gem environment [arg] [options]
 ## `gem -h`
 
 ```sh
-❯ gem -h
+$ gem -h
 RubyGems is a sophisticated package manager for Ruby.  This is a
 basic help message containing pointers to more information.
 
@@ -305,7 +346,7 @@ Usage: gem install GEMNAME [GEMNAME ...] [options] -- --build-flags [options]
     -N, --no-document                Disable documentation generation
 ```
 
-## `require` gem
+## `require` gem in code
 
 RubyGems modifies your Ruby *load path*, which controls how your Ruby code is found by the `require` statement. When you `require` a gem, really you're just placing that gem's `lib` directory onto your `$LOAD_PATH`.
 
@@ -367,7 +408,7 @@ freewill/
     └── freewill.rb
 ```
 
-## `ri`: Viewing Documentation
+## `ri`: viewing Documentation
 
 You can view the documentation for your installed gems with `ri`:
 

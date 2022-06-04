@@ -8,6 +8,7 @@
         "discoverability",
         "favourite",
         "gemdir",
+        "GEMNAME",
         "gempath",
         "ibireme",
         "MVVM",
