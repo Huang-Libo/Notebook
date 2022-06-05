@@ -11,6 +11,8 @@
 - [rbenv](Ruby/rbenv.md)
 - [RubyGems](Ruby/RubyGems/README.md)
   - [Basics](Ruby/RubyGems/Basics.md)
+- [Bundler](Ruby/Bundler/README.md)
+  - [Getting Started](Ruby/Bundler/getting-started.md)
 
 ## 🐍 Python
 
