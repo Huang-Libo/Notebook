@@ -46,8 +46,13 @@ gem 'rspec'
 Install all of the required gems from your specified sources:
 
 ```sh
-bundle install --path vendor/bundle
+bundle config set --local path 'vendor/bundle' # or: bundle config path vendor/bundle
+bundle install
 ```
+
+> **Warning**:  
+> If you try to use `bundle install --path vendor/bundle`, you will get a warning:  
+> [DEPRECATED] The `--path` flag is deprecated because it relies on being remembered across bundler invocations, which bundler will no longer do in future versions. Instead please use `bundle config set --local path 'vendor/bundle'`, and stop using this flag.
 
 Other way to setup the install `path` for gems:
 
