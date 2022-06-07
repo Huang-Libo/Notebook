@@ -46,8 +46,11 @@ gem 'rspec'
 Install all of the required gems from your specified sources:
 
 ```sh
-bundle config set --local path 'vendor/bundle' # or: bundle config path vendor/bundle
+bundle config set --local path 'vendor/bundle'
 bundle install
+
+## Another way to set bundle path:
+# bundle config path vendor/bundle
 ```
 
 > **Warning**:  
