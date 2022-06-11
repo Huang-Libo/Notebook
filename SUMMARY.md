@@ -13,17 +13,14 @@
   - [Basics](Ruby/RubyGems/Basics.md)
 - [Bundler](Ruby/Bundler/README.md)
   - [Getting Started](Ruby/Bundler/getting-started.md)
+- [Homebrew](Ruby/Homebrew/README.md)
+  - [Installation](Ruby/Homebrew/Installation.md)
+  - [FAQ](Ruby/Homebrew/FAQ.md)
 
 ## 🐍 Python
 
 - [pyenv](Python/pyenv.md)
 - [Flask Web 开发](Python/Flask-Web.md)
-
-## 💼 Package Manager
-
-- [Homebrew](PackageManager/Homebrew/README.md)
-  - [Installation](PackageManager/Homebrew/Installation.md)
-  - [FAQ](PackageManager/Homebrew/FAQ.md)
 
 ##  Apple Documents
 
