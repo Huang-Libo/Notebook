@@ -161,15 +161,14 @@ For the full command list, see the [COMMANDS](#commands) section.
 With `--verbose` or `--debug`, many commands print extra debugging information.
 Note that these options should only appear after a command.
 
-Some command behaviour can be customised with environment variables; see the [ENVIRONMENT](#environment) section.
+Some command behaviour can be customized with environment variables; see the [ENVIRONMENT](#environment) section.
 
 ### `install` *`formula`*
 
 Install *`formula`*.
 
 *`formula`* is usually the name of the formula to install, but it has other
-syntaxes which are listed in the [SPECIFYING FORMULAE](#specifying-formulae)
-section.
+syntaxes which are listed in the [SPECIFYING FORMULAE](#specifying-formulae) section.
 
 ### `uninstall` *`formula`*
 
@@ -182,7 +181,7 @@ List all installed formulae.
 ### `search` [*`text`*|`/`*`text`*`/`]
 
 Perform a substring search of cask tokens and formula names for *`text`*. If
-*`text`* is flanked by slashes, it is interpreted as a regular expression.
+*`text`* is flanked by slashes, it is interpreted as a **regular expression**.
 The search for *`text`* is extended online to `homebrew/core` and `homebrew/cask`.
 If no search term is provided, all locally available formulae are listed.
 
@@ -241,7 +240,7 @@ Show lists of built-in and external commands.
 ### `completions` [*`subcommand`*]
 
 Control whether Homebrew automatically links external tap shell completion files.
-Read more at <https://docs.brew.sh/Shell-Completion>.
+Read more at <https://github.com/Homebrew/brew/blob/master/docs/Shell-Completion.md>.
 
 `brew completions` [`state`]
 <br>Display the current state of Homebrew's completions.
@@ -465,7 +464,7 @@ is already installed but outdated.
 - `--build-bottle`:
   Prepare the formula for eventual bottling during installation, skipping any post-install steps.
 - `--bottle-arch`:
-  Optimise bottles for the specified architecture rather than the oldest architecture supported by the version of macOS the bottles are built on.
+  Optimize bottles for the specified architecture rather than the oldest architecture supported by the version of macOS the bottles are built on.
 - `--display-times`:
   Print install times for each package at the end of the run.
 - `-i`, `--interactive`:
@@ -515,7 +514,7 @@ installations.
 
 List all installed formulae and casks.
 
-If *`formula`* is provided, summarise the paths within its current keg.
+If *`formula`* is provided, summarize the paths within its current keg.
 If *`cask`* is provided, list its artifacts.
 
 - `--formula`:
@@ -940,9 +939,9 @@ the list is formatted for export to `bash`(1) unless `--plain` is passed.
 
 Display Homebrew's install path. *Default:*
 
-  - macOS Intel: `/usr/local`
-  - macOS ARM: `/opt/homebrew`
-  - Linux: `/home/linuxbrew/.linuxbrew`
+- macOS Intel: `/usr/local`
+- macOS ARM: `/opt/homebrew`
+- Linux: `/home/linuxbrew/.linuxbrew`
 
 If *`formula`* is provided, display the location where *`formula`* is or would be installed.
 
@@ -1632,7 +1631,7 @@ working directory.
 - `--patch`:
   Patches for *`formula`* will be applied to the unpacked source.
 - `-g`, `--git`:
-  Initialise a Git repository in the unpacked source. This is useful for creating patches for the software.
+  Initialize a Git repository in the unpacked source. This is useful for creating patches for the software.
 - `-f`, `--force`:
   Overwrite the destination directory if it already exists.
 
