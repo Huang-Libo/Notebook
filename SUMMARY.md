@@ -19,6 +19,12 @@
 - [pyenv](Python/pyenv.md)
 - [Flask Web 开发](Python/Flask-Web.md)
 
+## 💼 Package Manager
+
+- [Homebrew](PackageManager/Homebrew/README.md)
+  - [Installation](PackageManager/Homebrew/Installation.md)
+  - [FAQ](PackageManager/Homebrew/FAQ.md)
+
 ##  Apple Documents
 
 - [Encoding and Decoding Custom Types](AppleDocuments/encoding_and_decoding_custom_types.md)
