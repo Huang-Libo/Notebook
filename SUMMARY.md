@@ -15,6 +15,7 @@
   - [Getting Started](Ruby/Bundler/getting-started.md)
 - [Homebrew](Ruby/Homebrew/README.md)
   - [Installation](Ruby/Homebrew/Installation.md)
+  - [Man Page](Ruby/Homebrew/ManPage.md)
   - [FAQ](Ruby/Homebrew/FAQ.md)
 
 ## 🐍 Python

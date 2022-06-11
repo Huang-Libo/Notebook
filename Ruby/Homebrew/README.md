@@ -4,6 +4,7 @@
 
 - HomePage: <https://brew.sh/>
   - Document: <https://docs.brew.sh/>
+  - Search: <https://formulae.brew.sh/>
 
 ## GitHub
 
