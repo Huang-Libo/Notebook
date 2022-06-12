@@ -4,6 +4,7 @@
 
 ## 🕹️ *NIX
 
+- [ShellCheck](UNIX/ShellCheck.md)
 - [FAQ](UNIX/FAQ.md)
 
 ## 💎 Ruby
