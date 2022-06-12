@@ -24,7 +24,7 @@
     - [`brew shellenv`](#brew-shellenv)
     - [`brew config`](#brew-config)
     - [`brew commands`](#brew-commands)
-  - [`brew doctor`](#brew-doctor)
+    - [`brew doctor`](#brew-doctor)
     - [`brew help <cmd>`](#brew-help-cmd)
   - [GLOBAL OPTIONS](#global-options)
 
@@ -342,7 +342,7 @@ dispatch-build-bottle      pr-pull                    tests
 aspell-dictionaries                 determine-rebottle-runners          postgresql-upgrade-database
 ```
 
-## `brew doctor`
+### `brew doctor`
 
 Check your system for potential problems. Will exit with a non-zero status if
 any potential problems are found. Please note that these warnings are just used
