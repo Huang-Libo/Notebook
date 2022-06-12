@@ -1,13 +1,209 @@
-# Commands
+# Frequently used Commands
 
-- [Commands](#commands)
+- [Frequently used Commands](#frequently-used-commands)
+  - [`brew update`](#brew-update)
+  - [`brew upgrade`](#brew-upgrade)
+  - [`brew outdated`](#brew-outdated)
+  - [`brew list/ls`](#brew-listls)
+  - [`brew search/-S <formula>`: Use regular expression](#brew-search-s-formula-use-regular-expression)
+  - [`brew install`](#brew-install)
+  - [`brew uninstall/remove/rm`](#brew-uninstallremoverm)
+  - [`brew deps`](#brew-deps)
+  - [`brew shellenv`](#brew-shellenv)
+  - [`brew info`](#brew-info)
+  - [`brew home`](#brew-home)
+  - [`brew commands`](#brew-commands)
+  - [`brew help <cmd>`](#brew-help-cmd)
   - [`brew --env`](#brew---env)
   - [`brew config`](#brew-config)
-  - [`brew list`](#brew-list)
-  - [`brew search <formula-name>`: Use regular expression](#brew-search-formula-name-use-regular-expression)
-  - [`brew deps`](#brew-deps)
-  - [`brew <cmd> -h`](#brew-cmd--h)
-  - [`brew commands`](#brew-commands)
+
+## `brew update`
+
+**Fetch** the newest version of *Homebrew* and *all formulae* from GitHub using git(1)
+and perform any necessary **migrations**.
+
+```sh
+$ brew update
+Already up-to-date.
+```
+
+## `brew upgrade`
+
+**Upgrade** *outdated casks* and *outdated&unpinned formulae* using the same options
+they were originally installed with, plus any appended brew formula options.
+
+If *cask* or *formula* are specified, upgrade only the given *cask* or *formula*
+kegs (unless they are pinned; see `pin`, `unpin`).
+
+## `brew outdated`
+
+List installed *casks* and *formulae* that have an updated version available. By
+default, version information is displayed in interactive shells, and suppressed
+otherwise.
+
+## `brew list/ls`
+
+List all installed *formulae* and *casks*.
+
+```sh
+$ brew list
+==> Formulae
+autoconf	git		libtool		pcre2		ruby-build
+automake	gmp		libunistring	pkg-config	tree
+ca-certificates	libgpg-error	libyaml		pyenv		wget
+coreutils	libidn2		m4		rbenv		zlib
+gettext		libksba		openssl@1.1	readline
+
+==> Casks
+bob		eul		tinypng4mac
+```
+
+## `brew search/-S <formula>`: Use regular expression
+
+If *`<formula>`* is flanked by slashes, it is interpreted as a **regular expression**. e.g.:
+
+```sh
+$ brew search /^wget$/
+==> Formulae
+wget ✔
+```
+
+## `brew install`
+
+Install a *formula* or *cask*. Additional options specific to a formula may be
+appended to the command.
+
+```sh
+brew install wget
+```
+
+## `brew uninstall/remove/rm`
+
+Uninstall a *formula* or *cask*.
+
+```sh
+brew install wget
+```
+
+## `brew deps`
+
+Show dependencies for *formula*. Additional options specific to formula may be appended to the command. When given multiple formula arguments, show the intersection of dependencies for each formula.
+
+```sh
+$ brew deps wget
+ca-certificates
+gettext
+libidn2
+libunistring
+openssl@1.1
+```
+
+## `brew shellenv`
+
+Print export statements. When run in a shell, this installation of Homebrew will
+be added to your `PATH`, `MANPATH`, and `INFOPATH`.
+
+```sh
+$ brew shellenv
+export HOMEBREW_PREFIX="/opt/homebrew";
+export HOMEBREW_CELLAR="/opt/homebrew/Cellar";
+export HOMEBREW_REPOSITORY="/opt/homebrew";
+export PATH="/opt/homebrew/bin:/opt/homebrew/sbin${PATH+:$PATH}";
+export MANPATH="/opt/homebrew/share/man${MANPATH+:$MANPATH}:";
+export INFOPATH="/opt/homebrew/share/info:${INFOPATH:-}";
+```
+
+## `brew info`
+
+Display brief statistics for your Homebrew installation.
+
+If a *formula* or *cask* is provided, show summary of information about it.
+
+```sh
+$ brew info
+24 kegs, 14,493 files, 135MB
+
+$ brew info wget
+wget: stable 1.21.3 (bottled), HEAD
+Internet file retriever
+https://www.gnu.org/software/wget/
+/opt/homebrew/Cellar/wget/1.21.3 (89 files, 4.2MB) *
+  Poured from bottle on 2022-02-28 at 14:55:22
+From: https://github.com/Homebrew/homebrew-core/blob/HEAD/Formula/wget.rb
+License: GPL-3.0-or-later
+==> Dependencies
+Build: pkg-config ✔
+Required: libidn2 ✔, openssl@1.1 ✔
+==> Options
+--HEAD
+	Install HEAD version
+==> Analytics
+install: 124,882 (30 days), 470,809 (90 days), 1,870,829 (365 days)
+install-on-request: 124,131 (30 days), 468,274 (90 days), 1,862,068 (365 days)
+build-error: 20 (30 days)
+```
+
+## `brew home`
+
+Open a *formula* or *cask*'s homepage in a browser, or open Homebrew's own homepage if no argument is provided.
+
+```sh
+$ brew home wget
+Opening homepage for Formula wget
+```
+
+## `brew commands`
+
+Display the path to the file being used when invoking `brew <cmd>`.
+
+```sh
+$ brew commands
+==> Built-in commands
+--cache           casks             fetch             list              reinstall         update-report
+--caskroom        cleanup           formulae          log               search            update-reset
+--cellar          commands          gist-logs         migrate           shellenv          update
+--env             completions       help              missing           tap-info          upgrade
+--prefix          config            home              options           tap               uses
+--repository      deps              info              outdated          uninstall         vendor-install
+--version         desc              install           pin               unlink
+analytics         developer         leaves            postinstall       unpin
+autoremove        doctor            link              readall           untap
+
+==> Built-in developer commands
+audit                      edit                       pr-upload                  typecheck
+bottle                     extract                    prof                       unbottled
+bump-cask-pr               formula                    release                    unpack
+bump-formula-pr            generate-man-completions   rubocop                    update-license-data
+bump-revision              install-bundler-gems       ruby                       update-maintainers
+bump-unversioned-casks     irb                        sh                         update-python-resources
+bump                       linkage                    sponsors                   update-test
+cat                        livecheck                  style                      vendor-gems
+command                    pr-automerge               tap-new
+create                     pr-publish                 test
+dispatch-build-bottle      pr-pull                    tests
+
+==> External commands
+aspell-dictionaries                 determine-rebottle-runners          postgresql-upgrade-database
+```
+
+## `brew help <cmd>`
+
+> Or use `brew <cmd> -h`
+
+Show help info for a *command*. e.g.:
+
+```sh
+$ brew config -h
+Usage: brew config, --config
+
+Show Homebrew and system configuration info useful for debugging. If you file a
+bug report, you will be required to provide this information.
+
+  -d, --debug                      Display any debugging information.
+  -q, --quiet                      Make some output more quiet.
+  -v, --verbose                    Make some output more verbose.
+  -h, --help                       Show this message.
+```
 
 ## `brew --env`
 
@@ -55,95 +251,4 @@ macOS: 12.4-arm64
 CLT: 13.4.0.0.1.1651278267
 Xcode: 13.4.1
 Rosetta 2: false
-```
-
-## `brew list`
-
-List all installed *formulae* and *casks*.
-
-```sh
-$ brew list
-==> Formulae
-autoconf	git		libtool		pcre2		ruby-build
-automake	gmp		libunistring	pkg-config	tree
-ca-certificates	libgpg-error	libyaml		pyenv		wget
-coreutils	libidn2		m4		rbenv		zlib
-gettext		libksba		openssl@1.1	readline
-
-==> Casks
-bob		eul		tinypng4mac
-```
-
-## `brew search <formula-name>`: Use regular expression
-
-If *`<formula-name>`* is flanked by slashes, it is interpreted as a **regular expression**. e.g.:
-
-```sh
-$ brew search /^wget$/
-==> Formulae
-wget ✔
-```
-
-## `brew deps`
-
-Show dependencies for *formula*. Additional options specific to formula may be appended to the command. When given multiple formula arguments, show the intersection of dependencies for each formula.
-
-```sh
-$ brew deps wget
-ca-certificates
-gettext
-libidn2
-libunistring
-openssl@1.1
-```
-
-## `brew <cmd> -h`
-
-Show help info for a *command*. e.g.:
-
-```sh
-$ brew config -h
-Usage: brew config, --config
-
-Show Homebrew and system configuration info useful for debugging. If you file a
-bug report, you will be required to provide this information.
-
-  -d, --debug                      Display any debugging information.
-  -q, --quiet                      Make some output more quiet.
-  -v, --verbose                    Make some output more verbose.
-  -h, --help                       Show this message.
-```
-
-## `brew commands`
-
-Display the path to the file being used when invoking `brew <cmd>`.
-
-```sh
-$ brew commands
-==> Built-in commands
---cache           casks             fetch             list              reinstall         update-report
---caskroom        cleanup           formulae          log               search            update-reset
---cellar          commands          gist-logs         migrate           shellenv          update
---env             completions       help              missing           tap-info          upgrade
---prefix          config            home              options           tap               uses
---repository      deps              info              outdated          uninstall         vendor-install
---version         desc              install           pin               unlink
-analytics         developer         leaves            postinstall       unpin
-autoremove        doctor            link              readall           untap
-
-==> Built-in developer commands
-audit                      edit                       pr-upload                  typecheck
-bottle                     extract                    prof                       unbottled
-bump-cask-pr               formula                    release                    unpack
-bump-formula-pr            generate-man-completions   rubocop                    update-license-data
-bump-revision              install-bundler-gems       ruby                       update-maintainers
-bump-unversioned-casks     irb                        sh                         update-python-resources
-bump                       linkage                    sponsors                   update-test
-cat                        livecheck                  style                      vendor-gems
-command                    pr-automerge               tap-new
-create                     pr-publish                 test
-dispatch-build-bottle      pr-pull                    tests
-
-==> External commands
-aspell-dictionaries                 determine-rebottle-runners          postgresql-upgrade-database
 ```

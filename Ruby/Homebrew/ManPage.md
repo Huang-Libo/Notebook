@@ -340,7 +340,7 @@ an issue; just ignore this.
 
 ### `fetch` [*`options`*] *`formula`*|*`cask`* [...]
 
-Download a bottle (if available) or source packages for *`formula`*e
+Download a bottle (if available) or source packages for *`formulae`*
 and binaries for *`cask`*s. For files, also print SHA-256 checksums.
 
 - `--bottle-tag`:
@@ -432,7 +432,7 @@ outdated dependents and dependents with broken linkage, respectively.
 Unless `HOMEBREW_NO_INSTALL_CLEANUP` is set, `brew cleanup` will then be run for
 the installed formulae or, every 30 days, for all formulae.
 
-Unless `HOMEBREW_NO_INSTALL_UPGRADE` is set, `brew install *`formula`*` will upgrade *`formula`* if it
+Unless `HOMEBREW_NO_INSTALL_UPGRADE` is set, `brew install <formula>` will upgrade *`formula`* if it
 is already installed but outdated.
 
 - `-d`, `--debug`:
@@ -757,7 +757,7 @@ If no *`tap`* names are provided, display brief statistics for all installed tap
 - `--installed`:
   Show information on each installed tap.
 - `--json`:
-  Print a JSON representation of *`tap`*. Currently the default and only accepted value for *`version`* is `v1`. See the docs for examples of using the JSON output: <https://docs.brew.sh/Querying-Brew>
+  Print a JSON representation of *`tap`*. Currently the default and only accepted value for *`version`* is `v1`. See the docs for examples of using the JSON output: <https://github.com/Homebrew/brew/blob/master/docs/Querying-Brew.md>
 
 ### `uninstall`, `remove`, `rm` [*`options`*] *`installed_formula`*|*`installed_cask`* [...]
 
