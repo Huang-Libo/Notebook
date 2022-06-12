@@ -5,6 +5,7 @@
 - HomePage: <https://brew.sh/>
   - Document: <https://docs.brew.sh/>
   - Search: <https://formulae.brew.sh/>
+- Discussions: <https://github.com/Homebrew/discussions/discussions>
 
 ## GitHub
 
