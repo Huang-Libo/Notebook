@@ -13,6 +13,12 @@
     - [Using Package Manager](#using-package-manager)
     - [pre-commit](#pre-commit)
     - [Travis CI](#travis-ci)
+  - [Ignoring issues](#ignoring-issues)
+    - [Ignoring one specific instance in a file](#ignoring-one-specific-instance-in-a-file)
+    - [Ignoring all instances in a file](#ignoring-all-instances-in-a-file)
+    - [Ignoring all errors in a file](#ignoring-all-errors-in-a-file)
+    - [Ignoring errors in one specific run](#ignoring-errors-in-one-specific-run)
+    - [Ignoring one or more types of errors forever](#ignoring-one-or-more-types-of-errors-forever)
   - [Gallery of bad code](#gallery-of-bad-code)
     - [Quoting](#quoting)
     - [Conditionals](#conditionals)
@@ -23,7 +29,6 @@
     - [Robustness](#robustness)
     - [Portability](#portability)
     - [Miscellaneous](#miscellaneous)
-  - [Ignoring issues](#ignoring-issues)
   - [Other Resources](#other-resources)
 
 ## Overview
@@ -205,6 +210,76 @@ repos:
 
 Travis CI has now integrated ShellCheck by default, so you don't need to manually install it.
 
+## Ignoring issues
+
+> <https://github.com/koalaman/shellcheck/wiki/Ignore>
+
+Issues can be ignored via environmental variable, command line, individually or globally within a file:
+
+### Ignoring one specific instance in a file
+
+Use a [directive](https://github.com/koalaman/shellcheck/wiki/Directive) to disable a certain instance:
+
+```sh
+hexToAscii() {
+  # shellcheck disable=SC2059
+  printf "\x$1"
+}
+```
+
+You can pass multiple errors to directive:
+
+```sh
+# shellcheck disable=SC2116,SC2086
+hash=$(echo ${hash})    # trim spaces
+```
+
+### Ignoring all instances in a file
+
+Add a directive at the top of the file:
+
+```sh
+#!/bin/sh
+
+# shellcheck disable=SC2059
+
+...
+```
+
+Note that the directive must be on the first line after the shebang with versions before 0.4.6. As of 0.4.6 comments and **whitespace are allowed** before file-wide directives.
+
+### Ignoring all errors in a file
+
+Add a directive at the top of the file:
+
+```sh
+#!/bin/sh
+
+# shellcheck disable=all
+
+...
+```
+
+Note that the directive must be on the first non-commented/non-whitespace line after the shebang with versions after 0.4.6.
+
+### Ignoring errors in one specific run
+
+Use a `-e` flag to disable a specific error when running `shellcheck`:
+
+```console
+shellcheck -e SC2059 myscript
+```
+
+### Ignoring one or more types of errors forever
+
+You can create a file `.shellcheckrc` in your home directory (or your project's base directory), and add `disable` directives to it:
+
+```sh
+# ~/.shellcheckrc
+disable=SC2059,SC2034 # Disable individual error codes
+disable=SC1090-SC1100 # Disable a range of error codes
+```
+
 ## Gallery of bad code
 
 So what kind of things does ShellCheck look for? Here is an incomplete list of detected issues.
@@ -373,14 +448,6 @@ alias ls='ls -l'; ls foo          # Alias used before it takes effect
 for x; do for x; do               # Nested loop uses same variable
 while getopts "a" f; do case $f in "b") # Unhandled getopts flags
 ```
-
-## Ignoring issues
-
-Issues can be ignored via environmental variable, command line, individually or globally within a file:
-
-<https://github.com/koalaman/shellcheck/wiki/Ignore>
-
-Happy ShellChecking!
 
 ## Other Resources
 
