@@ -1,13 +1,15 @@
 # FAQ for *NIX
 
 - [FAQ for *NIX](#faq-for-nix)
-  - [How to display $PATH as one directory per line?](#how-to-display-path-as-one-directory-per-line)
+  - [How to display `$PATH` as one directory per line?](#how-to-display-path-as-one-directory-per-line)
   - [What's the difference between `<<` and `<<<`](#whats-the-difference-between--and-)
     - [Here Document: output multi lines](#here-document-output-multi-lines)
     - [Here String Usage](#here-string-usage)
-  - [Process Substitution and Pipe](#process-substitution-and-pipe)
+  - [Process Substitution](#process-substitution)
+    - [Introduction](#introduction)
+    - [Difference between Process Substitution and Pipe](#difference-between-process-substitution-and-pipe)
 
-## How to display $PATH as one directory per line?
+## How to display `$PATH` as one directory per line?
 
 > From [ask ubuntu](https://askubuntu.com/a/600019).
 
@@ -60,7 +62,7 @@ Then you can use `mypath` to display directories in `PATH` in single lines.
 
 ## What's the difference between `<<` and `<<<`
 
-> [ask ubuntu](https://askubuntu.com/questions/678915/whats-the-difference-between-and-in-bash)
+> From [ask ubuntu](https://askubuntu.com/questions/678915/whats-the-difference-between-and-in-bash)
 
 ### Here Document: output multi lines
 
@@ -105,9 +107,35 @@ Line 3
 
 `<<<` is known as **here-string**. Instead of typing in text, you give a pre-made string of text to a program. For example, with such program as `bc` we can do `bc <<< 5*4` to just get output for that specific case, no need to run `bc` interactively. Think of it as the equivalent of `echo '5*4' | bc`.
 
-## Process Substitution and Pipe
+## Process Substitution
 
-> [Stack Exchange](https://unix.stackexchange.com/questions/17107/process-substitution-and-pipe)
+### Introduction
+
+> [Wikipedia](https://en.wikipedia.org/wiki/Process_substitution)
+
+*Process substitution* is a form of *inter-process communication(IPC)* that **allows the input or output of a command to appear as a file**. The command is substituted in-line, where a file name would normally occur, by the command shell. This allows programs that normally only accept files to directly read from or write to another program.
+
+**e.g.**
+
+The Unix `diff` command normally accepts the names of two files to compare, or one file name and standard input. *Process substitution* allows one to compare the output of two programs directly:
+
+```bash
+diff <(sort file1) <(sort file2)
+```
+
+The `<(command)` expression tells the command interpreter to run *command* and **make its output appear as a file**. The *command* can be any arbitrarily complex shell command.
+
+Without *process substitution*, the alternatives are save the output of the command(s) to a temporary file, then read the temporary file(s):
+
+```bash
+sort file2 > /tmp/file2.sorted
+sort file1 | diff - /tmp/file2.sorted
+rm /tmp/file2.sorted
+```
+
+### Difference between Process Substitution and Pipe
+
+> From [Stack Exchange](https://unix.stackexchange.com/questions/17107/process-substitution-and-pipe)
 
 Let's use the `date` command for testing.
 
