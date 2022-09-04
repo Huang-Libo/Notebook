@@ -72,6 +72,8 @@ Open **Emoji & Symbols** ( <kbd>⌃</kbd> <kbd>⌘</kbd> <kbd>Space</kbd> ), you
 
 | Shortcuts | Name | Tab | Comments |
 |---|---|---|---|
+| <kbd>⌃</kbd> <kbd>I</kbd> | Re-Indent | Editor - Structure |   |
+| <kbd>⌘</kbd> <kbd>L</kbd> | Jump to Line | Navigate | Also works in *Vim Mode* |
 | <kbd>⌘</kbd> <kbd>⏎</kbd> | Show Editor Only | Editor |   |
 | <kbd>⌘</kbd> <kbd>⇧</kbd> <kbd>⏎</kbd> | Canvas | Editor |   |
 | <kbd>⇧</kbd> <kbd>⌘</kbd> <kbd>D</kbd> | Reveal in Debug Navigator | Navigate |   |
