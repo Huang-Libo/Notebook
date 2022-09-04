@@ -73,9 +73,21 @@ Open **Emoji & Symbols** ( <kbd>⌃</kbd> <kbd>⌘</kbd> <kbd>Space</kbd> ), you
 | Shortcuts | Name | Tab | Comments |
 |---|---|---|---|
 | <kbd>⌃</kbd> <kbd>I</kbd> | Re-Indent | Editor - Structure |   |
+| <kbd>⌘</kbd> <kbd>[</kbd> | Shift Left | Editor - Structure |   |
+| <kbd>⌘</kbd> <kbd>]</kbd> | Shift Right | Editor - Structure |   |
+| <kbd>⌥</kbd> <kbd>⌘</kbd> <kbd>[</kbd> | Move Line Up | Editor - Structure |   |
+| <kbd>⌥</kbd> <kbd>⌘</kbd> <kbd>]</kbd> | Move Line Down | Editor - Structure |   |
+| <kbd>⌥</kbd> <kbd>⌘</kbd> <kbd>←</kbd> | Fold | Editor - Code Folding |   |
+| <kbd>⌥</kbd> <kbd>⌘</kbd> <kbd>→</kbd> | Unfold | Editor - Code Folding |   |
+| <kbd>⌥</kbd> <kbd>⇧</kbd> <kbd>⌘</kbd> <kbd>←</kbd> | Fold Methods & Functions | Editor - Code Folding |   |
+| <kbd>⌥</kbd> <kbd>⇧</kbd> <kbd>⌘</kbd> <kbd>→</kbd> | Unfold Methods & Functions | Editor - Code Folding |   |
+| <kbd>⌃</kbd> <kbd>⇧</kbd> <kbd>⌘</kbd> <kbd>←</kbd> | Fold Comment Blocks | Editor - Code Folding |   |
+| <kbd>⌃</kbd> <kbd>⇧</kbd> <kbd>⌘</kbd> <kbd>→</kbd> | Unfold Comment Blocks | Editor - Code Folding |   |
 | <kbd>⌘</kbd> <kbd>L</kbd> | Jump to Line | Navigate | Also works in *Vim Mode* |
 | <kbd>⌘</kbd> <kbd>⏎</kbd> | Show Editor Only | Editor |   |
 | <kbd>⌘</kbd> <kbd>⇧</kbd> <kbd>⏎</kbd> | Canvas | Editor |   |
+| <kbd>⌃</kbd> <kbd>⌘</kbd> <kbd>⇧</kbd> <kbd>⏎</kbd> | Assistant | Editor |   |
+| <kbd>⌃</kbd> <kbd>⌘</kbd> <kbd>E</kbd> | Edit All in Scope | Editor |   |
 | <kbd>⇧</kbd> <kbd>⌘</kbd> <kbd>D</kbd> | Reveal in Debug Navigator | Navigate |   |
 | <kbd>⇧</kbd> <kbd>⌘</kbd> <kbd>J</kbd> | Reveal in Project Navigator | Navigate |   |
 | <kbd>⇧</kbd> <kbd>⌘</kbd> <kbd>M</kbd> | Reveal in Changes Navigator | Navigate |   |
