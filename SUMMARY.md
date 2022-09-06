@@ -2,6 +2,11 @@
 
 - [About Notebook](README.md)
 
+## ⌨️ Keyboard Shortcuts
+
+- [Special Keys](KeyboardShortcuts/SpecialKeys.md)
+- [Xcode](KeyboardShortcuts/Xcode.md)
+
 ## 🕹️ *NIX
 
 - [ShellCheck](UNIX/ShellCheck.md)
@@ -33,7 +38,6 @@
 
 ## 📱 iOS
 
-- [Xcode Keyboard Shortcuts](iOS/XcodeKeyboardShortcuts.md)
 - [Block](iOS/Block.md)
 - [fishhook & PIC](iOS/fishhook.md)
 - [weak 源码分析](iOS/objc4-weak.md)
