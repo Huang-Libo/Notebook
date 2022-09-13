@@ -1,11 +1,21 @@
 # Xcode Keyboard Shortcuts
 
 - [Xcode Keyboard Shortcuts](#xcode-keyboard-shortcuts)
+  - [View](#view)
+    - [View: Main](#view-main)
   - [Editor](#editor)
     - [Editor: Main](#editor-main)
     - [Editor: Structure](#editor-structure)
     - [Editor: Code Folding](#editor-code-folding)
   - [Navigate](#navigate)
+
+## View
+
+### View: Main
+
+| Shortcuts                              | Name         |
+|----------------------------------------|--------------|
+| <kbd>⌘</kbd> <kbd>⇧</kbd> <kbd>L</kbd> | Show Library |
 
 ## Editor
 
