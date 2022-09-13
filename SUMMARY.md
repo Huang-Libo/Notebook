@@ -29,6 +29,7 @@
 
 ## 🐍 Python
 
+- [FAQ](Python/FAQ.md)
 - [pyenv](Python/pyenv.md)
 - [Flask Web 开发](Python/Flask-Web.md)
 
