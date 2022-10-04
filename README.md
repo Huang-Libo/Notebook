@@ -1,6 +1,6 @@
 # Notebook
 
-就做了一点微小的工作，谢谢大家。
+Just did a little bit of work, thank you all.
 
 ## GitBook (public)
 
@@ -9,7 +9,7 @@
 ## GitHub (private)
 
 - <https://github.com/Huang-Libo/Notebook>
-- 目录：<https://github.com/Huang-Libo/Notebook/blob/master/SUMMARY.md>
+  - ToC：<https://github.com/Huang-Libo/Notebook/blob/master/SUMMARY.md>
 
 ## FAQ
 
