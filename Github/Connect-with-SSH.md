@@ -257,3 +257,9 @@ Someone could be eavesdropping on you right now (man-in-the-middle attack)!
 其实就是**湖北联通 DNS 劫持了 Github 域名** 💢 ，把 GitHub 域名解析到一些保留 IP 地址，导致 fingerprint 与 `~/.ssh/known_hosts` 里存储的不匹配。
 
 **解决方案**：在系统偏好->网络设置里，把默认 DNS 更换成 114DNS（114.114.114.114），就恢复正常了。
+
+相关文章：
+
+- [emacs-china: github ssh pubkey 失效，总是提示输入密码](https://emacs-china.org/t/github-ssh-pubkey/21172)
+- [v2ex: github 已经配置好 ssh，但是提示输入密码](https://www.v2ex.com/t/881922)
+- [v2ex: 运营商 DNS 将 GitHub 指向的本地](https://www.v2ex.com/t/855574)
