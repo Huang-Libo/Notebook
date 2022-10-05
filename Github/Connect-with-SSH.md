@@ -8,6 +8,9 @@
     - [Generating a new SSH key](#generating-a-new-ssh-key)
     - [Adding your SSH key to the ssh-agent](#adding-your-ssh-key-to-the-ssh-agent)
   - [Adding a new SSH key to your GitHub account](#adding-a-new-ssh-key-to-your-github-account)
+  - [Testing your SSH connection](#testing-your-ssh-connection)
+  - [Logs](#logs)
+    - [Oct 5th, 2022](#oct-5th-2022)
 
 ## About SSH
 
@@ -142,5 +145,75 @@ Agent pid 59566
 
 ## Adding a new SSH key to your GitHub account
 
+1️⃣ Copy the SSH public key to your clipboard.
 
+```bash
+$ pbcopy < ~/.ssh/id_ed25519.pub
+```
 
+2️⃣ Add public key in Settings -> **SSH and GPG keys**
+
+## Testing your SSH connection
+
+> After you've set up your SSH key and added it to your account on GitHub.com, you can test your connection.
+
+1️⃣ Enter the following:
+
+```bash
+$ ssh -T git@github.com
+  # Attempts to ssh to GitHub
+```
+
+Use `-v` parameter to print verbose log:
+
+```bash
+$ ssh -vT git@github.com
+> ...
+> debug1: identity file /Users/YOU/.ssh/id_rsa type -1
+> debug1: identity file /Users/YOU/.ssh/id_rsa-cert type -1
+> debug1: identity file /Users/YOU/.ssh/id_dsa type -1
+> debug1: identity file /Users/YOU/.ssh/id_dsa-cert type -1
+> ...
+```
+
+2️⃣ You may see a warning like this:
+
+```console
+> The authenticity of host 'github.com (IP ADDRESS)' can't be established.
+> RSA key fingerprint is SHA256:nThbg6kXUpJWGl7E1IGOCspRomTxdCARLviKw6E5SY8.
+> Are you sure you want to continue connecting (yes/no)?
+```
+
+3️⃣ Verify that the fingerprint in the message you see matches [GitHub's public key fingerprint](https://docs.github.com/en/github/authenticating-to-github/githubs-ssh-key-fingerprints). If it does, then type `yes`:
+
+```console
+> Hi USERNAME! You've successfully authenticated, but GitHub does not
+> provide shell access.
+```
+
+4️⃣ Verify that the resulting message contains your username. If you receive a "permission denied" message, see "[Error: Permission denied (publickey)](https://docs.github.com/en/articles/error-permission-denied-publickey)".
+
+> **Note**: If everything is configured properly, but your public key still cannot be verified by GitHub, you should check your DNS server is working correctly. For more Info, see [Logs](#logs).
+
+## Logs
+
+### Oct 5th, 2022
+
+**网络环境**：湖北联通
+
+**现象**：`git push` 失败（之前一直都是正常的）。
+
+终端错误信息：
+
+```console
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@    WARNING: REMOTE HOST IDENTIFICATION HAS CHANGED!     @
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+IT IS POSSIBLE THAT SOMEONE IS DOING SOMETHING NASTY!
+Someone could be eavesdropping on you right now (man-in-the-middle attack)!
+...
+```
+
+其实就是**湖北联通 DNS 劫持了 Github 域名** 💢 ，把 GitHub 域名解析到一些保留 IP 地址，导致 fingerprint 与 `~/.ssh/known_hosts` 里存储的不匹配。
+
+**解决方案**：在系统偏好->网络设置里，把默认 DNS 更换成 114DNS（114.114.114.114），就恢复正常了。
