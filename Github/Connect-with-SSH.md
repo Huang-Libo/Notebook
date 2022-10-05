@@ -9,6 +9,10 @@
     - [Adding your SSH key to the ssh-agent](#adding-your-ssh-key-to-the-ssh-agent)
   - [Adding a new SSH key to your GitHub account](#adding-a-new-ssh-key-to-your-github-account)
   - [Testing your SSH connection](#testing-your-ssh-connection)
+  - [Working with SSH key passphrases](#working-with-ssh-key-passphrases)
+    - [About passphrases for SSH keys](#about-passphrases-for-ssh-keys)
+    - [Adding or changing a passphrase](#adding-or-changing-a-passphrase)
+    - [Saving your passphrase in the keychain](#saving-your-passphrase-in-the-keychain)
   - [Logs](#logs)
     - [Oct 5th, 2022](#oct-5th-2022)
 
@@ -194,6 +198,42 @@ $ ssh -vT git@github.com
 4️⃣ Verify that the resulting message contains your username. If you receive a "permission denied" message, see "[Error: Permission denied (publickey)](https://docs.github.com/en/articles/error-permission-denied-publickey)".
 
 > **Note**: If everything is configured properly, but your public key still cannot be verified by GitHub, you should check your DNS server is working correctly. For more Info, see [Logs](#logs).
+
+## Working with SSH key passphrases
+
+> You can secure your SSH keys and configure an authentication agent so that you won't have to reenter your passphrase every time you use your SSH keys.
+
+### About passphrases for SSH keys
+
+With SSH keys, if someone gains access to your computer, the attacker can gain access to every system that uses that key. To add an extra layer of security, you can add a passphrase to your SSH key.
+
+To avoid entering the passphrase every time you connect, you can securely save your passphrase in the SSH agent.
+
+### Adding or changing a passphrase
+
+You can **change** the passphrase for an existing private key *without* regenerating the keypair by typing the following command:
+
+```bash
+$ ssh-keygen -p -f ~/.ssh/id_ed25519
+> Enter old passphrase: [Type old passphrase]
+> Key has comment 'your_email@example.com'
+> Enter new passphrase (empty for no passphrase): [Type new passphrase]
+> Enter same passphrase again: [Repeat the new passphrase]
+> Your identification has been saved with the new passphrase.
+```
+
+If your key already has a passphrase, you will be prompted to enter it before you can change to a new passphrase.
+
+### Saving your passphrase in the keychain
+
+On *Mac OS X Leopard* through *Mac OS X El Capitan*, these default private key files are handled automatically:
+
+- .ssh/id_rsa
+- .ssh/identity
+
+That's to say, the *first time* you use your key, you will be prompted to enter your passphrase. *If you choose to save the passphrase with your keychain, you won't have to enter it again.*
+
+However, in the systems after *Mac OS X El Capitan*, you need to store your passphrase in the keychain when you add your key to the ssh-agent. For more information, see "[Adding your SSH key to the ssh-agent](https://docs.github.com/en/articles/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent#adding-your-ssh-key-to-the-ssh-agent)".
 
 ## Logs
 
