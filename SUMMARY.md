@@ -133,7 +133,7 @@
 
 ## 🐱 GitHub
 
-- [GitHub: Connect with SSH](Github/Connect-with-SSH.md)
+- [Connect with SSH](Github/Connect-with-SSH.md)
 
 ## 💻 mac
 
