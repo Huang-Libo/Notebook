@@ -1,6 +1,7 @@
 # FAQ for *NIX
 
 - [FAQ for *NIX](#faq-for-nix)
+  - [`$0`](#0)
   - [How to display `$PATH` as one directory per line?](#how-to-display-path-as-one-directory-per-line)
   - [What's the difference between `<<` and `<<<`](#whats-the-difference-between--and-)
     - [Here Document: output multi lines](#here-document-output-multi-lines)
@@ -8,6 +9,20 @@
   - [Process Substitution](#process-substitution)
     - [Introduction](#introduction)
     - [Difference between Process Substitution and Pipe](#difference-between-process-substitution-and-pipe)
+  - [Exit status of a command](#exit-status-of-a-command)
+
+## `$0`
+
+You can use `$0` to obtain the corresponding program name which is executed in shell scripts:
+
+- If you use *relative path*, for example, `./test.sh`, then `$0` equals to `./test.sh`;
+- If you use *absolute path*, for example, `/User/username/test.sh`, then `$0` equals to `/User/username/test.sh`.
+
+If you just want to get the program file name without path, you can use `basename` command in shell script:
+
+```bash
+script_file_name=$(basename $0)
+```
 
 ## How to display `$PATH` as one directory per line?
 
@@ -187,3 +202,11 @@ $ echo < <(date)
 Since `echo` doesn't read STDIN and no argument was passed, we get nothing.
 
 Pipes and input redirects shove content onto the STDIN stream. *Process substitution* runs the commands, saves their output to a **special temporary file** and then passes that file name in place of the command. **Whatever command you are using treats it as a file name**. Note that the file created is not a regular file but a named pipe that gets removed automatically once it is no longer needed.
+
+## Exit status of a command
+
+- value of `$?`
+  - `0`: Command run **success**
+  - `1`: Command **failed** during run
+  - `2`: Incorrect command usage
+  - `127`: Command not found
