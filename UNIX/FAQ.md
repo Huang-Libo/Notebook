@@ -1,6 +1,9 @@
 # FAQ for *NIX
 
 - [FAQ for *NIX](#faq-for-nix)
+  - [Arguments in `if` Statement](#arguments-in-if-statement)
+    - [String](#string)
+    - [Number](#number)
   - [`$0`](#0)
   - [How to display `$PATH` as one directory per line?](#how-to-display-path-as-one-directory-per-line)
   - [What's the difference between `<<` and `<<<`](#whats-the-difference-between--and-)
@@ -11,6 +14,28 @@
     - [Difference between Process Substitution and Pipe](#difference-between-process-substitution-and-pipe)
   - [Exit status of a command](#exit-status-of-a-command)
 
+## Arguments in `if` Statement
+
+### String
+
+| Option | Explain             |
+|--------|---------------------|
+| `==`   | string equal        |
+| `!=`   | string not equal    |
+| `-z`   | string is empty     |
+| `-n`   | string is not empty |
+
+### Number
+
+| Option | Explain                  |
+|--------|--------------------------|
+| `-eq`  | equal to                 |
+| `-ne`  | not equal to             |
+| `-gt`  | greater than             |
+| `-ge`  | greater than or equal to |
+| `-lt`  | less than                |
+| `-le`  | less than or equal to    |
+
 ## `$0`
 
 You can use `$0` to obtain the corresponding program name which is executed in shell scripts:
@@ -18,7 +43,7 @@ You can use `$0` to obtain the corresponding program name which is executed in s
 - If you use *relative path*, for example, `./test.sh`, then `$0` equals to `./test.sh`;
 - If you use *absolute path*, for example, `/User/username/test.sh`, then `$0` equals to `/User/username/test.sh`.
 
-If you just want to get the program file name without path, you can use `basename` command in shell script:
+So, if you just want to get the program file name without path, you can use `basename` command in shell script:
 
 ```bash
 script_file_name=$(basename $0)
