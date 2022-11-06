@@ -4,7 +4,10 @@
   - [Arguments in `if` Statement](#arguments-in-if-statement)
     - [String](#string)
     - [Number](#number)
-  - [`$0`](#0)
+  - [Special variables in Bash](#special-variables-in-bash)
+    - [`$0`](#0)
+    - [`$#` and `${!#}`](#-and-)
+    - [`$*` and `$@`](#-and--1)
   - [How to display `$PATH` as one directory per line?](#how-to-display-path-as-one-directory-per-line)
   - [What's the difference between `<<` and `<<<`](#whats-the-difference-between--and-)
     - [Here Document: output multi lines](#here-document-output-multi-lines)
@@ -19,7 +22,7 @@
 ### String
 
 | Option | Explain             |
-|--------|---------------------|
+| ------ | ------------------- |
 | `==`   | string equal        |
 | `!=`   | string not equal    |
 | `-z`   | string is empty     |
@@ -28,7 +31,7 @@
 ### Number
 
 | Option | Explain                  |
-|--------|--------------------------|
+| ------ | ------------------------ |
 | `-eq`  | equal to                 |
 | `-ne`  | not equal to             |
 | `-gt`  | greater than             |
@@ -36,7 +39,9 @@
 | `-lt`  | less than                |
 | `-le`  | less than or equal to    |
 
-## `$0`
+## Special variables in Bash
+
+### `$0`
 
 You can use `$0` to obtain the corresponding program name which is executed in shell scripts:
 
@@ -48,6 +53,34 @@ So, if you just want to get the program file name without path, you can use `bas
 ```bash
 script_file_name=$(basename $0)
 ```
+
+### `$#` and `${!#}`
+
+`$#` is used for getting the number of parameters.
+
+If you need to get the *last* parameter, you cannot use `${$#}`, because you shouldn't use `$` sign inside the `{}` pair. You have two choices:
+
+1. Use a temp parameter:
+
+    ```bash
+    param_count=$#
+    last_param=${param_count}
+    ```
+
+2. Use `${!#}` (change `$` to `!` inside the `{}` pair).
+
+### `$*` and `$@`
+
+Both `$*` and `$@` variables provide quick access to all parameters. [The difference appears when the special parameters are quoted](https://stackoverflow.com/a/28099707):
+
+| Syntax | Effective Result          |
+| ------ | :------------------------ |
+| `$*`   | `$1 $2 $3 … ${N}`         |
+| `$@`   | `$1 $2 $3 … ${N}`         |
+| `"$*"` | `"$1c$2c$3c…c${N}`"       |
+| `"$@"` | `"$1" "$2" "$3" … "${N}"` |
+
+where `c` in the third row is the first character of `$IFS`, the *Input Field Separator*, a shell variable.
 
 ## How to display `$PATH` as one directory per line?
 
