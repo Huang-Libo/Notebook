@@ -2,6 +2,7 @@
 
 - [FAQ for *NIX](#faq-for-nix)
   - [Arguments in `if` Statement](#arguments-in-if-statement)
+    - [File](#file)
     - [String](#string)
     - [Number](#number)
   - [Special variables in Bash](#special-variables-in-bash)
@@ -18,6 +19,17 @@
   - [Exit status of a command](#exit-status-of-a-command)
 
 ## Arguments in `if` Statement
+
+### File
+
+| Option | Explain                       |
+| ------ | ----------------------------- |
+| `-e`   | The given path exists         |
+| `-d`   | The given path is a directory |
+| `-f`   | The given path is a file      |
+| `-r`   | The given path is readable    |
+| `-w`   | The given path is writable    |
+| `-x`   | The given path is executable  |
 
 ### String
 
