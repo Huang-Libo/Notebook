@@ -102,17 +102,17 @@ print(manager.importer.filename)
 // Prints "data.txt"
 ```
 
-> **NOTE**: If a property marked with the `lazy` modifier is accessed by multiple threads simultaneously and the property hasn’t yet been initialized, there’s no guarantee that the property will be initialized only once.
+> **NOTE**: If a property marked with the `lazy` modifier is accessed by multiple threads **simultaneously** and the property hasn’t yet been initialized, there’s *no* guarantee that the property will be initialized only once.
 
 ### 1.3. Stored Properties and Instance Variables
 
-If you have experience with Objective-C, you may know that it provides two ways to store values and references as part of a class instance. In addition to properties, you can use instance variables as a backing store for the values stored in a property.
+If you have experience with Objective-C, you may know that it provides two ways to store values and references as part of a class instance. In addition to properties, you can use *instance variables* as a backing store for the values stored in a property.
 
 Swift unifies these concepts into a single property declaration. A Swift property doesn’t have a corresponding instance variable, and the backing store for a property isn’t accessed directly.
 
 ## 2. Computed Properties
 
-In addition to stored properties, `classes`, `structures`, and `enumerations` can define *computed properties*, which don’t actually store a value. Instead, they provide a getter and an optional setter to retrieve and set other properties and values indirectly.
+In addition to stored properties, *classes*, *structures*, and *enumerations* can define *computed properties*, which don’t actually store a value. Instead, they provide a `getter` and an *optional* `setter` to retrieve and set other properties and values indirectly.
 
 ```swift
 struct Point {
@@ -174,7 +174,7 @@ struct AlternativeRect {
 
 ### 2.2. Shorthand Getter Declaration
 
-If the entire body of a getter is a single expression, the getter implicitly returns that expression. Here’s an another version of the `Rect` structure that takes advantage of this shorthand notation and the shorthand notation for setters:
+If the entire body of a getter is a *single expression*, the getter implicitly returns that expression. Here’s an another version of the `Rect` structure that takes advantage of this shorthand notation and the shorthand notation for setters:
 
 ```swift
 struct CompactRect {
@@ -201,7 +201,7 @@ A computed property with a getter but no setter is known as a *read-only compute
 
 > **NOTE**: You must declare computed properties, including read-only computed properties as *variable properties* with the `var` keyword, because their value isn’t fixed. The `let` keyword is only used for constant properties, to indicate that their values can’t be changed once they’re set as part of instance initialization.
 
-You can simplify the declaration of a read-only computed property by removing the get keyword and its braces:
+You can simplify the declaration of a read-only computed property by removing the `get` keyword and its braces:
 
 ```swift
 struct Cuboid {
@@ -217,7 +217,7 @@ print("the volume of fourByFiveByTwo is \(fourByFiveByTwo.volume)")
 
 ## 3. Property Observers
 
-Property observers are called every time a property’s value is set, even if the new value is the same as the property’s current value.
+*Property observers* are called *every* time a property’s value is set, even if the new value is the same as the property’s current value.
 
 You can add property observers in the following places:
 
@@ -227,16 +227,16 @@ You can add property observers in the following places:
 
 For an inherited property, you add a property observer by overriding that property in a subclass.
 
-For a computed property that you define, use the property’s setter to observe and respond to value changes, instead of trying to create an observer.
+**For a computed property that you define, use the property’s setter to observe and respond to value changes, instead of trying to create an observer.**
 
 You have the option to define either or both of these observers on a property:
 
 - `willSet` is called just *before* the value is stored.
 - `didSet` is called immediately *after* the new value is stored.
 
-If you implement a `willSet` observer, it’s passed the new property value as a constant parameter. You can specify a name for this parameter as part of your willSet implementation. If you don’t write the parameter name and parentheses within your implementation, the parameter is made available with a default parameter name of `newValue`.
+If you implement a `willSet` observer, it’s passed the *new* property value as a *constant parameter*. You can specify a name for this parameter as part of your willSet implementation. If you don’t write the parameter name and parentheses within your implementation, the parameter is made available with a default parameter name of `newValue`.
 
-Similarly, if you implement a `didSet` observer, it’s passed a constant parameter containing the old property value. You can name the parameter or use the default parameter name of `oldValue`. If you assign a value to a property within its own `didSet` observer, the new value that you assign replaces the one that was just set.
+Similarly, if you implement a `didSet` observer, it’s passed a *constant parameter* containing the *old* property value. You can name the parameter or use the default parameter name of `oldValue`. If you assign a value to a property within its own `didSet` observer, the new value that you assign replaces the one that was just set.
 
 > **NOTE**: The `willSet` and `didSet` observers of superclass properties are called when a property is set in a subclass initializer, after the superclass initializer has been called. They aren’t called while a class is setting its own properties, before the superclass initializer has been called.
 
@@ -269,7 +269,7 @@ stepCounter.totalSteps = 896
 
 The `willSet` and `didSet` observers for `totalSteps` are called whenever the property is assigned a new value. This is true even if the new value is the *same* as the current value.
 
-> **NOTE**: If you pass a property that has observers to a function as an *in-out* parameter, the `willSet` and `didSet` observers are always called. This is because of the copy-in copy-out memory model for *in-out* parameters: The value is always *written back* to the property at the end of the function. For a detailed discussion of the behavior of *in-out* parameters, see [LANGUAGE REFERENCE: In-Out Parameters](https://docs.swift.org/swift-book/ReferenceManual/Declarations.html#ID545).
+> **NOTE**: If you pass a property that has observers to a function as an *in-out* parameter, the `willSet` and `didSet` observers are always called. This is because of the *copy-in copy-out memory model* for *in-out* parameters: The value is always *written back* to the property at the end of the function. For a detailed discussion of the behavior of *in-out* parameters, see [LANGUAGE REFERENCE: In-Out Parameters](https://docs.swift.org/swift-book/ReferenceManual/Declarations.html#ID545).
 
 ## 4. Property Wrappers
 
@@ -524,10 +524,10 @@ However, you can also define *computed variables* and define observers for store
 
 > **NOTE**:
 >  
-> - Global constants and variables are always computed lazily, in a similar manner to [Lazy Stored Properties](#12-lazy-stored-properties). Unlike lazy stored properties, global constants and variables don’t need to be marked with the `lazy` modifier.
+> - Global constants and variables are *always* computed lazily, in a similar manner to [Lazy Stored Properties](#12-lazy-stored-properties). Unlike lazy stored properties, global constants and variables do *not* need to be marked with the `lazy` modifier.
 > - Local constants and variables are never computed lazily.
 
-You can apply a property wrapper to a local stored variable, but not to a global variable or a computed variable. For example, in the code below, myNumber uses SmallNumber as a property wrapper.
+You can apply a property wrapper to a *local stored variable*, but not to a *global variable* or a *computed variable*. For example, in the code below, `myNumber` uses `SmallNumber` as a property wrapper.
 
 ```swift
 func someFunction() {
@@ -552,9 +552,9 @@ Type properties are useful for defining values that are universal to *all* insta
 
 > **NOTE**:
 >  
-> Unlike stored instance properties, you must always give stored type properties a default value. This is because the type itself doesn’t have an initializer that can assign a value to a stored type property at initialization time.
+> Unlike stored instance properties, you must always give stored type properties a **default value**. This is because the type itself doesn’t have an initializer that can assign a value to a stored type property at initialization time.
 >  
-> Stored type properties are lazily initialized on their first access. They’re guaranteed to be initialized only once, even when accessed by multiple threads simultaneously, and they don’t need to be marked with the `lazy` modifier.
+> Stored type properties are lazily initialized on their first access. **They’re guaranteed to be initialized only once, even when accessed by multiple threads simultaneously**, and they don’t need to be marked with the `lazy` modifier.
 
 ### 6.1. Type Property Syntax
 
