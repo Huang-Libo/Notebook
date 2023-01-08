@@ -1,4 +1,4 @@
-# Properties
+# Properties<!-- omit in toc -->
 
 > Version: *Swift 5.5*  
 > Source: [*swift-book: Properties*](https://docs.swift.org/swift-book/LanguageGuide/Properties.html)  
@@ -15,25 +15,24 @@ In addition, you can define *property observers* to monitor changes in a propert
 
 You can also use a *property wrapper* to reuse code in the getter and setter of multiple properties.
 
-- [Properties](#properties)
-  - [Stored Properties](#stored-properties)
-    - [Stored Properties of Constant Structure Instances](#stored-properties-of-constant-structure-instances)
-    - [Lazy Stored Properties](#lazy-stored-properties)
-    - [Stored Properties and Instance Variables](#stored-properties-and-instance-variables)
-  - [Computed Properties](#computed-properties)
-    - [Shorthand Setter Declaration](#shorthand-setter-declaration)
-    - [Shorthand Getter Declaration](#shorthand-getter-declaration)
-    - [Read-Only Computed Properties](#read-only-computed-properties)
-  - [Property Observers](#property-observers)
-  - [Property Wrappers](#property-wrappers)
-    - [Setting Initial Values for Wrapped Properties](#setting-initial-values-for-wrapped-properties)
-    - [Projecting a Value From a Property Wrapper](#projecting-a-value-from-a-property-wrapper)
-  - [Global and Local Variables](#global-and-local-variables)
-  - [Type Properties](#type-properties)
-    - [Type Property Syntax](#type-property-syntax)
-    - [Querying and Setting Type Properties](#querying-and-setting-type-properties)
+- [1. Stored Properties](#1-stored-properties)
+  - [1.1. Stored Properties of Constant Structure Instances](#11-stored-properties-of-constant-structure-instances)
+  - [1.2. Lazy Stored Properties](#12-lazy-stored-properties)
+  - [1.3. Stored Properties and Instance Variables](#13-stored-properties-and-instance-variables)
+- [2. Computed Properties](#2-computed-properties)
+  - [2.1. Shorthand Setter Declaration](#21-shorthand-setter-declaration)
+  - [2.2. Shorthand Getter Declaration](#22-shorthand-getter-declaration)
+  - [2.3. Read-Only Computed Properties](#23-read-only-computed-properties)
+- [3. Property Observers](#3-property-observers)
+- [4. Property Wrappers](#4-property-wrappers)
+  - [4.1. Setting Initial Values for Wrapped Properties](#41-setting-initial-values-for-wrapped-properties)
+  - [4.2. Projecting a Value From a Property Wrapper](#42-projecting-a-value-from-a-property-wrapper)
+- [5. Global and Local Variables](#5-global-and-local-variables)
+- [6. Type Properties](#6-type-properties)
+  - [6.1. Type Property Syntax](#61-type-property-syntax)
+  - [6.2. Querying and Setting Type Properties](#62-querying-and-setting-type-properties)
 
-## Stored Properties
+## 1. Stored Properties
 
 In its simplest form, a stored property is a constant (`var`) or variable (`let`) that’s stored as part of an instance of a particular *class* or *structure*.
 
@@ -50,7 +49,7 @@ rangeOfThreeItems.firstValue = 6
 // the range now represents integer values 6, 7, and 8
 ```
 
-### Stored Properties of Constant Structure Instances
+### 1.1. Stored Properties of Constant Structure Instances
 
 If you create an instance of a structure and assign that instance to a constant, you can’t modify the instance’s properties, even if they were declared as variable properties:
 
@@ -65,7 +64,7 @@ rangeOfFourItems.firstValue = 6
 - This behavior is due to *structures* being *value types*. When an instance of a value type is marked as a constant, so are all of its properties.
 - The same isn’t true for cla*s*ses, which are *reference types*. If you assign an instance of a reference type to a constant, you can still change that instance’s variable properties.
 
-### Lazy Stored Properties
+### 1.2. Lazy Stored Properties
 
 A *lazy stored property* is a property whose initial value isn’t calculated until the first time it’s used. You indicate a lazy stored property by writing the `lazy` modifier before its declaration.
 
@@ -105,13 +104,13 @@ print(manager.importer.filename)
 
 > **NOTE**: If a property marked with the `lazy` modifier is accessed by multiple threads simultaneously and the property hasn’t yet been initialized, there’s no guarantee that the property will be initialized only once.
 
-### Stored Properties and Instance Variables
+### 1.3. Stored Properties and Instance Variables
 
 If you have experience with Objective-C, you may know that it provides two ways to store values and references as part of a class instance. In addition to properties, you can use instance variables as a backing store for the values stored in a property.
 
 Swift unifies these concepts into a single property declaration. A Swift property doesn’t have a corresponding instance variable, and the backing store for a property isn’t accessed directly.
 
-## Computed Properties
+## 2. Computed Properties
 
 In addition to stored properties, `classes`, `structures`, and `enumerations` can define *computed properties*, which don’t actually store a value. Instead, they provide a getter and an optional setter to retrieve and set other properties and values indirectly.
 
@@ -151,7 +150,7 @@ Setting the `center` property calls the setter for `center`, which modifies the 
 
 <img src="../../media/Swift/swift.org/computedProperties_2x.png" width="50%"/>
 
-### Shorthand Setter Declaration
+### 2.1. Shorthand Setter Declaration
 
 If a computed property’s setter doesn’t define a name for the new value to be set, a default name of `newValue` is used. Here’s an alternative version of the `Rect` structure that takes advantage of this shorthand notation:
 
@@ -173,7 +172,7 @@ struct AlternativeRect {
 }
 ```
 
-### Shorthand Getter Declaration
+### 2.2. Shorthand Getter Declaration
 
 If the entire body of a getter is a single expression, the getter implicitly returns that expression. Here’s an another version of the `Rect` structure that takes advantage of this shorthand notation and the shorthand notation for setters:
 
@@ -196,7 +195,7 @@ struct CompactRect {
 
 Omitting the `return` from a getter follows the same rules as omitting `return` from a function, as described in [Functions With an Implicit Return](https://docs.swift.org/swift-book/LanguageGuide/Functions.html#ID607).
 
-### Read-Only Computed Properties
+### 2.3. Read-Only Computed Properties
 
 A computed property with a getter but no setter is known as a *read-only computed property*.
 
@@ -216,7 +215,7 @@ print("the volume of fourByFiveByTwo is \(fourByFiveByTwo.volume)")
 // Prints "the volume of fourByFiveByTwo is 40.0"
 ```
 
-## Property Observers
+## 3. Property Observers
 
 Property observers are called every time a property’s value is set, even if the new value is the same as the property’s current value.
 
@@ -272,7 +271,7 @@ The `willSet` and `didSet` observers for `totalSteps` are called whenever the pr
 
 > **NOTE**: If you pass a property that has observers to a function as an *in-out* parameter, the `willSet` and `didSet` observers are always called. This is because of the copy-in copy-out memory model for *in-out* parameters: The value is always *written back* to the property at the end of the function. For a detailed discussion of the behavior of *in-out* parameters, see [LANGUAGE REFERENCE: In-Out Parameters](https://docs.swift.org/swift-book/ReferenceManual/Declarations.html#ID545).
 
-## Property Wrappers
+## 4. Property Wrappers
 
 A *property wrapper* adds a layer of separation between *code that manages how a property is stored* and the *code that defines a property*.
 
@@ -335,7 +334,7 @@ struct SmallRectangle {
 
 The `_height` and `_width` properties store an instance of the property wrapper, `TwelveOrLess`. The getter and setter for `height` and `width` wrap access to the `wrappedValue` property.
 
-### Setting Initial Values for Wrapped Properties
+### 4.1. Setting Initial Values for Wrapped Properties
 
 To support setting an initial value or other customization, the property wrapper needs to add an initializer. Here’s an expanded version of `TwelveOrLess` called `SmallNumber` that defines initializers that set the wrapped and maximum value:
 
@@ -433,7 +432,7 @@ print(mixedRectangle.height)
 - The instance of `SmallNumber` that wraps `height` is created by calling `SmallNumber(wrappedValue: 1)`, which uses the default `maximum` value of `12`.
 - The instance that wraps `width` is created by calling `SmallNumber(wrappedValue: 2, maximum: 9)`.
 
-### Projecting a Value From a Property Wrapper
+### 4.2. Projecting a Value From a Property Wrapper
 
 In addition to the *wrapped value*, a property wrapper can expose additional functionality by defining a *projected value*.
 
@@ -512,7 +511,7 @@ struct SizedRectangle {
 
 Because *property wrapper* syntax is just *syntactic sugar* for a property with a getter and a setter, accessing height and width behaves the same as accessing any other property.
 
-## Global and Local Variables
+## 5. Global and Local Variables
 
 The capabilities described above for *computing* and *observing* properties are also available to *global variables* and *local variables*.
 
@@ -525,7 +524,7 @@ However, you can also define *computed variables* and define observers for store
 
 > **NOTE**:
 >  
-> - Global constants and variables are always computed lazily, in a similar manner to [Lazy Stored Properties](#lazy-stored-properties). Unlike lazy stored properties, global constants and variables don’t need to be marked with the `lazy` modifier.
+> - Global constants and variables are always computed lazily, in a similar manner to [Lazy Stored Properties](#12-lazy-stored-properties). Unlike lazy stored properties, global constants and variables don’t need to be marked with the `lazy` modifier.
 > - Local constants and variables are never computed lazily.
 
 You can apply a property wrapper to a local stored variable, but not to a global variable or a computed variable. For example, in the code below, myNumber uses SmallNumber as a property wrapper.
@@ -542,7 +541,7 @@ func someFunction() {
 }
 ```
 
-## Type Properties
+## 6. Type Properties
 
 You can also define properties that belong to the type itself, not to any one instance of that type. These kinds of properties are called *type properties*.
 
@@ -557,7 +556,7 @@ Type properties are useful for defining values that are universal to *all* insta
 >  
 > Stored type properties are lazily initialized on their first access. They’re guaranteed to be initialized only once, even when accessed by multiple threads simultaneously, and they don’t need to be marked with the `lazy` modifier.
 
-### Type Property Syntax
+### 6.1. Type Property Syntax
 
 In C and Objective-C, you define static constants and variables associated with a type as global static variables. In Swift, however, type properties are written as part of the type’s definition, within the type’s outer curly braces, and each type property is explicitly scoped to the type it supports.
 
@@ -589,7 +588,7 @@ class SomeClass {
 }
 ```
 
-### Querying and Setting Type Properties
+### 6.2. Querying and Setting Type Properties
 
 Type properties are queried and set with dot syntax, just like instance properties. However, type properties are queried and set on the *type*, not on an instance of that type. For example:
 
