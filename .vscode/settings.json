@@ -108,7 +108,26 @@
         "WHALEBREW",
         "xcodeproj",
         "xcworkspace",
-        "Yilong"
+        "Yilong",
+        "Alamofire",
+        "ARCHS",
+        "armv",
+        "CocoaPods",
+        "iphoneos",
+        "iphonesimulator",
+        "lipo",
+        "mktemp",
+        "pipefail",
+        "Podfile",
+        "rdar",
+        "Runpath",
+        "swiftmodule",
+        "TOOLCHAINS",
+        "XCCONFIG",
+        "xcframework",
+        "xcframeworks",
+        "xcodebuild",
+        "xcrun"
     ],
     "grammarly.selectors": [
         {
