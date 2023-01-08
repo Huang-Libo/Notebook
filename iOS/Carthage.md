@@ -690,7 +690,7 @@ Ultimately, we created Carthage because we wanted the **simplest** tool possible
 
 ### DWARFs symbol problem
 
-Pre-built framework cannot be debugged using step execution on other machine than on which the framework was built. Simply `carthage bootstrap/build/update --no-use-binaries` should fix this, but for muore automated workaround, see [#924](https://github.com/Carthage/Carthage/isses/924). Dupe [rdar://23551273](http://www.openradar.me/23551273) if you want Apple to fix the root cause of this problem.
+Pre-built framework cannot be debugged using step execution on other machine than on which the framework was built. Simply `carthage bootstrap/build/update --no-use-binaries` should fix this, but for more automated workaround, see [#924](https://github.com/Carthage/Carthage/isses/924). Dupe [rdar://23551273](http://www.openradar.me/23551273) if you want Apple to fix the root cause of this problem.
 
 - [#2137](https://github.com/Carthage/Carthage/issues/2137)
 - [stackoverflow: Debugging (owned) Framework when using Carthage](https://stackoverflow.com/questions/38862464/debugging-owned-framework-when-using-carthage)

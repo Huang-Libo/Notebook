@@ -109,5 +109,11 @@
         "xcodeproj",
         "xcworkspace",
         "Yilong"
+    ],
+    "grammarly.selectors": [
+        {
+            "language": "markdown",
+            "scheme": "file"
+        }
     ]
 }
