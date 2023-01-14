@@ -1,26 +1,26 @@
-# FAQ for *NIX
+# FAQ for *NIX<!-- omit in toc -->
 
-- [FAQ for *NIX](#faq-for-nix)
-  - [Arguments in `if` Statement](#arguments-in-if-statement)
-    - [File](#file)
-    - [String](#string)
-    - [Number](#number)
-  - [Special variables in Bash](#special-variables-in-bash)
-    - [`$0`](#0)
-    - [`$#` and `${!#}`](#-and-)
-    - [`$*` and `$@`](#-and--1)
-  - [How to display `$PATH` as one directory per line?](#how-to-display-path-as-one-directory-per-line)
-  - [What's the difference between `<<` and `<<<`](#whats-the-difference-between--and-)
-    - [Here Document: output multi lines](#here-document-output-multi-lines)
-    - [Here String Usage](#here-string-usage)
-  - [Process Substitution](#process-substitution)
-    - [Introduction](#introduction)
-    - [Difference between Process Substitution and Pipe](#difference-between-process-substitution-and-pipe)
-  - [Exit status of a command](#exit-status-of-a-command)
+- [1. Arguments in `if` Statement](#1-arguments-in-if-statement)
+  - [1.1. File](#11-file)
+  - [1.2. String](#12-string)
+  - [1.3. Number](#13-number)
+- [2. `shift` variables](#2-shift-variables)
+- [3. Special variables in Bash](#3-special-variables-in-bash)
+  - [3.1. `$?`](#31-)
+  - [3.2. `$0`](#32-0)
+  - [3.3. `$#` and `${!#}`](#33--and-)
+  - [3.4. `$*` and `$@`](#34--and-)
+- [4. How to display `$PATH` as one directory per line?](#4-how-to-display-path-as-one-directory-per-line)
+- [5. What's the difference between `<<` and `<<<`](#5-whats-the-difference-between--and-)
+  - [5.1. Here Document: output multi lines](#51-here-document-output-multi-lines)
+  - [5.2. Here String Usage](#52-here-string-usage)
+- [6. Process Substitution](#6-process-substitution)
+  - [6.1. Introduction](#61-introduction)
+  - [6.2. Difference between Process Substitution and Pipe](#62-difference-between-process-substitution-and-pipe)
 
-## Arguments in `if` Statement
+## 1. Arguments in `if` Statement
 
-### File
+### 1.1. File
 
 | Option | Explain                       |
 | ------ | ----------------------------- |
@@ -31,7 +31,7 @@
 | `-w`   | The given path is writable    |
 | `-x`   | The given path is executable  |
 
-### String
+### 1.2. String
 
 | Option | Explain             |
 | ------ | ------------------- |
@@ -40,7 +40,7 @@
 | `-z`   | string is empty     |
 | `-n`   | string is not empty |
 
-### Number
+### 1.3. Number
 
 | Option | Explain                  |
 | ------ | ------------------------ |
@@ -51,9 +51,24 @@
 | `-lt`  | less than                |
 | `-le`  | less than or equal to    |
 
-## Special variables in Bash
+## 2. `shift` variables
 
-### `$0`
+> Note: `$0` won't change by `shift` command.
+
+p/278
+
+## 3. Special variables in Bash
+
+### 3.1. `$?`
+
+Exit status of a command
+
+- `0`: Command run **success**
+- `1`: Command **failed** during run
+- `2`: Incorrect command usage
+- `127`: Command not found
+
+### 3.2. `$0`
 
 You can use `$0` to obtain the corresponding program name which is executed in shell scripts:
 
@@ -66,11 +81,11 @@ So, if you just want to get the program file name without path, you can use `bas
 script_file_name=$(basename $0)
 ```
 
-### `$#` and `${!#}`
+### 3.3. `$#` and `${!#}`
 
 `$#` is used for getting the number of parameters.
 
-If you need to get the *last* parameter, you cannot use `${$#}`, because you shouldn't use `$` sign inside the `{}` pair. You have two choices:
+If you need to get the *last* parameter, you **cannot** use `${$#}`, because you shouldn't use `$` sign inside the `{}` pair. You have two choices:
 
 1. Use a temp parameter:
 
@@ -81,7 +96,7 @@ If you need to get the *last* parameter, you cannot use `${$#}`, because you sho
 
 2. Use `${!#}` (change `$` to `!` inside the `{}` pair).
 
-### `$*` and `$@`
+### 3.4. `$*` and `$@`
 
 Both `$*` and `$@` variables provide quick access to all parameters. [The difference appears when the special parameters are quoted](https://stackoverflow.com/a/28099707):
 
@@ -94,7 +109,7 @@ Both `$*` and `$@` variables provide quick access to all parameters. [The differ
 
 where `c` in the third row is the first character of `$IFS`, the *Input Field Separator*, a shell variable.
 
-## How to display `$PATH` as one directory per line?
+## 4. How to display `$PATH` as one directory per line?
 
 > From [ask ubuntu](https://askubuntu.com/a/600019).
 
@@ -145,11 +160,11 @@ function mypath() { tr ':' '\n' <<< "$PATH" }
 
 Then you can use `mypath` to display directories in `PATH` in single lines.
 
-## What's the difference between `<<` and `<<<`
+## 5. What's the difference between `<<` and `<<<`
 
 > From [ask ubuntu](https://askubuntu.com/questions/678915/whats-the-difference-between-and-in-bash)
 
-### Here Document: output multi lines
+### 5.1. Here Document: output multi lines
 
 `<<` is known as **here-document** structure. You let the program know what will be the ending text, and whenever that delimiter is seen, the program will read all the stuff you've given to the program as input and perform a task upon it.
 
@@ -188,13 +203,13 @@ Line 2
 Line 3
 ```
 
-### Here String Usage
+### 5.2. Here String Usage
 
 `<<<` is known as **here-string**. Instead of typing in text, you give a pre-made string of text to a program. For example, with such program as `bc` we can do `bc <<< 5*4` to just get output for that specific case, no need to run `bc` interactively. Think of it as the equivalent of `echo '5*4' | bc`.
 
-## Process Substitution
+## 6. Process Substitution
 
-### Introduction
+### 6.1. Introduction
 
 > [Wikipedia](https://en.wikipedia.org/wiki/Process_substitution)
 
@@ -218,7 +233,7 @@ sort file1 | diff - /tmp/file2.sorted
 rm /tmp/file2.sorted
 ```
 
-### Difference between Process Substitution and Pipe
+### 6.2. Difference between Process Substitution and Pipe
 
 > From [Stack Exchange](https://unix.stackexchange.com/questions/17107/process-substitution-and-pipe)
 
@@ -272,11 +287,3 @@ $ echo < <(date)
 Since `echo` doesn't read STDIN and no argument was passed, we get nothing.
 
 Pipes and input redirects shove content onto the STDIN stream. *Process substitution* runs the commands, saves their output to a **special temporary file** and then passes that file name in place of the command. **Whatever command you are using treats it as a file name**. Note that the file created is not a regular file but a named pipe that gets removed automatically once it is no longer needed.
-
-## Exit status of a command
-
-- value of `$?`
-  - `0`: Command run **success**
-  - `1`: Command **failed** during run
-  - `2`: Incorrect command usage
-  - `127`: Command not found
