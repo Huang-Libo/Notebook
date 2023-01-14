@@ -36,6 +36,7 @@ Bob --> Alice: Another authentication Response
 ### 1.2. Option 2: Using PlantUML Server
 
 > Documentation: [PlantUML Server](http://plantuml.com/server.html)
+> **Tool**: [PlantUML Web Server](http://www.plantuml.com/plantuml)
 
 **Source**:
 
