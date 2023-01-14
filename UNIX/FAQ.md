@@ -5,6 +5,8 @@
   - [1.2. String](#12-string)
   - [1.3. Number](#13-number)
 - [2. `shift` variables](#2-shift-variables)
+  - [2.1. shift one parameter](#21-shift-one-parameter)
+  - [2.2. shift multiple parameters](#22-shift-multiple-parameters)
 - [3. Special variables in Bash](#3-special-variables-in-bash)
   - [3.1. `$?`](#31-)
   - [3.2. `$0`](#32-0)
@@ -53,9 +55,77 @@
 
 ## 2. `shift` variables
 
-> Note: `$0` won't change by `shift` command.
+> Note: `$0` won't be changed by `shift` command.
 
-p/278
+The `shift` command literally shifts the command-line parameters in their relative positions.
+
+When you use the shift command, it moves each parameter variable one position to the left by default. Thus, the value for variable $3 is moved to $2 , the value for variable $2 is moved to $1 , and the value for variable $1 is discarded (note that the value for variable $0 , the program name, remains unchanged).
+
+This is another great way to iterate through command-line parameters. You can just operate on the first parameter, shift the parameters over, and then operate on the first parameter again.
+
+### 2.1. shift one parameter
+
+Here's a short demonstration of how this works:
+
+**shift-params.sh**:
+
+```bash
+#!/bin/bash
+
+# Shifting through the parameters
+echo
+echo "Using the shift method:"
+count=1
+while [ -n "$1" ]
+do
+     echo "Parameter #$count = $1"
+     count=$[ $count + 1 ]
+     shift
+done
+echo
+exit
+```
+
+```bash
+$ ./shift-params.sh alpha bravo charlie delta
+ 
+Using the shift method:
+Parameter #1 = alpha
+Parameter #2 = bravo
+Parameter #3 = charlie
+Parameter #4 = delta
+```
+
+> **NOTE**: Be careful when working with the shift command. When a parameter is shifted out, its value is lost and can't be recovered.
+
+### 2.2. shift multiple parameters
+
+Alternatively, you can perform a multiple location shift by providing a parameter to the shift command. Just provide the number of places you want to shift:
+
+**big-shift-params.sh**:
+
+```bash
+#!/bin/bash
+
+# Shifting multiple positions through the parameters
+echo
+echo "The original parameters: $*"
+echo "Now shifting 2..."
+shift 2
+echo "Here's the new first parameter: $1"
+echo
+exit
+```
+
+```bash
+$ ./big-shift-params.sh alpha bravo charlie delta
+ 
+The original parameters: alpha bravo charlie delta
+Now shifting 2...
+Here's the new first parameter: charlie
+```
+
+By using values in the shift command, you can easily skip over parameters you don't need in certain situations.
 
 ## 3. Special variables in Bash
 
