@@ -133,6 +133,7 @@
 
 ## 🐱 GitHub
 
+- [FAQ](Github/FAQ.md)
 - [Connect with SSH](Github/Connect-with-SSH.md)
 
 ## 💻 mac
