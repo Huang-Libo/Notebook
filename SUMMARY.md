@@ -7,6 +7,10 @@
 - [Special Keys](KeyboardShortcuts/SpecialKeys.md)
 - [Xcode](KeyboardShortcuts/Xcode.md)
 
+## 🏭 PlantUML
+
+- [FAQ](PlantUML/FAQ.md)
+
 ## 🕹️ *NIX
 
 - [ShellCheck](UNIX/ShellCheck.md)
