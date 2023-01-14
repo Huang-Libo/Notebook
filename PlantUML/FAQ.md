@@ -1,17 +1,22 @@
 # FAQ for PlantUML<!-- omit in toc -->
 
-- [1. How to integrate UML diagrams into GitLab or GitHub](#1-how-to-integrate-uml-diagrams-into-gitlab-or-github)
-  - [1.1. Option 1: Using `mermaid`](#11-option-1-using-mermaid)
-  - [1.2. Option 2: Using PlantUML Server](#12-option-2-using-plantuml-server)
+- [1. Tools](#1-tools)
+- [2. How to integrate UML diagrams into GitLab or GitHub](#2-how-to-integrate-uml-diagrams-into-gitlab-or-github)
+  - [2.1. Option 1: Using `mermaid`](#21-option-1-using-mermaid)
+  - [2.2. Option 2: Using PlantUML Server](#22-option-2-using-plantuml-server)
 
-## 1. How to integrate UML diagrams into GitLab or GitHub
+## 1. Tools
+
+- [PlantUML Web Server (Live Editor)](http://www.plantuml.com/plantuml)
+- [Mermaid Live Editor](https://mermaid.live/)
+
+## 2. How to integrate UML diagrams into GitLab or GitHub
 
 > Reference: [stackoverflow](https://stackoverflow.com/a/32771815)
 
-### 1.1. Option 1: Using `mermaid`
+### 2.1. Option 1: Using `mermaid`
 
 > Note: This tool works in both *GitHub* and *VS Code*, but **doesn't work in *GitBook***.
-> **Tool**: [Mermaid Live Editor](https://mermaid.live/)
 
 **Source**:
 
@@ -33,10 +38,9 @@ Alice -> Bob:Another authentication Response
 Bob --> Alice: Another authentication Response
 ```
 
-### 1.2. Option 2: Using PlantUML Server
+### 2.2. Option 2: Using PlantUML Server
 
 > Documentation: [PlantUML Server](http://plantuml.com/server.html)
-> **Tool**: [PlantUML Web Server](http://www.plantuml.com/plantuml)
 
 **Source**:
 
