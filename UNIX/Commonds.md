@@ -4,6 +4,7 @@
   - [tr](#tr)
   - [cut](#cut)
   - [tee](#tee)
+  - [`grep`](#grep)
 
 ## tr
 
@@ -14,6 +15,8 @@
 ```bash
 tr ':' '\n' <<< "$PATH"
 ```
+
+- `-d`: Delete characters in string from the input.
 
 ## cut
 
@@ -43,4 +46,28 @@ Send the echoed message *both* to **stdout** and to the **greetings.txt** file:
 ```bash
 $ echo "Hello" | tee greetings.txt
 Hello
+```
+
+## `grep`
+
+- `-i, --ignore-case`: Perform case insensitive matching.  By default, grep is case sensitive.
+- `-E, --extended-regexp`: Interpret pattern as an *extended regular expression* (i.e., force `grep` to behave as `egrep`).
+
+**Use pattern**:
+
+```bash
+$ grep -E "pyenv" .zshrc
+# pyenv
+eval "$(pyenv init -)"
+```
+
+```bash
+$ grep -E "pyenv$" .zshrc
+# pyenv
+```
+
+Match empty lines:
+
+```bash
+grep -E "^$" .zshrc
 ```
