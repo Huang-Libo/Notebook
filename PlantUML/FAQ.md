@@ -3,7 +3,7 @@
 - [1. Tools](#1-tools)
 - [2. How to integrate UML diagrams into GitLab or GitHub](#2-how-to-integrate-uml-diagrams-into-gitlab-or-github)
   - [2.1. Option 1: Using `mermaid`](#21-option-1-using-mermaid)
-  - [2.2. Option 2: Using PlantUML Server](#22-option-2-using-plantuml-server)
+  - [2.2. Option 2: Using PlantUML Proxy Server](#22-option-2-using-plantuml-proxy-server)
 
 ## 1. Tools
 
@@ -38,7 +38,7 @@ Alice -> Bob:Another authentication Response
 Bob --> Alice: Another authentication Response
 ```
 
-### 2.2. Option 2: Using PlantUML Server
+### 2.2. Option 2: Using PlantUML Proxy Server
 
 > Documentation: [PlantUML Server](http://plantuml.com/server.html)
 

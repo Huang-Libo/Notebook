@@ -10,6 +10,7 @@
 ## 🏭 PlantUML
 
 - [FAQ](PlantUML/FAQ.md)
+- [Class Diagram](PlantUML/class-diagram.md)
 
 ## 🕹️ *NIX
 
