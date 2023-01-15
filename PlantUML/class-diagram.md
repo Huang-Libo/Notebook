@@ -9,6 +9,8 @@
 - [2. Relations between Classes](#2-relations-between-classes)
 - [3. Label on Relations](#3-label-on-relations)
 - [4. Using non-letters in element names and relation labels](#4-using-non-letters-in-element-names-and-relation-labels)
+- [5. Adding methods](#5-adding-methods)
+- [6. Defining visibility](#6-defining-visibility)
 
 ## 1. Declaring Element
 
@@ -71,11 +73,11 @@ Class19 <--* Class20
 
 ```mermaid
 classDiagram
-Class11 <|.. Class12
-Class13 --> Class14
-Class15 ..> Class16
-Class17 ..|> Class18
-Class19 <--* Class20
+    Class11 <|.. Class12
+    Class13 --> Class14
+    Class15 ..> Class16
+    Class17 ..|> Class18
+    Class19 <--* Class20
 ```
 
 ## 3. Label on Relations
@@ -98,9 +100,9 @@ Class05 --> "1" Class06
 
 ```mermaid
 classDiagram
-Class01 "1" *-- "n" Class02 : contains
-Class03 o-- Class04 : aggregation
-Class05 --> "1" Class06
+    Class01 "1" *-- "n" Class02 : contains
+    Class03 o-- Class04 : aggregation
+    Class05 --> "1" Class06
 ```
 
 You can add an extra arrow pointing at one object showing which object acts on the other object, using `<` or `>` at the begin or at the end of the label.
@@ -120,12 +122,109 @@ Car -- Person : < owns
 
 ```mermaid
 classDiagram
-class Car
-Driver -- Car : drives >
-Car *-- Wheel : have 4 >
-Car -- Person : < owns
+    class Car
+    Driver -- Car : drives >
+    Car *-- Wheel : have 4 >
+    Car -- Person : < owns
 ```
 
 > Warning: This feature is not fully supported by mermaid.
 
 ## 4. Using non-letters in element names and relation labels
+
+Seems not so useful, omit for now.
+
+## 5. Adding methods
+
+To declare fields and methods, you can use the symbol `:` followed by the field's or method's name.
+
+The system checks for parenthesis to choose between methods and fields.
+
+**Source**:
+
+```uml
+@startuml
+Object <|-- ArrayList
+
+Object : equals()
+ArrayList : Object[] elementData
+ArrayList : size()
+@enduml
+```
+
+**Preview by using mermaid**:
+
+```mermaid
+classDiagram
+    Object <|-- ArrayList
+
+    Object : equals()
+    ArrayList : Object[] elementData
+    ArrayList : size()
+```
+
+It is also possible to group between brackets `{}` all fields and methods.
+
+**Note that the syntax is highly flexible about *type/name* order.**
+
+**Source**:
+
+```uml
+@startuml
+class Dummy {
+  String data
+  void methods()
+}
+
+class Flight {
+   flightNumber : Integer
+   departureTime : Date
+}
+@enduml
+```
+
+**Preview by using mermaid**:
+
+```mermaid
+classDiagram
+
+    class Dummy {
+        String data
+        void methods()
+    }
+
+    class Flight {
+        flightNumber : Integer
+        departureTime : Date
+    }
+```
+
+You can use `{field}` and `{method}` modifiers to override default behaviour of the parser about fields and methods.
+
+**Source**:
+
+```uml
+@startuml
+
+class Dummy {
+    {field} A field (despite parentheses)
+    {method} Some method
+}
+
+@enduml
+```
+
+**Preview by using mermaid**:
+
+```mermaid
+classDiagram
+
+    class Dummy {
+        {field} A field (despite parentheses)
+        {method} Some method
+    }
+```
+
+> Warning: This feature is not supported by mermaid.
+
+## 6. Defining visibility
