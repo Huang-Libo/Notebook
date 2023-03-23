@@ -1,0 +1,34 @@
+@startuml Operation
+
+enum QualityOfService {
+    userInteractive = 33
+    userInitiated = 25
+    utility = 17
+    background = 9
+    `default` = -1
+}
+
+class OperationQueue {
+    {static} main: OperationQueue
+    {static} current: OperationQueue?
+    {static} defaultMaxConcurrentOperationCount: Int
+    maxConcurrentOperationCount: Int
+    qualityOfService: QualityOfService
+    progress: Progress
+
+    addOperation(_ op: Operation)
+    addOperations(_ ops: [Operation], waitUntilFinished wait: Bool)
+    addOperation(_ block: @escaping () -> Void)
+    addBarrierBlock(_ barrier: @escaping () -> Void)
+    cancelAllOperations()
+    waitUntilAllOperationsAreFinished()
+}
+
+class Operation {
+
+}
+
+OperationQueue --> Operation: Use
+OperationQueue --> QualityOfService: Use
+
+@enduml
