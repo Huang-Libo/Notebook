@@ -1,0 +1,8 @@
+@startuml URLSessionDiagram
+
+' NSURLSession instances are thread-safe.
+class URLSession {
+
+}
+
+@enduml

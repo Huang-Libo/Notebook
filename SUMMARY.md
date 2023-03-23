@@ -7,6 +7,10 @@
 - [Special Keys](KeyboardShortcuts/SpecialKeys.md)
 - [Xcode](KeyboardShortcuts/Xcode.md)
 
+## 🌉 Diagrams
+
+- [URLSession](Diagram/URLSession.md)
+
 ## 🏭 PlantUML
 
 - [FAQ](PlantUML/FAQ.md)
