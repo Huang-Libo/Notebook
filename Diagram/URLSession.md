@@ -26,3 +26,19 @@ An `NSURLSessionWebSocketTask` is a task that allows clients to connect to serve
 - *DownloadTask objects* represent an active download to disk. They can provide *resume data* when canceled;
 - *StreamTask objects* may be used to create `NSInput` and `NSOutputStreams`, or used directly in reading and writing;
 - *WebSocket objects* perform a WebSocket handshake with the server and can be used to send and receive WebSocket messages.
+
+## NSURLRequest.CachePolicy
+
+Use the caching logic defined in the **protocol implementation**, if any, for a particular URL load request.
+
+### useProtocolCachePolicy
+
+This is the *default* policy for URL load requests.
+
+For the HTTP and HTTPS protocols, `NSURLRequest.CachePolicy.useProtocolCachePolicy` performs the following behavior:
+
+1. If a cached response does *not* exist for the request, the *URL loading system* fetches the data from the originating source.
+2. Otherwise, if the cached response does not indicate that it must be revalidated every time, and if the cached response is not stale (past its expiration date), the *URL loading system* returns the cached response.
+3. If the cached response is stale or requires revalidation, the *URL loading system* makes a `HEAD` request to the originating source to see if the resource has changed. If so, the *URL loading system* fetches the data from the originating source. Otherwise, it returns the cached response.
+
+![useProtocolCachePolicy](../media/iOS/AppleDocumentation/useProtocolCachePolicy.png)
