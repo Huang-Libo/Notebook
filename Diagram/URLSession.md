@@ -27,6 +27,28 @@ An `NSURLSessionWebSocketTask` is a task that allows clients to connect to serve
 - *StreamTask objects* may be used to create `NSInput` and `NSOutputStreams`, or used directly in reading and writing;
 - *WebSocket objects* perform a WebSocket handshake with the server and can be used to send and receive WebSocket messages.
 
+## URLSessionConfiguration
+
+An `URLSessionConfiguration` object defines the behavior and policies to use when uploading and downloading data using an URLSession object. When uploading or downloading data, creating a configuration object is always the first step you must take. You use this object to configure the timeout values, caching policies, connection requirements, and other types of information that you intend to use with your URLSession object.
+
+It is important to configure your `URLSessionConfiguration` object appropriately before using it to initialize a session object. Session objects **make a copy** of the configuration settings you provide and use those settings to configure the session.
+
+- Once configured, the session object **ignores** any changes you make to the `URLSessionConfiguration` object.
+- If you need to modify your transfer policies, you must update the session configuration object and use it to **create a new URLSession object**.
+
+> **Note**:
+> In some cases, the policies defined in this configuration may be *overridden* by policies specified by an `NSURLRequest` object provided for a task. Any policy specified on the request object is respected unless the session’s policy is more restrictive. For example, if the session configuration specifies that cellular networking should not be allowed, the `NSURLRequest` object cannot request cellular networking.
+
+### Types of Session Configurations
+
+The behavior and capabilities of a URL session are largely determined by the kind of configuration used to create the session.
+
+The *singleton shared session* (which **has no configuration object**) is for basic requests. It’s not as customizable as sessions that you create, but it serves as a good starting point if you have very limited requirements. You access this session by calling the `shared` class method (which is defined in `URLSession`).
+
+- *Default sessions* behave much like the *shared session* (unless you customize them further), but let you obtain data incrementally using a delegate. You can create a default session configuration by calling the `default` method on the `URLSessionConfiguration` class.
+- *Ephemeral sessions* are similar to default sessions, but they **don’t write caches, cookies, or credentials** to disk. You can create an ephemeral session configuration by calling the ephemeral method on the `URLSessionConfiguration` class.
+- *Background sessions* let you **perform uploads and downloads of content in the background while your app isn’t running**. You can create a background session configuration by calling the `backgroundSessionConfiguration(_:)` method on the `URLSessionConfiguration` class.
+
 ## NSURLRequest.CachePolicy
 
 Use the caching logic defined in the **protocol implementation**, if any, for a particular URL load request.
