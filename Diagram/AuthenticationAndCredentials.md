@@ -8,40 +8,46 @@
   - [2.4. Create a Credential Instance](#24-create-a-credential-instance)
   - [2.5. Call the Completion Handler](#25-call-the-completion-handler)
   - [2.6. Handle Failures Gracefully](#26-handle-failures-gracefully)
-- [3. URLSession.AuthChallengeDisposition](#3-urlsessionauthchallengedisposition)
-  - [3.1. useCredential](#31-usecredential)
-  - [3.2. performDefaultHandling](#32-performdefaulthandling)
-  - [3.3. cancelAuthenticationChallenge](#33-cancelauthenticationchallenge)
-  - [3.4. rejectProtectionSpace](#34-rejectprotectionspace)
-- [4. URLAuthenticationChallenge](#4-urlauthenticationchallenge)
-- [5. URLCredential](#5-urlcredential)
-- [6. URLCredentialStorage](#6-urlcredentialstorage)
-- [7. NSURLProtectionSpace](#7-nsurlprotectionspace)
-  - [7.1. `authenticationMethod`: Authentication Method Constants](#71-authenticationmethod-authentication-method-constants)
-    - [7.1.1. Session-Wide Authentication Challenges](#711-session-wide-authentication-challenges)
-      - [7.1.1.1. NSURLAuthenticationMethodClientCertificate](#7111-nsurlauthenticationmethodclientcertificate)
-      - [7.1.1.2. NSURLAuthenticationMethodServerTrust](#7112-nsurlauthenticationmethodservertrust)
-      - [7.1.1.3. NSURLAuthenticationMethodNegotiate](#7113-nsurlauthenticationmethodnegotiate)
-      - [7.1.1.4. NSURLAuthenticationMethodNTLM](#7114-nsurlauthenticationmethodntlm)
-    - [7.1.2. Task-Specific Authentication Challenges](#712-task-specific-authentication-challenges)
-      - [7.1.2.1. NSURLAuthenticationMethodDefault](#7121-nsurlauthenticationmethoddefault)
-      - [7.1.2.2. NSURLAuthenticationMethodHTTPBasic](#7122-nsurlauthenticationmethodhttpbasic)
-      - [7.1.2.3. NSURLAuthenticationMethodHTTPDigest](#7123-nsurlauthenticationmethodhttpdigest)
-      - [7.1.2.4. NSURLAuthenticationMethodHTMLForm](#7124-nsurlauthenticationmethodhtmlform)
-  - [7.2. NSURLProtectionSpace Protocol Types](#72-nsurlprotectionspace-protocol-types)
-    - [7.2.1. NSURLProtectionSpaceHTTP](#721-nsurlprotectionspacehttp)
-    - [7.2.2. NSURLProtectionSpaceHTTPS](#722-nsurlprotectionspacehttps)
-    - [7.2.3. NSURLProtectionSpaceFTP](#723-nsurlprotectionspaceftp)
-  - [7.3. NSURLProtectionSpace Proxy Types](#73-nsurlprotectionspace-proxy-types)
-    - [7.3.1. NSURLProtectionSpaceHTTPProxy](#731-nsurlprotectionspacehttpproxy)
-    - [7.3.2. NSURLProtectionSpaceHTTPSProxy](#732-nsurlprotectionspacehttpsproxy)
-    - [7.3.3. NSURLProtectionSpaceFTPProxy](#733-nsurlprotectionspaceftpproxy)
-    - [7.3.4. NSURLProtectionSpaceSOCKSProxy](#734-nsurlprotectionspacesocksproxy)
-- [8. FAQ](#8-faq)
-  - [8.1. What's `realm` in Authentication?](#81-whats-realm-in-authentication)
-  - [8.2. What's `distinguishedNames` ?](#82-whats-distinguishednames-)
-  - [8.3. How to use `proposedCredential` of `URLAuthenticationChallenge`](#83-how-to-use-proposedcredential-of-urlauthenticationchallenge)
-- [9. Reference](#9-reference)
+- [3. Article: Performing Manual Server Trust Authentication](#3-article-performing-manual-server-trust-authentication)
+  - [3.1. Determine When Manual Server Trust Evaluation Is Appropriate](#31-determine-when-manual-server-trust-evaluation-is-appropriate)
+  - [3.2. Handle Server Trust Authentication Challenges](#32-handle-server-trust-authentication-challenges)
+  - [3.3. Evaluate the Credential in the Challenge](#33-evaluate-the-credential-in-the-challenge)
+  - [3.4. Create a Long-Term Server Authentication Strategy](#34-create-a-long-term-server-authentication-strategy)
+- [4. URLSession.AuthChallengeDisposition](#4-urlsessionauthchallengedisposition)
+  - [4.1. useCredential](#41-usecredential)
+  - [4.2. performDefaultHandling](#42-performdefaulthandling)
+  - [4.3. cancelAuthenticationChallenge](#43-cancelauthenticationchallenge)
+  - [4.4. rejectProtectionSpace](#44-rejectprotectionspace)
+- [5. URLAuthenticationChallenge](#5-urlauthenticationchallenge)
+- [6. URLCredential](#6-urlcredential)
+- [7. URLCredentialStorage](#7-urlcredentialstorage)
+- [8. NSURLProtectionSpace](#8-nsurlprotectionspace)
+  - [8.1. `authenticationMethod`: Authentication Method Constants](#81-authenticationmethod-authentication-method-constants)
+    - [8.1.1. Session-Wide Authentication Challenges](#811-session-wide-authentication-challenges)
+      - [8.1.1.1. NSURLAuthenticationMethodClientCertificate](#8111-nsurlauthenticationmethodclientcertificate)
+      - [8.1.1.2. NSURLAuthenticationMethodServerTrust](#8112-nsurlauthenticationmethodservertrust)
+      - [8.1.1.3. NSURLAuthenticationMethodNegotiate](#8113-nsurlauthenticationmethodnegotiate)
+      - [8.1.1.4. NSURLAuthenticationMethodNTLM](#8114-nsurlauthenticationmethodntlm)
+    - [8.1.2. Task-Specific Authentication Challenges](#812-task-specific-authentication-challenges)
+      - [8.1.2.1. NSURLAuthenticationMethodDefault](#8121-nsurlauthenticationmethoddefault)
+      - [8.1.2.2. NSURLAuthenticationMethodHTTPBasic](#8122-nsurlauthenticationmethodhttpbasic)
+      - [8.1.2.3. NSURLAuthenticationMethodHTTPDigest](#8123-nsurlauthenticationmethodhttpdigest)
+      - [8.1.2.4. NSURLAuthenticationMethodHTMLForm](#8124-nsurlauthenticationmethodhtmlform)
+  - [8.2. NSURLProtectionSpace Protocol Types](#82-nsurlprotectionspace-protocol-types)
+    - [8.2.1. NSURLProtectionSpaceHTTP](#821-nsurlprotectionspacehttp)
+    - [8.2.2. NSURLProtectionSpaceHTTPS](#822-nsurlprotectionspacehttps)
+    - [8.2.3. NSURLProtectionSpaceFTP](#823-nsurlprotectionspaceftp)
+  - [8.3. NSURLProtectionSpace Proxy Types](#83-nsurlprotectionspace-proxy-types)
+    - [8.3.1. NSURLProtectionSpaceHTTPProxy](#831-nsurlprotectionspacehttpproxy)
+    - [8.3.2. NSURLProtectionSpaceHTTPSProxy](#832-nsurlprotectionspacehttpsproxy)
+    - [8.3.3. NSURLProtectionSpaceFTPProxy](#833-nsurlprotectionspaceftpproxy)
+    - [8.3.4. NSURLProtectionSpaceSOCKSProxy](#834-nsurlprotectionspacesocksproxy)
+- [9. FAQ](#9-faq)
+  - [9.1. What's `realm` in Authentication?](#91-whats-realm-in-authentication)
+  - [9.2. What's `distinguishedNames` ?](#92-whats-distinguishednames-)
+  - [9.3. How to use `proposedCredential` of `URLAuthenticationChallenge`](#93-how-to-use-proposedcredential-of-urlauthenticationchallenge)
+  - [9.4. What does `.performDefaultHandling` means?](#94-what-does-performdefaulthandling-means)
+- [10. Reference](#10-reference)
 
 ## 1. Diagram
 
@@ -133,31 +139,114 @@ completionHandler(.useCredential, credential)
 
 If the credential is refused, the system calls your delegate method again. When this happens, the callback provides your rejected credential as the `proposedCredential` property of the `URLAuthenticationChallenge` parameter. The challenge instance also includes a `previousFailureCount` property, which indicates how many times the credential has been rejected. You can use these properties to determine what to do next. For example, if the `previousFailureCount` is greater than zero, you could use the user string of the `proposedCredential` to populate a user/password reentry UI.
 
-## 3. URLSession.AuthChallengeDisposition
+## 3. Article: Performing Manual Server Trust Authentication
+
+> Evaluate the server’s security credentials in your app.
+
+When you use a secure connection (such as https) with a URL request, your `URLSessionDelegate` receives an authentication challenge with an authentication type of `NSURLAuthenticationMethodServerTrust`. Unlike other challenges where the server is asking your app to authenticate itself, **this is an opportunity for you to authenticate the server’s credentials**.
+
+### 3.1. Determine When Manual Server Trust Evaluation Is Appropriate
+
+In most cases, you should let the *URL Loading System*’s default handling evaluate the server trust. You get this behavior when you either don’t have a delegate or don’t handle authentication challenges. However, performing your own evaluation may be useful for scenarios like the following:
+
+- You want to accept server credentials that would otherwise be rejected by the system. For example, your app makes a secure connection to a development server that uses a **self-signed certificate**, which would ordinarily not match anything in the system’s trust store.
+- You want to reject credentials that would otherwise be accepted by the system. For example, you want to “pin” your app to a set of specific keys or certificates under your control, rather than accept any valid credential.
+
+Figure 1 illustrates how an app performs manual credential evaluation by providing a delegate method to handle the authentication challenge. This bypasses the default handling. Instead, **the delegate directly compares the server certificate or its public key against a copy of the certificate or key (or a hash of either of these) stored in the app bundle itself**. If the delegate decides the server credential is valid, it accepts the server trust and allows the connection to continue.
+
+**Figure 1**: **Manually evaluating server trust against credentials stored in the app bundle**
+
+![Manual-Server-Trust-Authentication.png](../media/iOS/AppleDocumentation/Manual-Server-Trust-Authentication.png)
+
+### 3.2. Handle Server Trust Authentication Challenges
+
+To perform manual server trust authentication, implement the `URLSessionDelegate` method `urlSession(_:didReceive:completionHandler:)`. When this method is called, the first things your implementation needs to do are to check that:
+
+- The challenge type is *server trust*, and not some other kind of challenge.
+- The challenge’s *host name* matches the host that you want to perform manual credential evaluation for.
+
+**Listing 1** shows how to test these conditions, given the `challenge` parameter passed to the `urlSession(_:didReceive:completionHandler:)` callback. It gets the challenge's `protectionSpace` and uses it to perform the two checks listed above.
+
+- First, it gets the `authenticationMethod` from the *protection space* and checks that the type of authentication is `NSURLAuthenticationMethodServerTrust`.
+- Then it makes sure the protection space’s host matches the expected name `example.com`.
+
+If either of these conditions are not met, it calls the `completionHandler` with the `URLSession.AuthChallengeDisposition.performDefaultHandling` disposition to allow the system to handle the challenge.
+
+**Listing 1** Testing the challenge type and host name of a server trust authentication challenge.
+
+```swift
+let protectionSpace = challenge.protectionSpace
+guard protectionSpace.authenticationMethod ==
+    NSURLAuthenticationMethodServerTrust,
+    protectionSpace.host.contains("example.com") else {
+        completionHandler(.performDefaultHandling, nil)
+        return
+}
+```
+
+### 3.3. Evaluate the Credential in the Challenge
+
+To access the server’s credential, get the `serverTrust` property (an instance of the `SecTrust` class) from the *protection space*.
+
+**Listing 2** shows how to access the server trust and accept or reject it. The listing starts by attempting to get the `serverTrust` property from the *protection space*, and falls back to default handling if the property is `nil`. Next, it passes the server trust to a `private` helper method `checkValidity(of:)` that compares the *certificate* or *public key* in the server trust to known-good values stored in the **app bundle**.
+
+**Listing 2** Evaluating credentials in a server trust instance.
+
+```swift
+guard let serverTrust = protectionSpace.serverTrust else {
+    completionHandler(.performDefaultHandling, nil)
+    return
+}
+if checkValidity(of: serverTrust) {
+    let credential = URLCredential(trust: serverTrust)
+    completionHandler(.useCredential, credential)
+} else {
+    // Show a UI here warning the user the server credentials are
+    // invalid, and cancel the load.
+    completionHandler(.cancelAuthenticationChallenge, nil)
+}
+```
+
+Once the code determines the validity of the server trust, it takes one of two actions:
+
+- If the server trust’s credential is *valid*, create a new `URLCredential` instance from the server trust. Then call the `completionHandler` with the `URLSession.AuthChallengeDisposition.useCredential` disposition, passing in the newly-created credential. This tells the system to accept the server’s credentials.
+- If the challenge’s credential is *invalid*, call the `completionHandler` with the `URLSession.AuthChallengeDisposition.cancelAuthenticationChallenge` disposition. This tells the system to reject the server’s credentials.
+
+**Tip**: See [Certificate, Key, and Trust Services](https://developer.apple.com/documentation/security/certificate_key_and_trust_services) to learn more about how to evaluate a SecTrust instance or access certificates or public keys from it.
+
+### 3.4. Create a Long-Term Server Authentication Strategy
+
+If you determine that you need to evaluate server trust manually in some or all cases, plan for what your app will do if you need to change your server credentials. Keep the following guidelines in mind:
+
+- **Compare the server’s credentials against a public key, instead of storing a single certificate in your app bundle. This will allow you to reissue a certificate for the same key and update the server, rather than needing to update the app.**
+- Compare the issuing certificate authority’s (CA’s) keys, rather than using the leaf key. This way, you can deploy certificates containing new keys signed by the same CA.
+- Use a set of keys or CAs, so you can rotate(轮换) server credentials more gracefully.
+
+## 4. URLSession.AuthChallengeDisposition
 
 Constants passed by session or task delegates to the provided continuation block in response to an authentication challenge.
 
-### 3.1. useCredential
+### 4.1. useCredential
 
 Use the specified credential, which may be `nil`.
 
-### 3.2. performDefaultHandling
+### 4.2. performDefaultHandling
 
 Use the default handling for the challenge as though this delegate method were not implemented. *The provided `credential` parameter is ignored.*
 
 (**Note**: `credential` means the parameter of the `completionHandler` in the delegate method)
 
-### 3.3. cancelAuthenticationChallenge
+### 4.3. cancelAuthenticationChallenge
 
 Cancel the entire request. *The provided `credential` parameter is ignored.*
 
-### 3.4. rejectProtectionSpace
+### 4.4. rejectProtectionSpace
 
 Reject this challenge, and call the authentication delegate method again with the next authentication protection space. *The provided `credential` parameter is ignored.*
 
 > **Note**: The `rejectProtectionSpace` disposition is only appropriate in fairly *unusual* situations.
 
-## 4. URLAuthenticationChallenge
+## 5. URLAuthenticationChallenge
 
 A challenge from a server requiring authentication from the client.
 
@@ -165,7 +254,7 @@ Your app receives authentication challenges in `URLSession` delegate methods, su
 
 At the core of that authentication challenge is a **protection space** that defines the type of authentication being requested, the host and port number, the networking protocol, and (where applicable) the authentication **realm** (*a group of related URLs on the same server that share a single set of credentials*).
 
-## 5. URLCredential
+## 6. URLCredential
 
 An authentication credential consisting of information specific to the type of credential and the type of persistent storage to use, if any.
 
@@ -187,32 +276,32 @@ When you create a credential,
 - Permanent storage of credentials is only available for *password-based credentials*.
 - TLS credentials are **never** stored permanently by `URLCredentialStorage`. In general, use *for-session persistence* for TLS credentials.
 
-## 6. URLCredentialStorage
+## 7. URLCredentialStorage
 
 The shared cache stores and retrieves instances of `URLCredential`.
 
 - You can store *password-based* credentials permanently, based on the `URLCredential.Persistence` they were created with.
 - *Certificate-based* credentials are **never** stored permanently.
 
-## 7. NSURLProtectionSpace
+## 8. NSURLProtectionSpace
 
 A server or an area on a server, commonly referred to as a **realm**, that requires authentication.
 
 A protection space defines a series of matching constraints that determine which credential should be provided. For example, if a request provides your delegate with a `URLAuthenticationChallenge` object that requests a client *username and password*, your app should provide the correct *username and password* for the particular host, port, protocol, and realm, as specified in the challenge’s protection space.
 
-### 7.1. `authenticationMethod`: Authentication Method Constants
+### 8.1. `authenticationMethod`: Authentication Method Constants
 
 Constants describing known values of the `authenticationMethod` property of a `URLProtectionSpace`.
 
-#### 7.1.1. Session-Wide Authentication Challenges
+#### 8.1.1. Session-Wide Authentication Challenges
 
 > These constants indicate *session-wide challenges*. Delegates handle these challenges in the `URLSessionDelegate` method `urlSession(_:didReceive:completionHandler:)`.
 
-##### 7.1.1.1. NSURLAuthenticationMethodClientCertificate
+##### 8.1.1.1. NSURLAuthenticationMethodClientCertificate
 
 Use *client certificate authentication* for this protection space.
 
-##### 7.1.1.2. NSURLAuthenticationMethodServerTrust
+##### 8.1.1.2. NSURLAuthenticationMethodServerTrust
 
 Perform *server trust authentication (certificate validation)* for this protection space.
 
@@ -220,71 +309,71 @@ This authentication method can apply to any protocol, and is most commonly used 
 
 To learn more, read [Overriding TLS Chain Validation Correctly](https://developer.apple.com/library/archive/documentation/NetworkingInternet/Conceptual/NetworkingTopics/Articles/OverridingSSLChainValidationCorrectly.html#//apple_ref/doc/uid/TP40012544).
 
-##### 7.1.1.3. NSURLAuthenticationMethodNegotiate
+##### 8.1.1.3. NSURLAuthenticationMethodNegotiate
 
 Negotiate whether to use `Kerberos` or `NTLM` authentication for this protection space.
 
-##### 7.1.1.4. NSURLAuthenticationMethodNTLM
+##### 8.1.1.4. NSURLAuthenticationMethodNTLM
 
 Use NTLM authentication for this protection space.
 
-#### 7.1.2. Task-Specific Authentication Challenges
+#### 8.1.2. Task-Specific Authentication Challenges
 
 > These constants indicate *task-specific challenges*. Delegates handle these challenges in the `URLSessionTaskDelegate` method `urlSession(_:task:didReceive:completionHandler:)`.
 
-##### 7.1.2.1. NSURLAuthenticationMethodDefault
+##### 8.1.2.1. NSURLAuthenticationMethodDefault
 
 Use the default authentication method for a protocol.
 
-##### 7.1.2.2. NSURLAuthenticationMethodHTTPBasic
+##### 8.1.2.2. NSURLAuthenticationMethodHTTPBasic
 
 Use HTTP basic authentication for this protection space.
 
-##### 7.1.2.3. NSURLAuthenticationMethodHTTPDigest
+##### 8.1.2.3. NSURLAuthenticationMethodHTTPDigest
 
 Use HTTP digest authentication for this protection space.
 
-##### 7.1.2.4. NSURLAuthenticationMethodHTMLForm
+##### 8.1.2.4. NSURLAuthenticationMethodHTMLForm
 
 Use HTML form authentication for this protection space.
 
 **Note**: The *URL loading system* **never** issues authentication challenges based on this authentication method. However, if your app authenticates by submitting a web form (or in some other protocol-neutral way), you can specify this protection space when you persist or look up credentials using the `URLCredentialStorage` class.
 
-### 7.2. NSURLProtectionSpace Protocol Types
+### 8.2. NSURLProtectionSpace Protocol Types
 
-#### 7.2.1. NSURLProtectionSpaceHTTP
+#### 8.2.1. NSURLProtectionSpaceHTTP
 
 The protocol type for HTTP.
 
-#### 7.2.2. NSURLProtectionSpaceHTTPS
+#### 8.2.2. NSURLProtectionSpaceHTTPS
 
 The protocol type for HTTPS.
 
-#### 7.2.3. NSURLProtectionSpaceFTP
+#### 8.2.3. NSURLProtectionSpaceFTP
 
 The protocol type for FTP.
 
-### 7.3. NSURLProtectionSpace Proxy Types
+### 8.3. NSURLProtectionSpace Proxy Types
 
-#### 7.3.1. NSURLProtectionSpaceHTTPProxy
+#### 8.3.1. NSURLProtectionSpaceHTTPProxy
 
 The proxy type for HTTP proxies.
 
-#### 7.3.2. NSURLProtectionSpaceHTTPSProxy
+#### 8.3.2. NSURLProtectionSpaceHTTPSProxy
 
 The proxy type for HTTPS proxies.
 
-#### 7.3.3. NSURLProtectionSpaceFTPProxy
+#### 8.3.3. NSURLProtectionSpaceFTPProxy
 
 The proxy type for FTP proxies.
 
-#### 7.3.4. NSURLProtectionSpaceSOCKSProxy
+#### 8.3.4. NSURLProtectionSpaceSOCKSProxy
 
 The proxy type for SOCKS proxies.
 
-## 8. FAQ
+## 9. FAQ
 
-### 8.1. What's `realm` in Authentication?
+### 9.1. What's `realm` in Authentication?
 
 The realm is used to describe the protected area or to indicate the scope of protection.
 
@@ -294,13 +383,13 @@ Pages in the same realm should share credentials. If your credentials work for a
 - [HTTP Headers: WWW-Authenticate](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/WWW-Authenticate)
 - [HTTP Authentication: WWW-Authenticate and Proxy-Authenticate headers](https://developer.mozilla.org/en-US/docs/Web/HTTP/Authentication#www-authenticate_and_proxy-authenticate_headers)
 
-### 8.2. What's `distinguishedNames` ?
+### 9.2. What's `distinguishedNames` ?
 
 The acceptable **certificate-issuing authorities** for *client certificate authentication*.
 
 This value is `nil` if the authentication method of the protection space is not *client certificate*. The returned issuing authorities are encoded with *Distinguished Encoding Rules (DER)*.
 
-### 8.3. How to use `proposedCredential` of `URLAuthenticationChallenge`
+### 9.3. How to use `proposedCredential` of `URLAuthenticationChallenge`
 
 This method returns `nil` if there is no default credential for this challenge.
 
@@ -308,7 +397,11 @@ This method returns `nil` if there is no default credential for this challenge.
 - If the proposed credential is not `nil` and returns `true` when you call its `hasPassword` method, then the credential is ready to use as-is.
 - If the proposed credential’s `hasPassword` method returns false, then the credential provides a default user name, and the client must prompt the user for a corresponding password.
 
-## 9. Reference
+### 9.4. What does `.performDefaultHandling` means?
+
+???
+
+## 10. Reference
 
 - [Apple Doc: Handling an Authentication Challenge](https://developer.apple.com/documentation/foundation/url_loading_system/handling_an_authentication_challenge)
 - [Mozilla Doc: HTTP authentication](https://developer.mozilla.org/en-US/docs/Web/HTTP/Authentication)
