@@ -10,6 +10,7 @@
 ## 🌉 Diagrams
 
 - [URLSession](Diagram/URLSession.md)
+- [Authentication and Credentials](Diagram/AuthenticationAndCredentials.md)
 
 ## 🏭 PlantUML
 

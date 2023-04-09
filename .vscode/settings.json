@@ -69,6 +69,7 @@
         "nixpkgs",
         "nokogiri",
         "NSURL",
+        "NTLM",
         "octa",
         "pacman",
         "pcre",
