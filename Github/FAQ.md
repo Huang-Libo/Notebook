@@ -21,3 +21,17 @@ git@github.com:Alamofire/Alamofire.git
 ```plaintext
 https://github.com/Alamofire/Alamofire.git 
 ```
+
+## BUG: No way to clear the markdown preview image cache
+
+**Workaround**:
+
+```console
+$ curl -X PURGE https://camo.githubusercontent.com/4d04abe0044d94fefcf9af2133223....
+> {"status": "ok", "id": "216-8675309-1008701"}
+```
+
+**Reference**:
+
+- [atom/markdown-preview/issues/207: No way to clear the markdown preview image cache](https://github.com/atom/markdown-preview/issues/207#issuecomment-261716706)
+- [GitHub Docs: About anonymized URLs](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/about-anonymized-urls)
