@@ -445,7 +445,7 @@ First, the certificate file must be encoded before the embed into the app bundle
 You can encode the certificate with proper format by importing the existing certificate file into the keychain and extracting back. The given output will be encoded as default.
 If you do not have any certificate file to the embed into app bundle. You can retrieve the certificate with ready to use format by running the command below.
 
-```console
+```base
 openssl s_client -connect <hostname>:443 </dev/null \
  | openssl x509 -outform DER -out <certificatename>.der
 ```
@@ -456,7 +456,7 @@ The extracting the bundle files from the IPA is quite easy. If you have concerns
 
 You can place the Base64 format of the certificate into your codebase and convert into the `SecCertificate` during the runtime. The Base64 format of the certificate can be obtained by running the following command below.
 
-```console
+```base
 base64 <certificatename>.der
 ```
 
