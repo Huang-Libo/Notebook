@@ -47,6 +47,16 @@
   - [9.2. What's `distinguishedNames` ?](#92-whats-distinguishednames-)
   - [9.3. How to use `proposedCredential` of `URLAuthenticationChallenge`](#93-how-to-use-proposedcredential-of-urlauthenticationchallenge)
   - [9.4. What does `.performDefaultHandling` means?](#94-what-does-performdefaulthandling-means)
+  - [9.5. SSL Pinning](#95-ssl-pinning)
+    - [9.5.1. What is SSL Pinning?](#951-what-is-ssl-pinning)
+    - [9.5.2. Why Should I Use SSL Pinning?](#952-why-should-i-use-ssl-pinning)
+    - [9.5.3. What types of SSL pinning methods are there?](#953-what-types-of-ssl-pinning-methods-are-there)
+    - [9.5.4. What’s Difference Using The Root, Leaf and Intermediate Certificates In Pinning?](#954-whats-difference-using-the-root-leaf-and-intermediate-certificates-in-pinning)
+    - [9.5.5. How should you embed the Certificate into App Bundle?](#955-how-should-you-embed-the-certificate-into-app-bundle)
+    - [9.5.6. Is it possible to pin the certificate without embedding into the App Bundle?](#956-is-it-possible-to-pin-the-certificate-without-embedding-into-the-app-bundle)
+    - [9.5.7. How to implement the SSL Pinning on iOS?](#957-how-to-implement-the-ssl-pinning-on-ios)
+      - [9.5.7.1. Alamofire](#9571-alamofire)
+      - [9.5.7.2. URLSession](#9572-urlsession)
 - [10. Reference](#10-reference)
 
 ## 1. Diagram
@@ -401,8 +411,130 @@ This method returns `nil` if there is no default credential for this challenge.
 
 ???
 
+### 9.5. SSL Pinning
+
+> Reference: [medium: Securing iOS Applications with SSL Pinning](https://medium.com/trendyol-tech/securing-ios-applications-with-ssl-pinning-38d551945306)
+
+#### 9.5.1. What is SSL Pinning?
+
+`SSL Pinning`(Secure Socket Layer Pinning) is the process of associating a *host* with its **certificate** or **public key**.
+
+#### 9.5.2. Why Should I Use SSL Pinning?
+
+Using Secure Socket Layer (SSL) Pinning allows you to protect your apps against the many types of Man-in-the-middle (MITM) attacks and interception of its network traffic.
+
+![MITM](../media/iOS/Blogs/MITM.webp)
+
+#### 9.5.3. What types of SSL pinning methods are there?
+
+1. **Embedding the Certificate**: You can extract the server’s *certificate* and embed into your *app bundle*. The network layer compares the server’s certificate with embedded certificate.
+2. **Embedding the Public Key**: You can extract the *certificate’s public key* and *define into your code or place into the app bundle*. The network layer compares the servers certificates’ public key with embedded one.
+
+#### 9.5.4. What’s Difference Using The Root, Leaf and Intermediate Certificates In Pinning?
+
+- **Leaf Certificate**: If the certificate becomes invalid because of expiration or a compromising, the application will be broken until you update SSL certificate.
+- **Intermediate Certificate**: As long as your certificate provider is the same, any changes to the leaf certificate will not require an update in your application.
+- **Root Certificate**: The root certificate comes from the trusted certificate authority. Pinning the root certificate puts trust in the root cert authority, as well as all intermediaries that the root cert authority trusts.
+
+**Note**: The all mentioned types can be pinned on your application. But, only pinning the root certificate puts your application in the risk because of its scope.
+
+#### 9.5.5. How should you embed the Certificate into App Bundle?
+
+First, the certificate file must be encoded before the embed into the app bundle. You can ensure whether the file is encoded by opening your certificate file with a text editor. *If you see similar content like Base64 output, it means the content of the certificate must be encoded.*
+
+You can encode the certificate with proper format by importing the existing certificate file into the keychain and extracting back. The given output will be encoded as default.
+If you do not have any certificate file to the embed into app bundle. You can retrieve the certificate with ready to use format by running the command below.
+
+```console
+openssl s_client -connect <hostname>:443 </dev/null \
+ | openssl x509 -outform DER -out <certificatename>.der
+```
+
+#### 9.5.6. Is it possible to pin the certificate without embedding into the App Bundle?
+
+The extracting the bundle files from the IPA is quite easy. If you have concerns to put the certificate into there, you may avoid this.
+
+You can place the Base64 format of the certificate into your codebase and convert into the `SecCertificate` during the runtime. The Base64 format of the certificate can be obtained by running the following command below.
+
+```console
+base64 <certificatename>.der
+```
+
+#### 9.5.7. How to implement the SSL Pinning on iOS?
+
+There are two common approach in that matter:
+
+##### 9.5.7.1. Alamofire
+
+If you use Alamofire which is the most popular network library in iOS, that allows you to pin the *certificate* or *public keys* by using the provided default trust evaluators with ease. (`PinnedCertificatesTrustEvaluator` & `PublicKeysTrustEvaluator`)
+
+`PinnedCertificatesTrustEvaluator` expects `certificates` as parameter to initialize the evaluator. It is provided by Alamofire as default. If you want to specify by yourself, you may override the provided default value with your own `SecCertificate` array.
+
+All you need is to set up the `Session` instance by using a `ServerTrustManager` with provided trust evaluators.
+
+```swift
+import Alamofire
+
+final class SampleNetworkManager {
+    private let session: Session
+    
+    init() {
+        let evaluators: [String: ServerTrustEvaluating] = [
+            "api.trendy.com": PinnedCertificatesTrustEvaluator(validateHost: true)
+        ]
+        
+        let serverTrustManager = ServerTrustManager(evaluators: evaluators)
+        self.session = Session(serverTrustManager: serverTrustManager)
+    }
+}
+```
+
+##### 9.5.7.2. URLSession
+
+You can use the Apple API’s to pin the certificate or public keys through the `URLSession`.
+
+As you know, Apple is providing the `URLSession` which enables us to perform network tasks. To achieve the same outcome via Apple API’s, you should initiate an `URLSession` instance with proper `configuration` and manage the SSL handshake process through the `URLSessionDelegate`.
+
+```swift
+import Foundation
+
+final class SampleNetworkManager: NSObject {
+    private lazy var certificates: [Data] = {
+        let url = Bundle.main.url(forResource: "ty", withExtension: "der")!
+        let data = try! Data(contentsOf: url)
+        return [data]
+    }()
+    
+    private var session: URLSession!
+    
+    override init() {
+        super.init()
+        session = URLSession(configuration: .default, delegate: self, delegateQueue: nil)
+    }
+}
+
+// MARK: - URLSessionDelegate
+extension SampleNetworkManager: URLSessionDelegate {
+    func urlSession(_ session: URLSession, didReceive challenge: URLAuthenticationChallenge, completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Void) {
+        if let trust = challenge.protectionSpace.serverTrust, SecTrustGetCertificateCount(trust) > 0 {
+            if let certificate = SecTrustGetCertificateAtIndex(trust, 0) {
+                let data = SecCertificateCopyData(certificate) as Data
+                if certificates.contains(data) {
+                    completionHandler(.useCredential, URLCredential(trust: trust))
+                    return
+                }
+            }
+        }
+        completionHandler(.cancelAuthenticationChallenge, nil)
+    }
+}
+```
+
+Furthermore, the host validation mechanism can be added by accessing through the `challenge.protectionSpace.host` in the same block to enhance the security too. You may pin the several certificates and map these certificates with any host.
+
 ## 10. Reference
 
-- [Apple Doc: Handling an Authentication Challenge](https://developer.apple.com/documentation/foundation/url_loading_system/handling_an_authentication_challenge)
+- [Apple Docs: Handling an Authentication Challenge](https://developer.apple.com/documentation/foundation/url_loading_system/handling_an_authentication_challenge)
+- [Apple News: Identity Pinning: How to configure server certificates for your app](https://developer.apple.com/news/?id=g9ejcf8y)
 - [Mozilla Doc: HTTP authentication](https://developer.mozilla.org/en-US/docs/Web/HTTP/Authentication)
 - [RFC 7235: HTTP/1.1 Authentication](https://datatracker.ietf.org/doc/html/rfc7235)

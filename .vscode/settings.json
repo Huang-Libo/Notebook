@@ -60,6 +60,7 @@
         "MANPATH",
         "mdimporterdir",
         "methoddir",
+        "MITM",
         "mkdir",
         "mktemp",
         "MVVM",
