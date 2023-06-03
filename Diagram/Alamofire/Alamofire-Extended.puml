@@ -1,0 +1,24 @@
+@startuml Alamofire-Extended
+
+interface AlamofireExtended {
+    associatedtype ExtendedType
+    {static} af: AlamofireExtension<ExtendedType>
+    af: AlamofireExtension<ExtendedType>
+}
+
+struct AlamofireExtension<ExtendedType> {
+    + type: ExtendedType
+    + init(type: ExtendedType)
+}
+
+URLSessionConfiguration ..|> AlamofireExtended: Implements
+Bundle ..|> AlamofireExtended: Implements
+SecTrust ..|> AlamofireExtended: Implements
+SecPolicy ..|> AlamofireExtended: Implements
+SecTrustResultType ..|> AlamofireExtended: Implements
+SecCertificate ..|> AlamofireExtended: Implements
+Array ..|> AlamofireExtended: Implements
+OSStatus ..|> AlamofireExtended: Implements
+AlamofireExtended --> AlamofireExtension: Use
+
+@enduml
