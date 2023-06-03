@@ -11,6 +11,7 @@
 
 - [URLSession](Diagram/URLSession.md)
 - [Authentication and Credentials](Diagram/AuthenticationAndCredentials.md)
+- [Alamofire](Diagram/Alamofire/Alamofire.md)
 
 ## 🏭 PlantUML
 
