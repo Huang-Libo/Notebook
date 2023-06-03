@@ -3,8 +3,10 @@
 - [1. Introduction](#1-introduction)
 - [2. URLSessionConfiguration](#2-urlsessionconfiguration)
   - [2.1. Types of Session Configurations](#21-types-of-session-configurations)
-- [3. NSURLRequest.CachePolicy](#3-nsurlrequestcachepolicy)
-  - [3.1. useProtocolCachePolicy](#31-useprotocolcachepolicy)
+- [3. URLSessionDelegate](#3-urlsessiondelegate)
+- [4. NSURLRequest.CachePolicy](#4-nsurlrequestcachepolicy)
+  - [4.1. useProtocolCachePolicy](#41-useprotocolcachepolicy)
+- [5. Reference](#5-reference)
 
 ## 1. Introduction
 
@@ -55,11 +57,19 @@ The *singleton shared session* (which **has no configuration object**) is for ba
 - *Ephemeral sessions* are similar to default sessions, but they **don’t write caches, cookies, or credentials** to disk. You can create an ephemeral session configuration by calling the ephemeral method on the `URLSessionConfiguration` class.
 - *Background sessions* let you **perform uploads and downloads of content in the background while your app isn’t running**. You can create a background session configuration by calling the `backgroundSessionConfiguration(_:)` method on the `URLSessionConfiguration` class.
 
-## 3. NSURLRequest.CachePolicy
+## 3. URLSessionDelegate
+
+A protocol that defines methods that URL session instances call on their delegates to handle **session-level events**, like session life cycle changes.
+
+In addition to the methods defined in this protocol, most delegates should also implement some or all of the methods in the `URLSessionTaskDelegate`, `URLSessionDataDelegate`, and `URLSessionDownloadDelegate` protocols to handle **task-level events**. These include events like the beginning and end of individual tasks, and periodic progress updates from data or download tasks.
+
+**Note**: Your `URLSession` object doesn’t need to have a delegate. If no delegate is assigned, a *system-provided* delegate is used, and you must provide a completion callback to obtain the data.
+
+## 4. NSURLRequest.CachePolicy
 
 Use the caching logic defined in the **protocol implementation**, if any, for a particular URL load request.
 
-### 3.1. useProtocolCachePolicy
+### 4.1. useProtocolCachePolicy
 
 This is the *default* policy for URL load requests.
 
@@ -70,3 +80,7 @@ For the HTTP and HTTPS protocols, `NSURLRequest.CachePolicy.useProtocolCachePoli
 3. If the cached response is stale or requires revalidation, the *URL loading system* makes a `HEAD` request to the originating source to see if the resource has changed. If so, the *URL loading system* fetches the data from the originating source. Otherwise, it returns the cached response.
 
 ![useProtocolCachePolicy](../media/iOS/AppleDocumentation/useProtocolCachePolicy.png)
+
+## 5. Reference
+
+- [URL Loading System](https://developer.apple.com/documentation/foundation/url_loading_system)
