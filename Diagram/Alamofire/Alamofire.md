@@ -30,6 +30,8 @@
 
 ### 2.2. Server Trust
 
+![Class Diagram](http://www.plantuml.com/plantuml/proxy?src=https://raw.githubusercontent.com/Huang-Libo/Notebook/master/Diagram/Alamofire/Alamofire-ServerTrust.puml)
+
 `ServerTrustManager`: Responsible for managing the mapping of `ServerTrustEvaluating` values to given hosts.
 
 ### 2.3. AlamofireExtended
