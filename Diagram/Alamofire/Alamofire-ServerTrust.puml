@@ -1,0 +1,60 @@
+@startuml Alamofire-ServerTrust
+
+class ServerTrustManager {
+    + allHostsMustBeEvaluated: Bool
+    + evaluators: [String: ServerTrustEvaluating]
+    + init(allHostsMustBeEvaluated: Bool, evaluators: [String: ServerTrustEvaluating])
+    + serverTrustEvaluator(forHost: String) -> ServerTrustEvaluating?
+}
+
+ServerTrustManager --> ServerTrustEvaluating: Denpendency
+
+interface ServerTrustEvaluating {
+    evaluate(trust: SecTrust, forHost: String)
+}
+
+class DefaultTrustEvaluator {
+    - validateHost: Bool
+    + init(validateHost: Bool)
+}
+
+class RevocationTrustEvaluator {
+    - performDefaultValidation: Bool
+    - validateHost: Bool
+    - options: Options
+    + init(performDefaultValidation: Bool, validateHost: Bool, options: Options)
+}
+
+class PinnedCertificatesTrustEvaluator {
+    - certificates: [SecCertificate]
+    - acceptSelfSignedCertificates: Bool
+    - performDefaultValidation: Bool
+    - validateHost: Bool
+    + init(certificates: [SecCertificate], acceptSelfSignedCertificates: Bool, performDefaultValidation: Bool, validateHost: Bool)
+}
+
+class PublicKeysTrustEvaluator {
+    - keys: [SecKey]
+    - performDefaultValidation: Bool
+    - validateHost: Bool
+    + init(keys: [SecKey], performDefaultValidation: Bool, validateHost: Bool)
+}
+
+class CompositeTrustEvaluator {
+    - evaluators: [ServerTrustEvaluating]
+    + init(evaluators: [ServerTrustEvaluating])
+}
+
+' THIS EVALUATOR SHOULD NEVER BE USED IN PRODUCTION!
+class DisabledTrustEvaluator {
+    + init()
+}
+
+DefaultTrustEvaluator ..|> ServerTrustEvaluating: Implements
+RevocationTrustEvaluator ..|> ServerTrustEvaluating: Implements
+PinnedCertificatesTrustEvaluator ..|> ServerTrustEvaluating: Implements
+PublicKeysTrustEvaluator ..|> ServerTrustEvaluating: Implements
+CompositeTrustEvaluator ..|> ServerTrustEvaluating: Implements
+DisabledTrustEvaluator ..|> ServerTrustEvaluating: Implements
+
+@enduml
