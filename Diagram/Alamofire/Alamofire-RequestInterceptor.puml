@@ -1,0 +1,84 @@
+@startuml Alamofire-RequestInterceptor
+
+struct RequestAdapterState {
+    + requestID: UUID
+    + session: Session
+}
+
+enum RetryResult {
+    .. cases ..
+    + retry
+    + {field} retryWithDelay(TimeInterval)
+    + doNotRetry
+    + {field} doNotRetryWithError(Error)
+    .. Computed properties ..
+    + retryRequired: Bool
+    + delay: TimeInterval?
+    + error: Error?
+}
+
+interface RequestInterceptor {
+
+}
+
+interface RequestAdapter {
+    adapt(urlRequest: URLRequest, for: Session, completion: (Result<URLRequest, Error>) -> Void)
+    adapt(urlRequest: URLRequest, using: RequestAdapterState, completion: (Result<URLRequest, Error>) -> Void)
+}
+
+interface RequestRetrier {
+    retry(request: Request, for: Session, dueTo: Error, completion: (RetryResult) -> Void)
+}
+
+RequestInterceptor --|> RequestAdapter
+RequestInterceptor --|> RequestRetrier
+
+RequestAdapter --> RequestAdapterState: Use
+RequestRetrier --> RetryResult: Use
+
+class Adapter {
+    - adaptHandler: AdaptHandler
+    + init(adaptHandler: AdaptHandler)
+}
+
+' note top of Adapter: typealias AdaptHandler = (URLRequest, Session, _ completion: @escaping (Result<URLRequest, Error>) -> Void) -> Void
+
+Adapter ..|> RequestInterceptor: Implements
+
+class Retrier {
+    - retryHandler: RetryHandler
+    + init(retryHandler: RetryHandler)
+}
+' note top of Retrier: typealias AdaptHandler = (URLRequest, Session, _ completion: @escaping (Result<URLRequest, Error>) -> Void) -> Void
+
+' note "This note is connected\nto several objects." as N2
+' Retrier .. N2
+' Adapter .. N2
+
+note top of Interceptor
+  <b><color:royalBlue>typealias AdaptHandler = (URLRequest, Session, completion: (Result<URLRequest, Error>) -> Void) -> Void</color>
+  <b><color:royalBlue>typealias RetryHandler = (Request, Session, Error, completion: (RetryResult) -> Void) -> Void</color>
+end note
+
+Retrier ..|> RequestInterceptor: Implements
+
+class Interceptor {
+    + adapters: [RequestAdapter]
+    + retriers: [RequestRetrier]
+    --
+    + init(adapters: [RequestAdapter], retriers: [RequestRetrier], interceptors: [RequestInterceptor])
+    + init(adapter: RequestAdapter, retrier: RequestRetrier)
+    + init(adaptHandler: AdaptHandler, retryHandler: RetryHandler)
+    .. adapt ..
+    + adapt(urlRequest: URLRequest, for: Session, completion: (Result<URLRequest, Error>) -> Void)
+    - adapt(urlRequest: URLRequest, for: Session, using: [RequestAdapter], completion: (Result<URLRequest, Error>) -> Void)
+    + adapt(urlRequest: URLRequest, using: RequestAdapterState, completion: (Result<URLRequest, Error>) -> Void)
+    - adapt(urlRequest: URLRequest, using: RequestAdapterState, adapters: [RequestAdapter], completion: (Result<URLRequest, Error>) -> Void)
+    .. retry ..
+    + retry(request: Request, for: Session, dueTo:: Error, completion: (RetryResult) -> Void)
+    - retry(request: Request, for: Session, dueTo:: Error, using retriers: [RequestRetrier], completion: (RetryResult) -> Void)
+}
+
+Interceptor ..|> RequestInterceptor: Impelements
+
+@enduml
