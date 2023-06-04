@@ -41,24 +41,19 @@ class Adapter {
     + init(adaptHandler: AdaptHandler)
 }
 
-' note top of Adapter: typealias AdaptHandler = (URLRequest, Session, _ completion: @escaping (Result<URLRequest, Error>) -> Void) -> Void
-
 Adapter ..|> RequestInterceptor: Implements
 
 class Retrier {
     - retryHandler: RetryHandler
     + init(retryHandler: RetryHandler)
 }
-' note top of Retrier: typealias AdaptHandler = (URLRequest, Session, _ completion: @escaping (Result<URLRequest, Error>) -> Void) -> Void
 
-' note "This note is connected\nto several objects." as N2
-' Retrier .. N2
-' Adapter .. N2
-
-note top of Interceptor
-  <b><color:royalBlue>typealias AdaptHandler = (URLRequest, Session, completion: (Result<URLRequest, Error>) -> Void) -> Void</color>
-  <b><color:royalBlue>typealias RetryHandler = (Request, Session, Error, completion: (RetryResult) -> Void) -> Void</color>
+note as N1
+  <color:royalBlue>typealias AdaptHandler = (URLRequest, Session, completion: Result<URLRequest, Error>) -> Void) -> Void</color>
+  <color:royalBlue>typealias RetryHandler = (Request, Session, Error, completion: (RetryResult) -> Void) -> Void</color>
 end note
+
+N1 .. Interceptor
 
 Retrier ..|> RequestInterceptor: Implements
 
