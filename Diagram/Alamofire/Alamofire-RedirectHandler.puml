@@ -1,0 +1,23 @@
+@startuml Alamofire-RedirectHandler
+
+interface RedirectHandler {
+    task(task: URLSessionTask, willBeRedirectedTo: URLRequest, for: HTTPURLResponse, completion: (URLRequest?) -> Void)
+}
+
+struct Redirector {
+    + {static} follow: Redirector
+    + {static} doNotFollow: Redirector
+    + behavior: Behavior
+    + init(behavior: Behavior)
+}
+
+enum Behavior {
+    + follow
+    + doNotFollow
+    + {field} modify((URLSessionTask, URLRequest, HTTPURLResponse) -> URLRequest?)
+}
+
+Redirector --> Behavior: Use
+Redirector ..|> RedirectHandler: Implements
+
+@enduml
