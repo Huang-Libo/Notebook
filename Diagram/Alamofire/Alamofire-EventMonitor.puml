@@ -1,0 +1,49 @@
+@startuml Alamofire-EventMonitor
+
+interface EventMonitor {
+    -- URLSession Events --
+    .. 1. URLSessionDelegate Events ..
+    urlSession(session: URLSession, didBecomeInvalidWithError: Error?)
+    .. 2. URLSessionTaskDelegate Events ..
+    urlSession(session: URLSession, task: URLSessionTask, didReceive: URLAuthenticationChallenge)
+    ...
+    .. 3. URLSessionDataDelegate Events ..
+    urlSession(session: URLSession, dataTask: URLSessionDataTask, didReceive data: Data)
+    ...
+    .. 4. URLSessionDownloadDelegate Events ..
+    urlSession(session: URLSession, downloadTask: URLSessionDownloadTask, didResumeAtOffset: Int64, expectedTotalBytes: Int64)
+    ...
+    -- Request Events --
+    .. 1. Request Events..
+    request(request: Request, didCreateInitialURLRequest: URLRequest)
+    ...
+    .. 2. DataRequest Events..
+    request(request: DataRequest, didValidateRequest: URLRequest?, response: HTTPURLResponse, data: Data?, withResult: ValidationResult)
+    ...
+    .. 3. UploadRequest Events..
+    request(request: UploadRequest, didCreateUploadable: Uploadable)
+    ...
+    .. 4. DownloadRequest Events..
+    request(request: DownloadRequest, didFinishDownloadingUsing: URLSessionTask, with: Result<URL, AFError>)
+    ...
+}
+
+note bottom of EventMonitor: Every method in `EventMonitor` protocol has a default Implementation which does nothing.
+
+class CompositeEventMonitor {
+
+}
+
+class ClosureEventMonitor {
+
+}
+
+class AlamofireNotifications {
+
+}
+
+CompositeEventMonitor ..|> EventMonitor: Implements
+ClosureEventMonitor ..|> EventMonitor: Implements
+AlamofireNotifications ..|> EventMonitor: Implements
+
+@enduml
