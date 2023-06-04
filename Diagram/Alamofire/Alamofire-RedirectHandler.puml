@@ -11,13 +11,13 @@ struct Redirector {
     + init(behavior: Behavior)
 }
 
-enum Redirector.Behavior {
+enum Behavior {
     + follow
     + doNotFollow
     + {field} modify((URLSessionTask, URLRequest, HTTPURLResponse) -> URLRequest?)
 }
 
-Redirector --> Redirector.Behavior: Use
+Redirector --> Behavior: Use
 Redirector ..|> RedirectHandler: Implements
 
 @enduml
