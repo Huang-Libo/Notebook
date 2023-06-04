@@ -49,8 +49,8 @@ class Retrier {
 }
 
 note as N1
-  <color:royalBlue>typealias AdaptHandler = (URLRequest, Session, completion: Result<URLRequest, Error>) -> Void) -> Void</color>
-  <color:royalBlue>typealias RetryHandler = (Request, Session, Error, completion: (RetryResult) -> Void) -> Void</color>
+  <b><color:royalBlue>typealias AdaptHandler = (URLRequest, Session, completion: Result<URLRequest, Error>) -> Void) -> Void</color></b>
+  <b><color:royalBlue>typealias RetryHandler = (Request, Session, Error, completion: (RetryResult) -> Void) -> Void</color></b>
 end note
 
 N1 .. Interceptor
