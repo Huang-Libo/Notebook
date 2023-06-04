@@ -1,0 +1,23 @@
+@startuml Alamofire-CachedResponseHandler
+
+interface CachedResponseHandler {
+    func dataTask(task: URLSessionDataTask, willCacheResponse: CachedURLResponse, completion: (CachedURLResponse?) -> Void)
+}
+
+struct ResponseCacher {
+    + {static} cache: ResponseCacher
+    + {static} doNotCache: ResponseCacher
+    + behavior: Behavior
+    + init(behavior: Behavior)
+}
+
+enum Behavior {
+    + cache
+    + doNotCache
+    + {field} modify((URLSessionDataTask, CachedURLResponse) -> CachedURLResponse?)
+}
+
+ResponseCacher ..|> CachedResponseHandler: Implements
+ResponseCacher --> Behavior: Use
+
+@enduml
