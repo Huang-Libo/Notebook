@@ -28,6 +28,8 @@
 
 ### 2.1. RedirectHandler
 
+![Class Diagram](http://www.plantuml.com/plantuml/proxy?src=https://raw.githubusercontent.com/Huang-Libo/Notebook/master/Diagram/Alamofire/Alamofire-RedirectHandler.puml)
+
 ### 2.2. Server Trust
 
 ![Class Diagram](http://www.plantuml.com/plantuml/proxy?src=https://raw.githubusercontent.com/Huang-Libo/Notebook/master/Diagram/Alamofire/Alamofire-ServerTrust.puml)
