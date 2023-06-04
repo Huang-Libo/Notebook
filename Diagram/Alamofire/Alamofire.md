@@ -6,19 +6,20 @@
 - [2. Feature](#2-feature)
   - [2.1. CachedResponseHandler](#21-cachedresponsehandler)
   - [2.2. RedirectHandler](#22-redirecthandler)
-  - [2.3. RequestInterceptor](#23-requestinterceptor)
-  - [2.4. Server Trust](#24-server-trust)
-  - [2.5. AlamofireExtended](#25-alamofireextended)
-    - [2.5.1. `AlamofireExtended` protocol](#251-alamofireextended-protocol)
-    - [2.5.2. `AlamofireExtension` struct](#252-alamofireextension-struct)
-    - [2.5.3. `AlamofireExtension+URLSessionConfiguration`](#253-alamofireextensionurlsessionconfiguration)
-    - [2.5.4. `AlamofireExtension+Bundle`](#254-alamofireextensionbundle)
-    - [2.5.5. `AlamofireExtension+SecTrust`](#255-alamofireextensionsectrust)
-    - [2.5.6. `AlamofireExtension+SecPolicy`](#256-alamofireextensionsecpolicy)
-    - [2.5.7. `AlamofireExtension+SecTrustResultType`](#257-alamofireextensionsectrustresulttype)
-    - [2.5.8. `AlamofireExtension+SecCertificate`](#258-alamofireextensionseccertificate)
-    - [2.5.9. `AlamofireExtension+Array`](#259-alamofireextensionarray)
-    - [2.5.10. `AlamofireExtension+OSStatus`](#2510-alamofireextensionosstatus)
+  - [2.3. EventMonitor](#23-eventmonitor)
+  - [2.4. RequestInterceptor](#24-requestinterceptor)
+  - [2.5. Server Trust](#25-server-trust)
+  - [2.6. AlamofireExtended](#26-alamofireextended)
+    - [2.6.1. `AlamofireExtended` protocol](#261-alamofireextended-protocol)
+    - [2.6.2. `AlamofireExtension` struct](#262-alamofireextension-struct)
+    - [2.6.3. `AlamofireExtension+URLSessionConfiguration`](#263-alamofireextensionurlsessionconfiguration)
+    - [2.6.4. `AlamofireExtension+Bundle`](#264-alamofireextensionbundle)
+    - [2.6.5. `AlamofireExtension+SecTrust`](#265-alamofireextensionsectrust)
+    - [2.6.6. `AlamofireExtension+SecPolicy`](#266-alamofireextensionsecpolicy)
+    - [2.6.7. `AlamofireExtension+SecTrustResultType`](#267-alamofireextensionsectrustresulttype)
+    - [2.6.8. `AlamofireExtension+SecCertificate`](#268-alamofireextensionseccertificate)
+    - [2.6.9. `AlamofireExtension+Array`](#269-alamofireextensionarray)
+    - [2.6.10. `AlamofireExtension+OSStatus`](#2610-alamofireextensionosstatus)
 
 ## 1. Core
 
@@ -36,21 +37,25 @@
 
 ![Class Diagram](http://www.plantuml.com/plantuml/proxy?src=https://raw.githubusercontent.com/Huang-Libo/Notebook/master/Diagram/Alamofire/Alamofire-RedirectHandler.puml)
 
-### 2.3. RequestInterceptor
+### 2.3. EventMonitor
+
+![Class Diagram](http://www.plantuml.com/plantuml/proxy?src=https://github.com/Huang-Libo/Notebook/raw/master/Diagram/Alamofire/Alamofire-EventMonitor.puml)
+
+### 2.4. RequestInterceptor
 
 ![Class Diagram](http://www.plantuml.com/plantuml/proxy?src=https://raw.githubusercontent.com/Huang-Libo/Notebook/master/Diagram/Alamofire/Alamofire-RequestInterceptor.puml)
 
-### 2.4. Server Trust
+### 2.5. Server Trust
 
 ![Class Diagram](http://www.plantuml.com/plantuml/proxy?src=https://raw.githubusercontent.com/Huang-Libo/Notebook/master/Diagram/Alamofire/Alamofire-ServerTrust.puml)
 
 `ServerTrustManager`: Responsible for managing the mapping of `ServerTrustEvaluating` values to given hosts.
 
-### 2.5. AlamofireExtended
+### 2.6. AlamofireExtended
 
 ![Class Diagram](http://www.plantuml.com/plantuml/proxy?src=https://raw.githubusercontent.com/Huang-Libo/Notebook/master/Diagram/Alamofire/Alamofire-Extended.puml)
 
-#### 2.5.1. `AlamofireExtended` protocol
+#### 2.6.1. `AlamofireExtended` protocol
 
 The `AlamofireExtended` protocol is used as **namespace** of all `public` extensions.
 
@@ -84,7 +89,7 @@ extension AlamofireExtended {
 }
 ```
 
-#### 2.5.2. `AlamofireExtension` struct
+#### 2.6.2. `AlamofireExtension` struct
 
 All the `public` extension functions in Alamofire are implemented under the `AlamofireExtension` type.
 
@@ -105,7 +110,7 @@ public struct AlamofireExtension<ExtendedType> {
 }
 ```
 
-#### 2.5.3. `AlamofireExtension+URLSessionConfiguration`
+#### 2.6.3. `AlamofireExtension+URLSessionConfiguration`
 
 **Use case 1**, adding extension for `URLSessionConfiguration`:
 
@@ -142,7 +147,7 @@ URLSessionConfiguration.af.default
 
 Other `public` extensions defined in Alamofire are listed below.
 
-#### 2.5.4. `AlamofireExtension+Bundle`
+#### 2.6.4. `AlamofireExtension+Bundle`
 
 ```swift
 extension Bundle: AlamofireExtended {}
@@ -163,7 +168,7 @@ extension AlamofireExtension where ExtendedType: Bundle {
 }
 ```
 
-#### 2.5.5. `AlamofireExtension+SecTrust`
+#### 2.6.5. `AlamofireExtension+SecTrust`
 
 ```swift
 extension SecTrust: AlamofireExtended {}
@@ -216,7 +221,7 @@ extension AlamofireExtension where ExtendedType == SecTrust {
 }
 ```
 
-#### 2.5.6. `AlamofireExtension+SecPolicy`
+#### 2.6.6. `AlamofireExtension+SecPolicy`
 
 ```swift
 extension SecPolicy: AlamofireExtended {}
@@ -235,7 +240,7 @@ extension AlamofireExtension where ExtendedType == SecPolicy {
 }
 ```
 
-#### 2.5.7. `AlamofireExtension+SecTrustResultType`
+#### 2.6.7. `AlamofireExtension+SecTrustResultType`
 
 ```swift
 extension SecTrustResultType: AlamofireExtended {}
@@ -246,7 +251,7 @@ extension AlamofireExtension where ExtendedType == SecTrustResultType {
 }
 ```
 
-#### 2.5.8. `AlamofireExtension+SecCertificate`
+#### 2.6.8. `AlamofireExtension+SecCertificate`
 
 ```swift
 extension SecCertificate: AlamofireExtended {}
@@ -257,7 +262,7 @@ extension AlamofireExtension where ExtendedType == SecCertificate {
 }
 ```
 
-#### 2.5.9. `AlamofireExtension+Array`
+#### 2.6.9. `AlamofireExtension+Array`
 
 ```swift
 extension Array: AlamofireExtended {}
@@ -273,7 +278,7 @@ extension AlamofireExtension where ExtendedType == [SecCertificate] {
 }
 ```
 
-#### 2.5.10. `AlamofireExtension+OSStatus`
+#### 2.6.10. `AlamofireExtension+OSStatus`
 
 ```swift
 extension OSStatus: AlamofireExtended {}
