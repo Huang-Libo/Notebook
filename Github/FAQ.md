@@ -35,3 +35,9 @@ $ curl -X PURGE https://camo.githubusercontent.com/4d04abe0044d94fefcf9af2133223
 
 - [atom/markdown-preview/issues/207: No way to clear the markdown preview image cache](https://github.com/atom/markdown-preview/issues/207#issuecomment-261716706)
 - [GitHub Docs: About anonymized URLs](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/about-anonymized-urls)
+
+## BUG: "raw.githubusercontent.com" does not be updated
+
+Adding `?token=$(date +%s)` to the end of the URL.
+
+- [Referred comment in the Issue](https://github.com/orgs/community/discussions/46758#discussioncomment-6078032)
