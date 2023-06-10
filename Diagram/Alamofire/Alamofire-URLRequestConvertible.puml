@@ -15,10 +15,23 @@ interface URLRequestConvertible {
 }
 
 class URLRequest {
-    init(url: URLConvertible, method: HTTPMethod, headers: HTTPHeaders?)
+    + init(url: URLConvertible, method: HTTPMethod, headers: HTTPHeaders?)
 }
 
 URLRequest ..|> URLRequestConvertible
 URLRequest --> URLConvertible: Denpendency
+
+' 3
+struct RequestConvertible {
+    ~ url: URLConvertible
+    ~ method: HTTPMethod
+    ~ parameters: Parameters?
+    ~ encoding: ParameterEncoding
+    ~ headers: HTTPHeaders?
+    ~ requestModifier: RequestModifier?
+}
+
+RequestConvertible ..|> URLRequestConvertible
+
 
 @enduml
