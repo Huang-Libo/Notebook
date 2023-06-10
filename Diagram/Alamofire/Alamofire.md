@@ -3,6 +3,7 @@
 - [1. Core](#1-core)
   - [1.1. Session](#11-session)
   - [1.2. Request](#12-request)
+  - [1.3. URLRequestConvertible](#13-urlrequestconvertible)
 - [2. Feature](#2-feature)
   - [2.1. CachedResponseHandler](#21-cachedresponsehandler)
   - [2.2. RedirectHandler](#22-redirecthandler)
@@ -26,6 +27,12 @@
 ### 1.1. Session
 
 ### 1.2. Request
+
+### 1.3. URLRequestConvertible
+
+`URLConvertible` & `URLRequestConvertible`
+
+![Class Diagram](http://www.plantuml.com/plantuml/proxy?src=https://github.com/Huang-Libo/Notebook/raw/master/Diagram/Alamofire/Alamofire-URLRequestConvertible.puml)
 
 ## 2. Feature
 
@@ -59,7 +66,7 @@
 
 The `AlamofireExtended` protocol is used as **namespace** of all `public` extensions.
 
-**Note**: Since `AlamofireExtended` has default implementations, so the *class*/*struct* which conform this protocol can use these default implementation of `af` directly without implement them.
+**Note**: Since `AlamofireExtended` has default implementations, so the *class*/*struct* which conform to this protocol can use these default implementation of `af` directly without implement them.
 
 ```swift
 /// Protocol describing the `af` extension points for Alamofire extended types.
