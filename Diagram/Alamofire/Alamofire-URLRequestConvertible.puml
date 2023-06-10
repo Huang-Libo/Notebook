@@ -18,10 +18,6 @@ class URLRequest {
     + init(url: URLConvertible, method: HTTPMethod, headers: HTTPHeaders?)
 }
 
-URLRequest ..|> URLRequestConvertible
-URLRequest --> URLConvertible: Denpendency
-
-' 3
 struct RequestConvertible {
     ~ url: URLConvertible
     ~ method: HTTPMethod
@@ -31,7 +27,29 @@ struct RequestConvertible {
     ~ requestModifier: RequestModifier?
 }
 
+struct RequestEncodableConvertible<Parameters: Encodable> {
+    ~ url: URLConvertible
+    ~ method: HTTPMethod
+    ~ parameters: Parameters?
+    ~ encoder: ParameterEncoder
+    ~ headers: HTTPHeaders?
+    ~ requestModifier: RequestModifier?
+}
+
+struct ParameterlessRequestConvertible {
+    ~ url: URLConvertible
+    ~ method: HTTPMethod
+    ~ headers: HTTPHeaders?
+    ~ requestModifier: RequestModifier?
+}
+
+left to right direction
+
+URLRequest ..|> URLRequestConvertible
+URLRequest --> URLConvertible: Denpendency
 RequestConvertible ..|> URLRequestConvertible
+RequestEncodableConvertible ..|> URLRequestConvertible
+ParameterlessRequestConvertible ..|> URLRequestConvertible
 
 
 @enduml
