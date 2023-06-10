@@ -7,8 +7,6 @@ class ServerTrustManager {
     + serverTrustEvaluator(forHost: String) -> ServerTrustEvaluating?
 }
 
-ServerTrustManager --> ServerTrustEvaluating: Denpendency
-
 interface ServerTrustEvaluating {
     evaluate(trust: SecTrust, forHost: String)
 }
@@ -50,6 +48,9 @@ class DisabledTrustEvaluator {
     + init()
 }
 
+left to right direction
+
+ServerTrustManager -[bold]-> ServerTrustEvaluating: Use
 DefaultTrustEvaluator ..|> ServerTrustEvaluating: Implements
 RevocationTrustEvaluator ..|> ServerTrustEvaluating: Implements
 PinnedCertificatesTrustEvaluator ..|> ServerTrustEvaluating: Implements
