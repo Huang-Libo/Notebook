@@ -1,0 +1,24 @@
+@startuml Alamofire-URLConvertible
+
+' 1. URLConvertible
+interface URLConvertible {
+    asURL() -> URL
+}
+
+String ..|> URLConvertible
+URL ..|> URLConvertible
+URLComponents ..|> URLConvertible
+
+' 2. URLRequestConvertible
+interface URLRequestConvertible {
+    asURLRequest() -> URLRequest
+}
+
+class URLRequest {
+    init(url: URLConvertible, method: HTTPMethod, headers: HTTPHeaders?)
+}
+
+URLRequest ..|> URLRequestConvertible
+URLRequest --> URLConvertible: Denpendency
+
+@enduml
