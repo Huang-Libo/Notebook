@@ -1,0 +1,86 @@
+@startuml Alamofire-HTTPHeaders
+
+struct HTTPHeader {
+    + name: String
+    + value: String
+    + init(name: String, value: String)
+    --
+    .. Create Header from String ..
+    + {static} accept(value: String) -> HTTPHeader
+    + {static} acceptCharset(value: String) -> HTTPHeader
+    + {static} acceptLanguage(value: String) -> HTTPHeader
+    + {static} acceptEncoding(value: String) -> HTTPHeader
+    + {static} userAgent(value: String) -> HTTPHeader
+    + {static} authorization(value: String) -> HTTPHeader
+    + {static} authorization(username: String, password: String) -> HTTPHeader
+    + {static} authorization(bearerToken: String) -> HTTPHeader
+    + {static} contentType(value: String) -> HTTPHeader
+    + {static} contentEncoding(value: String) -> HTTPHeader
+    + {static} contentDisposition(value: String) -> HTTPHeader
+    .. Default Header ..
+    + {static} defaultAcceptEncoding: HTTPHeader
+    + {static} defaultAcceptLanguage: HTTPHeader
+    + {static} defaultUserAgent: HTTPHeader
+}
+
+struct HTTPHeaders {
+    - headers: [HTTPHeader]
+    + dictionary: [String: String]
+    --
+    + init()
+    + init(headers: [HTTPHeader])
+    + init(dictionary: [String: String])
+    + add(name: String, value: String)
+    + add(header: HTTPHeader)
+    + update(name: String, value: String)
+    + update(header: HTTPHeader)
+    + remove(name: String)
+    + sort()
+    + sorted() -> HTTPHeaders
+    + value(for name: String) -> String?
+    + subscript(name: String) -> String?
+}
+
+interface Swift.Hashable {
+    hashValue: Int
+    hash(into hasher: inout Hasher)
+}
+
+interface Swift.ExpressibleByDictionaryLiteral {
+    associatedtype Key
+    associatedtype Value
+    init(dictionaryLiteral elements: (Self.Key, Self.Value)...)
+}
+
+interface Swift.ExpressibleByArrayLiteral {
+    associatedtype ArrayLiteralElement
+    init(arrayLiteral elements: Self.ArrayLiteralElement...)
+}
+
+interface Swift.Sequence<Element> {
+    + makeIterator() -> IndexingIterator<[HTTPHeader]>
+}
+
+interface Swift.Collection<Element> {
+    + startIndex: Int
+    + endIndex: Int
+    + subscript(position: Int) -> HTTPHeader
+    + index(after i: Int) -> Int
+}
+
+' note top of HTTPHeaders
+'     An order-preserving and case-insensitive representation of HTTP headers.
+' end note
+
+left to right direction
+
+HTTPHeader ..|> Swift.Hashable: Implements
+HTTPHeaders -right-> HTTPHeader: Use
+HTTPHeaders ..|> Swift.ExpressibleByDictionaryLiteral: Implements
+HTTPHeaders ..|> Swift.ExpressibleByArrayLiteral: Implements
+HTTPHeaders ..|> Swift.Sequence: Implements
+HTTPHeaders ..|> Swift.Collection: Implements
+
+Swift.Collection -right-|> Swift.Sequence: Inherits
+
+@enduml
