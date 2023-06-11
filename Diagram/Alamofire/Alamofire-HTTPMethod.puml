@@ -1,16 +1,16 @@
 @startuml Alamofire-HTTPMethod
 
 struct HTTPMethod {
-    + {static} connect
-    + {static} delete
     + {static} get
-    + {static} head
-    + {static} options
-    + {static} patch
     + {static} post
     + {static} put
+    + {static} delete
+    + {static} head
+    + {static} patch
     + {static} query
     + {static} trace
+    + {static} options
+    + {static} connect
 }
 
 interface Swift.RawRepresentable<RawValue> {
