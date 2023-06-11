@@ -1,0 +1,95 @@
+@startuml Alamofire-ParameterEncoder
+
+interface ParameterEncoder<Parameters: Encodable> {
+    encode(parameters: Parameters?, into: URLRequest) throws -> URLRequest
+}
+
+class JSONParameterEncoder {
+    + {static} `default`: JSONParameterEncoder
+    + {static} prettyPrinted: JSONParameterEncoder
+    + {static} sortedKeys: JSONParameterEncoder
+    + encoder: JSONEncoder
+    + init(encoder: JSONEncoder)
+}
+
+class URLEncodedFormParameterEncoder {
+    + {static} `default`: URLEncodedFormParameterEncoder
+    + encoder: URLEncodedFormEncoder
+    + destination: Destination
+    + init(encoder: URLEncodedFormEncoder, destination: Destination)
+}
+
+enum Destination {
+    + methodDependent
+    + queryString
+    + httpBody
+    + encodesParametersInURL(for: HTTPMethod) -> Bool
+}
+
+class URLEncodedFormEncoder {
+
+}
+
+URLEncodedFormParameterEncoder --> Destination: Use
+URLEncodedFormParameterEncoder -[bold,#Green]-> URLEncodedFormEncoder: Use
+
+' Foundation -> JSONEncoder
+class Foundation.JSONEncoder {
+    + outputFormatting: OutputFormatting
+    + dateEncodingStrategy: OutputFormatting
+    + dataEncodingStrategy: OutputFormatting
+    + nonConformingFloatEncodingStrategy: OutputFormatting
+    + keyEncodingStrategy: OutputFormatting
+    + userInfo: [CodingUserInfoKey : Any]
+    + init()
+    + encode<T>(value: T) -> Data where T : Encodable
+}
+
+class Foundation.OutputFormatting {
+    + {static} prettyPrinted: OutputFormatting
+    + {static} sortedKeys: OutputFormatting
+    + {static} withoutEscapingSlashes: OutputFormatting
+    + rawValue: UInt
+    + init(rawValue: UInt)
+    
+}
+
+enum Foundation.DateEncodingStrategy {
+    + deferredToDate
+    + secondsSince1970
+    + millisecondsSince1970
+    + iso8601
+    + {field} formatted(DateFormatter)
+    + {field} custom((Date, Encoder) throws -> Void)
+}
+
+enum Foundation.DataEncodingStrategy {
+    + base64
+    + deferredToData
+    + custom((Data, Encoder) throws -> Void)
+}
+
+enum Foundation.NonConformingFloatEncodingStrategy {
+    + `throw`
+    + {field} convertToString(positiveInfinity: String, negativeInfinity: String, nan: String)
+}
+
+enum Foundation.KeyEncodingStrategy {
+    + useDefaultKeys
+    + convertToSnakeCase
+    + {field} custom((codingPath: [CodingKey]) -> CodingKey)
+}
+
+left to right direction
+
+JSONParameterEncoder ..|> ParameterEncoder: Implements
+URLEncodedFormParameterEncoder ..|> ParameterEncoder: Implements
+
+JSONParameterEncoder -right-> Foundation.JSONEncoder: Use
+Foundation.JSONEncoder --> Foundation.OutputFormatting
+Foundation.JSONEncoder --> Foundation.DateEncodingStrategy
+Foundation.JSONEncoder --> Foundation.DataEncodingStrategy
+Foundation.JSONEncoder --> Foundation.NonConformingFloatEncodingStrategy
+Foundation.JSONEncoder --> Foundation.KeyEncodingStrategy
+
+@enduml
