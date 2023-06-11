@@ -1,0 +1,28 @@
+@startuml Alamofire-HTTPMethod
+
+struct HTTPMethod {
+    + {static} connect
+    + {static} delete
+    + {static} get
+    + {static} head
+    + {static} options
+    + {static} patch
+    + {static} post
+    + {static} put
+    + {static} query
+    + {static} trace
+}
+
+interface Swift.RawRepresentable<RawValue> {
+    associatedtype RawValue
+    var rawValue: Self.RawValue
+    init?(rawValue: Self.RawValue)
+}
+
+HTTPMethod ..|> Swift.RawRepresentable
+
+note top of HTTPMethod
+    Why use `struct` instead of `enum`?
+end note
+
+@enduml
