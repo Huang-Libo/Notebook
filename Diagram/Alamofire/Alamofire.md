@@ -5,7 +5,8 @@
   - [1.2. Request](#12-request)
   - [1.3. URLRequestConvertible](#13-urlrequestconvertible)
   - [1.4. HTTPMethod](#14-httpmethod)
-  - [1.5. typealias](#15-typealias)
+  - [1.5. HTTPHeaders](#15-httpheaders)
+  - [1.6. typealias](#16-typealias)
 - [2. Feature](#2-feature)
   - [2.1. CachedResponseHandler](#21-cachedresponsehandler)
   - [2.2. RedirectHandler](#22-redirecthandler)
@@ -40,7 +41,13 @@
 
 ![Class Diagram](http://www.plantuml.com/plantuml/proxy?src=https://github.com/Huang-Libo/Notebook/raw/master/Diagram/Alamofire/Alamofire-HTTPMethod.puml)
 
-### 1.5. typealias
+### 1.5. HTTPHeaders
+
+`HTTPHeaders`: An **order-preserving** and **case-insensitive** representation of HTTP headers.
+
+![Class Diagram](http://www.plantuml.com/plantuml/proxy?src=https://github.com/Huang-Libo/Notebook/raw/master/Diagram/Alamofire/Alamofire-HTTPHeaders.puml)
+
+### 1.6. typealias
 
 ```swift
 public typealias RequestModifier = (inout URLRequest) throws -> Void
