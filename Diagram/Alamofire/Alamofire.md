@@ -6,7 +6,8 @@
   - [1.3. URLRequestConvertible](#13-urlrequestconvertible)
   - [1.4. HTTPMethod](#14-httpmethod)
   - [1.5. HTTPHeaders](#15-httpheaders)
-  - [1.6. typealias](#16-typealias)
+  - [1.6. ParameterEncoder](#16-parameterencoder)
+  - [1.7. typealias](#17-typealias)
 - [2. Feature](#2-feature)
   - [2.1. CachedResponseHandler](#21-cachedresponsehandler)
   - [2.2. RedirectHandler](#22-redirecthandler)
@@ -24,6 +25,8 @@
     - [2.6.8. `AlamofireExtension+SecCertificate`](#268-alamofireextensionseccertificate)
     - [2.6.9. `AlamofireExtension+Array`](#269-alamofireextensionarray)
     - [2.6.10. `AlamofireExtension+OSStatus`](#2610-alamofireextensionosstatus)
+- [3. FAQ](#3-faq)
+  - [3.1. Result](#31-result)
 
 ## 1. Core
 
@@ -47,7 +50,11 @@
 
 ![Class Diagram](http://www.plantuml.com/plantuml/proxy?src=https://github.com/Huang-Libo/Notebook/raw/master/Diagram/Alamofire/Alamofire-HTTPHeaders.puml)
 
-### 1.6. typealias
+### 1.6. ParameterEncoder
+
+![Class Diagram](http://www.plantuml.com/plantuml/proxy?src=https://github.com/Huang-Libo/Notebook/raw/master/Diagram/Alamofire/Alamofire-ParameterEncoder.puml)
+
+### 1.7. typealias
 
 ```swift
 public typealias RequestModifier = (inout URLRequest) throws -> Void
@@ -312,4 +319,17 @@ extension OSStatus: AlamofireExtended {}
 extension AlamofireExtension where ExtendedType == OSStatus {
     public var isSuccess: Bool { ... }
 }
+```
+
+## 3. FAQ
+
+### 3.1. Result
+
+Where does the `Result` instance construct from?
+
+`URLEncodedFormParameterEncoder` -> `open func encode<Parameters: Encodable>(...)` :
+
+```swift
+let query: String = try Result<String, Error> { try encoder.encode(parameters) }
+    .mapError { AFError.parameterEncoderFailed(reason: .encoderFailed(error: $0)) }.get()
 ```
