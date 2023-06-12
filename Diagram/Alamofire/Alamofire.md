@@ -7,7 +7,8 @@
   - [1.4. HTTPMethod](#14-httpmethod)
   - [1.5. HTTPHeaders](#15-httpheaders)
   - [1.6. ParameterEncoder](#16-parameterencoder)
-  - [1.7. typealias](#17-typealias)
+  - [1.7. ParameterEncoding (Deprecated)](#17-parameterencoding-deprecated)
+  - [1.8. typealias](#18-typealias)
 - [2. Feature](#2-feature)
   - [2.1. CachedResponseHandler](#21-cachedresponsehandler)
   - [2.2. RedirectHandler](#22-redirecthandler)
@@ -54,7 +55,11 @@
 
 ![Class Diagram](http://www.plantuml.com/plantuml/proxy?src=https://github.com/Huang-Libo/Notebook/raw/master/Diagram/Alamofire/Alamofire-ParameterEncoder.puml)
 
-### 1.7. typealias
+### 1.7. ParameterEncoding (Deprecated)
+
+![Class Diagram](http://www.plantuml.com/plantuml/proxy?src=https://github.com/Huang-Libo/Notebook/raw/master/Diagram/Alamofire/Alamofire-ParameterEncoding.puml)
+
+### 1.8. typealias
 
 ```swift
 public typealias RequestModifier = (inout URLRequest) throws -> Void
