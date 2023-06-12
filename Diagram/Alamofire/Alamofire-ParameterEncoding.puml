@@ -1,0 +1,101 @@
+@startuml Alamofire-ParameterEncoding
+
+left to right direction
+
+' Foundation
+
+class Foundation.JSONSerialization {
+    + {static} isValidJSONObject(obj: Any) -> Bool
+    .. Create a Foundation obj from JSON Data..
+    + {static} jsonObject(with: Data, options: ReadingOptions) -> Any
+    + {static} jsonObject(with: InputStream, options: ReadingOptions) -> Any
+    .. Create JSON data from Foundation obj..
+    + {static} data(withJSONObject: Any, options: WritingOptions) -> Data
+    + {static} writeJSONObject(obj: Any, to: OutputStream, options: WritingOptions, error: NSErrorPointer) -> Int
+
+}
+
+class Foundation.ReadingOptions {
+    + {static} mutableContainers
+    + {static} mutableLeaves
+    + {static} fragmentsAllowed
+    + {static} json5Allowed
+    + {static} topLevelDictionaryAssumed
+    + init(rawValue: UInt)
+}
+
+class Foundation.WritingOptions {
+    + {static} fragmentsAllowed
+    + {static} prettyPrinted
+    + {static} sortedKeys
+    + {static} withoutEscapingSlashes
+    + init(rawValue: UInt)
+}
+
+Foundation.JSONSerialization -right-> Foundation.ReadingOptions: Use
+Foundation.JSONSerialization -left-> Foundation.WritingOptions: Use
+
+' Alamofire
+
+interface ParameterEncoding {
+    encode(urlRequest: URLRequestConvertible, with: Parameters?) -> URLRequest
+}
+
+note left of ParameterEncoding
+    <b><color:red>Warning:</b>
+    You can make requests using `Parameters` dictionaries and `ParameterEncoding` types. 
+    But this API is no longer recommended and will eventually be <b>deprecated</b> and removed from Alamofire.
+    Please use `ParameterEncoder` instead.
+end note
+
+struct URLEncoding {
+    + {static} `default`: URLEncoding
+    + {static} queryString: URLEncoding
+    + {static} httpBody: URLEncoding
+    + destination: Destination
+    + arrayEncoding: ArrayEncoding
+    + boolEncoding: BoolEncoding
+    + init(destination: Destination, arrayEncoding: ArrayEncoding, boolEncoding: BoolEncoding)
+    + queryComponents(fromKey key: String, value: Any) -> [(String, String)]
+    - query(parameters: [String: Any]) -> String
+    - escape(string: String) -> String
+}
+
+enum Destination {
+    + methodDependent
+    + queryString
+    + httpBody
+    + encodesParametersInURL(for: HTTPMethod) -> Bool
+}
+
+enum ArrayEncoding {
+    + brackets
+    + noBrackets
+    + indexInBrackets
+    + {field} custom((key: String, index: Int) -> String)
+    + encode(key: String, atIndex: Int) -> String
+}
+
+enum BoolEncoding {
+    + numeric
+    + literal
+    + encode(value: Bool) -> String
+}
+
+struct JSONEncoding {
+    + {static} `default`: JSONEncoding
+    + {static} prettyPrinted: JSONEncoding
+    + options: JSONSerialization.WritingOptions
+    + init(options: JSONSerialization.WritingOptions)
+    + encode(urlRequest: URLRequestConvertible, withJSONObject: Any?) -> URLRequest
+}
+
+URLEncoding ..|> ParameterEncoding: Implements
+URLEncoding --> Destination: Use
+URLEncoding --> ArrayEncoding: Use
+URLEncoding --> BoolEncoding: Use
+
+JSONEncoding ..|> ParameterEncoding: Implements
+JSONEncoding --> Foundation.JSONSerialization: Use
+
+@enduml
