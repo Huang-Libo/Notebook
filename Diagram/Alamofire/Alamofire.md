@@ -8,7 +8,8 @@
   - [1.5. HTTPHeaders](#15-httpheaders)
   - [1.6. ParameterEncoder](#16-parameterencoder)
   - [1.7. ParameterEncoding (Deprecated)](#17-parameterencoding-deprecated)
-  - [1.8. typealias](#18-typealias)
+  - [1.8. Protected](#18-protected)
+  - [1.9. typealias](#19-typealias)
 - [2. Feature](#2-feature)
   - [2.1. CachedResponseHandler](#21-cachedresponsehandler)
   - [2.2. RedirectHandler](#22-redirecthandler)
@@ -59,7 +60,21 @@
 
 ![Class Diagram](http://www.plantuml.com/plantuml/proxy?src=https://github.com/Huang-Libo/Notebook/raw/master/Diagram/Alamofire/Alamofire-ParameterEncoding.puml)
 
-### 1.8. typealias
+### 1.8. Protected
+
+`Protected` is defined as a **Property Wrapper**:
+
+```swift
+@propertyWrapper
+@dynamicMemberLookup
+final class Protected<T> {
+    ...
+}
+```
+
+![Class Diagram](http://www.plantuml.com/plantuml/proxy?src=https://github.com/Huang-Libo/Notebook/raw/master/Diagram/Alamofire/Alamofire-Protected.puml)
+
+### 1.9. typealias
 
 ```swift
 public typealias RequestModifier = (inout URLRequest) throws -> Void
