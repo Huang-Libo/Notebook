@@ -1,4 +1,4 @@
-@startuml Alamofire-Lock
+@startuml Alamofire-Protected
 
 interface Lock {
     lock()
