@@ -1,0 +1,40 @@
+@startuml Alamofire-Lock
+
+interface Lock {
+    lock()
+    unlock()
+    .. Extensions ..
+    around<T>(closure: () throws -> T) rethrows -> T
+    around(closure: () throws -> Void) rethrows
+}
+
+class UnfairLock {
+    - unfairLock: os_unfair_lock_t
+    ~ init()
+}
+
+class Protected<T> {
+    - lock: UnfairLock
+    - value: T
+    ~ wrappedValue: T
+    ~ projectedValue: Protected<T>
+    --
+    ~ init(wrappedValue: T)
+    .. read/write ..
+    ~ read<U>(closure: (T) -> U) -> U
+    ~ write<U>(closure: (inout T) -> U) -> U
+    .. subscript ..
+    ~ subscript<Property>(dynamicMember: WritableKeyPath<T, Property>) -> Property
+    ~ subscript<Property>(dynamicMember: KeyPath<T, Property>) -> Property
+    .. extension ..
+    ~ attemptToTransitionTo(state: Request.State) -> Bool
+    ~ withState(perform: (Request.State) -> Void)
+}
+
+' note
+' An `os_unfair_lock` wrapper.
+
+UnfairLock ..|> Lock: Implements
+Protected --> UnfairLock: Use
+
+@enduml
