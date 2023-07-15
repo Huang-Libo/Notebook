@@ -40,7 +40,7 @@ The goals of ShellCheck are
 - To point out and clarify typical intermediate level semantic problems that cause a shell to behave strangely and counter-intuitively.
 - To point out subtle caveats, corner cases and pitfalls that may cause an advanced user's otherwise working script to fail under future circumstances.
 
-See [the gallery of bad code](#gallery-of-bad-code) for examples of what ShellCheck can help you identify!
+See [the gallery of bad code](#5-gallery-of-bad-code) for examples of what ShellCheck can help you identify!
 
 ## 2. How to use
 
