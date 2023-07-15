@@ -1,37 +1,36 @@
-# ShellCheck
+# ShellCheck <!-- omit in toc -->
 
 > [ShellCheck](https://github.com/koalaman/shellcheck) is a shell script *static analysis* tool.
 
-- [ShellCheck](#shellcheck)
-  - [Overview](#overview)
-  - [How to use](#how-to-use)
-    - [On the WEB](#on-the-web)
-    - [From your terminal](#from-your-terminal)
-    - [In your Editor](#in-your-editor)
-    - [In your build or test suites](#in-your-build-or-test-suites)
-  - [Installing](#installing)
-    - [Using Package Manager](#using-package-manager)
-    - [pre-commit](#pre-commit)
-    - [Travis CI](#travis-ci)
-  - [Ignoring issues](#ignoring-issues)
-    - [Ignoring one specific instance in a file](#ignoring-one-specific-instance-in-a-file)
-    - [Ignoring all instances in a file](#ignoring-all-instances-in-a-file)
-    - [Ignoring all errors in a file](#ignoring-all-errors-in-a-file)
-    - [Ignoring errors in one specific run](#ignoring-errors-in-one-specific-run)
-    - [Ignoring one or more types of errors forever](#ignoring-one-or-more-types-of-errors-forever)
-  - [Gallery of bad code](#gallery-of-bad-code)
-    - [Quoting](#quoting)
-    - [Conditionals](#conditionals)
-    - [Frequently misused commands](#frequently-misused-commands)
-    - [Common beginner's mistakes](#common-beginners-mistakes)
-    - [Style](#style)
-    - [Data and typing errors](#data-and-typing-errors)
-    - [Robustness](#robustness)
-    - [Portability](#portability)
-    - [Miscellaneous](#miscellaneous)
-  - [Other Resources](#other-resources)
+- [1. Overview](#1-overview)
+- [2. How to use](#2-how-to-use)
+  - [2.1. On the WEB](#21-on-the-web)
+  - [2.2. From your terminal](#22-from-your-terminal)
+  - [2.3. In your Editor](#23-in-your-editor)
+  - [2.4. In your build or test suites](#24-in-your-build-or-test-suites)
+- [3. Installing](#3-installing)
+  - [3.1. Using Package Manager](#31-using-package-manager)
+  - [3.2. pre-commit](#32-pre-commit)
+  - [3.3. Travis CI](#33-travis-ci)
+- [4. Ignoring issues](#4-ignoring-issues)
+  - [4.1. Ignoring one specific instance in a file](#41-ignoring-one-specific-instance-in-a-file)
+  - [4.2. Ignoring all instances in a file](#42-ignoring-all-instances-in-a-file)
+  - [4.3. Ignoring all errors in a file](#43-ignoring-all-errors-in-a-file)
+  - [4.4. Ignoring errors in one specific run](#44-ignoring-errors-in-one-specific-run)
+  - [4.5. Ignoring one or more types of errors forever](#45-ignoring-one-or-more-types-of-errors-forever)
+- [5. Gallery of bad code](#5-gallery-of-bad-code)
+  - [5.1. Quoting](#51-quoting)
+  - [5.2. Conditionals](#52-conditionals)
+  - [5.3. Frequently misused commands](#53-frequently-misused-commands)
+  - [5.4. Common beginner's mistakes](#54-common-beginners-mistakes)
+  - [5.5. Style](#55-style)
+  - [5.6. Data and typing errors](#56-data-and-typing-errors)
+  - [5.7. Robustness](#57-robustness)
+  - [5.8. Portability](#58-portability)
+  - [5.9. Miscellaneous](#59-miscellaneous)
+- [6. Other Resources](#6-other-resources)
 
-## Overview
+## 1. Overview
 
 ShellCheck is a GPLv3 tool that gives warnings and suggestions for `bash`/`sh` shell scripts:
 
@@ -43,19 +42,19 @@ The goals of ShellCheck are
 
 See [the gallery of bad code](#gallery-of-bad-code) for examples of what ShellCheck can help you identify!
 
-## How to use
+## 2. How to use
 
 There are a number of ways to use ShellCheck!
 
-### On the WEB
+### 2.1. On the WEB
 
 Paste a shell script on <https://www.shellcheck.net> for instant feedback.
 
-### From your terminal
+### 2.2. From your terminal
 
 Run `shellcheck <your-script>` in your terminal for instant output.
 
-### In your Editor
+### 2.3. In your Editor
 
 You can see ShellCheck suggestions directly in a variety of editors.
 
@@ -66,7 +65,7 @@ You can see ShellCheck suggestions directly in a variety of editors.
 - Atom, through [Linter](https://github.com/AtomLinter/linter-shellcheck).
 - Most other editors, through [GCC error compatibility](shellcheck.1.md#user-content-formats).
 
-### In your build or test suites
+### 2.4. In your build or test suites
 
 While ShellCheck is mostly intended for interactive use, it can easily be added to builds or test suites.
 
@@ -103,9 +102,9 @@ It's a good idea to manually install a specific ShellCheck version regardless. T
 
 For customized filtering or reporting, ShellCheck can output simple JSON, CheckStyle compatible XML, GCC compatible warnings as well as human readable text (with or without ANSI colors). See the [Integration](https://github.com/koalaman/shellcheck/wiki/Integration) wiki page for more documentation.
 
-## Installing
+## 3. Installing
 
-### Using Package Manager
+### 3.1. Using Package Manager
 
 The easiest way to install ShellCheck locally is through your *package manager*.
 
@@ -193,7 +192,7 @@ Using the [nix package manager](https://nixos.org/nix):
 nix-env -iA nixpkgs.shellcheck
 ```
 
-### pre-commit
+### 3.2. pre-commit
 
 To run ShellCheck via [pre-commit](https://pre-commit.com/), add the hook to your `.pre-commit-config.yaml`:
 
@@ -206,17 +205,17 @@ repos:
 #       args: ["--severity=warning"]  # Optionally only show errors and warnings
 ```
 
-### Travis CI
+### 3.3. Travis CI
 
 Travis CI has now integrated ShellCheck by default, so you don't need to manually install it.
 
-## Ignoring issues
+## 4. Ignoring issues
 
 > <https://github.com/koalaman/shellcheck/wiki/Ignore>
 
 Issues can be ignored via environmental variable, command line, individually or globally within a file:
 
-### Ignoring one specific instance in a file
+### 4.1. Ignoring one specific instance in a file
 
 Use a [directive](https://github.com/koalaman/shellcheck/wiki/Directive) to disable a certain instance:
 
@@ -234,7 +233,7 @@ You can pass multiple errors to directive:
 hash=$(echo ${hash})    # trim spaces
 ```
 
-### Ignoring all instances in a file
+### 4.2. Ignoring all instances in a file
 
 Add a directive at the top of the file:
 
@@ -248,7 +247,7 @@ Add a directive at the top of the file:
 
 Note that the directive must be on the first line after the shebang with versions before 0.4.6. As of 0.4.6 comments and **whitespace are allowed** before file-wide directives.
 
-### Ignoring all errors in a file
+### 4.3. Ignoring all errors in a file
 
 Add a directive at the top of the file:
 
@@ -262,7 +261,7 @@ Add a directive at the top of the file:
 
 Note that the directive must be on the first non-commented/non-whitespace line after the shebang with versions after 0.4.6.
 
-### Ignoring errors in one specific run
+### 4.4. Ignoring errors in one specific run
 
 Use a `-e` flag to disable a specific error when running `shellcheck`:
 
@@ -270,7 +269,7 @@ Use a `-e` flag to disable a specific error when running `shellcheck`:
 shellcheck -e SC2059 myscript
 ```
 
-### Ignoring one or more types of errors forever
+### 4.5. Ignoring one or more types of errors forever
 
 You can create a file `.shellcheckrc` in your home directory (or your project's base directory), and add `disable` directives to it:
 
@@ -280,11 +279,11 @@ disable=SC2059,SC2034 # Disable individual error codes
 disable=SC1090-SC1100 # Disable a range of error codes
 ```
 
-## Gallery of bad code
+## 5. Gallery of bad code
 
 So what kind of things does ShellCheck look for? Here is an incomplete list of detected issues.
 
-### Quoting
+### 5.1. Quoting
 
 ShellCheck can recognize several types of incorrect quoting:
 
@@ -302,7 +301,7 @@ trap "echo Took ${SECONDS}s" 0    # Prematurely expanded trap
 unset var[i]                      # Array index treated as glob
 ```
 
-### Conditionals
+### 5.2. Conditionals
 
 ShellCheck can recognize many types of incorrect test statements.
 
@@ -321,7 +320,7 @@ ShellCheck can recognize many types of incorrect test statements.
 [ x ] & [ y ] | [ z ]             # Accidental backgrounding and piping
 ```
 
-### Frequently misused commands
+### 5.3. Frequently misused commands
 
 ShellCheck can recognize instances where commands are used incorrectly:
 
@@ -339,7 +338,7 @@ find -name \*.bak -o -name \*~ -delete  # Implicit precedence in find
 f() { whoami; }; sudo f           # External use of internal functions
 ```
 
-### Common beginner's mistakes
+### 5.4. Common beginner's mistakes
 
 ShellCheck recognizes many common beginner's syntax errors:
 
@@ -360,7 +359,7 @@ f; f() { echo "hello world; }     # Using function before definition
 if ( -f file )                    # Using (..) instead of test
 ```
 
-### Style
+### 5.5. Style
 
 ShellCheck can make suggestions to improve style:
 
@@ -375,7 +374,7 @@ echo "$(date)"                    # Useless use of echo
 cat file | grep foo               # Useless use of cat
 ```
 
-### Data and typing errors
+### 5.6. Data and typing errors
 
 ShellCheck can recognize issues related to data and typing:
 
@@ -394,7 +393,7 @@ eval "${array[@]}"                # Lost word boundaries in array eval
 for i in "${x[@]}"; do ${x[$i]}   # Using array value as key
 ```
 
-### Robustness
+### 5.7. Robustness
 
 ShellCheck can make suggestions for improving the robustness of a script:
 
@@ -408,7 +407,7 @@ export MYVAR=$(cmd)              # Masked exit codes
 case $version in 2.*) :;; 2.6.*) # Shadowed case branches
 ```
 
-### Portability
+### 5.8. Portability
 
 ShellCheck will warn when using features not supported by the shebang. For example, if you set the shebang to `#!/bin/sh`, ShellCheck will warn about portability issues similar to `checkbashisms`:
 
@@ -426,7 +425,7 @@ local var=value                  # local is undefined in sh
 time sleep 1 | sleep 5           # Undefined uses of 'time'
 ```
 
-### Miscellaneous
+### 5.9. Miscellaneous
 
 ShellCheck recognizes a menagerie of other issues:
 
@@ -449,7 +448,7 @@ for x; do for x; do               # Nested loop uses same variable
 while getopts "a" f; do case $f in "b") # Unhandled getopts flags
 ```
 
-## Other Resources
+## 6. Other Resources
 
 - The wiki has [long form descriptions](https://github.com/koalaman/shellcheck/wiki/Checks) for each warning, e.g. [SC2221](https://github.com/koalaman/shellcheck/wiki/SC2221).
 - ShellCheck does not attempt to enforce any kind of formatting or indenting style, so also check out [shfmt](https://github.com/mvdan/sh).
