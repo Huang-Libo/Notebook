@@ -21,6 +21,7 @@
 ## 🕹️ *NIX
 
 - [ShellCheck](UNIX/ShellCheck.md)
+- [The AWK Programming Language](UNIX/The_AWK_Programming_Language.md)
 - [FAQ](UNIX/FAQ.md)
 
 ## 💎 Ruby
@@ -154,7 +155,7 @@
 
 ## 🌐 Proxy
 
-- [INBOX](Proxy/Clash.md)
+- [Clash](Proxy/Clash.md)
 
 ## 📝 log
 
