@@ -126,7 +126,7 @@
 
 - [安装](React/installation.md)
 
-## ⚛️📱 React Native
+## 📱 React Native
 
 - [React Native: Docs](ReactNative/Docs/README.md)
   - [配置开发环境](ReactNative/Docs/environment-setup.md)
@@ -154,7 +154,7 @@
 
 ## 🌐 Proxy
 
-- [INBOX](Proxy/INBOX.md)
+- [INBOX](Proxy/Clash.md)
 
 ## 📝 log
 
