@@ -7,6 +7,8 @@
   - [1.4. Path of Configuration Files](#14-path-of-configuration-files)
 - [2. Clash 怎么配置自定义 Rule](#2-clash-怎么配置自定义-rule)
   - [2.1. 添加自定义分组](#21-添加自定义分组)
+  - [2.2. 给指定进程设置规则](#22-给指定进程设置规则)
+  - [2.3. 给指定域名设置规则](#23-给指定域名设置规则)
 
 ## 1. Settings
 
@@ -55,3 +57,21 @@ Clash 的规则语法非常严格，错误的语法可能会导致 Clash 无法�
 如果您要添加多个自定义规则，请确保每个规则之间有一个空行，否则可能会导致规则无法正确解析。
 
 ### 2.1. 添加自定义分组
+
+```yaml
+proxy-groups:
+    - { name: '...', type: ..., proxies: [..., ..., ...] }
+    
+```
+
+### 2.2. 给指定进程设置规则
+
+```yaml
+- 'PROCESS-PATH,/opt/homebrew/bin/brew,♻️ 自动选择'
+```
+
+### 2.3. 给指定域名设置规则
+
+```yaml
+- 'DOMAIN-SUFFIX,gitbook.io,♻️ 自动选择'
+```
