@@ -49,7 +49,7 @@
 
 ## 1. Overview
 
-pyenv lets you easily switch between multiple versions of Python. It's simple, unobtrusive, and follows the UNIX tradition of single-purpose tools that do one thing well.
+[pyenv](https://github.com/pyenv/pyenv) lets you easily switch between multiple versions of Python. It's simple, unobtrusive, and follows the UNIX tradition of single-purpose tools that do one thing well.
 
 This project was forked from [rbenv](https://github.com/rbenv/rbenv) and [ruby-build](https://github.com/rbenv/ruby-build), and modified for Python.
 
@@ -180,25 +180,24 @@ The simplicity of pyenv makes it easy to temporarily disable it, or uninstall fr
 
 Skip this section unless you must know what every line in your shell profile is doing.
 
-`pyenv init` is the only command that crosses the line of loading extra commands into your shell. Coming from ~~RVM~~, some of you might be opposed to this idea.
+`pyenv init` is the only command that *crosses* the line of loading extra commands into your shell. Coming from RVM, some of you might be opposed to this idea.
 
-Here's what **`eval "$(pyenv init -)"`** actually does:
-
-> Note:
->  
-> - **`eval "$(pyenv init --path)"`** only does items **1** and **3**.
-> - To see exactly what happens under the hood for yourself, run `pyenv init -` or `pyenv init --path`.
+**Here's what `eval "$(pyenv init -)"` actually does**:
 
 1. **Sets up the shims path.** This is what allows pyenv to intercept and redirect invocations of `python`, `pip` etc. transparently. It prepends `$(pyenv root)/shims` to your `$PATH`. It also deletes any other instances of `$(pyenv root)/shims` on `PATH` which allows to invoke `eval "$(pyenv init -)"` multiple times without getting duplicate `PATH` entries.
 
-2. **Installs autocompletion.** This is entirely optional but pretty useful. Sourcing ~~`$(pyenv root)/completions/pyenv.bash`~~ will set that up. There are also completions for Zsh and Fish.
+2. **Installs autocompletion.** This is entirely optional but pretty useful. Sourcing `$(pyenv root)/completions/pyenv.bash` will set that up. There are also completions for Zsh and Fish.
 
 3. **Rehashes shims.** From time to time you'll need to rebuild your shim files. Doing this on init makes sure everything is up to date. You can always run `pyenv rehash` manually.
 
 4. **Installs `pyenv` into the current shell as a shell function.** This bit is also optional, but allows pyenv and plugins to change variables in your current shell. This is required for some commands like `pyenv shell` to work. The sh dispatcher doesn't do anything crazy like override `cd` or hack your shell prompt, but if for some reason you need `pyenv` to be a real script rather than a shell function, you can safely skip it.
 
+**Note**:
+
+- **`eval "$(pyenv init --path)"`** only does items **1** and **3**.
+- To see exactly what happens under the hood for yourself, run `pyenv init -` or `pyenv init --path`.
 - `eval "$(pyenv init -)"` is supposed to run at any interactive shell's startup (including nested shells -- e.g. those invoked from editors) so that you get completion and convenience shell functions.
-- `eval "$(pyenv init --path)"` can be used instead of `eval "$(pyenv init -)"` to just enable shims, without shell integration. It can also be used to bump shims to the front of `PATH` after some other logic has prepended stuff to `PATH` that may shadow pyenv's shims.
+- `eval "$(pyenv init --path)"` can be used instead of `eval "$(pyenv init -)"` to just enable shims, *without shell integration*. It can also be used to bump shims to the front of `PATH` after some other logic has prepended stuff to `PATH` that may shadow pyenv's shims.
 
 ### 5.1. Using pyenv without shims
 
@@ -206,7 +205,7 @@ If you don't want to use `pyenv init` and shims, you can still benefit from pyen
 
 You can manually execute or symlink them as required, or you can use [`pyenv exec <command>`](COMMANDS.md#pyenv-exec) whenever you want `<command>` to be affected by pyenv's version selection as currently configured.
 
-`pyenv exec` works by prepending `$(pyenv root)/versions/<selected version>/bin` to `PATH` in the `<command>`'s environment, the same as what e.g. ~~RVM~~ does.
+`pyenv exec` works by prepending `$(pyenv root)/versions/<selected version>/bin` to `PATH` in the `<command>`'s environment, the same as what e.g. RVM does.
 
 ### 5.2. Environment variables
 
