@@ -2,7 +2,7 @@
 
 - [1. Overview](#1-overview)
 - [2. Install](#2-install)
-  - [2.1. PyPI](#21-pypi)
+  - [2.1. Installing from PyPI](#21-installing-from-pypi)
   - [2.2. Installing with Anaconda](#22-installing-with-anaconda)
   - [2.3. Installing with Miniconda](#23-installing-with-miniconda)
 
@@ -21,7 +21,7 @@ built on top of the Python programming language.
 
 > <https://pandas.pydata.org/docs/getting_started/install.html>
 
-### 2.1. PyPI
+### 2.1. Installing from PyPI
 
 ```sh
 pip install pandas
