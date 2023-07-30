@@ -22,12 +22,13 @@
   - [6.3. Understanding Python version selection](#63-understanding-python-version-selection)
   - [6.4. Locating pyenv-provided Python installations](#64-locating-pyenv-provided-python-installations)
 - [7. Command Reference](#7-command-reference)
-  - [7.1. `pyenv local`](#71-pyenv-local)
-    - [7.1.1. `pyenv local` (advanced)](#711-pyenv-local-advanced)
-  - [7.2. `pyenv global`](#72-pyenv-global)
-    - [7.2.1. `pyenv global` (advanced)](#721-pyenv-global-advanced)
+  - [7.1. `pyenv global`](#71-pyenv-global)
+    - [7.1.1. `pyenv global` (advanced)](#711-pyenv-global-advanced)
+  - [7.2. `pyenv local`](#72-pyenv-local)
+    - [7.2.1. `pyenv local` (advanced)](#721-pyenv-local-advanced)
   - [7.3. `pyenv shell`](#73-pyenv-shell)
-    - [7.3.1. `pyenv shell` (advanced)](#731-pyenv-shell-advanced)
+    - [7.3.1. Set `PYENV_VERSION` Manually](#731-set-pyenv_version-manually)
+    - [7.3.2. `pyenv shell` (advanced)](#732-pyenv-shell-advanced)
   - [7.4. `pyenv install`](#74-pyenv-install)
   - [7.5. `pyenv uninstall`](#75-pyenv-uninstall)
   - [7.6. `pyenv rehash`](#76-pyenv-rehash)
@@ -119,15 +120,35 @@ The below setup should work for the vast majority of users for common use cases.
 
 ### 3.1. Install additional Python versions
 
-To install additional Python versions, use `pyenv install`.
-
-For example, to download and install Python 3.10.4, run:
+To search standard python only:
 
 ```sh
-pyenv install 3.10.4
+pyenv install -l | grep "^[^a-z]*$"
+```
+
+To install additional Python versions, use `pyenv install`.
+
+For example, to download and install Python 3.11.4, run:
+
+```sh
+pyenv install 3.11.4
 ```
 
 **NOTE:** Most pyenv-provided Python releases are source releases and are built from source as part of installation (that's why you need Python build dependencies preinstalled).
+
+To install the latest version of Python without giving a specific version use the `:latest` syntax.
+
+- For example, to install the latest patch version for Python `3.8` you could do:
+
+```sh
+pyenv install 3.8:latest
+```
+
+- To install the latest major release for Python `3` try:
+
+```sh
+pyenv install 3:latest
+```
 
 ### 3.2. Switch between Python versions
 
@@ -138,15 +159,29 @@ of the following commands:
 - [`pyenv local <version>`](COMMANDS.md#pyenv-local) -- automatically select whenever you are in the current directory (or its subdirectories)
 - [`pyenv global <version>`](COMMANDS.md#pyenv-shell) -- select globally for your user account
 
-E.g. to select the above-mentioned newly-installed Python 3.10.4 as your preferred version to use:
+E.g. to select the above-mentioned newly-installed Python 3.11.4 as your preferred version to use:
 
 ```bash
-pyenv global 3.10.4
+pyenv global 3.11.4
 ```
 
-Now whenever you invoke `python`, `pip` etc., an executable from the pyenv-provided 3.10.4 installation will be run instead of the system Python.
+Now whenever you invoke `python`, `pip` etc., an executable from the pyenv-provided 3.11.4 installation will be run instead of the system Python.
 
 Using "`system`" as a version name would reset the selection to your system-provided Python.
+
+If you want to use multiple python versions in shell, you can specify the versions in sequence:
+
+```sh
+pyenv global 3.11.4 2.7.18
+```
+
+For the scenario above,
+
+- `python` command will use *3.11.4* version;
+- `python3`/`python3.11`/`python3.11.4` commands will all use *3.11.4* version;
+- `python2`/`python2.7`/`python2.18` commands will use *2.7.18* version.
+
+**Note**: You can specify multiple versions with `pyenv global` and invoke them by the specific version number, e.g. `pythonX` or `pythonX.Y` or `pythonX.Y.Z` name.
 
 ### 3.3. Uninstall Python versions
 
@@ -273,7 +308,9 @@ So e.g. if you are on MacOS and have *OS-bundled Python 3.8.9* and *Homebrew-ins
   - then set **`pyenv global system 3.3.6 3.2.1 2.5.2`**. Then you'll be able to invoke any of those versions with an appropriate `pythonX` or `pythonX.Y` name.
   - **You can also specify multiple versions in a `.python-version` file by hand, separated by newlines.** Lines starting with a `#` are ignored.
 
-`pyenv which <command>` displays which real executable would be run when you invoke `<command>` via a shim. E.g. if you have 3.3.6, 3.2.1 and 2.5.2 installed of which 3.3.6 and 2.5.2 are selected and your system Python is 3.2.5, `pyenv which python2.5` should display `$(pyenv root)/versions/2.5.2/bin/python2.5`, `pyenv which python3` -- `$(pyenv root)/versions/3.3.6/bin/python3` and `pyenv which python3.2` -- path to your system Python due to the fall-through (see below).
+`pyenv which <command>` displays which **real** executable would be run when you invoke `<command>` via a shim.
+
+E.g. if you have 3.3.6, 3.2.1 and 2.5.2 installed of which 3.3.6 and 2.5.2 are selected and your system Python is 3.2.5, `pyenv which python2.5` should display `$(pyenv root)/versions/2.5.2/bin/python2.5`, `pyenv which python3` -- `$(pyenv root)/versions/3.3.6/bin/python3` and `pyenv which python3.2` -- path to your system Python due to the fall-through (see below).
 
 Shims also fall through to anything further on `PATH` if the corresponding executable is not present in any of the selected Python installations.
 
@@ -298,80 +335,19 @@ As far as pyenv is concerned, version names are simply directories under `$(pyen
 Like `git`, the `pyenv` command delegates to subcommands based on its
 first argument.
 
-### 7.1. `pyenv local`
-
-Sets a *local application-specific* Python version by writing the version name to a `.python-version` file in the current directory. This version overrides the *global* version, and can be overridden itself by setting the `PYENV_VERSION` environment variable or with the `pyenv shell` command.
-
-```sh
-pyenv local 2.7.6
-```
-
-When run without a version number, `pyenv local` reports the currently configured local version. You can also *unset* the local version:
-
-```sh
-pyenv local --unset
-```
-
-Previous versions of pyenv stored local version specifications in a file named `.pyenv-version`. For backwards compatibility, pyenv will read a local version specified in an `.pyenv-version` file, but a **`.python-version`** file in the same directory will take precedence.
-
-#### 7.1.1. `pyenv local` (advanced)
-
-You can specify multiple versions as local Python at once.
-
-Let's say if you have two versions of 2.7.6 and 3.3.3. If you prefer 2.7.6 over 3.3.3,
-
-```sh
-$ pyenv local 2.7.6 3.3.3
-
-$ pyenv versions
-  system
-* 2.7.6 (set by /Users/<name>/path/to/project/.python-version)
-* 3.3.3 (set by /Users/<name>/path/to/project/.python-version)
-    
-$ python --version
-Python 2.7.6
-
-$ python2.7 --version
-Python 2.7.6
-
-$ python3.3 --version
-Python 3.3.3
-```
-
-or, if you prefer 3.3.3 over 2.7.6,
-
-```sh
-$ pyenv local 3.3.3 2.7.6
-
-$ pyenv versions
-  system
-* 2.7.6 (set by /Users/<name>/path/to/project/.python-version)
-* 3.3.3 (set by /Users/<name>/path/to/project/.python-version)
-  venv27
-
-$ python --version
-Python 3.3.3
-
-$ python2.7 --version
-Python 2.7.6
-
-$ python3.3 --version
-Python 3.3.3
-```
-
-### 7.2. `pyenv global`
+### 7.1. `pyenv global`
 
 Sets the global version of Python to be used in all shells by writing the version name to the `~/.pyenv/version` file. This version can be overridden by an *application-specific* `.python-version` file, or by setting the `PYENV_VERSION` environment variable.
 
 ```sh
-pyenv global 2.7.6
+pyenv global 3.11.4
 ```
 
 The special version name `system` tells pyenv to use the system Python (detected by searching your `$PATH`).
 
-When run without a version number, `pyenv global` reports the currently configured global version.
+**Note**: When running without a version number, `pyenv global` prints the currently configured global version.
 
-#### 7.2.1. `pyenv global` (advanced)
+#### 7.1.1. `pyenv global` (advanced)
 
 You can specify multiple versions as global Python at once.
 
@@ -416,19 +392,84 @@ $ python3.3 --version
 Python 3.3.3
 ```
 
+### 7.2. `pyenv local`
+
+Sets a *local application-specific* Python version by writing the version name to a `.python-version` file in the current directory. This version overrides the *global* version, and can be overridden itself by setting the `PYENV_VERSION` environment variable or with the `pyenv shell` command.
+
+```sh
+pyenv local 2.7.6
+```
+
+**Note**: When run without a version number, `pyenv local` prints the currently configured local version.
+
+You can also **unset** the local version:
+
+```sh
+pyenv local --unset
+```
+
+#### 7.2.1. `pyenv local` (advanced)
+
+You can specify multiple versions as local Python at once.
+
+Let's say if you have two versions of 2.7.6 and 3.3.3. If you prefer 2.7.6 over 3.3.3,
+
+```sh
+$ pyenv local 2.7.6 3.3.3
+
+$ pyenv versions
+  system
+* 2.7.6 (set by /Users/<name>/path/to/project/.python-version)
+* 3.3.3 (set by /Users/<name>/path/to/project/.python-version)
+    
+$ python --version
+Python 2.7.6
+
+$ python2.7 --version
+Python 2.7.6
+
+$ python3.3 --version
+Python 3.3.3
+```
+
+or, if you prefer 3.3.3 over 2.7.6,
+
+```sh
+$ pyenv local 3.3.3 2.7.6
+
+$ pyenv versions
+  system
+* 2.7.6 (set by /Users/<name>/path/to/project/.python-version)
+* 3.3.3 (set by /Users/<name>/path/to/project/.python-version)
+  venv27
+
+$ python --version
+Python 3.3.3
+
+$ python2.7 --version
+Python 2.7.6
+
+$ python3.3 --version
+Python 3.3.3
+```
+
 ### 7.3. `pyenv shell`
 
-Sets a *shell-specific* Python version by setting the `PYENV_VERSION` environment variable in your shell. This version overrides *application-specific* versions and the *global version*.
+Sets a *shell-specific* Python version by setting the `PYENV_VERSION` environment variable in your shell. This version overrides *application-specific* versions and the *global version*. (Priority level: `pyenv shell` > `pyenv local` > `pyenv global`)
 
 ```sh
 pyenv shell pypy-2.2.1
 ```
 
-When run without a version number, `pyenv shell` reports the current value of `PYENV_VERSION`. You can also *unset* the shell version:
+**Note**: When run without a version number, `pyenv shell` prints the current value of `PYENV_VERSION`.
+
+You can also **unset** the shell version:
 
 ```sh
 pyenv shell --unset
 ```
+
+#### 7.3.1. Set `PYENV_VERSION` Manually
 
 Note that you'll need pyenv's shell integration enabled (step 3 of the installation instructions) in order to use this command. If you prefer not to use shell integration, you may simply set the `PYENV_VERSION` variable yourself:
 
@@ -436,7 +477,13 @@ Note that you'll need pyenv's shell integration enabled (step 3 of the installat
 export PYENV_VERSION=pypy-2.2.1
 ```
 
-#### 7.3.1. `pyenv shell` (advanced)
+And also **unset** it manually:
+
+```bash
+unset PYENV_VERSION
+```
+
+#### 7.3.2. `pyenv shell` (advanced)
 
 You can specify multiple versions via `PYENV_VERSION` at once.
 
