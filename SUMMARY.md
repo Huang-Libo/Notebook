@@ -44,6 +44,7 @@
 - [FAQ](Python/FAQ.md)
 - [pyenv](Python/pyenv.md)
 - [Jupyter](Python/Jupyter.md)
+- [Pandas](Python/Pandas.md)
 - [Flask Web 开发](Python/Flask-Web.md)
 
 ##  Apple Documents
