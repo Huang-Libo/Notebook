@@ -39,6 +39,7 @@
   - [2.1. Patterns](#21-patterns)
     - [2.1.1. BEGIN and END](#211-begin-and-end)
     - [2.1.2. Expressions as Patterns](#212-expressions-as-patterns)
+    - [2.1.3. String-Matching Patterns](#213-string-matching-patterns)
 
 Computer users spend a lot of time doing simple, mechanical data manipulation - changing the format of data, checking its validity, finding items with some property, adding up numbers, printing reports, and the like. All of these jobs ought to be mechanized, but it's a real nuisance to have to write a special purpose program in a standard language like C or Pascal each time such a task comes up.
 
@@ -1082,3 +1083,73 @@ With the `countries.txt` file as input, this program produces
 ```
 
 #### 2.1.2. Expressions as Patterns
+
+Throughout this book, the term *string* means a sequence of zero or more characters. These may be stored in variables, or appear literally as string constants like `""` or `"Asia"`.
+
+The string `""`, which contains no characters, is called the *null string*. The term *substring* means a contiguous sequence of zero or more characters within a string. In every string, the *null string* appears as a *substring* of length zero before the first character, between every pair of adjacent characters, and after the last character.
+
+Any expression can be used as an operand of any operator.
+
+- If an expression has a numeric value but an operator requires a string value, the numeric value is automatically transformed into a string;
+- similarly, a string is converted into a number when an operator demands a numeric value.
+
+Any expression can be used as a pattern. If an expression used as a pattern has a *nonzero* or *nonnull* value at the current input line, then the pattern matches that line. The typical expression patterns are those involving comparisons between numbers or strings.
+
+A comparison expression contains one of the **6** relational operators, or one of the two *string-matching* operators `~`(tilde) and `!~` that will be discussed in the next section.
+
+| OPERATOR | MEANING                  |
+|----------|--------------------------|
+| `==`     | equal to                 |
+| `!=`     | not equal to             |
+| `<`      | less than                |
+| `<=`     | less than or equal to    |
+| `>`      | greater than             |
+| `>=`     | greater than or equal to |
+| `~`      | matched by               |
+| `!~`     | not matched by           |
+
+- If the pattern is a *comparison expression* like `NF > 10`, then it matches the current input line when the condition is satisfied, that is, when the number of fields in the line is greater than 10.
+- If the pattern is an *arithmetic expression* like `NF`, it matches the current input line when its numeric value is *nonzero*.
+- If the pattern is a *string expression*, it matches the current input line when the string value of the expression is *nonnull*.
+
+In a relational comparison,
+
+- if both operands are numeric, a numeric comparison is made;
+- otherwise, *any numeric operand is converted to a string*, and then the operands are compared as strings. The strings are compared character by character using the ordering provided by the machine, most often the `ASCII` character set. One string is said to be "less than" another if it would appear before the other according to this ordering, e.g., `"Canada" < "China"` and `"Asia" < "Asian"`.
+
+The pattern
+
+```awk
+$3/$2 >= 0.5
+```
+
+selects lines where the value of the third field divided by the second is numerically greater than or equal to 0.5, while
+
+```awk
+$0 >= "M"
+```
+
+selects lines that begin with an M, N, O, etc.:
+
+```console
+USSR    8649    275     Asia
+USA     3615    237     North America
+Mexico  762     78      North America
+```
+
+Sometimes the type of a comparison operator cannot be determined solely by the syntax of the expression in which it appears. The program
+
+```awk
+$1 < $4
+```
+
+could compare the *first* and *fourth* fields of each input line either as numbers or as strings. Here, the type of the comparison depends on the values of the fields, and it may vary from line to line. In the `countries.txt` file, the *first* and *fourth* fields are always strings, so string comparisons are always made; the output is
+
+```console
+Canada  3852    25      North America
+Brazil  3286    134     South America
+Mexico  762     78      North America
+England 94      56      Europe
+```
+
+#### 2.1.3. String-Matching Patterns
