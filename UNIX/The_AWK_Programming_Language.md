@@ -40,6 +40,7 @@
     - [2.1.1. BEGIN and END](#211-begin-and-end)
     - [2.1.2. Expressions as Patterns](#212-expressions-as-patterns)
     - [2.1.3. String-Matching Patterns](#213-string-matching-patterns)
+    - [2.1.4. Regular Expressions](#214-regular-expressions)
 
 Computer users spend a lot of time doing simple, mechanical data manipulation - changing the format of data, checking its validity, finding items with some property, adding up numbers, printing reports, and the like. All of these jobs ought to be mechanized, but it's a real nuisance to have to write a special purpose program in a standard language like C or Pascal each time such a task comes up.
 
@@ -1153,3 +1154,85 @@ England 94      56      Europe
 ```
 
 #### 2.1.3. String-Matching Patterns
+
+A *string-matching pattern* tests whether a string contains a substring matched by a *regular expression*.
+
+---
+
+**String-Matching Patterns**
+
+1. `/regexpr/`
+
+    Matches when the *current input line* contains a substring matched by *regexpr*.
+
+2. `expression ~ /regexpr/`
+
+    Matches if the *string value of expression* contains a substring matched by *regexpr*.
+
+3. `expression !~ /regexpr/`
+
+    Matches if the *string value of expression* does not contain a substring matched by *regexpr*.
+
+---
+
+The simplest regular expression is a string of letters and numbers, like Asia, that matches itself. To turn a regular expression into a *string-matching pattern*, just enclose it in slashes(`/`):
+
+```awk
+/Asia/
+```
+
+This pattern matches when the current input line contains the substring *Asia*, either as *Asia* by itself or as some part of a larger word like *Asian* or *Pan-Asiatic*. Note that *blanks* are significant within regular expressions: the string-matching pattern
+
+```awk
+/ Asia /
+```
+
+matches only when *Asia* is surrounded by *blanks*.
+
+The pattern above is one of **3** types of *string-matching patterns*. Its form is a regular expression `r` enclosed in slashes:
+
+```awk
+/r/
+```
+
+This pattern matches an input line if the line contains a substring matched by `r`.
+
+The other two types of *string-matching patterns* use an explicit *matching operator*(`~`):
+
+```awk
+expression ~ /r/
+expression !~ /r/
+```
+
+The *matching operator* `~` means "is matched by" and `!~` means "is not matched by."
+
+- The first pattern matches when the *string value of expression* contains a substring matched by the regular expression `r`;
+- the second pattern matches if there is no such substring.
+
+The left operand of a matching operator is often a field: the pattern
+
+```awk
+$4 ~ /Asia/
+```
+
+matches all input lines in which the fourth field contains *Asia* as a substring, while
+
+```awk
+$4 !~ /Asia/
+```
+
+matches if the fourth field does not contain *Asia* anywhere.
+
+Note that the string-matching pattern
+
+```awk
+/Asia/
+```
+
+is a shorthand for
+
+```awk
+$0 ~ /Asia/
+```
+
+#### 2.1.4. Regular Expressions
