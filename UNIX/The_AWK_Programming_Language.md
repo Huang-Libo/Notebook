@@ -34,6 +34,7 @@
     - [1.6.2. while Statement](#162-while-statement)
     - [1.6.3. for Statement](#163-for-statement)
   - [1.7. Arrays](#17-arrays)
+  - [1.8. A Handful of Useful "One-liners"](#18-a-handful-of-useful-one-liners)
 
 Computer users spend a lot of time doing simple, mechanical data manipulation - changing the format of data, checking its validity, finding items with some property, adding up numbers, printing reports, and the like. All of these jobs ought to be mechanized, but it's a real nuisance to have to write a special purpose program in a standard language like C or Pascal each time such a task comes up.
 
@@ -655,7 +656,7 @@ END { if (n > 0)
                    "average pay is", pay/n
       else
           print "no employees are paid more than $6/hour"
-}
+    }
 ```
 
 The output for `emp.data` is:
@@ -720,3 +721,46 @@ Another statement, `for`, compresses into a single line the initialization, test
 ```
 
 ### 1.7. Arrays
+
+Awk provides arrays for storing groups of related values. Although arrays give awk considerable power, we will show only a simple example here.
+
+The following program prints its input in reverse order by line. The first action puts the input lines into successive elements of the array `line`;
+
+- that is, the first line goes into `line[1]` , the second line into `line[2]`, and so on.
+- The `END` action uses a `while` statement to print the lines from the array from last to first:
+
+```awk
+# reverse - print input in reverse order by line
+    { line[NR] = $0 } # remember each input line
+END {
+      i = NR            # print lines in reverse order
+      while (i > 0) {
+          print line[i]
+          i = i - 1
+      }
+    }
+```
+
+With `emp.data`, the output is
+
+```console
+Susie   4.25    18
+Mary    5.50    22
+Mark    5.00    20
+Kathy   4.00    10
+Dan     3.75    0
+Beth    4.00    0
+```
+
+Here is the same example with a `for` statement:
+
+```awk
+# reverse - print input in reverse order by line
+    { line[NR] = $0 } # remember each input line
+END {
+      for (i = NR; i > 0; i = i - 1)
+          print line[i]
+    }
+```
+
+### 1.8. A Handful of Useful "One-liners"
