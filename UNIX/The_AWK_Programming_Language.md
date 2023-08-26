@@ -30,6 +30,10 @@
     - [1.5.6. Built-in Functions](#156-built-in-functions)
     - [1.5.7. Counting Lines, Words, and Characters](#157-counting-lines-words-and-characters)
   - [1.6. Control-Flow Statements](#16-control-flow-statements)
+    - [1.6.1. if-else Statement](#161-if-else-statement)
+    - [1.6.2. while Statement](#162-while-statement)
+    - [1.6.3. for Statement](#163-for-statement)
+  - [1.7. Arrays](#17-arrays)
 
 Computer users spend a lot of time doing simple, mechanical data manipulation - changing the format of data, checking its validity, finding items with some property, adding up numbers, printing reports, and the like. All of these jobs ought to be mechanized, but it's a real nuisance to have to write a special purpose program in a standard language like C or Pascal each time such a task comes up.
 
@@ -637,3 +641,82 @@ The file `emp.data` has
 We have added `1` for the *newline character*(`\n`) at the end of each input line, since `$0` doesn't include it.
 
 ### 1.6. Control-Flow Statements
+
+Awk provides an `if-else` statement for making decisions and several statements for writing *loops*, all modeled on those found in the *C programming language*. **They can only be used in actions.**
+
+#### 1.6.1. if-else Statement
+
+The following program computes the total and average pay of employees making more than $6.00 an hour. It uses an `if` to defend against division by `0` in computing the average pay.
+
+```awk
+$2 > 6 { n = n + 1; pay = pay + $2 * $3 }
+END { if (n > 0)
+          print n, "employees, total pay is", pay,
+                   "average pay is", pay/n
+      else
+          print "no employees are paid more than $6/hour"
+}
+```
+
+The output for `emp.data` is:
+
+```console
+no employees are paid more than $6/hour
+```
+
+Note that we can continue a long statement over several lines by breaking it after a comma.
+
+#### 1.6.2. while Statement
+
+A `while` statement has a condition and a body. The statements in the body are performed repeatedly while the condition is true.
+
+This program shows how the value of an amount of money invested at a particular interest rate grows over a number of years, using the formula `value = amount * (1 + rate) ^ years`.
+
+```awk
+# interest1 - compute compound interest
+#   input: amount rate years
+#   output: compounded value at the end of each year
+{
+    i = 1
+    while (i <= $3) {
+        printf("\t%.2f\n" , $1 * (1 + $2) ^ i)
+        i =i + 1
+    }
+}
+```
+
+The condition is the parenthesized expression after the `while`; the loop body is the two statements enclosed in braces after the condition. The `\t` in the `printf` specification string stands for a *tab* character; the `^` is the *exponentiation* operator.
+
+You can type triplets of numbers at this program to see what various amounts, rates, and years produce. For example, this transaction shows how $1000 grows at 6% and 12% compound interest for 5 years:
+
+```bash
+$ awk -f interest1
+1000 .06 5
+        1060.00
+        1123.60
+        1191.02
+        1262.48
+        1338.23
+1000 .12 5
+        1120.00
+        1254.40
+        1404.93
+        1573.52
+        1762.34
+```
+
+#### 1.6.3. for Statement
+
+Another statement, `for`, compresses into a single line the initialization, test, and increment that are part of most loops. Here is the previous interest computation with a for:
+
+```awk
+# interest2 - compute compound interest
+#   input: amount rate years
+#   output: compounded value at the end of each year
+{
+    for (i = 1; i <= $3; i = i + 1)
+        printf("\t%.2f\n" , $1 * (1 + $2) ^ i)
+}
+```
+
+### 1.7. Arrays
