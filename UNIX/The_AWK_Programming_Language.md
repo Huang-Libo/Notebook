@@ -36,6 +36,7 @@
   - [1.7. Arrays](#17-arrays)
   - [1.8. A Handful of Useful "One-liners"](#18-a-handful-of-useful-one-liners)
 - [2. Chapter 2: THE AWK LANGUAGE](#2-chapter-2-the-awk-language)
+  - [2.1. Patterns](#21-patterns)
 
 Computer users spend a lot of time doing simple, mechanical data manipulation - changing the format of data, checking its validity, finding items with some property, adding up numbers, printing reports, and the like. All of these jobs ought to be mechanized, but it's a real nuisance to have to write a special purpose program in a standard language like C or Pascal each time such a task comes up.
 
@@ -907,3 +908,76 @@ Although awk can be used to write programs of some complexity, many useful progr
     ```
 
 ## 2. Chapter 2: THE AWK LANGUAGE
+
+This chapter explains, mostly with examples, the constructs that make up awk programs.
+
+The simplest awk program is a sequence of *pattern-action* statements:
+
+```awk
+pattern { action }
+pattern { action }
+...
+```
+
+- In some statements, the *pattern* may be missing;
+- in others, the *action* and its enclosing braces may be missing.
+
+After awk has checked your program to make sure there are no syntactic errors, it reads the input a line at a time, and for each line, evaluates the patterns in order. For each pattern that matches the current input line, it executes the associated action.
+
+- A missing pattern matches every input line, so every action with no pattern is performed at each line.
+- A pattern-action statement consisting only of a pattern prints each input line matched by the pattern.
+
+**The Input File** `countries.txt`
+
+As input for many of the awk programs in this chapter, we will use a file called `countries.txt`.
+
+```plaintext
+USSR	8649	275	Asia
+Canada	3852	25	North America
+China	3705	1032	Asia
+USA	3615	237	North America
+Brazil	3286	134	South America
+India	1267	746	Asia
+Mexico	762	78	North America
+France	211	55	Europe
+Japan	144	120	Asia
+Germany	96	61	Europe
+England	94	56	Europe
+```
+
+Each line contains:
+
+- the name of a country
+- its area in thousands of square miles
+- its population in millions
+- the continent it is in.
+
+The data is from 1984; the USSR has been arbitrarily placed in Asia.
+
+- In the file, the four columns are separated by *tabs*;
+- a single *blank* separates *North* and *South* from *America*.
+
+**Program Format**
+
+Pattern-action statements and the statements within an action are usually separated by newlines, but several statements may appear on one line if they are separated by semicolons. A semicolon may be put at the end of any statement.
+
+*The opening brace of an action must be on the same line as the pattern it accompanies*; the remainder of the action, including the closing brace, may appear on the following lines.
+
+Comments may be inserted at the end of any line. A comment starts with the character `#` and finishes at the end of the line, as in
+
+```awk
+{ print $1, $3 } # print country name and population
+```
+
+A long statement may be spread over several lines by inserting a *backslash*(`\`) and *newline* at each break:
+
+```awk
+{ print \
+        $1,     # country name
+        $2,     # area in thousands of square miles
+        $3 }    # population in millions
+```
+
+As this example shows, *statements may also be broken after commas*, and a comment may be inserted at the end of each broken line.
+
+### 2.1. Patterns
