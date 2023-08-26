@@ -6,6 +6,12 @@
     - [1.1.2. Running an AWK Program](#112-running-an-awk-program)
     - [1.1.3. Errors](#113-errors)
   - [1.2. Simple Output](#12-simple-output)
+    - [1.2.1. Printing Every Line](#121-printing-every-line)
+    - [1.2.2. Printing Certain Fields](#122-printing-certain-fields)
+    - [1.2.3. NF, the Number of Fields](#123-nf-the-number-of-fields)
+    - [1.2.4. NR, the Number of Records](#124-nr-the-number-of-records)
+    - [1.2.5. Putting Text in the Output](#125-putting-text-in-the-output)
+  - [1.3. Fancier Output](#13-fancier-output)
 
 Computer users spend a lot of time doing simple, mechanical data manipulation - changing the format of data, checking its validity, finding items with some property, adding up numbers, printing reports, and the like. All of these jobs ought to be mechanized, but it's a real nuisance to have to write a special purpose program in a standard language like C or Pascal each time such a task comes up.
 
@@ -163,3 +169,92 @@ awk: bailing out at source line 1
 - *"Bailing out"* means that no recovery was attempted.
 
 ### 1.2. Simple Output
+
+The rest of this chapter contains a collection of short, typical awk programs based on manipulation of the `emp.data` file above.
+
+There are only two types of data in awk: **numbers** and **strings** of characters. The `emp.data` file is typical of this kind of information - a mixture of words and numbers separated by *blanks* and/or *tabs*.
+
+Awk reads its input one line at a time and splits each line into fields, where, by default, a field is a sequence of characters that doesn't contain any blanks or tabs. The first field in the current input line is called `$1`, the second `$2`, and so forth. The entire line is called `$0`. The number of fields can vary from line to line.
+
+#### 1.2.1. Printing Every Line
+
+If an action has no pattern, the action is performed for all input lines. The statement `print` by itself prints the current input line, so the program
+
+```awk
+{ print }
+```
+
+prints all of its input on the **standard output**. Since `$0` is the whole line,
+
+```awk
+{ print $0 }
+```
+
+does the same thing.
+
+#### 1.2.2. Printing Certain Fields
+
+More than one item can be printed on the same output line with a single print statement. The program to print the *first* and *third* fields of each input line is
+
+```awk
+{ print $1, $3 }
+```
+
+- Expressions separated by a *comma* in a `print` statement are, by default, separated by a single *blank* when they are printed.
+- Each line produced by print ends with a *newline character*(`\n`).
+
+Both of these defaults can be changed; we'll show how in Chapter 2.
+
+#### 1.2.3. NF, the Number of Fields
+
+It might appear you must always refer to fields as `$1`, `$2`, and so on, but any *expression* can be used after `$` to **denote** a field number, *the expression is evaluated and its numeric value is used as the field number*.
+
+Awk counts the number of fields in the current input line and stores the count in *a built-in variable* called `NF`(*Number of Fields*). Thus, the program
+
+```awk
+{ print NF, $1, $NF }
+```
+
+prints *the number of fields* and the *first and last fields* of each input line.
+
+#### 1.2.4. NR, the Number of Records
+
+Awk provides another *built-variable*, called `NR`(*Number of Records*), that counts the *number of lines* read so far. We can use `NR` and `$0` to prefix each line of `emp.data` with its line number:
+
+```awk
+{ print NR, $0 }
+```
+
+The output looks like this:
+
+```console
+1 Beth  4.00    0
+2 Dan   3.75    0
+3 Kathy 4.00    10
+4 Mark  5.00    20
+5 Mary  5.50    22
+6 Susie 4.25    18
+```
+
+#### 1.2.5. Putting Text in the Output
+
+You can also print words in the midst of fields and computed values:
+
+```awk
+{ print "total pay for", $1, "is", $2 * $3 }
+```
+
+prints
+
+```console
+total pay for Beth is 0
+total pay for Dan is 0
+total pay for Kathy is 40
+total pay for Mark is 100
+total pay for Mary is 121
+total pay for Susie is 76.5
+```
+
+In the `print` statement, the text inside the *double quotes* is printed along with the fields and computed values.
+
+### 1.3. Fancier Output
