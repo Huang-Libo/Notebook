@@ -15,6 +15,13 @@
     - [1.3.1. Lining Up Fields](#131-lining-up-fields)
     - [1.3.2. Sorting the Output](#132-sorting-the-output)
   - [1.4. Selection](#14-selection)
+    - [1.4.1. Selection by Comparison](#141-selection-by-comparison)
+    - [1.4.2. Selection by Computation](#142-selection-by-computation)
+    - [1.4.3. Selection by Text Content](#143-selection-by-text-content)
+    - [1.4.4. Combinations of Patterns](#144-combinations-of-patterns)
+    - [1.4.5. Data Validation](#145-data-validation)
+    - [1.4.6. BEGIN and END](#146-begin-and-end)
+  - [1.5. Computing with AWK](#15-computing-with-awk)
 
 Computer users spend a lot of time doing simple, mechanical data manipulation - changing the format of data, checking its validity, finding items with some property, adding up numbers, printing reports, and the like. All of these jobs ought to be mechanized, but it's a real nuisance to have to write a special purpose program in a standard language like C or Pascal each time such a task comes up.
 
@@ -332,3 +339,146 @@ pipes the output of `awk` into the `sort` command, and produces:
 ```
 
 ### 1.4. Selection
+
+Awk patterns are good for selecting interesting lines from the input for further processing.
+
+Since **a pattern without an action prints all lines matching the pattern**, many awk programs consist of nothing more than a single pattern.
+
+#### 1.4.1. Selection by Comparison
+
+This program uses a comparison pattern to select the records of employees who earn $5.00 or more per hour, that is, lines in which the second field is greater than or equal to `5`:
+
+```awk
+$2 >= 5
+```
+
+It selects these lines from `emp.data`:
+
+```console
+Mark    5.00    20
+Mary    5.50    22
+```
+
+#### 1.4.2. Selection by Computation
+
+The program
+
+```awk
+$2 * $3 > 50 { printf("$%6.2f for %s\n", $2 * $3, $1) }
+```
+
+prints the pay of those employees whose total pay exceeds $50:
+
+```console
+$100.00 for Mark
+$121.00 for Mary
+$ 76.50 for Susie
+```
+
+#### 1.4.3. Selection by Text Content
+
+Besides numeric tests, you can select input lines that contain specific words or phrases. This program prints all lines in which the first field is *Susie*:
+
+```awk
+$1 == " Susie"
+```
+
+The operator `==` tests for equality. You can also look for text containing any of a set of letters, words, and phrases by using patterns called *regular expressions*.
+
+This program prints all lines that contain *Susie* anywhere:
+
+```awk
+/Susie/
+```
+
+The output is this line:
+
+```console
+Susie   4.25    18
+```
+
+*Regular expressions* can be used to specify much more elaborate patterns; **Section 2.1** contains a full discussion.
+
+#### 1.4.4. Combinations of Patterns
+
+Patterns can be combined with parentheses and the logical operators `&&`, `||`, and `!`, which stand for *AND*, *OR*, and *NOT*. The program
+
+```awk
+$2 >= 4 || $3 >= 20
+```
+
+prints those lines where `$2` is at least 4 or `$3` is at least 20:
+
+```console
+Beth    4.00    0
+Kathy   4.00    10
+Mark    5.00    20
+Mary    5.50    22
+Susie   4.25    18
+```
+
+Lines that satisfy both conditions are printed only **once**.
+
+Contrast this with the following program, which consists of **two patterns**:
+
+```awk
+$2 >= 4
+$3 >= 20
+```
+
+This program prints an input line **twice** if it satisfies both conditions:
+
+```console
+Beth    4.00    0
+Kathy   4.00    10
+Mark    5.00    20
+Mark    5.00    20
+Mary    5.50    22
+Mary    5.50    22
+Susie   4.25    18
+```
+
+#### 1.4.5. Data Validation
+
+There are always errors in real data. Awk is an excellent tool for checking that data has reasonable values and is in the right format, a task that is often called *data validation*.
+
+Data validation is essentially negative: instead of printing lines with desirable properties, one prints lines that are suspicious. The following program uses comparison patterns to apply five plausibility tests to each line of `emp.data`:
+
+```awk
+NF != 3   { print $0, "number of fields is not equal to 3" }
+$2 < 3.35 { print $0, "rate is below minimum wage" }
+$2 > 10   { print $0, "rate exceeds $10 per hour" }
+$3 < 0    { print $0, "negative hours worked"}
+$3 > 60   { print $0, "too many hours worked" }
+```
+
+If there are no errors, there's no output.
+
+#### 1.4.6. BEGIN and END
+
+The special pattern `BEGIN` matches before the first line of the first input file is read, and `END` matches after the last line of the last file has been processed.
+
+This program uses `BEGIN` to print a heading:
+
+```awk
+BEGIN { print "NAME    RATE    HOURS"; print " " }
+      { print }
+```
+
+The output is:
+
+```console
+NAME    RATE    HOURS
+ 
+Beth    4.00    0
+Dan     3.75    0
+Kathy   4.00    10
+Mark    5.00    20
+Mary    5.50    22
+Susie   4.25    18
+```
+
+- You can put several statements on a single line if you separate them by semicolons(`;`).
+- Notice that `print " "` prints a blank line, quite different from just plain `print`, which prints the current input line.
+
+### 1.5. Computing with AWK
