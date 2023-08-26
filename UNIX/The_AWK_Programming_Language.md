@@ -95,13 +95,13 @@ Since patterns and actions are both *optional*, actions are enclosed in *braces*
 
 There are several ways to run an awk program. You can type a command line of the form
 
-```awk
+```bash
 awk 'program' input files
 ```
 
 to run the *program* on each of the specified input files. For example, you could type
 
-```awk
+```bash
 awk '$3 == 0 { print $1 }' file1 file2
 ```
 
@@ -115,8 +115,9 @@ In this case awk will apply the program to whatever you type next on your termin
 
 Here is a sample of a session on Unix:
 
-```console
+```bash
 $ awk '$3 == 0 { print $1 }'
+
 Beth 4.00 0
 -> Beth
 Dan 3.75 0
@@ -140,7 +141,7 @@ This arrangement is convenient when the program is short (a few lines).
 
 If the program is long, however, it is more convenient to put it into a separate file, say *progfile*, and type the command line
 
-```console
+```bash
 awk -f <progfile> <optional list of input files>
 ```
 
@@ -150,7 +151,7 @@ The `-f` option instructs awk to fetch the program from the named file. Any file
 
 If you make an error in an awk program, awk will give you a diagnostic message. For example, if you mistype a brace, like this:
 
-```console
+```bash
 awk '$3 > 0 [ print $1, $2 * $3 }' emp.data
 ```
 
