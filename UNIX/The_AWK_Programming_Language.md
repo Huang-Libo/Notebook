@@ -3,6 +3,7 @@
 - [1. Chapter 1: AN AWK TUTORIAL](#1-chapter-1-an-awk-tutorial)
   - [1.1. Getting Started](#11-getting-started)
     - [1.1.1. The Structure of an AWK Program](#111-the-structure-of-an-awk-program)
+    - [1.1.2. Running an AWK Program](#112-running-an-awk-program)
 
 Computer users spend a lot of time doing simple, mechanical data manipulation - changing the format of data, checking its validity, finding items with some property, adding up numbers, printing reports, and the like. All of these jobs ought to be mechanized, but it's a real nuisance to have to write a special purpose program in a standard language like C or Pascal each time such a task comes up.
 
@@ -45,3 +46,41 @@ The part inside the quotes is the complete awk program. It consists of a single 
 - The **action** `{ print $1, $2 * $3 }` prints the first field and the product of the second and third fields of each matched line.
 
 #### 1.1.1. The Structure of an AWK Program
+
+In the command lines above, the parts between the quote characters are programs written in the *awk programming language*. Each awk program in this chapter is a sequence of one or more *pattern-action* statements:
+
+```awk
+pattern { action }
+pattern { action }
+...
+```
+
+The basic operation of awk is to scan a sequence of input lines one after another, searching for lines that are matched by any of the patterns in the program.
+
+```awk
+$3 == 0 { print $1 }
+```
+
+is a single pattern-action statement; for every line in which the third field is zero, the first field is printed.
+
+Either the *pattern* or the *action* (but not both) in a pattern-action statement may be omitted.
+
+- If a pattern has no action, for example,
+
+  ```awk
+  $3 == 0
+  ```
+
+  then each line that the pattern matches (that is, each line for which the condition is true) is printed.
+
+- If there is an action with no pattern, for example,
+
+  ```awk
+  { print $1 }
+  ```
+
+  then the action, in this case printing the first field, is performed for every input line.
+
+Since patterns and actions are both *optional*, actions are enclosed in *braces* to distinguish them from patterns.
+
+#### 1.1.2. Running an AWK Program
