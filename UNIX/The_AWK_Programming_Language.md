@@ -37,6 +37,7 @@
   - [1.8. A Handful of Useful "One-liners"](#18-a-handful-of-useful-one-liners)
 - [2. Chapter 2: THE AWK LANGUAGE](#2-chapter-2-the-awk-language)
   - [2.1. Patterns](#21-patterns)
+    - [2.1.1. BEGIN and END](#211-begin-and-end)
 
 Computer users spend a lot of time doing simple, mechanical data manipulation - changing the format of data, checking its validity, finding items with some property, adding up numbers, printing reports, and the like. All of these jobs ought to be mechanized, but it's a real nuisance to have to write a special purpose program in a standard language like C or Pascal each time such a task comes up.
 
@@ -981,3 +982,43 @@ A long statement may be spread over several lines by inserting a *backslash*(`\`
 As this example shows, *statements may also be broken after commas*, and a comment may be inserted at the end of each broken line.
 
 ### 2.1. Patterns
+
+Patterns control the execution of actions: when a pattern matches, its associated action is executed. This section describes the **6** types of patterns and the conditions under which they match.
+
+---
+
+**Summary of Patterns**
+
+1. `BEGIN { statements }`
+
+    The *statements* are executed once *before* any input has been read.
+
+2. `END { statements }`
+
+    The *statements* are executed once *after* all input has been read.
+
+3. `expression { statements }`
+
+    The *statements* are executed at each input line where the *expression* is `true`, that is, *nonzero* or *nonnull*.
+
+4. `/regular expression/ { statements }`
+
+    The *statements* are executed at each input line that contains a string matched by the *regular expression*.
+
+5. `compound pattern { statements }`
+
+    A *compound pattern* combines expressions with `&&` (AND), `||` (OR), `!` (NOT), and parentheses; the *statements* are executed at each input line where the *compound pattern* is true.
+
+6. `pattern1, pattern2 { statements }`
+
+    A **range pattern** matches each input line from a line matched by *pattern1* to the next line matched by *pattern2* , inclusive; the *statements* are executed at each matching line.
+
+NOTE:
+
+- `BEGIN` and `END` do not combine with other patterns.
+- `BEGIN` and `END` are the only patterns that require an action.
+- A **range pattern** cannot be part of any other pattern.
+
+---
+
+#### 2.1.1. BEGIN and END
