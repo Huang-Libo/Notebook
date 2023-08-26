@@ -35,6 +35,7 @@
     - [1.6.3. for Statement](#163-for-statement)
   - [1.7. Arrays](#17-arrays)
   - [1.8. A Handful of Useful "One-liners"](#18-a-handful-of-useful-one-liners)
+- [2. Chapter 2: THE AWK LANGUAGE](#2-chapter-2-the-awk-language)
 
 Computer users spend a lot of time doing simple, mechanical data manipulation - changing the format of data, checking its validity, finding items with some property, adding up numbers, printing reports, and the like. All of these jobs ought to be mechanized, but it's a real nuisance to have to write a special purpose program in a standard language like C or Pascal each time such a task comes up.
 
@@ -764,3 +765,145 @@ END {
 ```
 
 ### 1.8. A Handful of Useful "One-liners"
+
+Although awk can be used to write programs of some complexity, many useful programs are not much more complicated than what we've seen so far. Here is a collection of short programs that you might find handy and instructive. Most are variations on material already covered.
+
+1. Print the total number of input lines:
+
+    ```awk
+    END { print NR }
+    ```
+
+    > NOTE: In bash you can also use `line_count=$(wc -l < filename)`.
+
+2. Print the tenth input line:
+
+    ```awk
+    NR == 10
+    ```
+
+3. Print the last field of *every* input line:
+
+    ```awk
+    { print $NF }
+    ```
+
+4. Print the last field of the *last* input line:
+
+    ```awk
+        { field = $NF}
+    END { print field }
+    ```
+
+5. Print every input line with more than 4 fields:
+
+    ```awk
+    NF > 4
+    ```
+
+6. Print every input line in which the last field is more than 4:
+
+    ```awk
+    $NF > 4
+    ```
+
+7. Print the total number of fields in all input lines:
+
+    ```awk
+        { nf = nf + NF }
+    END { print nf }
+    ```
+
+8. Print the total number of lines that contain *Beth*:
+
+    ```awk
+    /Beth/ { n_lines = n_lines + 1 }
+    END    { print n_lines }
+    ```
+
+9. Print the largest first field and the line that contains it (assumes some `$1` is positive):
+
+    ```awk
+    $1 > max { max = $1; max_line = $0 }
+    END { print max, max_line }
+    ```
+
+10. Print every line that has at least one field:
+
+    ```awk
+    NF > 0
+    ```
+
+11. Print every line longer than 80 characters:
+
+    ```awk
+    length($0) > 80
+    ```
+
+12. Print the number of fields in every line followed by the line itself:
+
+    ```awk
+    { print NF, $0 }
+    ```
+
+13. Print the first two fields, in opposite order, of every line:
+
+    ```awk
+    { print $2, $1 }
+    ```
+
+14. Exchange the first two fields of every line and then print the line:
+
+    ```awk
+    { temp = $1; $1 = $2; $2 = temp; print }
+    ```
+
+15. Print every line with the first field replaced by the line number:
+
+    ```awk
+    { $1 = NR; print }
+    ```
+
+16. Print every line after erasing the second field:
+
+    ```awk
+    { $2 = "" ; print }
+    ```
+
+17. Print in reverse order the fields of every line:
+
+    ```awk
+    {
+      for (i = NF; i > 0; i = i - 1) printf("%s ", $i)
+      printf("\n")
+    }
+    ```
+
+18. Print the sums of the fields of every line:
+
+    ```awk
+    {
+      sum = 0
+      for (i = 1; i <= NF; i = i + 1) sum = sum + $i
+      print sum
+    }
+    ```
+
+19. Add up all fields in all lines and print the sum:
+
+    ```awk
+        { for (i = 1; i <= NF; i = i + 1) sum = sum+ $i }
+    END { print sum }
+    ```
+
+20. Print every line after replacing each field by its absolute value:
+
+    ```awk
+    {
+      for (i = 1; i <= NF; i = i + 1)
+          if ($i < 0) $i = -$i
+      print
+    }
+    ```
+
+## 2. Chapter 2: THE AWK LANGUAGE
