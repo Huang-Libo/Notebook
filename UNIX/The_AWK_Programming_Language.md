@@ -4,6 +4,8 @@
   - [1.1. Getting Started](#11-getting-started)
     - [1.1.1. The Structure of an AWK Program](#111-the-structure-of-an-awk-program)
     - [1.1.2. Running an AWK Program](#112-running-an-awk-program)
+    - [1.1.3. Errors](#113-errors)
+  - [1.2. Simple Output](#12-simple-output)
 
 Computer users spend a lot of time doing simple, mechanical data manipulation - changing the format of data, checking its validity, finding items with some property, adding up numbers, printing reports, and the like. All of these jobs ought to be mechanized, but it's a real nuisance to have to write a special purpose program in a standard language like C or Pascal each time such a task comes up.
 
@@ -84,3 +86,80 @@ Either the *pattern* or the *action* (but not both) in a pattern-action statemen
 Since patterns and actions are both *optional*, actions are enclosed in *braces* to distinguish them from patterns.
 
 #### 1.1.2. Running an AWK Program
+
+There are several ways to run an awk program. You can type a command line of the form
+
+```awk
+awk 'program' input files
+```
+
+to run the *program* on each of the specified input files. For example, you could type
+
+```awk
+awk '$3 == 0 { print $1 }' file1 file2
+```
+
+You can omit the input files from the command line and just type
+
+```awk
+awk 'program'
+```
+
+In this case awk will apply the program to whatever you type next on your terminal until you type an end-of-file signal (`Control-D` on Unix systems).
+
+Here is a sample of a session on Unix:
+
+```console
+$ awk '$3 == 0 { print $1 }'
+Beth 4.00 0
+-> Beth
+Dan 3.75 0
+-> Dan
+Kathy 3.75 10
+Kathy 3.75 0
+-> Kathy
+...
+```
+
+The characters after `->` are what the computer printed.
+
+This behavior makes it easy to experiment with awk: type your program, then type data at it and see what happens.
+
+Notice that the program is enclosed in **single quotes** on the command line.
+
+- This protects characters like `$` in the program from being interpreted by the shell
+- and also allows the program to be longer than one line.
+
+This arrangement is convenient when the program is short (a few lines).
+
+If the program is long, however, it is more convenient to put it into a separate file, say *progfile*, and type the command line
+
+```console
+awk -f <progfile> <optional list of input files>
+```
+
+The `-f` option instructs awk to fetch the program from the named file. Any filename can be used in place of *progfile*.
+
+#### 1.1.3. Errors
+
+If you make an error in an awk program, awk will give you a diagnostic message. For example, if you mistype a brace, like this:
+
+```console
+awk '$3 > 0 [ print $1, $2 * $3 }' emp.data
+```
+
+you will get a message like this:
+
+```console
+awk: syntax error at source line 1
+ context is
+        $3 > 0 >>>  [ <<< 
+        extra }
+        missing ]
+awk: bailing out at source line 1
+```
+
+- *"Syntax error"* means that you have made a grammatical error that was detected at the place marked by `>>> <<<`.
+- *"Bailing out"* means that no recovery was attempted.
+
+### 1.2. Simple Output
