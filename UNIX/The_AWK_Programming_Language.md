@@ -38,6 +38,7 @@
 - [2. Chapter 2: THE AWK LANGUAGE](#2-chapter-2-the-awk-language)
   - [2.1. Patterns](#21-patterns)
     - [2.1.1. BEGIN and END](#211-begin-and-end)
+    - [2.1.2. Expressions as Patterns](#212-expressions-as-patterns)
 
 Computer users spend a lot of time doing simple, mechanical data manipulation - changing the format of data, checking its validity, finding items with some property, adding up numbers, printing reports, and the like. All of these jobs ought to be mechanized, but it's a real nuisance to have to write a special purpose program in a standard language like C or Pascal each time such a task comes up.
 
@@ -1022,3 +1023,62 @@ NOTE:
 ---
 
 #### 2.1.1. BEGIN and END
+
+The `BEGIN` and `END` patterns do not match any input lines. Rather,
+
+- the statements in the `BEGIN` action are executed *before* awk reads any input;
+- the statements in the `END` action are executed *after* all input has been read.
+
+`BEGIN` and `END` thus provide a way to gain control for initialization and wrap-up.
+
+If there is more than one `BEGIN`, the associated actions are executed in the order in which they appear in the program, and similarly for multiple `END`'s.
+
+Although it's not mandatory, we put `BEGIN` first and `END` last.
+
+**Field Separator**
+
+One common use of a `BEGIN` action is to change the default way that input lines are split into fields. The *field separator* is controlled by a *built-in variable* called `FS`(*Field Separator*).
+
+By default, fields are separated by ***blanks* and/or *tabs***; this behavior occurs when `FS` is set to a blank. Setting `FS` to any character other than a blank makes that character the *field separator*.
+
+The following program uses the `BEGIN` action to set the *field separator* to a tab character (`\t`) and to put column headings on the output. The second `printf` statement, which is executed at each input line, formats the output into a table, neatly aligned under the column headings. The `END` action prints the totals.
+
+```awk
+# print countries with column headers and totals
+
+BEGIN { 
+        FS = "\t"   # make tab the field separator
+        printf("%10s %6s %5s   %s\n\n",
+              "COUNTRY", "AREA", "POP", "CONTINENT")
+      }
+
+      { 
+        printf("%10s %6d %5d   %s\n", $1, $2, $3, $4)
+        area = area + $2
+        pop = pop + $3
+      }
+
+END   { printf("\n%10s %6d %5d\n", "TOTAL", area, pop) }
+```
+
+With the `countries.txt` file as input, this program produces
+
+```console
+   COUNTRY   AREA   POP   CONTINENT
+
+      USSR   8649   275   Asia
+    Canada   3852    25   North America
+     China   3705  1032   Asia
+       USA   3615   237   North America
+    Brazil   3286   134   South America
+     India   1267   746   Asia
+    Mexico    762    78   North America
+    France    211    55   Europe
+     Japan    144   120   Asia
+   Germany     96    61   Europe
+   England     94    56   Europe
+
+     TOTAL  25681  2819
+```
+
+#### 2.1.2. Expressions as Patterns
