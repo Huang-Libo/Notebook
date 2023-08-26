@@ -22,6 +22,14 @@
     - [1.4.5. Data Validation](#145-data-validation)
     - [1.4.6. BEGIN and END](#146-begin-and-end)
   - [1.5. Computing with AWK](#15-computing-with-awk)
+    - [1.5.1. Counting](#151-counting)
+    - [1.5.2. Computing Sums and Averages](#152-computing-sums-and-averages)
+    - [1.5.3. Handling Text](#153-handling-text)
+    - [1.5.4. String Concatenation](#154-string-concatenation)
+    - [1.5.5. Printing the Last Input Line](#155-printing-the-last-input-line)
+    - [1.5.6. Built-in Functions](#156-built-in-functions)
+    - [1.5.7. Counting Lines, Words, and Characters](#157-counting-lines-words-and-characters)
+  - [1.6. Control-Flow Statements](#16-control-flow-statements)
 
 Computer users spend a lot of time doing simple, mechanical data manipulation - changing the format of data, checking its validity, finding items with some property, adding up numbers, printing reports, and the like. All of these jobs ought to be mechanized, but it's a real nuisance to have to write a special purpose program in a standard language like C or Pascal each time such a task comes up.
 
@@ -461,7 +469,7 @@ The special pattern `BEGIN` matches before the first line of the first input fil
 This program uses `BEGIN` to print a heading:
 
 ```awk
-BEGIN { print "NAME    RATE    HOURS"; print " " }
+BEGIN { print "NAME    RATE    HOURS"; print "" }
       { print }
 ```
 
@@ -479,6 +487,153 @@ Susie   4.25    18
 ```
 
 - You can put several statements on a single line if you separate them by semicolons(`;`).
-- Notice that `print " "` prints a blank line, quite different from just plain `print`, which prints the current input line.
+- Notice that `print ""` prints a blank line, quite different from just plain `print`, which prints the current input line.
 
 ### 1.5. Computing with AWK
+
+An action is a sequence of statements separated by *newlines* or *semicolons*.
+
+This section provides examples of statements for performing simple *numeric* and *string* computations. In these statements you can use not only the *built-in variables* like `NF`, but you can create your own variables for performing calculations, storing data, and the like.
+
+In awk, **user-created variables are *not* declared**.
+
+#### 1.5.1. Counting
+
+This program uses a variable `emp` to count employees who have worked more than 15 hours:
+
+```awk
+$3 > 15 { emp = emp + 1 }
+END { print emp, " employees worked more than 15 hours" }
+```
+
+For every line in which the third field exceeds 15, the previous value of `emp` is incremented by 1. With `emp.data` as input, this program yields:
+
+```console
+3  employees worked more than 15 hours
+```
+
+Awk variables used as numbers begin life with the value `0`, so we didn't need to initialize `emp`.
+
+#### 1.5.2. Computing Sums and Averages
+
+To count the number of employees, we can use the *built-in variable* `NR`, which holds the number of lines read so far; its value at the end of all input is the total number of lines read.
+
+```awk
+END { print NR, " employees" }
+```
+
+The output is:
+
+```console
+6  employees
+```
+
+Here is a program that uses `NR` to compute the average pay:
+
+```awk
+    { pay = pay + $2 * $3 }
+END { print NR, " employees"
+      print "total pay is" , pay
+      print "average pay is" , pay/NR
+    }
+```
+
+The `END` action prints
+
+```console
+6  employees
+total pay is 337.5
+average pay is 56.25
+```
+
+#### 1.5.3. Handling Text
+
+One of the strengths of awk is its ability to handle strings of characters as conveniently as most languages handle numbers. Awk variables can hold strings of characters as well as numbers. This program finds the employee who is paid the most per hour:
+
+```awk
+$2 > max_rate { max_rate = $2; max_emp = $1 }
+END { print "highest hourly rate:", max_rate, "for", max_emp }
+```
+
+It prints
+
+```console
+highest hourly rate: 5.50 for Mary
+```
+
+In this program the variable `max_rate` holds a numeric value, while the variable `max_emp` holds a string.
+
+#### 1.5.4. String Concatenation
+
+New strings may be created by combining old ones; this operation is called concatenation. The program
+
+```awk
+    { names = names $1 " " }
+END { print names }
+```
+
+collects all the employee names into a single string, by appending each *name* and a *blank* to the previous value in the variable names. The value of names is printed by the `END` action:
+
+```console
+Beth Dan Kathy Mark Mary Susie 
+```
+
+The concatenation operation is represented in an awk program by *writing string values one after the other*.
+
+Variables used to store strings begin life holding the `null` string (that is, the string containing no characters), so in this program `names` did not need to be explicitly initialized.
+
+#### 1.5.5. Printing the Last Input Line
+
+Although `NR` retains its value in an `END` action, `$0` does not. The program
+
+```awk
+    { last = $0 }
+END { print last }
+```
+
+is one way to print the last input line:
+
+```console
+Susie   4.25    18
+```
+
+#### 1.5.6. Built-in Functions
+
+There are *built-in functions* for computing other useful values. One of these is `length`, which counts the number of characters in a string. For example, this program computes the length of each person's name:
+
+```awk
+{ print $1, length($1) }
+```
+
+The result:
+
+```console
+Beth 4
+Dan 3
+Kathy 5
+Mark 4
+Mary 4
+Susie 5
+```
+
+#### 1.5.7. Counting Lines, Words, and Characters
+
+This program uses `length`, `NF`, and `NR` to count the number of *lines*, *words*, and *characters* in the input. For convenience, we'll treat each field as a word.
+
+```awk
+    {
+      nc = nc + length($0) + 1
+      nw = nw + NF
+    }
+END { print NR, "lines,", nw, "words," , nc, "Characters" }
+```
+
+The file `emp.data` has
+
+```console
+6 lines, 18 words, 77 Characters
+```
+
+We have added `1` for the *newline character*(`\n`) at the end of each input line, since `$0` doesn't include it.
+
+### 1.6. Control-Flow Statements
