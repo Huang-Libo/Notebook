@@ -12,6 +12,9 @@
     - [1.2.4. NR, the Number of Records](#124-nr-the-number-of-records)
     - [1.2.5. Putting Text in the Output](#125-putting-text-in-the-output)
   - [1.3. Fancier Output](#13-fancier-output)
+    - [1.3.1. Lining Up Fields](#131-lining-up-fields)
+    - [1.3.2. Sorting the Output](#132-sorting-the-output)
+  - [1.4. Selection](#14-selection)
 
 Computer users spend a lot of time doing simple, mechanical data manipulation - changing the format of data, checking its validity, finding items with some property, adding up numbers, printing reports, and the like. All of these jobs ought to be mechanized, but it's a real nuisance to have to write a special purpose program in a standard language like C or Pascal each time such a task comes up.
 
@@ -259,3 +262,73 @@ total pay for Susie is 76.5
 In the `print` statement, the text inside the *double quotes* is printed along with the fields and computed values.
 
 ### 1.3. Fancier Output
+
+The `print` statement is meant for quick and easy output. To format the output exactly the way you want it, you may have to use the `printf` statement. As we shall see in **Section 2.4**, `printf` can produce almost any kind of output, but in this section we'll only show a few of its capabilities.
+
+#### 1.3.1. Lining Up Fields
+
+The `printf` statement has the form
+
+```awk
+printf(format, value_1, value_2, ..., value_n)
+```
+
+Here's a program that uses `printf` to print the total pay for every employee:
+
+```awk
+{ printf("total pay for %s is $%.2f\n", $1, $2 * $3) }
+```
+
+With `emp.data` as input, this program yields:
+
+```console
+total pay for Beth is $0.00
+total pay for Dan is $0.00
+total pay for Kathy is $40.00
+total pay for Mark is $100.00
+total pay for Mary is $121.00
+total pay for Susie is $76.50
+```
+
+With `printf`, no *blanks* or *newlines* are produced automatically; you must create them yourself. Don't forget the `\n`.
+
+Here's another program that prints each employee's *name* and *pay*:
+
+```awk
+{ printf("%-8s $%6.2f\n", $1, $2 * $3) }
+```
+
+- The first specification, `%-8s`, prints a name as a string of characters **left** justified in a field **8** characters wide.
+- The second specification, `%6.2f`, prints the pay as a number with two digits after the decimal point, in a field **6** characters wide:
+
+```console
+Beth     $  0.00
+Dan      $  0.00
+Kathy    $ 40.00
+Mark     $100.00
+Mary     $121.00
+Susie    $ 76.50
+```
+
+#### 1.3.2. Sorting the Output
+
+Suppose you want to print all the data for each employee, along with his or her pay, *sorted in order of increasing pay*.
+
+The easiest way is to use awk to prefix the total pay to each employee record, and run that output through a sorting program. On Unix, the command line
+
+```bash
+awk '{ printf("%6.2f  %s\n", $2 * $3, $0) }' emp.data | sort
+```
+
+pipes the output of `awk` into the `sort` command, and produces:
+
+```console
+  0.00  Beth    4.00    0
+  0.00  Dan     3.75    0
+ 40.00  Kathy   4.00    10
+ 76.50  Susie   4.25    18
+100.00  Mark    5.00    20
+121.00  Mary    5.50    22
+```
+
+### 1.4. Selection
