@@ -17,6 +17,7 @@
     - [2.1.5. Arithmetic Operators](#215-arithmetic-operators)
     - [2.1.6. Comparison Operators](#216-comparison-operators)
     - [2.1.7. Logical Operators](#217-logical-operators)
+    - [2.1.8. Conditional Expressions](#218-conditional-expressions)
 
 This chapter explains, mostly with examples, the constructs that make up awk programs.
 
@@ -713,3 +714,21 @@ Comparison expressions are those containing either a *relational operator* or a 
 The value of a comparison expression is `1` if it is true and `0` otherwise. Similarly, the value of a matching expression is `1` if true, `0` if false.
 
 #### 2.1.7. Logical Operators
+
+The logical operators `&&` `||` `!` are used to create logical expressions by combining other expressions.
+
+The operands of expressions separated by `&&` or `||` are *evaluated from left to right*, and evaluation ceases as soon as the value of the complete expression can be determined. This means that in
+
+```awk
+expr1 && expr2
+```
+
+`expr2` is not evaluated if `expr1` is *false*, while in
+
+```awk
+expr3 || expr4
+```
+
+`expr4` is not evaluated if `expr3` is *true*.
+
+#### 2.1.8. Conditional Expressions
