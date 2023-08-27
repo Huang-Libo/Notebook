@@ -18,7 +18,7 @@
 - [FAQ](PlantUML/FAQ.md)
 - [Class Diagram](PlantUML/class-diagram.md)
 
-## 🕹️ *NIX
+## 🕹️ UNIX
 
 - [FAQ](UNIX/FAQ.md)
 - [ShellCheck](UNIX/ShellCheck.md)

@@ -5,6 +5,7 @@
   - [1.2. Expressions as Patterns](#12-expressions-as-patterns)
   - [1.3. String-Matching Patterns](#13-string-matching-patterns)
   - [1.4. Regular Expressions](#14-regular-expressions)
+  - [1.5. Compound Patterns](#15-compound-patterns)
 
 This chapter explains, mostly with examples, the constructs that make up awk programs.
 
@@ -329,3 +330,89 @@ $0 ~ /Asia/
 ```
 
 ### 1.4. Regular Expressions
+
+A regular expression is a notation for specifying and matching strings.
+
+---
+
+**Regular Expressions**
+
+1. The regular expression metacharacters are:
+
+    `.` `*` `+` `?` `^` `$` `\` `|` `(` `)` `[` `]` `{` `}`
+
+2. A basic regular expression is one of the following:
+
+    - a non-metacharacter, such as *A*. that matches itself.
+    - an escape sequence that matches a special symbol: `\t` matches a *tab*
+    - a *quoted* metacharacter, such as `\*`, that matches the metacharacter literally.
+    - `^`, which matches the *beginning* of a string.
+    - `$`, which matches the *end* of a string.
+    - `.`, which matches *any* single character *except* `\n`.
+    - *a character class*: `[ABC]` matches any of the characters *A*, *B*, or *C*.
+    - *character classes* may include abbreviations: `[A-Za-z]` matches any single letter.
+    - *a complemented character class*: `[^0-9]` matches any character except a digit.
+
+3. These operators combine regular expressions into larger ones:
+
+    - alternation: `A|B` matches *A* or *B*.
+    - concatenation: `AB` matches *A* immediately followed by *B*.
+    - closure: `A*` matches zero or more *A*'s.
+    - positive closure: `A+` matches one or more *A*'s.
+    - zero or one: `A?` matches the *null string* or *A*.
+    - parentheses: `(r)` matches the same strings as *r* does.
+
+---
+
+The characters
+
+`.` `*` `+` `?` `^` `$` `\` `|` `(` `)` `[` `]` `{` `}`
+
+are called *metacharacters* because they have special meanings.
+
+To preserve the *literal* meaning of a *metacharacter* in a regular expression, precede it by a *backslash*. Thus, the regular expression `\$` matches the character `$`. If a character is preceded by a single `\`, we'll say that character is **quoted**.
+
+A regular expression consisting of a group of characters enclosed in *brackets*(`[]`) is called a *character class*; it matches any one of the enclosed characters. For example, `[AEIOU]` matches any of the characters *A*, *E*, *I*, *O*, or *U*.
+
+Ranges of characters can be abbreviated in a *character class* by using a hyphen(`-`).
+
+- The character immediately to the left of the hyphen defines the beginning of the range;
+- the character immediately to the right defines the end.
+
+Thus, `[0-9]` matches any digit, and `[a-zA-Z][0-9]` matches a letter followed by a digit.
+
+**Without both a left and right operand, a hyphen(`-`) in a character class denotes itself**,
+
+- so the character classes `[+-]` and `[-+]` match either a `+` or a `-`.
+- The character class `[A-Za-z-]+` matches words that include hyphens.
+
+A *complemented* character class is one in which the first character after the `[` is a `^` . Such a class matches any character *not* in the group following the caret. Thus, `[^0-9]` matches any character except a digit; `[^a-zA-Z]` matches any character except an upper or lower-case letter.
+
+| Pattern    | Meaning                                                                    |
+|------------|----------------------------------------------------------------------------|
+| `^[ABC]`   | matches an *A*, *B* or *C* at the beginning of a string                    |
+| `^[^ABC]`  | matches any character at the beginning of a string. except *A*, *B* or *C* |
+| `[^ABC]`   | matches any character other than an *A*, *B* Or *C*                        |
+| `^[^a-z]$` | matches any single-character string. except a lower-case letter            |
+
+Inside a *character class*, all characters have their literal meaning, except for the quoting character `\`, `^` at the beginning, and `-` between two characters. Thus, **`[.]` matches a period(`.`)** and `^[^^]` matches any character except a caret at the beginning of a string.
+
+Parentheses are used in regular expressions to specify how components are grouped.
+
+| Pattern  | Meaning                                          |
+|----------|--------------------------------------------------|
+| `AB+C`   | matches *ABC* or *ABBC* or *ABBBC*, and so on    |
+| `(AB)+C` | matches *ABC* or *ABABC* or *ABABABC*, and so on |
+
+In regular expressions, the *alternation* operator `|` has the *lowest* precedence, then *concatenation*, and finally the *repetition* operators `*`, `+`, and `?`. As in arithmetic expressions, operators of higher precedence are done before lower ones. These conventions often allow parentheses to be omitted: `ab|cd` is the same as `(ab)|(cd)`, and `^ab|cd*e$` is the same as `(^ab)|(c(d*)e$)`.
+
+To finish our discussion of regular expressions, here are some examples of useful string-matching patterns containing regular expressions with *unary* and *binary* operators, along with a description of the kinds of input lines they match.
+
+- `^(\+|-)?[0-9]+\.?[0-9]*$`
+  - a decimal number with an optional sign and optional fraction
+- `^[+-]?[0-9]+[.]?[0-9]*$`
+  - also a decimal number with an optional sign and optional fraction
+
+Since `+` and `.` are *metacharacters*, they have to be preceded by *backslashes*(`\`) in the first example to match *literal* occurrences. These backslashes are *not* needed within *character classes*, so the second example shows an alternate way to describe the same numbers.
+
+### 1.5. Compound Patterns
