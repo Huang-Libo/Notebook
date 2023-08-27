@@ -8,6 +8,7 @@
   - [1.5. Compound Patterns](#15-compound-patterns)
   - [1.6. Range Patterns](#16-range-patterns)
 - [2. Actions](#2-actions)
+  - [2.1. Expressions](#21-expressions)
 
 This chapter explains, mostly with examples, the constructs that make up awk programs.
 
@@ -515,3 +516,33 @@ FNR <= 5 { print FILENAME ": " $0 }
 > Note: **A *range pattern* cannot be part of any other pattern.**
 
 ## 2. Actions
+
+In a pattern-action statement, the pattern determines when the action is to be executed. Sometimes an action is very simple: a single print or assignment. Other times, it may be a sequence of several statements separated by *newlines* or *semicolons*.
+
+---
+
+**Actions**
+
+The statements in actions can include:
+
+- *expressions*, with constants, variables, assignments, function calls, etc.
+- `print` *expression-list*
+- `printf`(*format, expression-list*)
+- `if` *(expression) statement*
+- `if` *(expression) statement* `else` *statement*
+- `while` *(expression) statement*
+- `for` (*expression; expression; expression*) *statement*
+- `for` (*variable in array*) *statement*
+- `do` *statement* `while` (*expression*)
+- `break`
+- `continue`
+- `next`
+- `exit`
+- `exit` *expression*
+- { *statements* }
+
+---
+
+### 2.1. Expressions
+
+
