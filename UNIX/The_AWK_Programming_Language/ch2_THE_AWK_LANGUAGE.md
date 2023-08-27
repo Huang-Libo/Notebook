@@ -9,6 +9,9 @@
   - [1.6. Range Patterns](#16-range-patterns)
 - [2. Actions](#2-actions)
   - [2.1. Expressions](#21-expressions)
+    - [2.1.1. Constants](#211-constants)
+    - [2.1.2. Variables](#212-variables)
+    - [2.1.3. Built-In Variables](#213-built-in-variables)
 
 This chapter explains, mostly with examples, the constructs that make up awk programs.
 
@@ -545,4 +548,34 @@ The statements in actions can include:
 
 ### 2.1. Expressions
 
+We begin with *expressions*, since expressions are the simplest *statements*, and most other statements are made up of expressions of various kinds. An expression is formed by combining *primary expressions* and other expressions with *operators*.
 
+- The *primary expressions* are the primitive building blocks: they include constants, variables, array references, function invocations, and various built-ins, like field names.
+
+#### 2.1.1. Constants
+
+There are two types of constants, *string* and *numeric*.
+
+- A *string constant* is created by enclosing a sequence of characters in quotation marks, as in `"Asia"` or `"hello, world"` or `""` . String constants may contain the *escape sequences*.
+- A *numeric constant* can be an *integer* like `1127`, a *decimal* number like `3.14`, or a number in scientific (exponential) notation like `0.707E-1`.
+  - Different representations of the same number have the same numeric value: the numbers `1e6`, `1.OOE6`, `10e5`, `0.1e7`, and `1000000` are numerically equal.
+  - All numbers are stored in *floating point*, the precision of which is machine dependent.
+
+#### 2.1.2. Variables
+
+Expressions can contain several kinds of variables: *user-defined*, *built-in*, and *fields*.
+
+- The names of *user-defined variables* are sequences of letters, digits, and underscores that do not begin with a digit;
+- all *built-in variables* have UPPER-CASE names.
+
+A variable has a value that is a string or a number or both. Since the type of a variable is not declared, awk *infers* the type from context. When necessary, awk will convert a string value into a numeric one, or vice versa. For example, in
+
+```awk
+$4 == "Asia" { print $1, 1000 * $2 }
+```
+
+`$2` is converted into a number if it is not one already, and `$1` and `$4` are converted into strings if they are not already.
+
+An uninitialized variable has the string value `""` (the *null string*) and the numeric value `0`.
+
+#### 2.1.3. Built-In Variables
