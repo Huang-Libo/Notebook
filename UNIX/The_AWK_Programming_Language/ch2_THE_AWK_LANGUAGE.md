@@ -7,6 +7,7 @@
   - [1.4. Regular Expressions](#14-regular-expressions)
   - [1.5. Compound Patterns](#15-compound-patterns)
   - [1.6. Range Patterns](#16-range-patterns)
+- [2. Actions](#2-actions)
 
 This chapter explains, mostly with examples, the constructs that make up awk programs.
 
@@ -447,3 +448,70 @@ or even
 The `||` operator has the *lowest* precedence, then `&&`, and finally `!`. The `&&` and `||` operators evaluate their operands from *left* to *right*; evaluation stops as soon as truth or falsehood is determined.
 
 ### 1.6. Range Patterns
+
+A *range pattern* consists of two patterns separated by a comma, as in
+
+```awk
+pat1, pat2
+```
+
+A *range pattern* matches each line between an occurrence of `pat1` and the next occurrence of `pat2` inclusive; `pat2` may match the same line as `pat1` , making the range a single line. As an example, the pattern
+
+```awk
+/Canada/, /USA/
+```
+
+matches lines starting with the first line that contains *Canada* up through the next line that contains *USA*.
+
+prints:
+
+```console
+Canada  3852    25      North America
+China   3705    1032    Asia
+USA     3615    237     North America
+```
+
+Matching begins whenever the first pattern of a range matches; if no instance of the second pattern is subsequently found, then all lines to the end of the input are matched:
+
+```awk
+/Europe/, /Africa/
+```
+
+prints
+
+```console
+France  211     55      Europe
+Japan   144     120     Asia
+Germany 96      61      Europe
+England 94      56      Europe
+```
+
+In the next example
+
+- `FNR`(*File Number of Record*) is *the number of the line just read from the current input file*
+- `FILENAME` is the filename itself
+
+both are *built-in variables*.
+
+**Difference between `NR` and `FNR`**:
+
+| Variable | Meaning                                         |
+|----------|-------------------------------------------------|
+| FNR      | Record number within the *current* input file     |
+| NR       | *Cumulative* record number across *all* input files |
+
+Thus, the program
+
+```awk
+FNR == 1, FNR == 5 { print FILENAME ": " $0 }
+```
+
+prints the first five lines of *each input file* with the filename prefixed. Alternately, this program could be written as
+
+```awk
+FNR <= 5 { print FILENAME ": " $0 }
+```
+
+> Note: **A *range pattern* cannot be part of any other pattern.**
+
+## 2. Actions
