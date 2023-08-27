@@ -12,7 +12,9 @@
     - [2.1.1. Constants](#211-constants)
     - [2.1.2. Variables](#212-variables)
     - [2.1.3. Built-In Variables](#213-built-in-variables)
+      - [2.1.3.1. The difference between `%.6g` and `%.6f`](#2131-the-difference-between-6g-and-6f)
     - [2.1.4. Field Variables](#214-field-variables)
+    - [2.1.5. Arithmetic Operators](#215-arithmetic-operators)
 
 This chapter explains, mostly with examples, the constructs that make up awk programs.
 
@@ -602,4 +604,69 @@ An uninitialized variable has the string value `""` (the *null string*) and the 
 | `RSTART`   | start of string matched by match function  | -        |
 | `RLENGTH`  | length of string matched by match function | -        |
 
+> Note: *FMT* in `OFMT` is short for *Format*.
+
+##### 2.1.3.1. The difference between `%.6g` and `%.6f`
+
+**The meaning of `%.6g`**:
+
+- This format specifier specifies that the numeric value should be formatted with up to **6 significant digits** in a `g` format. The `g` format is used to print floating-point numbers in either fixed-point or scientific notation, depending on the magnitude of the value.
+
+For example, consider the following awk code:
+
+```awk
+awk 'BEGIN { value = 123.456789; printf "%.6g\n", value }'
+```
+
+In this code, the printf function uses the format specifier `%.6g` to format the value `123.456789`. The output will be:
+
+```console
+123.457
+```
+
+**The meaning of `%.6f`**:
+
+- This format specifier specifies that the numeric value should be formatted as a floating-point number with exactly **6 decimal places**. e.g.
+
+```awk
+awk 'BEGIN { value = 123.456789; printf "%.6f\n", value }'
+```
+
+prints
+
+```console
+123.456789
+```
+
 #### 2.1.4. Field Variables
+
+The fields of the current input line are called `$1`, `$2`, through `$NF`; `$0` refers to the whole line.
+
+One can assign a new string to a field:
+
+```awk
+BEGIN                   { FS = OFS = "\t" }
+$4 == "North America"   { $4 = "NA" }
+$4 == "South America"   { $4 = "SA" }
+                        { print }
+```
+
+The `print` statement in the fourth line prints the value of `$0` after it has been modified by previous assignments. This is important:
+
+- when `$0` is changed by assignment or substitution, **`$1`, `$2`, ..., and `NF` will be recomputed**;
+- likewise, when one of `$1`, `$2`, ..., is changed, **`$0` is reconstructed using `OFS` to separate fields**.
+
+Fields can also be specified by expressions. For example, `$(NF-1)` is the next-to-last field of the current line. *The parentheses are needed*: `$NF-1` is one less than the numeric value of the last field.
+
+A field variable referring to a nonexistent field, e.g., `$(NF+1)` , has as its initial value the *null string*.
+
+**A new field can be created by assigning a value to it**. For example, the following program creates a fifth field containing the population density:
+
+```awk
+BEGIN { FS = OFS = "\t" }
+      { $5 = 1000 * $3 / $2; print }
+```
+
+The number of fields can vary from line to line, but there is usually an implementation **limit of 100 fields per line**.
+
+#### 2.1.5. Arithmetic Operators
