@@ -15,6 +15,8 @@
       - [2.1.3.1. The difference between `%.6g` and `%.6f`](#2131-the-difference-between-6g-and-6f)
     - [2.1.4. Field Variables](#214-field-variables)
     - [2.1.5. Arithmetic Operators](#215-arithmetic-operators)
+    - [2.1.6. Comparison Operators](#216-comparison-operators)
+    - [2.1.7. Logical Operators](#217-logical-operators)
 
 This chapter explains, mostly with examples, the constructs that make up awk programs.
 
@@ -555,6 +557,29 @@ We begin with *expressions*, since expressions are the simplest *statements*, an
 
 - The *primary expressions* are the primitive building blocks: they include constants, variables, array references, function invocations, and various built-ins, like field names.
 
+---
+
+**Expressions**
+
+1. The primary expressions are:
+
+    numeric and string constants, variables, fields, function calls, array elements.
+
+2. These operators combine expressions:
+
+    - *unary operator* `+` `-`
+    - *arithmetic operators* `+` `-` `*` `/` `%` `^`
+    - *assignment operators* `=` `+=` `-=` `*=` `/=` `%=` `^=`
+    - *increment and decrement operators* `++` `--`
+    - *relational operators* `<` `<=` `==` `!=` `>` `>=`
+    - *logical operators* `||` `&&` `!`
+    - *matching operators* `~` `!~`
+    - *conditional expression operator* `?:`
+    - *concatenation* (no explicit operator)
+    - *parentheses for grouping*
+
+---
+
 #### 2.1.1. Constants
 
 There are two types of constants, *string* and *numeric*.
@@ -670,3 +695,21 @@ BEGIN { FS = OFS = "\t" }
 The number of fields can vary from line to line, but there is usually an implementation **limit of 100 fields per line**.
 
 #### 2.1.5. Arithmetic Operators
+
+Awk provides the usual `+`, `-`, `*`, `/`, `%`, and `^` arithmetic operators.
+
+- The `%` operator computes remainders: `x%y` is the remainder when `x` is divided by `y`; its behavior depends on the machine if `x` or `y` is negative.
+- The `^` operator is exponentiation.
+
+All arithmetic is done in *floating point*.
+
+#### 2.1.6. Comparison Operators
+
+Comparison expressions are those containing either a *relational operator* or a *regular expression matching operator*.
+
+- The *relational operators* are `<`, `<=`, `==`, `!=`, `>=`, `>`.
+- The *regular expression matching operators* are `~` (is matched by) and `!~` (is not matched by).
+
+The value of a comparison expression is `1` if it is true and `0` otherwise. Similarly, the value of a matching expression is `1` if true, `0` if false.
+
+#### 2.1.7. Logical Operators
