@@ -1,4 +1,4 @@
-# FAQ for *NIX<!-- omit in toc -->
+# FAQ for UNIX<!-- omit in toc -->
 
 - [1. Arguments in `if` Statement](#1-arguments-in-if-statement)
   - [1.1. File](#11-file)

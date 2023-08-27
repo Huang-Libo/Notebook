@@ -12,6 +12,7 @@
     - [2.1.1. Constants](#211-constants)
     - [2.1.2. Variables](#212-variables)
     - [2.1.3. Built-In Variables](#213-built-in-variables)
+    - [2.1.4. Field Variables](#214-field-variables)
 
 This chapter explains, mostly with examples, the constructs that make up awk programs.
 
@@ -579,3 +580,26 @@ $4 == "Asia" { print $1, 1000 * $2 }
 An uninitialized variable has the string value `""` (the *null string*) and the numeric value `0`.
 
 #### 2.1.3. Built-In Variables
+
+*Built-In variables* can be used in all expressions, and may be reset by the user. `FILENAME` is set each time a new file is read. `NR`, `FNR` and `NF` are set each time a new record is read; additionally, `NF` is reset when `$0` changes or when a new field is created. `RLENGTH` and `RSTART` change as a result of invoking the `match` function.
+
+**BUILT-IN VARIABLES**
+
+| VARIABLE   | MEANING                                    | DEFAULT  |
+|------------|--------------------------------------------|----------|
+| `ARGC`     | number of command-line arguments           | -        |
+| `ARGV`     | array of command-line arguments            | -        |
+| `FILENAME` | name of current input file                 | -        |
+| `NF`       | number of fields in current record         | -        |
+| `NR`       | number of records read so far              | -        |
+| `FNR`      | record number in current file              | -        |
+| `FS`       | controls the input field separator         | `" "`    |
+| `OFS`      | output field separator                     | `" "`    |
+| `RS`       | controls the input record separator        | `"\n"`   |
+| `ORS`      | output record separator                    | `"\n"`   |
+| `OFMT`     | output format for numbers                  | `"%.6g"` |
+| `SUBSEP`   | subscript separator                        | `\034`   |
+| `RSTART`   | start of string matched by match function  | -        |
+| `RLENGTH`  | length of string matched by match function | -        |
+
+#### 2.1.4. Field Variables
