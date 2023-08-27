@@ -6,6 +6,7 @@
   - [1.3. String-Matching Patterns](#13-string-matching-patterns)
   - [1.4. Regular Expressions](#14-regular-expressions)
   - [1.5. Compound Patterns](#15-compound-patterns)
+  - [1.6. Range Patterns](#16-range-patterns)
 
 This chapter explains, mostly with examples, the constructs that make up awk programs.
 
@@ -416,3 +417,33 @@ To finish our discussion of regular expressions, here are some examples of usefu
 Since `+` and `.` are *metacharacters*, they have to be preceded by *backslashes*(`\`) in the first example to match *literal* occurrences. These backslashes are *not* needed within *character classes*, so the second example shows an alternate way to describe the same numbers.
 
 ### 1.5. Compound Patterns
+
+A *compound pattern* is an expression that combines other patterns, using parentheses and the logical operators `||` (OR), `&&` (AND), and `!` (NOT). A compound pattern matches the current input line if the expression evaluates to `true`.
+
+The program
+
+```awk
+$4 == "Asia" || $4 == "Europe"
+```
+
+uses the `OR` operator to select lines with either *Asia* or *Europe* as the fourth field. Because the latter query is a test on string values, another way to write it is to use a regular expression with the alternation operator `|`:
+
+```awk
+$4 ~ /^(Asia|Europe)$/
+```
+
+If there are no occurrences of *Asia* or *Europe* in other fields, this pattern could also be written as
+
+```awk
+/Asia/ || /Europe/
+```
+
+or even
+
+```awk
+/Asia|Europe/
+```
+
+The `||` operator has the *lowest* precedence, then `&&`, and finally `!`. The `&&` and `||` operators evaluate their operands from *left* to *right*; evaluation stops as soon as truth or falsehood is determined.
+
+### 1.6. Range Patterns
