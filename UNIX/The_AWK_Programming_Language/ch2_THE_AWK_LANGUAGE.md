@@ -18,6 +18,9 @@
     - [2.1.6. Comparison Operators](#216-comparison-operators)
     - [2.1.7. Logical Operators](#217-logical-operators)
     - [2.1.8. Conditional Expressions](#218-conditional-expressions)
+    - [2.1.9. Assignment Operators](#219-assignment-operators)
+    - [2.1.10. Increment and Decrement Operators](#2110-increment-and-decrement-operators)
+    - [2.1.11. Built-In Arithmetic Functions](#2111-built-in-arithmetic-functions)
 
 This chapter explains, mostly with examples, the constructs that make up awk programs.
 
@@ -732,3 +735,45 @@ expr3 || expr4
 `expr4` is not evaluated if `expr3` is *true*.
 
 #### 2.1.8. Conditional Expressions
+
+A conditional expression has the form
+
+```awk
+expr1 ? expr2 : expr3
+```
+
+The following program uses a conditional expression to print the reciprocal of `$1`, or a warning if `$1` is `0`:
+
+```awk
+{ print ($1 != 0 ? 1/$1 : "$1 is zero, line " NR) }
+```
+
+#### 2.1.9. Assignment Operators
+
+There are **7** assignment operators that can be used in expressions called assignments, `=` `+=` `-=` `*=` `/=` `%=` `^=`.
+
+An assignment is an expression; its value is the new value of the left side. Thus assignments can be used inside any expression. In the *multiple assignment*
+
+```awk
+FS = OFS = "\t"
+```
+
+both the *field separator* and the *output field separator* are set to *tab*. Assignment expressions are also common within tests, such as:
+
+```awk
+if ((n = length($0)) > 0) ...
+```
+
+#### 2.1.10. Increment and Decrement Operators
+
+The assignment
+
+```awk
+n = n + 1
+```
+
+is usually written `++n` or `n++` using the *unary increment operator* `++`, which adds `1` to a variable.
+
+The prefix and postfix decrement operator `--`, which subtracts `1` from a variable, works the same way.
+
+#### 2.1.11. Built-In Arithmetic Functions
