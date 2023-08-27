@@ -1,59 +1,41 @@
-# The AWK Programming Language  <!-- omit in toc -->
+# Chapter 1: AN AWK TUTORIAL <!-- omit in toc -->
 
-- [1. Chapter 1: AN AWK TUTORIAL](#1-chapter-1-an-awk-tutorial)
-  - [1.1. Getting Started](#11-getting-started)
-    - [1.1.1. The Structure of an AWK Program](#111-the-structure-of-an-awk-program)
-    - [1.1.2. Running an AWK Program](#112-running-an-awk-program)
-    - [1.1.3. Errors](#113-errors)
-  - [1.2. Simple Output](#12-simple-output)
-    - [1.2.1. Printing Every Line](#121-printing-every-line)
-    - [1.2.2. Printing Certain Fields](#122-printing-certain-fields)
-    - [1.2.3. NF, the Number of Fields](#123-nf-the-number-of-fields)
-    - [1.2.4. NR, the Number of Records](#124-nr-the-number-of-records)
-    - [1.2.5. Putting Text in the Output](#125-putting-text-in-the-output)
-  - [1.3. Fancier Output](#13-fancier-output)
-    - [1.3.1. Lining Up Fields](#131-lining-up-fields)
-    - [1.3.2. Sorting the Output](#132-sorting-the-output)
-  - [1.4. Selection](#14-selection)
-    - [1.4.1. Selection by Comparison](#141-selection-by-comparison)
-    - [1.4.2. Selection by Computation](#142-selection-by-computation)
-    - [1.4.3. Selection by Text Content](#143-selection-by-text-content)
-    - [1.4.4. Combinations of Patterns](#144-combinations-of-patterns)
-    - [1.4.5. Data Validation](#145-data-validation)
-    - [1.4.6. BEGIN and END](#146-begin-and-end)
-  - [1.5. Computing with AWK](#15-computing-with-awk)
-    - [1.5.1. Counting](#151-counting)
-    - [1.5.2. Computing Sums and Averages](#152-computing-sums-and-averages)
-    - [1.5.3. Handling Text](#153-handling-text)
-    - [1.5.4. String Concatenation](#154-string-concatenation)
-    - [1.5.5. Printing the Last Input Line](#155-printing-the-last-input-line)
-    - [1.5.6. Built-in Functions](#156-built-in-functions)
-    - [1.5.7. Counting Lines, Words, and Characters](#157-counting-lines-words-and-characters)
-  - [1.6. Control-Flow Statements](#16-control-flow-statements)
-    - [1.6.1. if-else Statement](#161-if-else-statement)
-    - [1.6.2. while Statement](#162-while-statement)
-    - [1.6.3. for Statement](#163-for-statement)
-  - [1.7. Arrays](#17-arrays)
-  - [1.8. A Handful of Useful "One-liners"](#18-a-handful-of-useful-one-liners)
-- [2. Chapter 2: THE AWK LANGUAGE](#2-chapter-2-the-awk-language)
-  - [2.1. Patterns](#21-patterns)
-    - [2.1.1. BEGIN and END](#211-begin-and-end)
-    - [2.1.2. Expressions as Patterns](#212-expressions-as-patterns)
-    - [2.1.3. String-Matching Patterns](#213-string-matching-patterns)
-    - [2.1.4. Regular Expressions](#214-regular-expressions)
+- [1. Getting Started](#1-getting-started)
+  - [1.1. The Structure of an AWK Program](#11-the-structure-of-an-awk-program)
+  - [1.2. Running an AWK Program](#12-running-an-awk-program)
+  - [1.3. Errors](#13-errors)
+- [2. Simple Output](#2-simple-output)
+  - [2.1. Printing Every Line](#21-printing-every-line)
+  - [2.2. Printing Certain Fields](#22-printing-certain-fields)
+  - [2.3. NF, the Number of Fields](#23-nf-the-number-of-fields)
+  - [2.4. NR, the Number of Records](#24-nr-the-number-of-records)
+  - [2.5. Putting Text in the Output](#25-putting-text-in-the-output)
+- [3. Fancier Output](#3-fancier-output)
+  - [3.1. Lining Up Fields](#31-lining-up-fields)
+  - [3.2. Sorting the Output](#32-sorting-the-output)
+- [4. Selection](#4-selection)
+  - [4.1. Selection by Comparison](#41-selection-by-comparison)
+  - [4.2. Selection by Computation](#42-selection-by-computation)
+  - [4.3. Selection by Text Content](#43-selection-by-text-content)
+  - [4.4. Combinations of Patterns](#44-combinations-of-patterns)
+  - [4.5. Data Validation](#45-data-validation)
+  - [4.6. BEGIN and END](#46-begin-and-end)
+- [5. Computing with AWK](#5-computing-with-awk)
+  - [5.1. Counting](#51-counting)
+  - [5.2. Computing Sums and Averages](#52-computing-sums-and-averages)
+  - [5.3. Handling Text](#53-handling-text)
+  - [5.4. String Concatenation](#54-string-concatenation)
+  - [5.5. Printing the Last Input Line](#55-printing-the-last-input-line)
+  - [5.6. Built-in Functions](#56-built-in-functions)
+  - [5.7. Counting Lines, Words, and Characters](#57-counting-lines-words-and-characters)
+- [6. Control-Flow Statements](#6-control-flow-statements)
+  - [6.1. if-else Statement](#61-if-else-statement)
+  - [6.2. while Statement](#62-while-statement)
+  - [6.3. for Statement](#63-for-statement)
+- [7. Arrays](#7-arrays)
+- [8. A Handful of Useful "One-liners"](#8-a-handful-of-useful-one-liners)
 
-Computer users spend a lot of time doing simple, mechanical data manipulation - changing the format of data, checking its validity, finding items with some property, adding up numbers, printing reports, and the like. All of these jobs ought to be mechanized, but it's a real nuisance to have to write a special purpose program in a standard language like C or Pascal each time such a task comes up.
-
-Awk is a programming language that makes it possible to handle such tasks with very short programs, often only one or two lines long. An awk program is **a sequence of patterns and actions** that tell what to look for in the input data and what to do when it's found. Awk searches a set of files for lines matched by any of the patterns; **when a matching line is found, the corresponding action is performed**.
-
-- **Patterns** can select lines by combinations of regular expressions and comparison operations on strings, numbers, fields, variables, and array elements.
-- **Actions** may perform arbitrary processing on selected lines; the action language looks like `C` but there are no declarations, and strings and numbers are built-in data types.
-
-Awk scans the input files and splits each input line into fields automatically. Because so many things are automatic - input, field splitting, storage management, initialization - awk programs are usually much smaller than they would be in a more conventional language. Thus one common use of awk is for the kind of data manipulation suggested above. Programs, a line or two long, are composed at the keyboard, run once, then discarded. In effect, awk is a general-purpose programmable tool that can replace a host of specialized tools or programs.
-
-## 1. Chapter 1: AN AWK TUTORIAL
-
-### 1.1. Getting Started
+## 1. Getting Started
 
 Suppose you have a file called `emp.data` that contains the name, pay rate in dollars per hour, and number of hours worked for your employees, one employee record per line, like this:
 
@@ -82,7 +64,7 @@ The part inside the quotes is the complete awk program. It consists of a single 
 - The **pattern** `$3 > 0`, matches every input line in which the third column, or field, is greater than zero
 - The **action** `{ print $1, $2 * $3 }` prints the first field and the product of the second and third fields of each matched line.
 
-#### 1.1.1. The Structure of an AWK Program
+### 1.1. The Structure of an AWK Program
 
 In the command lines above, the parts between the quote characters are programs written in the *awk programming language*. Each awk program in this chapter is a sequence of one or more *pattern-action* statements:
 
@@ -120,7 +102,7 @@ Either the *pattern* or the *action* (but not both) in a pattern-action statemen
 
 Since patterns and actions are both *optional*, actions are enclosed in *braces* to distinguish them from patterns.
 
-#### 1.1.2. Running an AWK Program
+### 1.2. Running an AWK Program
 
 There are several ways to run an awk program. You can type a command line of the form
 
@@ -176,7 +158,7 @@ awk -f <progfile> <optional list of input files>
 
 The `-f` option instructs awk to fetch the program from the named file. Any filename can be used in place of *progfile*.
 
-#### 1.1.3. Errors
+### 1.3. Errors
 
 If you make an error in an awk program, awk will give you a diagnostic message. For example, if you mistype a brace, like this:
 
@@ -198,7 +180,7 @@ awk: bailing out at source line 1
 - *"Syntax error"* means that you have made a grammatical error that was detected at the place marked by `>>> <<<`.
 - *"Bailing out"* means that no recovery was attempted.
 
-### 1.2. Simple Output
+## 2. Simple Output
 
 The rest of this chapter contains a collection of short, typical awk programs based on manipulation of the `emp.data` file above.
 
@@ -206,7 +188,7 @@ There are only two types of data in awk: **numbers** and **strings** of characte
 
 Awk reads its input one line at a time and splits each line into fields, where, by default, a field is a sequence of characters that doesn't contain any blanks or tabs. The first field in the current input line is called `$1`, the second `$2`, and so forth. The entire line is called `$0`. The number of fields can vary from line to line.
 
-#### 1.2.1. Printing Every Line
+### 2.1. Printing Every Line
 
 If an action has no pattern, the action is performed for all input lines. The statement `print` by itself prints the current input line, so the program
 
@@ -222,7 +204,7 @@ prints all of its input on the **standard output**. Since `$0` is the whole line
 
 does the same thing.
 
-#### 1.2.2. Printing Certain Fields
+### 2.2. Printing Certain Fields
 
 More than one item can be printed on the same output line with a single print statement. The program to print the *first* and *third* fields of each input line is
 
@@ -235,7 +217,7 @@ More than one item can be printed on the same output line with a single print st
 
 Both of these defaults can be changed; we'll show how in Chapter 2.
 
-#### 1.2.3. NF, the Number of Fields
+### 2.3. NF, the Number of Fields
 
 It might appear you must always refer to fields as `$1`, `$2`, and so on, but any *expression* can be used after `$` to **denote** a field number, *the expression is evaluated and its numeric value is used as the field number*.
 
@@ -247,7 +229,7 @@ Awk counts the number of fields in the current input line and stores the count i
 
 prints *the number of fields* and the *first and last fields* of each input line.
 
-#### 1.2.4. NR, the Number of Records
+### 2.4. NR, the Number of Records
 
 Awk provides another *built-variable*, called `NR`(*Number of Records*), that counts the *number of lines* read so far. We can use `NR` and `$0` to prefix each line of `emp.data` with its line number:
 
@@ -266,7 +248,7 @@ The output looks like this:
 6 Susie 4.25    18
 ```
 
-#### 1.2.5. Putting Text in the Output
+### 2.5. Putting Text in the Output
 
 You can also print words in the midst of fields and computed values:
 
@@ -287,11 +269,11 @@ total pay for Susie is 76.5
 
 In the `print` statement, the text inside the *double quotes* is printed along with the fields and computed values.
 
-### 1.3. Fancier Output
+## 3. Fancier Output
 
 The `print` statement is meant for quick and easy output. To format the output exactly the way you want it, you may have to use the `printf` statement. As we shall see in **Section 2.4**, `printf` can produce almost any kind of output, but in this section we'll only show a few of its capabilities.
 
-#### 1.3.1. Lining Up Fields
+### 3.1. Lining Up Fields
 
 The `printf` statement has the form
 
@@ -336,7 +318,7 @@ Mary     $121.00
 Susie    $ 76.50
 ```
 
-#### 1.3.2. Sorting the Output
+### 3.2. Sorting the Output
 
 Suppose you want to print all the data for each employee, along with his or her pay, *sorted in order of increasing pay*.
 
@@ -357,13 +339,13 @@ pipes the output of `awk` into the `sort` command, and produces:
 121.00  Mary    5.50    22
 ```
 
-### 1.4. Selection
+## 4. Selection
 
 Awk patterns are good for selecting interesting lines from the input for further processing.
 
 Since **a pattern without an action prints all lines matching the pattern**, many awk programs consist of nothing more than a single pattern.
 
-#### 1.4.1. Selection by Comparison
+### 4.1. Selection by Comparison
 
 This program uses a comparison pattern to select the records of employees who earn $5.00 or more per hour, that is, lines in which the second field is greater than or equal to `5`:
 
@@ -378,7 +360,7 @@ Mark    5.00    20
 Mary    5.50    22
 ```
 
-#### 1.4.2. Selection by Computation
+### 4.2. Selection by Computation
 
 The program
 
@@ -394,7 +376,7 @@ $121.00 for Mary
 $ 76.50 for Susie
 ```
 
-#### 1.4.3. Selection by Text Content
+### 4.3. Selection by Text Content
 
 Besides numeric tests, you can select input lines that contain specific words or phrases. This program prints all lines in which the first field is *Susie*:
 
@@ -418,7 +400,7 @@ Susie   4.25    18
 
 *Regular expressions* can be used to specify much more elaborate patterns; **Section 2.1** contains a full discussion.
 
-#### 1.4.4. Combinations of Patterns
+### 4.4. Combinations of Patterns
 
 Patterns can be combined with parentheses and the logical operators `&&`, `||`, and `!`, which stand for *AND*, *OR*, and *NOT*. The program
 
@@ -457,7 +439,7 @@ Mary    5.50    22
 Susie   4.25    18
 ```
 
-#### 1.4.5. Data Validation
+### 4.5. Data Validation
 
 There are always errors in real data. Awk is an excellent tool for checking that data has reasonable values and is in the right format, a task that is often called *data validation*.
 
@@ -473,7 +455,7 @@ $3 > 60   { print $0, "too many hours worked" }
 
 If there are no errors, there's no output.
 
-#### 1.4.6. BEGIN and END
+### 4.6. BEGIN and END
 
 The special pattern `BEGIN` matches before the first line of the first input file is read, and `END` matches after the last line of the last file has been processed.
 
@@ -500,7 +482,7 @@ Susie   4.25    18
 - You can put several statements on a single line if you separate them by semicolons(`;`).
 - Notice that `print ""` prints a blank line, quite different from just plain `print`, which prints the current input line.
 
-### 1.5. Computing with AWK
+## 5. Computing with AWK
 
 An action is a sequence of statements separated by *newlines* or *semicolons*.
 
@@ -508,7 +490,7 @@ This section provides examples of statements for performing simple *numeric* and
 
 In awk, **user-created variables are *not* declared**.
 
-#### 1.5.1. Counting
+### 5.1. Counting
 
 This program uses a variable `emp` to count employees who have worked more than 15 hours:
 
@@ -525,7 +507,7 @@ For every line in which the third field exceeds 15, the previous value of `emp` 
 
 Awk variables used as numbers begin life with the value `0`, so we didn't need to initialize `emp`.
 
-#### 1.5.2. Computing Sums and Averages
+### 5.2. Computing Sums and Averages
 
 To count the number of employees, we can use the *built-in variable* `NR`, which holds the number of lines read so far; its value at the end of all input is the total number of lines read.
 
@@ -557,7 +539,7 @@ total pay is 337.5
 average pay is 56.25
 ```
 
-#### 1.5.3. Handling Text
+### 5.3. Handling Text
 
 One of the strengths of awk is its ability to handle strings of characters as conveniently as most languages handle numbers. Awk variables can hold strings of characters as well as numbers. This program finds the employee who is paid the most per hour:
 
@@ -574,7 +556,7 @@ highest hourly rate: 5.50 for Mary
 
 In this program the variable `max_rate` holds a numeric value, while the variable `max_emp` holds a string.
 
-#### 1.5.4. String Concatenation
+### 5.4. String Concatenation
 
 New strings may be created by combining old ones; this operation is called concatenation. The program
 
@@ -593,7 +575,7 @@ The concatenation operation is represented in an awk program by *writing string 
 
 Variables used to store strings begin life holding the `null` string (that is, the string containing no characters), so in this program `names` did not need to be explicitly initialized.
 
-#### 1.5.5. Printing the Last Input Line
+### 5.5. Printing the Last Input Line
 
 Although `NR` retains its value in an `END` action, `$0` does not. The program
 
@@ -608,7 +590,7 @@ is one way to print the last input line:
 Susie   4.25    18
 ```
 
-#### 1.5.6. Built-in Functions
+### 5.6. Built-in Functions
 
 There are *built-in functions* for computing other useful values. One of these is `length`, which counts the number of characters in a string. For example, this program computes the length of each person's name:
 
@@ -627,7 +609,7 @@ Mary 4
 Susie 5
 ```
 
-#### 1.5.7. Counting Lines, Words, and Characters
+### 5.7. Counting Lines, Words, and Characters
 
 This program uses `length`, `NF`, and `NR` to count the number of *lines*, *words*, and *characters* in the input. For convenience, we'll treat each field as a word.
 
@@ -647,11 +629,11 @@ The file `emp.data` has
 
 We have added `1` for the *newline character*(`\n`) at the end of each input line, since `$0` doesn't include it.
 
-### 1.6. Control-Flow Statements
+## 6. Control-Flow Statements
 
 Awk provides an `if-else` statement for making decisions and several statements for writing *loops*, all modeled on those found in the *C programming language*. **They can only be used in actions.**
 
-#### 1.6.1. if-else Statement
+### 6.1. if-else Statement
 
 The following program computes the total and average pay of employees making more than $6.00 an hour. It uses an `if` to defend against division by `0` in computing the average pay.
 
@@ -673,7 +655,7 @@ no employees are paid more than $6/hour
 
 Note that we can continue a long statement over several lines by breaking it after a comma.
 
-#### 1.6.2. while Statement
+### 6.2. while Statement
 
 A `while` statement has a condition and a body. The statements in the body are performed repeatedly while the condition is true.
 
@@ -712,7 +694,7 @@ $ awk -f interest1
         1762.34
 ```
 
-#### 1.6.3. for Statement
+### 6.3. for Statement
 
 Another statement, `for`, compresses into a single line the initialization, test, and increment that are part of most loops. Here is the previous interest computation with a for:
 
@@ -726,7 +708,7 @@ Another statement, `for`, compresses into a single line the initialization, test
 }
 ```
 
-### 1.7. Arrays
+## 7. Arrays
 
 Awk provides arrays for storing groups of related values. Although arrays give awk considerable power, we will show only a simple example here.
 
@@ -769,7 +751,7 @@ END {
     }
 ```
 
-### 1.8. A Handful of Useful "One-liners"
+## 8. A Handful of Useful "One-liners"
 
 Although awk can be used to write programs of some complexity, many useful programs are not much more complicated than what we've seen so far. Here is a collection of short programs that you might find handy and instructive. Most are variations on material already covered.
 
@@ -910,329 +892,3 @@ Although awk can be used to write programs of some complexity, many useful progr
       print
     }
     ```
-
-## 2. Chapter 2: THE AWK LANGUAGE
-
-This chapter explains, mostly with examples, the constructs that make up awk programs.
-
-The simplest awk program is a sequence of *pattern-action* statements:
-
-```awk
-pattern { action }
-pattern { action }
-...
-```
-
-- In some statements, the *pattern* may be missing;
-- in others, the *action* and its enclosing braces may be missing.
-
-After awk has checked your program to make sure there are no syntactic errors, it reads the input a line at a time, and for each line, evaluates the patterns in order. For each pattern that matches the current input line, it executes the associated action.
-
-- A missing pattern matches every input line, so every action with no pattern is performed at each line.
-- A pattern-action statement consisting only of a pattern prints each input line matched by the pattern.
-
-**The Input File** `countries.txt`
-
-As input for many of the awk programs in this chapter, we will use a file called `countries.txt`.
-
-```plaintext
-USSR	8649	275	Asia
-Canada	3852	25	North America
-China	3705	1032	Asia
-USA	3615	237	North America
-Brazil	3286	134	South America
-India	1267	746	Asia
-Mexico	762	78	North America
-France	211	55	Europe
-Japan	144	120	Asia
-Germany	96	61	Europe
-England	94	56	Europe
-```
-
-Each line contains:
-
-- the name of a country
-- its area in thousands of square miles
-- its population in millions
-- the continent it is in.
-
-The data is from 1984; the USSR has been arbitrarily placed in Asia.
-
-- In the file, the four columns are separated by *tabs*;
-- a single *blank* separates *North* and *South* from *America*.
-
-**Program Format**
-
-Pattern-action statements and the statements within an action are usually separated by newlines, but several statements may appear on one line if they are separated by semicolons. A semicolon may be put at the end of any statement.
-
-*The opening brace of an action must be on the same line as the pattern it accompanies*; the remainder of the action, including the closing brace, may appear on the following lines.
-
-Comments may be inserted at the end of any line. A comment starts with the character `#` and finishes at the end of the line, as in
-
-```awk
-{ print $1, $3 } # print country name and population
-```
-
-A long statement may be spread over several lines by inserting a *backslash*(`\`) and *newline* at each break:
-
-```awk
-{ print \
-        $1,     # country name
-        $2,     # area in thousands of square miles
-        $3 }    # population in millions
-```
-
-As this example shows, *statements may also be broken after commas*, and a comment may be inserted at the end of each broken line.
-
-### 2.1. Patterns
-
-Patterns control the execution of actions: when a pattern matches, its associated action is executed. This section describes the **6** types of patterns and the conditions under which they match.
-
----
-
-**Summary of Patterns**
-
-1. `BEGIN { statements }`
-
-    The *statements* are executed once *before* any input has been read.
-
-2. `END { statements }`
-
-    The *statements* are executed once *after* all input has been read.
-
-3. `expression { statements }`
-
-    The *statements* are executed at each input line where the *expression* is `true`, that is, *nonzero* or *nonnull*.
-
-4. `/regular expression/ { statements }`
-
-    The *statements* are executed at each input line that contains a string matched by the *regular expression*.
-
-5. `compound pattern { statements }`
-
-    A *compound pattern* combines expressions with `&&` (AND), `||` (OR), `!` (NOT), and parentheses; the *statements* are executed at each input line where the *compound pattern* is true.
-
-6. `pattern1, pattern2 { statements }`
-
-    A **range pattern** matches each input line from a line matched by *pattern1* to the next line matched by *pattern2* , inclusive; the *statements* are executed at each matching line.
-
-NOTE:
-
-- `BEGIN` and `END` do not combine with other patterns.
-- `BEGIN` and `END` are the only patterns that require an action.
-- A **range pattern** cannot be part of any other pattern.
-
----
-
-#### 2.1.1. BEGIN and END
-
-The `BEGIN` and `END` patterns do not match any input lines. Rather,
-
-- the statements in the `BEGIN` action are executed *before* awk reads any input;
-- the statements in the `END` action are executed *after* all input has been read.
-
-`BEGIN` and `END` thus provide a way to gain control for initialization and wrap-up.
-
-If there is more than one `BEGIN`, the associated actions are executed in the order in which they appear in the program, and similarly for multiple `END`'s.
-
-Although it's not mandatory, we put `BEGIN` first and `END` last.
-
-**Field Separator**
-
-One common use of a `BEGIN` action is to change the default way that input lines are split into fields. The *field separator* is controlled by a *built-in variable* called `FS`(*Field Separator*).
-
-By default, fields are separated by ***blanks* and/or *tabs***; this behavior occurs when `FS` is set to a blank. Setting `FS` to any character other than a blank makes that character the *field separator*.
-
-The following program uses the `BEGIN` action to set the *field separator* to a tab character (`\t`) and to put column headings on the output. The second `printf` statement, which is executed at each input line, formats the output into a table, neatly aligned under the column headings. The `END` action prints the totals.
-
-```awk
-# print countries with column headers and totals
-
-BEGIN { 
-        FS = "\t"   # make tab the field separator
-        printf("%10s %6s %5s   %s\n\n",
-              "COUNTRY", "AREA", "POP", "CONTINENT")
-      }
-
-      { 
-        printf("%10s %6d %5d   %s\n", $1, $2, $3, $4)
-        area = area + $2
-        pop = pop + $3
-      }
-
-END   { printf("\n%10s %6d %5d\n", "TOTAL", area, pop) }
-```
-
-With the `countries.txt` file as input, this program produces
-
-```console
-   COUNTRY   AREA   POP   CONTINENT
-
-      USSR   8649   275   Asia
-    Canada   3852    25   North America
-     China   3705  1032   Asia
-       USA   3615   237   North America
-    Brazil   3286   134   South America
-     India   1267   746   Asia
-    Mexico    762    78   North America
-    France    211    55   Europe
-     Japan    144   120   Asia
-   Germany     96    61   Europe
-   England     94    56   Europe
-
-     TOTAL  25681  2819
-```
-
-#### 2.1.2. Expressions as Patterns
-
-Throughout this book, the term *string* means a sequence of zero or more characters. These may be stored in variables, or appear literally as string constants like `""` or `"Asia"`.
-
-The string `""`, which contains no characters, is called the *null string*. The term *substring* means a contiguous sequence of zero or more characters within a string. In every string, the *null string* appears as a *substring* of length zero before the first character, between every pair of adjacent characters, and after the last character.
-
-Any expression can be used as an operand of any operator.
-
-- If an expression has a numeric value but an operator requires a string value, the numeric value is automatically transformed into a string;
-- similarly, a string is converted into a number when an operator demands a numeric value.
-
-Any expression can be used as a pattern. If an expression used as a pattern has a *nonzero* or *nonnull* value at the current input line, then the pattern matches that line. The typical expression patterns are those involving comparisons between numbers or strings.
-
-A comparison expression contains one of the **6** relational operators, or one of the two *string-matching* operators `~`(tilde) and `!~` that will be discussed in the next section.
-
-| OPERATOR | MEANING                  |
-|----------|--------------------------|
-| `==`     | equal to                 |
-| `!=`     | not equal to             |
-| `<`      | less than                |
-| `<=`     | less than or equal to    |
-| `>`      | greater than             |
-| `>=`     | greater than or equal to |
-| `~`      | matched by               |
-| `!~`     | not matched by           |
-
-- If the pattern is a *comparison expression* like `NF > 10`, then it matches the current input line when the condition is satisfied, that is, when the number of fields in the line is greater than 10.
-- If the pattern is an *arithmetic expression* like `NF`, it matches the current input line when its numeric value is *nonzero*.
-- If the pattern is a *string expression*, it matches the current input line when the string value of the expression is *nonnull*.
-
-In a relational comparison,
-
-- if both operands are numeric, a numeric comparison is made;
-- otherwise, *any numeric operand is converted to a string*, and then the operands are compared as strings. The strings are compared character by character using the ordering provided by the machine, most often the `ASCII` character set. One string is said to be "less than" another if it would appear before the other according to this ordering, e.g., `"Canada" < "China"` and `"Asia" < "Asian"`.
-
-The pattern
-
-```awk
-$3/$2 >= 0.5
-```
-
-selects lines where the value of the third field divided by the second is numerically greater than or equal to 0.5, while
-
-```awk
-$0 >= "M"
-```
-
-selects lines that begin with an M, N, O, etc.:
-
-```console
-USSR    8649    275     Asia
-USA     3615    237     North America
-Mexico  762     78      North America
-```
-
-Sometimes the type of a comparison operator cannot be determined solely by the syntax of the expression in which it appears. The program
-
-```awk
-$1 < $4
-```
-
-could compare the *first* and *fourth* fields of each input line either as numbers or as strings. Here, the type of the comparison depends on the values of the fields, and it may vary from line to line. In the `countries.txt` file, the *first* and *fourth* fields are always strings, so string comparisons are always made; the output is
-
-```console
-Canada  3852    25      North America
-Brazil  3286    134     South America
-Mexico  762     78      North America
-England 94      56      Europe
-```
-
-#### 2.1.3. String-Matching Patterns
-
-A *string-matching pattern* tests whether a string contains a substring matched by a *regular expression*.
-
----
-
-**String-Matching Patterns**
-
-1. `/regexpr/`
-
-    Matches when the *current input line* contains a substring matched by *regexpr*.
-
-2. `expression ~ /regexpr/`
-
-    Matches if the *string value of expression* contains a substring matched by *regexpr*.
-
-3. `expression !~ /regexpr/`
-
-    Matches if the *string value of expression* does not contain a substring matched by *regexpr*.
-
----
-
-The simplest regular expression is a string of letters and numbers, like Asia, that matches itself. To turn a regular expression into a *string-matching pattern*, just enclose it in slashes(`/`):
-
-```awk
-/Asia/
-```
-
-This pattern matches when the current input line contains the substring *Asia*, either as *Asia* by itself or as some part of a larger word like *Asian* or *Pan-Asiatic*. Note that *blanks* are significant within regular expressions: the string-matching pattern
-
-```awk
-/ Asia /
-```
-
-matches only when *Asia* is surrounded by *blanks*.
-
-The pattern above is one of **3** types of *string-matching patterns*. Its form is a regular expression `r` enclosed in slashes:
-
-```awk
-/r/
-```
-
-This pattern matches an input line if the line contains a substring matched by `r`.
-
-The other two types of *string-matching patterns* use an explicit *matching operator*(`~`):
-
-```awk
-expression ~ /r/
-expression !~ /r/
-```
-
-The *matching operator* `~` means "is matched by" and `!~` means "is not matched by."
-
-- The first pattern matches when the *string value of expression* contains a substring matched by the regular expression `r`;
-- the second pattern matches if there is no such substring.
-
-The left operand of a matching operator is often a field: the pattern
-
-```awk
-$4 ~ /Asia/
-```
-
-matches all input lines in which the fourth field contains *Asia* as a substring, while
-
-```awk
-$4 !~ /Asia/
-```
-
-matches if the fourth field does not contain *Asia* anywhere.
-
-Note that the string-matching pattern
-
-```awk
-/Asia/
-```
-
-is a shorthand for
-
-```awk
-$0 ~ /Asia/
-```
-
-#### 2.1.4. Regular Expressions
