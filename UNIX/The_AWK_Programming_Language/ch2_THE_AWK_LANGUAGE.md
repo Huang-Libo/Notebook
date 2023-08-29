@@ -22,6 +22,8 @@
     - [2.1.10. Increment and Decrement Operators](#2110-increment-and-decrement-operators)
     - [2.1.11. Built-In Arithmetic Functions](#2111-built-in-arithmetic-functions)
     - [2.1.12. String Operators](#2112-string-operators)
+    - [2.1.13. Strings as Regular Expressions](#2113-strings-as-regular-expressions)
+    - [2.1.14. Built-In String Functions](#2114-built-in-string-functions)
 
 This chapter explains, mostly with examples, the constructs that make up awk programs.
 
@@ -823,3 +825,67 @@ x = int(x + 0.5)
 rounds the value of `x` to the nearest integer when `x` is positive.
 
 #### 2.1.12. String Operators
+
+There is only one string operation, **concatenation**. It has no explicit operator: string expressions are created by writing *constants*, *variables*, *fields*, *array elements*, *function values*, and *other expressions* next to one another. The program
+
+```awk
+{ print NR ":" $0 }
+```
+
+prints each line preceded by its line number and a colon, with no blanks. The number `NR` is converted to its string value (and so is `$0` if necessary); then the three strings are concatenated and the result is printed.
+
+#### 2.1.13. Strings as Regular Expressions
+
+So far, in all of our examples of matching expressions, the right-hand operand of `~` and `!~` has been a regular expression enclosed in slashes. But, in fact, *any expression can be used as the right operand of these operators*. Awk evaluates the expression, converts the value to a string if necessary, and interprets the string as a regular expression. For example, the program
+
+```awk
+BEGIN { digits = "^[0-9]+$" }
+$2 ~ digits
+```
+
+will print all lines in which the second field is a string of digits.
+
+Since expressions can be concatenated, a regular expression can be built up from components. The following program echoes input lines that are valid floating point numbers:
+
+```awk
+BEGIN {
+    sign = "[+-]?"
+    decimal = "[0-9]+[.]?[0-9]*"
+    fraction = "[.][0-9]+"
+    exponent = "([eE]" sign "[0-9]+)?"
+    number = "^" sign "(" decimal "|" fraction ")" exponent "$"
+}
+$0 ~ number
+```
+
+In a matching expression, a quoted string like `"^[0-9]+$"` can normally be used *interchangeably* with a regular expression enclosed in slashes, such as `/^[0-9]+$/`. There is **one exception**, however. If the string in quotes is to match a *literal* occurrence of a regular expression *metacharacter*, one extra backslash is needed to protect the protecting backslash itself. That is,
+
+```awk
+$0 ~ /(\+|-)[0-9]+/
+```
+
+and
+
+```awk
+$0 ~ "(\\+|-)[0-9]+"
+```
+
+are equivalent.
+
+This behavior may seem *arcane*, but it arises because **one level of protecting backslashes is removed when a quoted string is parsed by awk**. If a backslash is needed in front of a metacharacter to turn off its special meaning in a regular expression, then that *backslash needs a preceding backslash to protect it in a string*. If the right operand of a matching operator is a *variable* or *field variable*, as in
+
+```awk
+x ~ $1
+```
+
+then the additional level of backslashes is not needed in the first field because backslashes have no special meaning in data.
+
+As an aside, it's easy to test your understanding of regular expressions interactively: the program
+
+```awk
+$1 ~ $2
+```
+
+lets you type in a string and a regular expression; it echoes the line back if the string matches the regular expression.
+
+#### 2.1.14. Built-In String Functions
