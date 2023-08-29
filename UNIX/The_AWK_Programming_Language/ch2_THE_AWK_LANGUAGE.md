@@ -21,6 +21,7 @@
     - [2.1.9. Assignment Operators](#219-assignment-operators)
     - [2.1.10. Increment and Decrement Operators](#2110-increment-and-decrement-operators)
     - [2.1.11. Built-In Arithmetic Functions](#2111-built-in-arithmetic-functions)
+    - [2.1.12. String Operators](#2112-string-operators)
 
 This chapter explains, mostly with examples, the constructs that make up awk programs.
 
@@ -777,3 +778,48 @@ is usually written `++n` or `n++` using the *unary increment operator* `++`, whi
 The prefix and postfix decrement operator `--`, which subtracts `1` from a variable, works the same way.
 
 #### 2.1.11. Built-In Arithmetic Functions
+
+The *built-in arithmetic functions* are shown in Table below, `x` and `y` are arbitrary expressions.
+
+| FUNCTION     | VALUE RETURNED                                          |
+|--------------|---------------------------------------------------------|
+| `sqrt(x)`    | square root of `x`                                      |
+| `int(x)`     | integer part of `x`; truncated towards `0` when `x > 0` |
+| `log(x)`     | natural (base `e`) logarithm of `x`                     |
+| `exp(x)`     | exponential function of `x`, `e^x`                      |
+| `sin(x)`     | sine of `x`, with `x` in radians                        |
+| `cos(x)`     | cosine of `x`, with `x` in radians                      |
+| `atan2(y,x)` | arctangent of `y/x` in the range `-π` to `π`            |
+| `rand()`     | random number `r`, where `0 ≤ r < 1`                    |
+| `srand(x)`   | `x` is new seed for `rand()`                            |
+
+Useful constants can be computed with these functions:
+
+- `atan2(0,-1)` gives `π`
+- `exp(1)` gives `e`, the base of the natural logarithms
+
+To compute the `base-10` logarithm of `x`, use `log(x)/log(10)`.
+
+The function `rand()` returns a *pseudo-random* floating point number greater than or equal to `0` and less than `1`.
+
+- Calling `srand(x)` sets the starting point of the generator from `x`.
+- Calling `srand()`(*without parameter*) sets the starting point from the time of day.
+- If `srand` is not called, `rand` starts with the same value each time the program is run.
+
+The assignment
+
+```awk
+rand_int = int(n * rand()) + 1
+```
+
+sets `rand_int` to a random integer between `1` and `n` inclusive.
+
+Here we are using the `int` function to discard the fractional part. The assignment
+
+```awk
+x = int(x + 0.5)
+```
+
+rounds the value of `x` to the nearest integer when `x` is positive.
+
+#### 2.1.12. String Operators
