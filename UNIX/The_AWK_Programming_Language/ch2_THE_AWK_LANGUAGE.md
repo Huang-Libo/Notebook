@@ -878,7 +878,7 @@ This behavior may seem *arcane*, but it arises because **one level of protecting
 x ~ $1
 ```
 
-then the additional level of backslashes is not needed in the first field because backslashes have no special meaning in data.
+**then the additional level of backslashes is not needed in the first field because backslashes have no special meaning in data.**
 
 As an aside, it's easy to test your understanding of regular expressions interactively: the program
 
@@ -889,3 +889,22 @@ $1 ~ $2
 lets you type in a string and a regular expression; it echoes the line back if the string matches the regular expression.
 
 #### 2.1.14. Built-In String Functions
+
+Awk provides the built-in string functions shown in Table below.
+
+In this table, `r` represents a *regular expression* (either as a string or enclosed in slashes), `s` and `t` are string expressions, and `n` and `p` are integers.
+
+| FUNCTION                  | DESCRIPTION                                                                                                        |
+|---------------------------|--------------------------------------------------------------------------------------------------------------------|
+| `length(s)`               | return number of characters in `s`                                                                                 |
+| `substr(s, p)`            | return *suffix* of `s` starting at position `p`                                                                    |
+| `substr(s, p, n)`         | return substring of s of length `n` starting at position `p`                                                       |
+| `sub(r, s)`               | substitute `s` for the leftmost longest substring of `$0` matched by `r`, <br> return number of substitutions made |
+| `sub(r, s, t)`            | substitute `s` for the leftmost longest substring of `t` matched by `r`, <br> return number of substitutions made  |
+| `gsub(r,s)`               | substitute `s` for `r` globally in `$0`, <br> return number of substitutions made                                  |
+| `gsub(r ,s ,t)`           | substitute `s` for `r` globally in string `t`, <br> return number of substitutions made                            |
+| `split(s ,a)`             | split `s` into array `a` on `FS`, <br> *return number of fields*                                                   |
+| `split(s ,a ,fs)`         | split `s` into array `a` on field separator `fs`, <br> return number of fields                                     |
+| `index(s ,t)`             | return first position(start from `1`) of string `t` in `s`, or `0` if `t` is not present                           |
+| `match(s ,r)`             | test whether `s` contains a substring matched by `r`, <br> return index or `0`; sets `RSTART` and `RLENGTH`        |
+| `sprintf(fmt, expr-list)` | return *expr-list* formatted according to format string `fmt`                                                      |
