@@ -24,6 +24,16 @@
     - [2.1.12. String Operators](#2112-string-operators)
     - [2.1.13. Strings as Regular Expressions](#2113-strings-as-regular-expressions)
     - [2.1.14. Built-In String Functions](#2114-built-in-string-functions)
+      - [2.1.14.1. `index(s, t)`](#21141-indexs-t)
+      - [2.1.14.2. `match(s, r)`](#21142-matchs-r)
+      - [2.1.14.3. `split(s, a, fs)`](#21143-splits-a-fs)
+      - [2.1.14.4. `sprintf(format, expr_1 , expr_2 , ... , expr_n)`](#21144-sprintfformat-expr_1--expr_2----expr_n)
+      - [2.1.14.5. `sub(r, s, t)`](#21145-subr-s-t)
+      - [2.1.14.6. `gsub(r, s, t)`](#21146-gsubr-s-t)
+      - [2.1.14.7. Special Meaning of `&` Symbol in `sub()` and `gsub()`](#21147-special-meaning-of--symbol-in-sub-and-gsub)
+      - [2.1.14.8. `substr(s, p)`](#21148-substrs-p)
+      - [2.1.14.9. Concatenation of Strings](#21149-concatenation-of-strings)
+    - [2.1.15. Number or String?](#2115-number-or-string)
 
 This chapter explains, mostly with examples, the constructs that make up awk programs.
 
@@ -892,8 +902,6 @@ lets you type in a string and a regular expression; it echoes the line back if t
 
 Awk provides the built-in string functions shown in Table below.
 
-In this table, `r` represents a *regular expression* (either as a string or enclosed in slashes), `s` and `t` are string expressions, and `n` and `p` are integers.
-
 | FUNCTION                  | DESCRIPTION                                                                                                        |
 |---------------------------|--------------------------------------------------------------------------------------------------------------------|
 | `length(s)`               | return number of characters in `s`                                                                                 |
@@ -908,3 +916,125 @@ In this table, `r` represents a *regular expression* (either as a string or encl
 | `index(s ,t)`             | return first position(start from `1`) of string `t` in `s`, or `0` if `t` is not present                           |
 | `match(s ,r)`             | test whether `s` contains a substring matched by `r`, <br> return index or `0`; sets `RSTART` and `RLENGTH`        |
 | `sprintf(fmt, expr-list)` | return *expr-list* formatted according to format string `fmt`                                                      |
+
+> In this table, `r` represents a *regular expression* (either as a string or enclosed in slashes), `s` and `t` are string expressions, and `n` and `p` are integers.
+
+##### 2.1.14.1. `index(s, t)`
+
+The function `index(s, t)` returns the *leftmost position* where the string `t` begins in `s`, or `0` if t does not occur in `s`. The first character in a string is at position `1`:
+
+```awk
+index("banana", "an")
+```
+
+returns `2`.
+
+##### 2.1.14.2. `match(s, r)`
+
+The function `match(s, r)` finds the *leftmost longest substring* in the strings that is matched by the regular expression `r`. It returns the index where the substring begins or `0` if there is no matching substring. It also sets the *built-in variables* `RSTART` to this index and `RLENGTH` to the length of the matched substring.
+
+##### 2.1.14.3. `split(s, a, fs)`
+
+The function `split(s, a, fs)` splits the string `s` into the array `a` according to the separator `fs` and returns the number of elements. It is described after arrays, at the end of this section.
+
+##### 2.1.14.4. `sprintf(format, expr_1 , expr_2 , ... , expr_n)`
+
+The string function `sprintf(format, expr_1 , expr_2 , ... , expr_n)` returns(*without printing*) a string containing `expr_1`, `expr_2` , ... , `expr_n` formatted according to the `printf` specifications in the string value of the expression `format`. Thus, the statement
+
+```awk
+x = sprintf("%10s %6d", $1, $2)
+```
+
+assigns to `x` the string produced by formatting the values of `$1` and `$2` as a ten-character string and a decimal number in a field of width at least six. **Section 2.4** contains a complete description of the format-conversion characters.
+
+##### 2.1.14.5. `sub(r, s, t)`
+
+The functions `sub` and `gsub` are patterned after the substitute command in the Unix text editor `ed`. The function `sub(r, s, t)` first finds the **leftmost longest substring** matched by the regular expression `r` in the target string `t`; it then replaces the substring by the substitution string `s`. As in `ed`, **"leftmost longest" means that the leftmost match is found first, then extended as far as possible.**
+
+- In the target string `banana`, for example, `anan` is the leftmost longest substring matched by the regular expression `(an)+`.
+- **By contrast, the leftmost longest match of `(an)*` is the *null string* before `b`.**
+
+The `sub` function returns the number of substitutions made. The function `sub(r,s)` is a synonym for `sub(r, s, $0)`.
+
+##### 2.1.14.6. `gsub(r, s, t)`
+
+The function `gsub(r, s, t)` is similar, except that it *successively* replaces the *leftmost longest non-overlapping substrings* matched by `r` with `s` in `t`; it returns the number of substitutions made. (The "g" is for "global", meaning everywhere.) For example, the program
+
+```awk
+{ gsub(/USA/, "United States" ); print }
+```
+
+will transcribe its input, replacing all occurrences of *"USA"* by *"United States"*. (In such examples, when `$0` changes, the fields and `NF` change too.) And
+
+```awk
+gsub(/ana/, "anda", "banana")
+```
+
+will replace *banana* by *bandana*; matches are non-overlapping.
+
+##### 2.1.14.7. Special Meaning of `&` Symbol in `sub()` and `gsub()`
+
+In a substitution performed by either `sub(r , s, t)` or `gsub(r, s, t)`, any occurrence of the character `&` in `s` will be replaced by the substring matched by `r`. Thus
+
+```awk
+gsub(/a/, "aba", "banana")
+```
+
+replaces *banana* by *babanabanaba*; so does
+
+```awk
+gsub(/a/, "&b&", "banana")
+```
+
+The special meaning of `&` in the substitution string can be turned off by preceding it with a backslash, as in `\&`.
+
+##### 2.1.14.8. `substr(s, p)`
+
+The function `substr(s, p)` returns the suffix of `s` that begins at position `p`. If `substr(s, p, n)` is used, only the first `n` characters of the suffix are returned; if the suffix is shorter than `n`, then the entire suffix is returned. For example, we could abbreviate the country names in countries to their first three characters by the program
+
+```awk
+{ $1 = substr($1, 1, 3); print $0 }
+```
+
+to produce
+
+```console
+USS 8649 275 Asia
+Can 3852 25 North America
+Chi 3705 1032 Asia
+USA 3615 237 North America
+Bra 3286 134 South America
+Ind 1267 746 Asia
+Mex 762 78 North America
+Fra 211 55 Europe
+Jap 144 120 Asia
+Ger 96 61 Europe
+Eng 94 56 Europe
+```
+
+**Setting `$1` forces awk to recompute `$0` and thus the fields are now separated by a blank (the default value of `OFS`), no longer by a tab.**
+
+##### 2.1.14.9. Concatenation of Strings
+
+Strings are concatenated merely by writing them one after another in an expression. For example, on the countries file,
+
+```awk
+    { s = s substr($1, 1, 3) " " }
+END { print s }
+```
+
+prints
+
+```console
+USS Can Chi USA Bra Ind Mex Fra Jap Ger Eng
+```
+
+by building `s` up a piece at a time starting with an initially empty string. (If you are worried about the extra blank on the end, use
+
+```awk
+print substr(s, 1, length(s)-1)
+```
+
+instead of print `s` in the `END` action.)
+
+#### 2.1.15. Number or String?
