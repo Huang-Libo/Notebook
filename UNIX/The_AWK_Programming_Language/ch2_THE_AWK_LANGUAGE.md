@@ -34,6 +34,7 @@
       - [2.1.14.8. `substr(s, p)`](#21148-substrs-p)
       - [2.1.14.9. Concatenation of Strings](#21149-concatenation-of-strings)
     - [2.1.15. Number or String?](#2115-number-or-string)
+    - [2.1.16. Summary of Operators](#2116-summary-of-operators)
 
 This chapter explains, mostly with examples, the constructs that make up awk programs.
 
@@ -521,9 +522,9 @@ both are *built-in variables*.
 
 **Difference between `NR` and `FNR`**:
 
-| Variable | Meaning                                         |
-|----------|-------------------------------------------------|
-| FNR      | Record number within the *current* input file     |
+| Variable | Meaning                                             |
+|----------|-----------------------------------------------------|
+| FNR      | Record number within the *current* input file       |
 | NR       | *Cumulative* record number across *all* input files |
 
 Thus, the program
@@ -1038,3 +1039,120 @@ print substr(s, 1, length(s)-1)
 instead of print `s` in the `END` action.)
 
 #### 2.1.15. Number or String?
+
+The value of an expression may be automatically converted from a *number* to a *string* or vice versa, depending on what operation is applied to it. In an arithmetic expression like
+
+```awk
+pop + $3
+```
+
+the operands `pop` and `$3` must be numeric, so their values will be forced or *coerced* to numbers if they are not already. Similarly, in the assignment expression
+
+```awk
+pop += $3
+```
+
+`pop` and `$3` must be numbers.
+
+In a string expression like
+
+```awk
+$1 $2
+```
+
+the operands `$1` and `$2` must be strings to be *concatenated*, so they will be coerced to strings if necessary.
+
+In contexts where the same operator applies to both numbers and strings, there are special rules. In the assignment `v = e`, both the assignment and the variable `v` acquire the type of the expression `e`. In a comparison expression like
+
+```awk
+x == y
+```
+
+- if **both** operands have a numeric type, the comparison is numeric;
+- otherwise, any numeric operand is coerced to a string and the comparison is made on the string values.
+
+Let us examine what this rule means for a comparison like
+
+```awk
+$1 == $2
+```
+
+that involves *fields variables*. Here, the type of the comparison depends on whether the *fields variables* contain *numbers* or *strings*, and this can only be determined when the program runs; the type of the comparison may differ from input line to input line.
+
+- When awk creates a field at run time, it automatically sets its type to *string*;
+- in addition,if the field contains a *machine-representable number*, it **also** gives the field a *numeric type*.
+
+For example, the comparison `$1 == $2` will be numeric and succeed if `$1` and `$2` have any of the values
+
+`1` `1.0` `+1` `1e0` `0.1e+1` `10E-1` `001`
+
+because all these values are different representations of the number `1`. However, this same expression will be a string comparison and hence fail on each of these pairs:
+
+| `$1`  | `$2`    |
+|-------|---------|
+| 0     | (null)  |
+| 0.0   | (null)  |
+| 0     | 0a      |
+| 1e500 | 1.0e500 |
+
+- In the first three pairs, the second field is *not* a number.
+- The last pair will be compared as *strings* on machines where the values are **too large** to be represented as numbers.
+
+The print statement
+
+```awk
+print $1
+```
+
+prints the string value of the first field; thus, the output is identical to the input.
+
+Uninitialized variables are created with the *numeric value* `0` and the *string value* `""` . **Nonexistent fields and fields that are explicitly null have only the string value `""` ; they are not numeric, but when coerced to numbers they acquire the numeric value `0`.** As we will see at the end of this section, *array subscripts* are strings.
+
+There are two idioms for coercing an expression of one type to the other:
+
+| Expression   | Explanation                                                    |
+|--------------|----------------------------------------------------------------|
+| *number* ""  | concatenate a *null string* to number to coerce it to a string |
+| *string* + 0 | add `0` to string to coerce it to a number                     |
+
+Thus, to force a string comparison between two fields, coerce one field to string:
+
+```awk
+$1 "" == $2
+```
+
+To force a numeric comparison, coerce **both** fields to numeric:
+
+```awk
+$1 + 0 == $2 + 0
+```
+
+This works regardless of what the fields contain.
+
+**The numeric value of a string is the value of the longest prefix of the string that looks numeric**. Thus
+
+```awk
+BEGIN { print "1E2"+0, "12E"+0, "E12"+0, "1X2Y3"+0 }
+```
+
+yields
+
+```console
+100 12 0 1
+```
+
+The string value of a number is computed by formatting the number with the output format conversion `OFMT`. `OFMT` also controls the conversion of numeric values to strings for *concatenation*, *comparison*, and *creation of array subscripts*. The default value of `OFMT` is `%.6g`. Thus
+
+```awk
+BEGIN { print 1E2 "", 12E-2 "", E12 "", 1.23456789 "" }
+```
+
+gives
+
+```console
+100 0.12  1.23457
+```
+
+The default value of `OFMT` can be changed by assigning it a new value. If `OFMT` were changed to `%.2f`, for example, numbers would be printed, and coerced numbers would be compared, with two digits after the decimal point.
+
+#### 2.1.16. Summary of Operators
