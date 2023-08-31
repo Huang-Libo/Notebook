@@ -1156,3 +1156,29 @@ gives
 The default value of `OFMT` can be changed by assigning it a new value. If `OFMT` were changed to `%.2f`, for example, numbers would be printed, and coerced numbers would be compared, with two digits after the decimal point.
 
 #### 2.1.16. Summary of Operators
+
+Operators of higher precedence are evaluated before lower ones; this means, for example, that `*` is evaluated before `+` in an expression. 
+
+All operators are left associative except the *assignment operators*, the *conditional operator*, and *exponentiation*, which are right associative. Left associativity means that operators of the same precedence are evaluated left to right; thus `3-2-1` is `(3-2)-1`, not `3-(2-1)`.
+
+Since there is no explicit operator for *concatenation*, it is wise to *parenthesize* expressions involving other operators in concatenations. the program
+
+```awk
+$1 < 0 { print "abs($1) = " -$1 }
+```
+
+**The expression following print seems to use concatenation, but is actually a subtraction.** (The precedence of *concatenation operator* is lower than *unary minus operator*)
+
+The programs
+
+```awk
+$1 < 0 { print "abs($1) = " (-$1) }
+```
+
+and
+
+```awk
+$1 < 0 { print "abs($1) =", -$1 }
+```
+
+both do what was intended.
