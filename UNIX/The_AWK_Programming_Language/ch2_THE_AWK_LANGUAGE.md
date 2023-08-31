@@ -1157,7 +1157,30 @@ The default value of `OFMT` can be changed by assigning it a new value. If `OFMT
 
 #### 2.1.16. Summary of Operators
 
-Operators of higher precedence are evaluated before lower ones; this means, for example, that `*` is evaluated before `+` in an expression. 
+The operators that can appear in expressions are summarized in Table below. Expressions can be created by applying these operators to *constants*, *variables*, *field names*, *array elements*, *functions*, and *other expressions*.
+
+| OPERATION             | OPERATORS                         | EXAMPLE      | MEANING OF EXAMPLE                                 |
+|-----------------------|-----------------------------------|--------------|----------------------------------------------------|
+| assignment            | `+` `+=` `-=` `*=` `/=` `%-` `^=` | `x *= 2`     |                                                    |
+| conditional           | `?:`                              | `x ? y : z`  |                                                    |
+| logical OR            | `||`                              | `x || y`     |                                                    |
+| logical AND           | `&&`                              | `x && y`     |                                                    |
+| array membership      | `in`                              | `i in a`     | `1` if `a[i]` exists, `0` otherwise                |
+| matching              | `~` `!~`                          | `$1 ~ /x/`   |                                                    |
+| relational            | `<` `<=` `==` `!=` `>=` `>`       | `x == y`     |                                                    |
+| concatenation         |                                   | `"a" "bc"`   | `abc`; there is no explicit concatenation operator |
+| add, subtract         | `+` `-`                           | `x + y`      |                                                    |
+| multiply, divide, mod | `*` `/` `%`                       | `x % y`      |                                                    |
+| unary plus and minus  | `+` `-`                           | `-x`         |                                                    |
+| logical NOT           | `!`                               | `!$1`        |                                                    |
+| exponentiation        | `^`                               | `x ^ y`      |                                                    |
+| increment, decrement  | `++` `--`                         | `x++`        |                                                    |
+| field                 | `$`                               |              |                                                    |
+| grouping              | `()`                              | ~~`($i)++`~~ | This example is incorrect                          |
+
+> Note: The last example is incorrect, awk will report syntax error - *illegal statement*.
+
+The operators are listed in order of **increasing precedence**. Operators of higher precedence are evaluated before lower ones; this means, for example, that `*` is evaluated before `+` in an expression.
 
 All operators are left associative except the *assignment operators*, the *conditional operator*, and *exponentiation*, which are right associative. Left associativity means that operators of the same precedence are evaluated left to right; thus `3-2-1` is `(3-2)-1`, not `3-(2-1)`.
 
