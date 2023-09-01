@@ -44,6 +44,11 @@
     - [2.2.6. `next` and `exit`](#226-next-and-exit)
   - [2.3. Empty Statement](#23-empty-statement)
   - [2.4. Arrays](#24-arrays)
+    - [2.4.1. Introduction](#241-introduction)
+    - [2.4.2. The delete Statement](#242-the-delete-statement)
+    - [2.4.3. The split Function](#243-the-split-function)
+    - [2.4.4. Multidimensional Arrays](#244-multidimensional-arrays)
+- [3. User-Defined Functions](#3-user-defined-functions)
 
 This chapter explains, mostly with examples, the constructs that make up awk programs.
 
@@ -1231,8 +1236,8 @@ both do what was intended.
   - if *expression* is `true`, execute *statement*, then repeat
 - `for (expression_1; expression_2; expression_3) statement`
   - equivalent to `expression_1; while (expression_2 ) { statement; expression_3 }`
-- `for (variable in array) statement`
-  - execute *statement* with variable set to each *subscript* in array in turn
+- `for (key in array) statement`
+  - execute *statement* with variable set to each *subscript* (**key**) in array in turn
 - `do statement while (expression)`
   - execute *statement*; if *expression* is `true`, repeat
 - `break`
@@ -1381,3 +1386,153 @@ BEGIN { FS = "\t" }
 The program prints all lines that contain an empty field.
 
 ### 2.4. Arrays
+
+#### 2.4.1. Introduction
+
+Awk provides one-dimensional arrays for storing *strings* and *numbers*. Arrays and array elements need *not* be declared, nor is there any need to specify how many elements an array has. Like variables, array elements spring into existence by being mentioned; at birth, they have the *numeric value* `0` and the *string value* `""`.
+
+As a simple example, the statement
+
+```awk
+x[NR] = $0
+```
+
+assigns the current input line to element `NR` of the array `x`. In fact, it is easy (though perhaps slow) to read the entire input into an array, then process it in any convenient order. For example, this variant of the program from *Section 1.7* prints its input in reverse line order:
+
+```awk
+    { x[NR] = $0 }
+END { for (i = NR; i > 0; i--) print x[i] }
+```
+
+The first action merely records each input line in the array `x`, using the *line number* as a *subscript*; the real work is done in the `END` statement.
+
+**The characteristic that sets awk arrays apart from those in most other languages is that subscripts are strings**. This gives awk a capability like the associative memory of `SNOBOL4` tables, and for this reason, arrays in awk are called **associative arrays**.
+
+The following program accumulates the populations of *Asia* and *Europe* in the array `pop`. The `END` action prints the total populations of these two continents.
+
+```awk
+/Asia/   { pop["Asia"] += $3 }
+/Europe/ { pop["Europe"] += $3 }
+END      { print "Asian population is",
+               pop["Asia"], "million."
+           print "European population is",
+               pop["Europe"], "million."
+         }
+```
+
+On countries, this program generates
+
+```console
+Asian population is 2173 million.
+European population is 172 million.
+```
+
+Note that the *subscripts* are the *string constants* *"Asia"* and *"Europe"*. If we had written `pop[Asia]` instead of `pop["Asia"]`, the expression would have used the value of the *variable* `Asia` as the subscript, and since the variable is uninitialized, the values would have been accumulated in `pop[""]`.
+
+This example doesn't really need an *associative array* since there are only two elements, both named explicitly. Suppose instead that our task is to determine the total population for each continent. *Associative arrays* are ideally suited for this kind of aggregation. Any expression can be used as a subscript in an array reference, so
+
+```awk
+pop[$4] += $3
+```
+
+uses the string in the fourth field of the current input line to index the array `pop` and in that entry accumulates the value of the third field:
+
+```awk
+BEGIN { FS = "\t" }
+      { pop[$4] += $3 }
+END   { for (name in pop)
+            print name, pop[name]
+      }
+```
+
+The *subscripts* (**keys**) of the array `pop` are the continent names; the values are the accumulated populations. This code works regardless of the number of continents; the output from the countries file is
+
+```console
+South America 134
+North America 340
+Asia 2173
+Europe 172
+```
+
+The last program used a form of the for statement that loops over all subscripts of an array:
+
+```awk
+for (key in array)
+    statement
+```
+
+This loop executes *statement* with *variable* set in turn to each different *subscript* (**key**) in the array. **The order in which the subscripts are considered is implementation dependent. Results are unpredictable if new elements are added to the array by *statement*.**
+
+You can determine whether a particular subscript occurs in an array with the expression
+
+```awk
+subscript in A
+```
+
+This expression has the value `1` if `A[subscript]` already exists, and `0` otherwise. Thus, to test whether `"Africa"` is a subscript of the array `pop` you can say
+
+> **NOTE: The example below is testing if a *key* already exists in the array `pop`, it's not testing if a *value* exists in the array `pop`.**
+
+```awk
+if ("Africa" in pop) ...
+```
+
+This condition performs the test *without* the side effect of creating `pop["Africa"]`, which would happen if you used
+
+```awk
+if (pop["Africa"] != "") ...
+```
+
+Note that neither (of the two examples above) is a test of whether the array `pop` contains an element with *value* `"Africa"`. (It's testing whether a *key* named "Africa" exists in the array `pop`)
+
+#### 2.4.2. The delete Statement
+
+An array element may be deleted with
+
+```awk
+delete array[subscript]
+```
+
+For example, this loop removes all the elements from the array `pop`:
+
+```awk
+for (i in pop)
+    delete pop[i]
+```
+
+#### 2.4.3. The split Function
+
+The function `split(str, arr, fs)` splits the string value of `str` into fields and stores them in the array `arr`. The number of fields produced is returned as the value of `split`. The string value of the third argument, `fs`, determines the *field separator*. If there is no third argument, `FS` is used. In either case, the rules are as for input field splitting, which is discussed in *Section 2.5*. The function
+
+```awk
+split("7/4/76", arr, "/")
+```
+
+splits the string `"7/4/76"` into three fields using `/` as the separator; it stores `7` in `arr["1"]` , `4` in `arr["2"]`, and `76` in `arr["3"]`.
+
+Strings are versatile array subscripts, but the behavior of numeric subscripts as strings may sometimes appear counterintuitive. Since the string values of `1` and `"1"` are the same, `arr[1]` is the same as `arr["1"]`. But notice that `"01"` is not the same string as `"1"` and *the string `"10"` comes before the string `"2"`.* ❓
+
+#### 2.4.4. Multidimensional Arrays
+
+Awk does not support *multidimensional arrays* directly but it provides a simulation using one-dimensional arrays. Although you can write multidimensional subscripts like `i,j` or `s,p,q,r`, awk concatenates the components of the subscripts (with a *separator* between them) to synthesize a single subscript out of the multiple subscripts you write. For example,
+
+```awk
+for (i = 1; i <= 10; i++)
+    for (j = 1; j <= 10; j++)
+        arr[i, j] = 0
+```
+
+creates an array of *100* elements whose subscripts appear to have the form `1,1`, `1,2`, and so on. Internally, however, these subscripts are stored as strings of the form `1 SUBSEP 1`, `1 SUBSEP 2`, and so on. The *built-in variable* `SUBSEP` contains the value of the *subscript-component separator*; its default value is not a comma but `"\034"`, a value that is unlikely to appear in normal text.
+
+The test for array membership with multidimensional subscripts uses a parenthesized list of subscripts, such as
+
+```awk
+if ((i,j) in arr)
+...
+```
+
+and use `split(str, arr, SUBSEP)` if access to the individual *subscript components* is needed.
+
+**Array elements cannot themselves be arrays.**
+
+## 3. User-Defined Functions
