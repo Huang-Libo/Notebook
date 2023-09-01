@@ -1217,6 +1217,35 @@ both do what was intended.
 
 ### 2.2. Control-Flow Statements
 
+---
+
+**Control-Flow Statements**
+
+- `{ statements }`
+  - statement grouping
+- `if (expression) statement`
+  - if *expression* is `true`, execute *statement*
+- `if (expression) statement_1 else statement_2`
+  - if *expression* is `true`, execute *statement_1* otherwise execute *statement_2*
+- `while (expression) statement`
+  - if *expression* is `true`, execute *statement*, then repeat
+- `for (expression_1; expression_2; expression_3) statement`
+  - equivalent to `expression_1; while (expression_2 ) { statement; expression_3 }`
+- `for (variable in array) statement`
+  - execute *statement* with variable set to each *subscript* in array in turn
+- `do statement while (expression)`
+  - execute *statement*; if *expression* is `true`, repeat
+- `break`
+  - immediately leave innermost enclosing `while`, `for` or `do-while` loop
+- `continue`
+  - start next iteration of innermost enclosing `while`, `for` or `do-while` loop
+- `next`
+  - start `next` iteration of main input loop
+- `exit` or `exit expression`
+  - go immediately to the `END` action; if within the `END` action, exit program entirely. Return *expression* as program status. If the *expression* doesn't exit, then return status `0`.
+
+---
+
 #### 2.2.1. `if-else`
 
 Awk provides braces(`{}`) for grouping statements, an `if-else` statement for decision-making, and `while`, `for`, and `do` statements for looping. All of these statements were adopted from *C Programming Language*.
