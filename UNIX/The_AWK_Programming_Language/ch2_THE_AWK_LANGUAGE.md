@@ -35,6 +35,7 @@
       - [2.1.14.9. Concatenation of Strings](#21149-concatenation-of-strings)
     - [2.1.15. Number or String?](#2115-number-or-string)
     - [2.1.16. Summary of Operators](#2116-summary-of-operators)
+  - [2.2. Control-Flow Statements](#22-control-flow-statements)
 
 This chapter explains, mostly with examples, the constructs that make up awk programs.
 
@@ -1159,24 +1160,24 @@ The default value of `OFMT` can be changed by assigning it a new value. If `OFMT
 
 The operators that can appear in expressions are summarized in Table below. Expressions can be created by applying these operators to *constants*, *variables*, *field names*, *array elements*, *functions*, and *other expressions*.
 
-| OPERATION             | OPERATORS                         | EXAMPLE      | MEANING OF EXAMPLE                                 |
-|-----------------------|-----------------------------------|--------------|----------------------------------------------------|
-| assignment            | `+` `+=` `-=` `*=` `/=` `%-` `^=` | `x *= 2`     |                                                    |
-| conditional           | `?:`                              | `x ? y : z`  |                                                    |
-| logical OR            | `||`                              | `x || y`     |                                                    |
-| logical AND           | `&&`                              | `x && y`     |                                                    |
-| array membership      | `in`                              | `i in a`     | `1` if `a[i]` exists, `0` otherwise                |
-| matching              | `~` `!~`                          | `$1 ~ /x/`   |                                                    |
-| relational            | `<` `<=` `==` `!=` `>=` `>`       | `x == y`     |                                                    |
-| concatenation         |                                   | `"a" "bc"`   | `abc`; there is no explicit concatenation operator |
-| add, subtract         | `+` `-`                           | `x + y`      |                                                    |
-| multiply, divide, mod | `*` `/` `%`                       | `x % y`      |                                                    |
-| unary plus and minus  | `+` `-`                           | `-x`         |                                                    |
-| logical NOT           | `!`                               | `!$1`        |                                                    |
-| exponentiation        | `^`                               | `x ^ y`      |                                                    |
-| increment, decrement  | `++` `--`                         | `x++`        |                                                    |
-| field                 | `$`                               |              |                                                    |
-| grouping              | `()`                              | ~~`($i)++`~~ | This example is incorrect                          |
+| OPERATION             | OPERATORS                                       | EXAMPLE      | MEANING OF EXAMPLE                     |
+|-----------------------|-------------------------------------------------|--------------|----------------------------------------|
+| assignment            | `=`<br>`+=` `-=`<br>`*=` `/=`<br>`%=` `^=`      | `x *= 2`     |                                        |
+| conditional           | `?:`                                            | `x ? y : z`  |                                        |
+| logical OR            | `||`                                            | `x || y`     |                                        |
+| logical AND           | `&&`                                            | `x && y`     |                                        |
+| array membership      | `in`                                            | `i in a`     | `1` if `a[i]` exists,<br>`0` otherwise |
+| matching              | `~` `!~`                                        | `$1 ~ /x/`   |                                        |
+| relational            | `<` `<=`<br>`==` `!=`<br>`>=` `>`               | `x == y`     |                                        |
+| concatenation         | (There is *no* explicit concatenation operator) | `"a" "bc"`   | `abc`                                  |
+| add, subtract         | `+` `-`                                         | `x + y`      |                                        |
+| multiply, divide, mod | `*` `/` `%`                                     | `x % y`      |                                        |
+| unary plus and minus  | `+` `-`                                         | `-x`         |                                        |
+| logical NOT           | `!`                                             | `!$1`        |                                        |
+| exponentiation        | `^`                                             | `x ^ y`      |                                        |
+| increment, decrement  | `++` `--`                                       | `x++`        |                                        |
+| field                 | `$`                                             |              |                                        |
+| grouping              | `()`                                            | ~~`($i)++`~~ | Incorrect example                      |
 
 > Note: The last example is incorrect, awk will report syntax error - *illegal statement*.
 
@@ -1205,3 +1206,7 @@ $1 < 0 { print "abs($1) =", -$1 }
 ```
 
 both do what was intended.
+
+### 2.2. Control-Flow Statements
+
+
