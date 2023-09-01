@@ -36,6 +36,14 @@
     - [2.1.15. Number or String?](#2115-number-or-string)
     - [2.1.16. Summary of Operators](#2116-summary-of-operators)
   - [2.2. Control-Flow Statements](#22-control-flow-statements)
+    - [2.2.1. `if-else`](#221-if-else)
+    - [2.2.2. `while`](#222-while)
+    - [2.2.3. `for`](#223-for)
+    - [2.2.4. `do-while`](#224-do-while)
+    - [2.2.5. `break` and `continue`](#225-break-and-continue)
+    - [2.2.6. `next` and `exit`](#226-next-and-exit)
+  - [2.3. Empty Statement](#23-empty-statement)
+  - [2.4. Arrays](#24-arrays)
 
 This chapter explains, mostly with examples, the constructs that make up awk programs.
 
@@ -1209,4 +1217,138 @@ both do what was intended.
 
 ### 2.2. Control-Flow Statements
 
+#### 2.2.1. `if-else`
 
+Awk provides braces(`{}`) for grouping statements, an `if-else` statement for decision-making, and `while`, `for`, and `do` statements for looping. All of these statements were adopted from *C Programming Language*.
+
+A single statement can always be replaced by a list of statements enclosed in braces. The statements in the list are separated by *newlines* or *semicolons*.
+
+The `if-else` statement has the form
+
+```awk
+if (expression)
+    statement_1
+else
+    statement_2
+```
+
+In an `if-else` statement, the test expression is evaluated first.
+
+- If it is `true`, that is, either *nonzero* or *nonnull*, *statement_1* is executed.
+- If expression is `false`, that is, either *zero* or *null*(**e.g. null string `""`**), and `else` *statement_2* is present, then *statement_2* is executed.
+
+To eliminate any ambiguity, we adopt the rule that each `else` is associated with the *closest* previous unassociated `if`. For example, the `else` in the statement
+
+```awk
+if (e1) if (e2) s=1; else s=2
+```
+
+is associated with the second `if`. (The semicolon after `s= 1` is required, since the `else` appears on the same line.)
+
+#### 2.2.2. `while`
+
+The `while` statement repeatedly executes a statement while a condition is `true`:
+
+```awk
+while (expression)
+    statement
+```
+
+For example, this program prints all input fields, one per line:
+
+```awk
+{
+    i = 1
+    while (i <= NF) {
+        print $i
+        i++
+    }
+}
+```
+
+#### 2.2.3. `for`
+
+The `for` statement is a more general form of `while`:
+
+```awk
+for (expression_1; expression_2; expression_3)
+    statement
+```
+
+The `for` statement has the same effect as
+
+```awk
+expression_1
+while (expression_2) {
+    statement
+    expression_3
+}
+```
+
+so
+
+```awk
+{
+    for (i = 1; i <= NF; i++)
+        print $1
+}
+```
+
+does the same loop over the fields as the while example above. In the `for` statement, all three expressions are *optional*. If *expression_2* is missing, the condition is taken to be always `true`, so `for(;;)` is an *infinite loop*.
+
+An alternate version of the `for` statement that loops over *array subscripts* is described in the section on arrays.
+
+#### 2.2.4. `do-while`
+
+The `do-while` statement has the form
+
+```awk
+do
+    statement
+while (expression)
+```
+
+The `do-while` loop executes statement once, then repeats statement as long as expression is `true`. It differs from the `while` and `for` in a critical way: *its test for completion is at the bottom instead of the top, so it always goes through the loop at least once*.
+
+#### 2.2.5. `break` and `continue`
+
+There are two statements for modifying how loops cycle: `break` and `continue`.
+
+- The `break` statement causes an exit from the immediately enclosing  `for` or `while` or `do-while`.
+- The `continue` statement causes the *next* iteration to begin; it causes execution to go to the test expression in the `while` and `do-while`, and to *expression_3* in the `for` statement.
+
+#### 2.2.6. `next` and `exit`
+
+The `next` and `exit` statements *control the outer loop that reads the input lines* in an awk program.
+
+- `next` statement:
+  - The `next` statement causes awk to *fetch the next input line* and begin matching patterns starting from the first *pattern-action* statement.
+- `exit` statement:
+  - In an `END` action, the `exit` statement causes the program to terminate.
+  - In any other action, it causes the program to behave as if the end of the input had occurred; no more input is read, and the `END` actions, if any, are executed.
+
+If an `exit` statement contains an expression
+
+```awk
+exit expr
+```
+
+it causes awk to return the value of `expr` as its *exit status* unless overridden by a subsequent error or exit. If there is no `expr`, the exit status is `0`. In some operating systems, including Unix, the exit status may be tested by the program that invoked awk (Can be checked with the UNIX built-in variable `$?`).
+
+### 2.3. Empty Statement
+
+A semicolon(`;`) by itself denotes the *empty statement*. In the following program, the body of the `for` loop is an *empty statement*.
+
+```awk
+BEGIN { FS = "\t" }
+      { 
+        for (i = 1; i <= NF && $i != ""; i++)
+            ;
+        if (i <= NF)
+            print
+      }
+```
+
+The program prints all lines that contain an empty field.
+
+### 2.4. Arrays
