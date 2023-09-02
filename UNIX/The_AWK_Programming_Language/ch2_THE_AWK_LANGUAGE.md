@@ -224,14 +224,14 @@ With the `countries.txt` file as input, this program produces
 
 Throughout this book, the term *string* means a sequence of zero or more characters. These may be stored in variables, or appear literally as string constants like `""` or `"Asia"`.
 
-The string `""`, which contains no characters, is called the *null string*. The term *substring* means a contiguous sequence of zero or more characters within a string. In every string, the *null string* appears as a *substring* of length zero before the first character, between every pair of adjacent characters, and after the last character.
+The string `""`, which contains no characters, is called the *null string*. The term *substring* means a contiguous sequence of zero or more characters within a string. **In every string, the *null string* appears as a *substring* of length zero before the first character, between every pair of adjacent characters, and after the last character.**
 
 Any expression can be used as an operand of any operator.
 
 - If an expression has a numeric value but an operator requires a string value, the numeric value is automatically transformed into a string;
 - similarly, a string is converted into a number when an operator demands a numeric value.
 
-Any expression can be used as a pattern. If an expression used as a pattern has a *nonzero* or *nonnull* value at the current input line, then the pattern matches that line. The typical expression patterns are those involving comparisons between numbers or strings.
+**Any expression can be used as a pattern. If an expression used as a pattern has a *nonzero* or *nonnull* value at the current input line, then the pattern matches that line.** The typical expression patterns are those involving comparisons between numbers or strings.
 
 A comparison expression contains one of the **6** relational operators, or one of the two *string-matching* operators `~`(tilde) and `!~` that will be discussed in the next section.
 
@@ -312,13 +312,13 @@ A *string-matching pattern* tests whether a string contains a substring matched 
 
 ---
 
-The simplest regular expression is a string of letters and numbers, like Asia, that matches itself. To turn a regular expression into a *string-matching pattern*, just enclose it in slashes(`/`):
+The simplest *regular expression* is a string of letters and numbers, like Asia, that matches itself. To turn a *regular expression* into a *string-matching pattern*, just enclose it in slashes(`/`):
 
 ```awk
 /Asia/
 ```
 
-This pattern matches when the current input line contains the substring *Asia*, either as *Asia* by itself or as some part of a larger word like *Asian* or *Pan-Asiatic*. Note that *blanks* are significant within regular expressions: the string-matching pattern
+This pattern matches when the current input line contains the substring *Asia*, either as *Asia* by itself or as some part of a larger word like *Asian* or *Pan-Asiatic*. Note that *blanks* are significant within *regular expressions*: the string-matching pattern
 
 ```awk
 / Asia /
@@ -326,7 +326,7 @@ This pattern matches when the current input line contains the substring *Asia*, 
 
 matches only when *Asia* is surrounded by *blanks*.
 
-The pattern above is one of **3** types of *string-matching patterns*. Its form is a regular expression `r` enclosed in slashes:
+The pattern above is one of **3** types of *string-matching patterns*. Its form is a *regular expression* `r` enclosed in slashes:
 
 ```awk
 /r/
@@ -343,7 +343,7 @@ expression !~ /r/
 
 The *matching operator* `~` means "is matched by" and `!~` means "is not matched by."
 
-- The first pattern matches when the *string value of expression* contains a substring matched by the regular expression `r`;
+- The first pattern matches when the *string value of expression* contains a substring matched by the *regular expression* `r`;
 - the second pattern matches if there is no such substring.
 
 The left operand of a matching operator is often a field: the pattern
@@ -374,17 +374,17 @@ $0 ~ /Asia/
 
 ### 1.4. Regular Expressions
 
-A regular expression is a notation for specifying and matching strings.
+A *regular expression* is a notation for specifying and matching strings.
 
 ---
 
 **Regular Expressions**
 
-1. The regular expression metacharacters are:
+1. The *regular expression metacharacters* are:
 
     `.` `*` `+` `?` `^` `$` `\` `|` `(` `)` `[` `]` `{` `}`
 
-2. A basic regular expression is one of the following:
+2. A basic *regular expression* is one of the following:
 
     - a non-metacharacter, such as *A*. that matches itself.
     - an escape sequence that matches a special symbol: `\t` matches a *tab*
@@ -396,7 +396,7 @@ A regular expression is a notation for specifying and matching strings.
     - *character classes* may include abbreviations: `[A-Za-z]` matches any single letter.
     - *a complemented character class*: `[^0-9]` matches any character except a digit.
 
-3. These operators combine regular expressions into larger ones:
+3. These operators combine *regular expressions* into larger ones:
 
     - alternation: `A|B` matches *A* or *B*.
     - concatenation: `AB` matches *A* immediately followed by *B*.
@@ -413,9 +413,9 @@ The characters
 
 are called *metacharacters* because they have special meanings.
 
-To preserve the *literal* meaning of a *metacharacter* in a regular expression, precede it by a *backslash*. Thus, the regular expression `\$` matches the character `$`. If a character is preceded by a single `\`, we'll say that character is **quoted**.
+To preserve the *literal* meaning of a *metacharacter* in a *regular expression*, precede it by a *backslash*. Thus, the *regular expression* `\$` matches the character `$`. If a character is preceded by a single `\`, we'll say that character is **quoted**.
 
-A regular expression consisting of a group of characters enclosed in *brackets*(`[]`) is called a *character class*; it matches any one of the enclosed characters. For example, `[AEIOU]` matches any of the characters *A*, *E*, *I*, *O*, or *U*.
+A *regular expression* consisting of a group of characters enclosed in *brackets*(`[]`) is called a *character class*; it matches any one of the enclosed characters. For example, `[AEIOU]` matches any of the characters *A*, *E*, *I*, *O*, or *U*.
 
 Ranges of characters can be abbreviated in a *character class* by using a hyphen(`-`).
 
@@ -429,16 +429,16 @@ Thus, `[0-9]` matches any digit, and `[a-zA-Z][0-9]` matches a letter followed b
 - so the character classes `[+-]` and `[-+]` match either a `+` or a `-`.
 - The character class `[A-Za-z-]+` matches words that include hyphens.
 
-A *complemented* character class is one in which the first character after the `[` is a `^` . Such a class matches any character *not* in the group following the caret. Thus, `[^0-9]` matches any character except a digit; `[^a-zA-Z]` matches any character except an upper or lower-case letter.
+A *complemented character class* is one in which the first character after the `[` is a `^` . Such a class matches any character *not* in the group following the caret. Thus, `[^0-9]` matches any character except a digit; `[^a-zA-Z]` matches any character except an upper or lower-case letter.
 
 | Pattern    | Meaning                                                                    |
 |------------|----------------------------------------------------------------------------|
 | `^[ABC]`   | matches an *A*, *B* or *C* at the beginning of a string                    |
 | `^[^ABC]`  | matches any character at the beginning of a string. except *A*, *B* or *C* |
 | `[^ABC]`   | matches any character other than an *A*, *B* Or *C*                        |
-| `^[^a-z]$` | matches any single-character string. except a lower-case letter            |
+| `^[^a-z]$` | matches any single-character string, except a lower-case letter            |
 
-Inside a *character class*, all characters have their literal meaning, except for the quoting character `\`, `^` at the beginning, and `-` between two characters. Thus, **`[.]` matches a period(`.`)** and `^[^^]` matches any character except a caret at the beginning of a string.
+**Inside a *character class*, all characters have their literal meaning, except for the quoting character `\`, `^` at the beginning, and `-` between two characters.** Thus, **`[.]` matches a period(`.`)** and `^[^^]` matches any character except a caret at the beginning of a string.
 
 Parentheses are used in regular expressions to specify how components are grouped.
 
@@ -456,7 +456,7 @@ To finish our discussion of regular expressions, here are some examples of usefu
 - `^[+-]?[0-9]+[.]?[0-9]*$`
   - also a decimal number with an optional sign and optional fraction
 
-Since `+` and `.` are *metacharacters*, they have to be preceded by *backslashes*(`\`) in the first example to match *literal* occurrences. These backslashes are *not* needed within *character classes*, so the second example shows an alternate way to describe the same numbers.
+Since `+` and `.` are *metacharacters*, they have to be preceded by *backslashes*(`\`) in the first example to match *literal* occurrences. **These backslashes are *not* needed within *character classes*, so the second example shows an alternate way to describe the same numbers.**
 
 ### 1.5. Compound Patterns
 
@@ -468,7 +468,7 @@ The program
 $4 == "Asia" || $4 == "Europe"
 ```
 
-uses the `OR` operator to select lines with either *Asia* or *Europe* as the fourth field. Because the latter query is a test on string values, another way to write it is to use a regular expression with the alternation operator `|`:
+uses the `OR` operator to select lines with either *Asia* or *Europe* as the fourth field. Because the latter query is a test on string values, another way to write it is to use a *regular expression* with the alternation operator `|`:
 
 ```awk
 $4 ~ /^(Asia|Europe)$/
@@ -572,7 +572,7 @@ The statements in actions can include:
 - `if` *(expression) statement* `else` *statement*
 - `while` *(expression) statement*
 - `for` (*expression; expression; expression*) *statement*
-- `for` (*variable in array*) *statement*
+- `for` (*key in array*) *statement*
 - `do` *statement* `while` (*expression*)
 - `break`
 - `continue`
@@ -861,7 +861,7 @@ prints each line preceded by its line number and a colon, with no blanks. The nu
 
 #### 2.1.13. Strings as Regular Expressions
 
-So far, in all of our examples of matching expressions, the right-hand operand of `~` and `!~` has been a regular expression enclosed in slashes. But, in fact, *any expression can be used as the right operand of these operators*. Awk evaluates the expression, converts the value to a string if necessary, and interprets the string as a regular expression. For example, the program
+So far, in all of our examples of matching expressions, the right-hand operand of `~` and `!~` has been a *regular expression* enclosed in slashes. But, in fact, *any expression can be used as the right operand of these operators*. Awk evaluates the expression, converts the value to a string if necessary, and interprets the string as a regular expression. For example, the program
 
 ```awk
 BEGIN { digits = "^[0-9]+$" }
@@ -870,7 +870,7 @@ $2 ~ digits
 
 will print all lines in which the second field is a string of digits.
 
-Since expressions can be concatenated, a regular expression can be built up from components. The following program echoes input lines that are valid floating point numbers:
+Since expressions can be concatenated, a *regular expression* can be built up from components. The following program echoes input lines that are valid floating point numbers:
 
 ```awk
 BEGIN {
@@ -883,7 +883,7 @@ BEGIN {
 $0 ~ number
 ```
 
-In a matching expression, a quoted string like `"^[0-9]+$"` can normally be used *interchangeably* with a regular expression enclosed in slashes, such as `/^[0-9]+$/`. There is **one exception**, however. If the string in quotes is to match a *literal* occurrence of a regular expression *metacharacter*, one extra backslash is needed to protect the protecting backslash itself. That is,
+In a matching expression, a quoted string like `"^[0-9]+$"` can normally be used *interchangeably* with a *regular expression* enclosed in slashes, such as `/^[0-9]+$/`. There is **one exception**, however. If the string in quotes is to match a *literal* occurrence of a *regular expression metacharacter*, one extra backslash is needed to protect the protecting backslash itself. That is,
 
 ```awk
 $0 ~ /(\+|-)[0-9]+/
@@ -946,7 +946,7 @@ returns `2`.
 
 ##### 2.1.14.2. `match(s, r)`
 
-The function `match(s, r)` finds the *leftmost longest substring* in the strings that is matched by the regular expression `r`. It returns the index where the substring begins or `0` if there is no matching substring. It also sets the *built-in variables* `RSTART` to this index and `RLENGTH` to the length of the matched substring.
+The function `match(s, r)` finds the *leftmost longest substring* in the strings that is matched by the *regular expression* `r`. It returns the index where the substring begins or `0` if there is no matching substring. It also sets the *built-in variables* `RSTART` to this index and `RLENGTH` to the length of the matched substring.
 
 ##### 2.1.14.3. `split(s, a, fs)`
 
@@ -964,9 +964,9 @@ assigns to `x` the string produced by formatting the values of `$1` and `$2` as 
 
 ##### 2.1.14.5. `sub(r, s, t)`
 
-The functions `sub` and `gsub` are patterned after the substitute command in the Unix text editor `ed`. The function `sub(r, s, t)` first finds the **leftmost longest substring** matched by the regular expression `r` in the target string `t`; it then replaces the substring by the substitution string `s`. As in `ed`, **"leftmost longest" means that the leftmost match is found first, then extended as far as possible.**
+The functions `sub` and `gsub` are patterned after the substitute command in the Unix text editor `ed`. The function `sub(r, s, t)` first finds the **leftmost longest substring** matched by the *regular expression* `r` in the target string `t`; it then replaces the substring by the substitution string `s`. As in `ed`, **"leftmost longest" means that the leftmost match is found first, then extended as far as possible.**
 
-- In the target string `banana`, for example, `anan` is the leftmost longest substring matched by the regular expression `(an)+`.
+- In the target string `banana`, for example, `anan` is the leftmost longest substring matched by the *regular expression* `(an)+`.
 - **By contrast, the leftmost longest match of `(an)*` is the *null string* before `b`.**
 
 The `sub` function returns the number of substitutions made. The function `sub(r,s)` is a synonym for `sub(r, s, $0)`.
@@ -1246,7 +1246,8 @@ both do what was intended.
   - start next iteration of innermost enclosing `while`, `for` or `do-while` loop
 - `next`
   - start `next` iteration of main input loop
-- `exit` or `exit expression`
+- `exit`
+- `exit expression`
   - go immediately to the `END` action; if within the `END` action, exit program entirely. Return *expression* as program status. If the *expression* doesn't exit, then return status `0`.
 
 ---
