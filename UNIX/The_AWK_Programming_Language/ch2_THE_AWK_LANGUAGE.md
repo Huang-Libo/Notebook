@@ -49,6 +49,7 @@
     - [2.4.3. The split Function](#243-the-split-function)
     - [2.4.4. Multidimensional Arrays](#244-multidimensional-arrays)
 - [3. User-Defined Functions](#3-user-defined-functions)
+- [4. Output](#4-output)
 
 This chapter explains, mostly with examples, the constructs that make up awk programs.
 
@@ -1537,3 +1538,59 @@ and use `split(str, arr, SUBSEP)` if access to the individual *subscript compone
 **Array elements cannot themselves be arrays.**
 
 ## 3. User-Defined Functions
+
+In addition to *built-in functions*, an awk program can contain *user-defined functions*. Such a function is defined by a statement. of the form
+
+```awk
+function name(parameter-list) {
+    statements
+}
+```
+
+The body of a function definition may contain a `return` statement that returns control and perhaps a value to the caller. It has the form
+
+```awk
+return expression
+```
+
+The *expression* is *optional*, and so is the `return` statement itself, but the returned value is undefined if none is provided or if the last statement executed is not a return.
+
+For example, this function computes the maximum of its arguments:
+
+```awk
+function max(m, n) {
+    return m > n ? m : n
+}
+```
+
+The variables `m` and `n` belong to the function `max`; they are unrelated to any other variables of the same names elsewhere in the program.
+
+If a user-defined function is called in the body of its own definition, that function is said to be *recursive*.
+
+For example, the `max` function might be called like this:
+
+```awk
+{ print max($1,max($2,$3)) }  # print maximum of $1, $2, $3
+
+function max(m, n) {
+    return m > n ? m : n
+}
+```
+
+- When a function is called with an argument like `$1`, which is just an **ordinary variable**, the function is given a *copy* of the value of the variable, so the function manipulates the copy, not the variable itself. This means that the function cannot affect the value of the variable outside the function. (The jargon is that such variables, called "scalars," are **passed "by value."**)
+- **Arrays** are not copied, however, so it is possible for the function to alter array elements or create new ones. (This is called **passing "by reference."**)
+- The name of a function may not be used as a parameter.
+
+To repeat,
+
+- within a function definition, the **parameters are local variables** they last only as long as the function is executing, and they are unrelated to variables of the same name elsewhere in the program.
+- **But all other variables are global; if a variable is not named in the parameter list, it is visible and accessible throughout the program**.
+
+This means that the way to provide *local variables* for the *private* use of a function is to include them at the end of the parameter list in the function definition. **Any variable in the parameter list for which no actual parameter is supplied in a call is a local variable**, with *null* initial value. This is not a very elegant language design but it at least provides the necessary facility. We put *several blanks* between the arguments and the local variables so they can be distinguished.
+
+> Tips:
+>
+> - A more elegant approach - you can create a workaround by using variable *naming conventions* to simulate local scope:
+>   - By convention, an underscore `_` is often used as a **prefix** to indicate that a variable is intended to be "*private*" or "*local*" to a function.
+
+## 4. Output
