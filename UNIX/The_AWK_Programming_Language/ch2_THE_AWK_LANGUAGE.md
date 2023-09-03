@@ -57,6 +57,7 @@
   - [4.5. Output Into Pipes](#45-output-into-pipes)
   - [4.6. Closing Flies and Pipes](#46-closing-flies-and-pipes)
 - [5. Input](#5-input)
+  - [5.1. Input Separators](#51-input-separators)
 
 This chapter explains, mostly with examples, the constructs that make up awk programs.
 
@@ -1877,3 +1878,69 @@ closes the `sort` pipe opened above.
 **close is necessary if you intend to write a file, then read it later in the same program.** There are also system-defined limits on the number of files and pipes that can be open at the same time.
 
 ## 5. Input
+
+There are several ways of providing input to an awk program. The most common arrangement is to put input data in a file, say data-file, and then type
+
+```awk
+awk 'program' data-file
+```
+
+Awk reads its *standard input* if no filenames are given; thus, a second common arrangement is to have another program pipe its output into awk. For example, **the program `egrep` selects input lines containing a specified regular expression, but it does this much faster than awk does**. We could therefore type the command
+
+```awk
+egrep 'Asia' countries | awk 'program'
+```
+
+`egrep` finds the lines containing *Asia* and passes them on to the awk program for subsequent processing.
+
+### 5.1. Input Separators
+
+The **default value** of the *built-in variable* `FS` is `" "`, that is, *a single blank*.
+
+- When `FS` has this specific value, input fields are **separated by blanks and/or tabs**,
+- and **leading blanks and tabs are discarded, so each of the following lines has the same first field**:
+
+```plaintext
+field_1
+  field_1
+    field_1         field_2
+```
+
+**When `FS` has any other value, however, leading blanks and tabs are *not* discarded.**
+
+The *field separator* can be changed by assigning a string to the *built-in variable* `FS`.
+
+- **If the string is longer than one character, it is taken to be a regular expression.**
+- **The leftmost longest nonnull and non-overlapping substrings matched by that regular expression become the *field separators* in the current input line.**
+
+For example,
+
+```awk
+BEGIN { FS = ",[ \t]*|[ \t]+" }
+```
+
+makes every string consisting of a *comma* followed by *blanks* and *tabs*, and every string of *blanks* and *tabs* without a *comma*, into *field separators*.
+
+**When `FS` is set to a single character other than blank, that character becomes the *field separator*. This convention makes it easy to use *regular expression metacharacters* as *field separators***:
+
+```awk
+FS = "|"
+```
+
+makes `｜` a *field separator*. But note that something indirect like
+
+> Rule mentioned above: *If the string is longer than one character, it is taken to be a regular expression.*
+
+```awk
+FS = "[ ]"
+```
+
+is required to set the *field separator* to a single blank.
+
+`FS` can also be set on the command line with the `-F` argument. The command line
+
+```awk
+awk -F ',[ \t]*|[ \t]+' 'program'
+```
+
+sets the *field separator* to the same strings as the `BEGIN` action shown above.
