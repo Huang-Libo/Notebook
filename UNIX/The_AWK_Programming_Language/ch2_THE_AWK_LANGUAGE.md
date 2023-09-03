@@ -63,7 +63,7 @@
   - [5.4. Command-Line Variable Assignments](#54-command-line-variable-assignments)
   - [5.5. Command-Line Arguments](#55-command-line-arguments)
 - [6. Interaction with Other Programs](#6-interaction-with-other-programs)
-  - [6.1. The system Function](#61-the-system-function)
+  - [6.1. The `system` Function](#61-the-system-function)
   - [6.2. Making a Shell Command from an AWK Program](#62-making-a-shell-command-from-an-awk-program)
 
 This chapter explains, mostly with examples, the constructs that make up awk programs.
@@ -2148,7 +2148,7 @@ The arguments in `ARGV` may be modified or added to; `ARGC` may be altered. As e
 
 This section describes some of the ways in which awk programs can cooperate with other commands. The discussion applies primarily to the Unix operating system; the examples here may fail or work differently on non-Unix systems.
 
-### 6.1. The system Function
+### 6.1. The `system` Function
 
 The *built-in function* `system(expression)` executes the command given by the *string value* of *expression*. The value returned by `system` is the *status* returned by the *command* executed.
 
