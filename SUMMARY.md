@@ -25,7 +25,7 @@
 - [The AWK Programming Language](UNIX/The_AWK_Programming_Language/README.md)
   - [ch1: AN AWK TUTORIAL](UNIX/The_AWK_Programming_Language/ch1_AN_AWK_TUTORIAL.md)
   - [ch2: THE AWK LANGUAGE](UNIX/The_AWK_Programming_Language/ch2_THE_AWK_LANGUAGE.md)
-  - [ch3: DATA PROCESSING](UNIX/The_AWK_Programming_Language/ch3_DATA_PROCESSING)
+  - [ch3: DATA PROCESSING](UNIX/The_AWK_Programming_Language/ch3_DATA_PROCESSING.md)
 
 ## 💎 Ruby
 
