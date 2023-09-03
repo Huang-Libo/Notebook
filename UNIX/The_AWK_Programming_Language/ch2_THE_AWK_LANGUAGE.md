@@ -63,6 +63,8 @@
   - [5.4. Command-Line Variable Assignments](#54-command-line-variable-assignments)
   - [5.5. Command-Line Arguments](#55-command-line-arguments)
 - [6. Interaction with Other Programs](#6-interaction-with-other-programs)
+  - [6.1. The system Function](#61-the-system-function)
+  - [6.2. Making a Shell Command from an AWK Program](#62-making-a-shell-command-from-an-awk-program)
 
 This chapter explains, mostly with examples, the constructs that make up awk programs.
 
@@ -2143,3 +2145,146 @@ all generate the integers `1` through `10`.
 The arguments in `ARGV` may be modified or added to; `ARGC` may be altered. As each input file ends, awk treats the next *non-null* element of `ARGV` (up through the current value of `ARGC-1`) as the name of the next input file. Thus setting an element of `ARGV` to *null* means that it will not be treated as an input file. The name `"-"` may be used for the standard input.
 
 ## 6. Interaction with Other Programs
+
+This section describes some of the ways in which awk programs can cooperate with other commands. The discussion applies primarily to the Unix operating system; the examples here may fail or work differently on non-Unix systems.
+
+### 6.1. The system Function
+
+The *built-in function* `system(expression)` executes the command given by the *string value* of *expression*. The value returned by `system` is the *status* returned by the *command* executed.
+
+For example, we can build another version of the *file-inclusion program* of *Section 2.5* like this,
+
+From
+
+```awk
+# include - replace `#include "filename"` by contents of the file which is named *filename*
+
+/^#include/ {
+    gsub(/"/, "", $2)
+    while ((getline x < $2) > 0)
+        print x
+    next
+}
+{ print }
+```
+
+To
+
+> Note: `gsub(/"/, "", $2)` is also not necessary in the example below, so `$2` is still equal to `"filename"`, but after concatenating in `system("cat " "filename")`, the result is `system("cat filename")`.
+
+```awk
+$1 == "#include" { system("cat " $2); next }
+                 { print }
+```
+
+If the first field is `#include`, quotes are removed, and the Unix command `cat` is called to print the file named in the second field. Other lines are just copied.
+
+### 6.2. Making a Shell Command from an AWK Program
+
+In all of the examples so far, the awk program was in a *file* and fetched with the `-f` flag, or it appeared on the *command line* enclosed in single quotes, like this:
+
+```bash
+awk '{ print $1 }' ...
+```
+
+Since awk uses many of the same characters as the shell does, such as `$` and `"`, **surrounding the program with *single quotes* ensures that the shell will pass the entire program unchanged to awk**.(And *single quotes* also allow us to put awk program in multiline without using backslashes)
+
+Both methods of invoking the awk program require some typing. To reduce the number of keystrokes, **we might want to put both the command and the program into an executable file, and invoke the command by typing just the name of the file**. Suppose we want to create a command `field1` that will print the first field of each line of input. This is easy: we put
+
+> **Note**: In Bash, `$*` is a special variable that represents *all of the command-line arguments* passed to a *script* or *function* as a single string. **It treats all the arguments as a space-separated list within a single string**.
+
+```bash
+awk '{ print $1 }' $*
+```
+
+into the file `field1`, and make the file executable by typing the Unix command
+
+```bash
+chmod +x field1
+```
+
+We can now print the first field of each line of a set of files by typing
+
+```bash
+./field1 filenames ...
+```
+
+Now, consider writing a more general command `field` that will print an arbitrary combination of fields from each line of its input; in other words, the command
+
+```bash
+field n_1, n_2 ... file_1 file_2 ...
+```
+
+will print the specified fields in the specified order. How do we get the value of each `n_i` into the awk program each time it is run and how do we distinguish the `n_i`'s from the *filename* arguments?
+
+There are several ways to do this if one is adept in shell programming. The simplest way that uses only awk, however, is to scan through the built-in array `ARGV` to process the `n_i`'s, **resetting each such argument to the *null string* so that it is not treated as a filename**.
+
+The content of `Field` script:
+
+```bash
+#!/usr/bin/env bash
+
+# field - print named fields of each input line
+#   usage:  field n n n ... file file file ...
+
+awk '
+BEGIN {
+    for (i = 1; ARGV[i] ~ /^[0-9]+$/; i++) { # collect numbers
+        fld[++nf] = ARGV[i]
+        ARGV[i] = ""
+    }
+    if (i >= ARGC)   # no file names so force stdin
+        ARGV[ARGC++] = "-"
+}
+{   
+    for (i = 1; i <= nf; i++)
+        printf("%s%s", $fld[i], i < nf ? " " : "\n")
+}
+' $*
+```
+
+Here is the highlighted code which is convenient for reading:
+
+```awk
+BEGIN {
+    for (i = 1; ARGV[i] ~ /^[0-9]+$/; i++) { # collect numbers
+        fld[++nf] = ARGV[i]
+        ARGV[i] = ""
+    }
+    if (i >= ARGC)   # no file names so force stdin
+        ARGV[ARGC++] = "-"
+}
+{   
+    for (i = 1; i <= nf; i++)
+        printf("%s%s", $fld[i], i < nf ? " " : "\n")
+}
+```
+
+This version can deal with either standard input or a list of filename arguments, and with any number of fields in any order.
+
+**Example 1**, print the first filed and the second field of the `countries.txt` file:
+
+```bash
+$ ./Field 1 2 countries.txt
+
+USSR 8649
+Canada 3852
+China 3705
+USA 3615
+Brazil 3286
+India 1267
+Mexico 762
+France 211
+Japan 144
+Germany 96
+England 94
+```
+
+**Example 2**, there aren't any filename being provided in the command line, so the `STDIN` is being used:
+
+```bash
+$ ./Field 1 2
+
+abc 123 xyz 456
+-> abc 123
+```
