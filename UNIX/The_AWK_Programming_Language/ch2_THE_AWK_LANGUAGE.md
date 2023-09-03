@@ -53,6 +53,8 @@
   - [4.1. The `print` Statement](#41-the-print-statement)
   - [4.2. Output Separators (`OFS` and `ORS`)](#42-output-separators-ofs-and-ors)
   - [4.3. The printf Statement](#43-the-printf-statement)
+  - [4.4. Output Into Files](#44-output-into-files)
+  - [4.5. Output Into Pipes](#45-output-into-pipes)
 
 This chapter explains, mostly with examples, the constructs that make up awk programs.
 
@@ -1748,3 +1750,47 @@ The *format argument* is always required; it is an expression whose string value
 | `|%10.3s|`  | January | <pre>\|       Jan\|</pre> |
 | `|%-10.3s|` | January | <pre>\|Jan       \|</pre> |
 | `%%`        | January | <pre>%</pre>              |
+
+### 4.4. Output Into Files
+
+The redirection operators `>` and `>>` are used to put output into *files* instead of the *standard output*. The following program will put the first and third fields of all input lines into two files: `big-pop` if the third field is greater than `100`, and `small-pop` otherwise:
+
+```awk
+$3 > 100   { print $1, $3 > "big-pop" }
+$3 <= 100  { print $1, $3 > "small-pop" }
+```
+
+Notice that the *filenames* have to be quoted.
+
+Filenames can be variables or expressions as well:
+
+```awk
+{ print($1, $3) > ($3 > 100 ? "big-pop" : "small-pop") }
+```
+
+does the same job, and the program
+
+```awk
+{ print > $1 }
+```
+
+puts every input line into a file named by the first field.
+
+In `print` and `printf` statements, if an expression in the *argument list* contains a *relational operator*, then either that expression or the argument list needs to be parenthesized. This rule eliminates any potential ambiguity arising from the *redirection operator* `>`. In
+
+```awk
+{ print $1, $2 > $3 }
+```
+
+`>` is the *redirection operator*, and hence not part of the second expression, so the values of the first two fields are written to the file named in the third field. If you want the second expression to include the `>` operator, use parentheses:
+
+```awk
+{ print $1, ($2 > $3) }
+```
+
+It is also important to note that a *redirection operator* opens a file only once; each successive `print` or `printf` statement adds more data to the open file.
+
+- When the *redirection operator* `>` is used, the file is initially cleared before any output is written to it.
+- If `>>` is used instead of `>`, the file is not initially cleared; output is *appended* after the original contents.
+
+### 4.5. Output Into Pipes
