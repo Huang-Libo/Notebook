@@ -52,7 +52,7 @@
 - [4. Output](#4-output)
   - [4.1. The `print` Statement](#41-the-print-statement)
   - [4.2. Output Separators (`OFS` and `ORS`)](#42-output-separators-ofs-and-ors)
-  - [4.3. The print£ Statement](#43-the-print-statement)
+  - [4.3. The printf Statement](#43-the-printf-statement)
 
 This chapter explains, mostly with examples, the constructs that make up awk programs.
 
@@ -1693,4 +1693,58 @@ By contrast,
 
 prints the first and second fields with **no** intervening *output field separator(OFS)*, because `$1 $2` is a string consisting of the **concatenation** of the two fields.
 
-### 4.3. The print£ Statement
+### 4.3. The printf Statement
+
+> NOTE: Output produced by `printf` does not contain any *newlines* unless you put them in explicitly.
+
+The `printf` statement is used to generate *formatted* output. It is similar to that in `C` except that the `*` *format specifier* is not supported in awk's `printf`.
+
+Like `print`, it has both an un-parenthesized and parenthesized form:
+
+- `printf format, expr_1, expr_2, ... , expr_n`
+- `printf(format, expr_1, expr_2, ... , expr_n)`
+
+The *format argument* is always required; it is an expression whose string value contains both *literal text* to be printed and *specifications* of how the expressions in the argument list are to be formatted. Each *specification* begins with a `%`, ends with a character that determines the conversion, and may include **3** modifiers:
+
+| Modifier Type | Explain                                                           |
+|---------------|-------------------------------------------------------------------|
+| `-`           | **left-justify** expression in its field                          |
+| *width*       | pad field to this width as needed;<br>leading `0` pads with zeros |
+| *.prec*       | maximum string width,<br>or digits to right of decimal point      |
+
+**Ⅰ. PRINTF FORMAT-CONTROL CHARACTERS**
+
+| CHARACTER | PRINT EXPRESSION AS                                                                   |
+|-----------|---------------------------------------------------------------------------------------|
+| `c`       | ASCII character                                                                       |
+| `d`       | decimal integer                                                                       |
+| `e`       | [-]d.ddddddE[+-]dd                                                                    |
+| `f`       | [-]ddd.dddddd                                                                         |
+| `g`       | `e` or `f` conversion, whichever is shorter,<br>with non-significant zeros suppressed |
+| `o`       | unsigned octal number                                                                 |
+| `s`       | string                                                                                |
+| `x`       | unsigned hexadecimal number                                                           |
+| `%`       | print a `%`; no argument is consumed                                                  |
+
+**Ⅱ. EXAMPLES OF PRINTF SPECIFICATIONS**
+
+| fmt         | $1      | printf(fmt, $1)           |
+|-------------|---------|---------------------------|
+| `%c`        | 97      | <pre>a</pre>              |
+| `%d`        | 97.5    | <pre>97</pre>             |
+| `%5d`       | 97.5    | <pre>   97</pre>          |
+| `%e`        | 97.5    | <pre>9.750000e+01</pre>   |
+| `%f`        | 97.5    | <pre>97.500000</pre>      |
+| `%7.2f`     | 97.5    | <pre>  97.50</pre>        |
+| `%g`        | 97.5    | <pre>97.5</pre>           |
+| `%.6g`      | 97.5    | <pre>97.5</pre>           |
+| `%o`        | 97      | <pre>141</pre>            |
+| `%06o`      | 97      | <pre>000141</pre>         |
+| `%x`        | 97      | <pre>61</pre>             |
+| `|%s|`      | January | <pre>\|January\|</pre>    |
+| `|%10s|`    | January | <pre>\|   January\|</pre> |
+| `|%-10s|`   | January | <pre>\|January   \|</pre> |
+| `|%.3s|`    | January | <pre>\|Jan\|</pre>        |
+| `|%10.3s|`  | January | <pre>\|       Jan\|</pre> |
+| `|%-10.3s|` | January | <pre>\|Jan       \|</pre> |
+| `%%`        | January | <pre>%</pre>              |
