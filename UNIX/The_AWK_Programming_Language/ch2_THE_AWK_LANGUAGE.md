@@ -59,6 +59,7 @@
 - [5. Input](#5-input)
   - [5.1. Input Separators](#51-input-separators)
   - [5.2. Multiline Records](#52-multiline-records)
+  - [5.3. The `getline` Function](#53-the-getline-function)
 
 This chapter explains, mostly with examples, the constructs that make up awk programs.
 
@@ -1966,3 +1967,91 @@ BEGIN { RS = ""; FS = "\n" }
 - and the *field separator(`FS`)* to *a newline* alone;
 
 **each line is thus a separate field**. There is a limit on how long a record can be, usually about **3000** characters. *Chapter 3* contains more discussion of how to handle multiline records.
+
+### 5.3. The `getline` Function
+
+The function `getline` can be used to read input either from the *current input* or from a *file* or *pipe*. By itself, `getline` fetches the next input record and performs the normal field-splitting operations on it. It sets `NF`, `NR`, and `FNR`;
+
+it returns
+
+- `1` if there was a record present,
+- `0` if end-of-file was encountered,
+- `-1` if some error occurred (such as failure to open a file).
+
+The expression `getline x` reads the next record into the variable `x` and increments `NR` and `FNR`. No splitting is done; `NF` is not set.
+
+The expression
+
+```awk
+getline < "file"
+```
+
+reads from *file* instead of the current input. It has no effect on `NR` or `FNR`, but field splitting is performed and `NF` is set.
+
+The expression
+
+```awk
+getline x < "file"
+```
+
+gets the next record from *file* into `x`; no splitting is done, and `NF`, `NR`, and `FNR` are untouched.
+
+The table below summarizes the forms of the `getline` function. The value of each expression is the value returned by `getline`.
+
+| EXPRESSION           | SETS                     |
+|----------------------|--------------------------|
+| `getline`            | `$0`, `NF`,  `NR`, `FNR` |
+| `getline var`        | `var`, `NR`, `FNR`       |
+| `getline < file`     | `$0`, `NF`               |
+| `getline var < file` | `var`                    |
+| `cmd | getline`      | `$0`, `NF`               |
+| `cmd | getline var`  | `var`                    |
+
+As an example, this program copies its input to its output, except that each line like
+
+```awk
+#include "filename"
+```
+
+is replaced by the contents of the file *filename*.
+
+```awk
+# include - replace `#include "filename"` by contents of the file which is named *filename*
+
+/^#include/ {
+    gsub(/"/, "", $2)
+    while ((getline x < $2) > 0)
+        print x
+    next
+}
+{ print }
+```
+
+It is also possible to pipe the output of another *command* directly into `getline`. For example, the statement
+
+```awk
+while("who" | getline)
+    n++
+```
+
+executes the Unix program `who` (once only) and pipes its output into `getline`. The output of `who` is a **list** of the users logged in. Each iteration of the `while` loop reads one more line from this list and increments the variable `n`, so after the `while` loop terminates, `n` contains a count of the number of users. Similarly, the expression
+
+```awk
+"date" | getline d
+```
+
+pipes the output of the `date` command into the variable `d`, thus setting `d` to the current date. Again, input pipes may not be available on non-Unix systems.
+
+In all cases involving `getline`, you should be aware of the possibility of an *error* return if the file can't be accessed. Although it's appealing to write
+
+```awk
+while (getline < "file") ...        # Dangerous
+```
+
+that's an infinite loop if file doesn't exist, because with a nonexistent file `getline` returns `-1`, a *nonzero* value that represents `true`. The preferred way is
+
+```awk
+while (getline < "file" > 0) ...    # Safe
+```
+
+Here the loop will be executed only when getline returns `1`.
