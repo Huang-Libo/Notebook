@@ -60,6 +60,9 @@
   - [5.1. Input Separators](#51-input-separators)
   - [5.2. Multiline Records](#52-multiline-records)
   - [5.3. The `getline` Function](#53-the-getline-function)
+  - [5.4. Command-Line Variable Assignments](#54-command-line-variable-assignments)
+  - [5.5. Command-Line Arguments](#55-command-line-arguments)
+- [6. Interaction with Other Programs](#6-interaction-with-other-programs)
 
 This chapter explains, mostly with examples, the constructs that make up awk programs.
 
@@ -2055,3 +2058,88 @@ while (getline < "file" > 0) ...    # Safe
 ```
 
 Here the loop will be executed only when getline returns `1`.
+
+### 5.4. Command-Line Variable Assignments
+
+As we have seen, an awk command line can have several forms:
+
+```awk
+awk 'program' f1 f2
+awk -f progfile f1 f2
+awk -Fsep 'program' f1 f2
+awk -Fsep -f progfile f1 f2
+```
+
+In these command lines, `f1`, `f2`, etc., are *command-line arguments* that normally represent *filenames*. If a filename has the form `var==text`, however, it is treated as an assignment of `text` to `var`, performed at the time when that argument would otherwise be accessed as a file (Usecase❓). This type of assignment allows variables to be changed before and after a file is read.
+
+### 5.5. Command-Line Arguments
+
+- The *command-line arguments* are available to the awk program in a *built-in array* called `ARGV`.
+- The value of *the built-in variable* `ARGC` is *one more than the number of arguments*. With the command line
+
+```awk
+awk -f progfile a v=1 b
+```
+
+`ARGC` has the value **4**,
+
+- `ARGV[0]` contains `awk`,
+- `ARGV[1]` contains `a`,
+- `ARGV[2]` contains `v= 1`,
+- `ARGV[3]` contains `b`.
+
+**`ARGC` is one more than the number of arguments because `awk`, the name of the command, is counted as argument `0`, as it is in C programs.** If the awk *program* appears on the command line, however, the *program* is not treated as an argument, nor is `-f filename` or any `-F` option. For example, with the command line
+
+```awk
+awk -F'\t' '$3 > 100' countries.txt
+```
+
+`ARGC` is **2** and `ARGV[1]` is `countries.txt`.
+
+The following program echoes its *command-line arguments*:
+
+```awk
+# echo - print command-line arguments
+
+BEGIN {
+    for (i = 1; i < ARGC; i++)
+        printf "%s ", ARGV[i]
+    printf "\n"
+}
+```
+
+Notice that everything happens in the `BEGIN` action: because there are no other *pattern-action* statements, the arguments are never treated as filenames, and no input is read.
+
+Another program using *command-line arguments* is `seq`, which generates sequences of integers:
+
+```awk
+# seq - print sequences of integers
+#   input:  arguments q, p q, or p q r;  q >= p; r > 0
+#   output: integers 1 to q, p to q, or p to q in steps of r
+
+BEGIN {
+    if (ARGC == 2)
+        for (i = 1; i <= ARGV[1]; i++)
+            print i
+    else if (ARGC == 3)
+        for (i = ARGV[1]; i <= ARGV[2]; i++)
+            print i
+    else if (ARGC == 4)
+        for (i = ARGV[1]; i <= ARGV[2]; i += ARGV[3])
+            print i
+}
+```
+
+The commands
+
+```bash
+awk -f seq 10
+awk -f seq 1 10
+awk -f seq 1 10 1
+```
+
+all generate the integers `1` through `10`.
+
+The arguments in `ARGV` may be modified or added to; `ARGC` may be altered. As each input file ends, awk treats the next *non-null* element of `ARGV` (up through the current value of `ARGC-1`) as the name of the next input file. Thus setting an element of `ARGV` to *null* means that it will not be treated as an input file. The name `"-"` may be used for the standard input.
+
+## 6. Interaction with Other Programs
