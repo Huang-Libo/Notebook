@@ -58,6 +58,7 @@
   - [4.6. Closing Flies and Pipes](#46-closing-flies-and-pipes)
 - [5. Input](#5-input)
   - [5.1. Input Separators](#51-input-separators)
+  - [5.2. Multiline Records](#52-multiline-records)
 
 This chapter explains, mostly with examples, the constructs that make up awk programs.
 
@@ -1944,3 +1945,24 @@ awk -F ',[ \t]*|[ \t]+' 'program'
 ```
 
 sets the *field separator* to the same strings as the `BEGIN` action shown above.
+
+### 5.2. Multiline Records
+
+By default, records are separated by newlines, so the terms "line" and "record" are normally synonymous. The default *record separator(`RS`)* can be changed in a limited way, however, by assigning a new value to the built-in *record-separator variable* `RS`. If `RS` is set to the *null string*, as in
+
+```awk
+BEGIN { RS = "" }
+```
+
+then records are separated by one or more blank lines and each record can therefore occupy several lines. Setting RS back to newline with the assignment `RS = "\n"` restores the default behavior. With multiline records, no matter what value `FS` has, newline is always one of the field separators.
+
+A common way to process multiline records is to use
+
+```awk
+BEGIN { RS = ""; FS = "\n" }
+```
+
+- to set the *record separator(`RS`)* to *one or more blank lines*
+- and the *field separator(`FS`)* to *a newline* alone;
+
+**each line is thus a separate field**. There is a limit on how long a record can be, usually about **3000** characters. *Chapter 3* contains more discussion of how to handle multiline records.
