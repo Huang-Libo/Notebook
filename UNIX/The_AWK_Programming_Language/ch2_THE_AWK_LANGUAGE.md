@@ -1594,3 +1594,48 @@ This means that the way to provide *local variables* for the *private* use of a 
 >   - By convention, an underscore `_` is often used as a **prefix** to indicate that a variable is intended to be "*private*" or "*local*" to a function.
 
 ## 4. Output
+
+The `print` and `printf` statements generate output.
+
+- The `print` statement is used for simple output;
+- `printf` is used when careful *formatting* is required.
+
+Output from `print` and `printf` can be directed into *files* and *pipes* as well as to the *terminal(Standard Output)*. These statements can be used in any mixture; the output comes out in the order in which it is generated.
+
+---
+
+**Output Statements**
+
+**Ⅰ. print**
+
+- `print`
+  - print `$0` on *standard output*
+- `print expression, expression, ...`
+  - print *expression*'s, separated by `OFS`, terminated by `ORS`
+- `print expression, expression, ... > filename`
+  - print on file *filename* instead of *standard output*
+- `print expression, expression, ... >> filename`
+  - append to file *filename* instead of overwriting previous contents
+- `print expression, expression, ... | command`
+  - print to *standard input* of *command*
+
+**Ⅱ. printf**
+
+- `printf(format, expression, expression, ... )`
+- `printf(format, expression, expression, ... ) > filename`
+- `printf(format, expression, expression, ... ) >> filename`
+- `printf(format, expression, expression, ... ) | command`
+  - `printf` statements are like `print` but the first argument specifies *output format*
+
+**Ⅲ. Others**
+
+- `close(filename)`, `close(command)`
+  - break connection between `print` and *filename* or *command*
+- `system(command)`
+  - execute *command*; value is *status* return of command
+
+The argument list of a `printf` statement does not need to be enclosed in parentheses. But if an expression in the argument list of a `print` or `printf` statement contains a *relational operator*, either the *expression* or the *argument list* must be enclosed in parentheses.
+
+*Pipes* and *system* may not be available on non-Unix systems.
+
+---
