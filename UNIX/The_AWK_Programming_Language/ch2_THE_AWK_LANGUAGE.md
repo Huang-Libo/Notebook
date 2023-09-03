@@ -55,6 +55,8 @@
   - [4.3. The printf Statement](#43-the-printf-statement)
   - [4.4. Output Into Files](#44-output-into-files)
   - [4.5. Output Into Pipes](#45-output-into-pipes)
+  - [4.6. Closing Flies and Pipes](#46-closing-flies-and-pipes)
+- [5. Input](#5-input)
 
 This chapter explains, mostly with examples, the constructs that make up awk programs.
 
@@ -1794,3 +1796,84 @@ It is also important to note that a *redirection operator* opens a file only onc
 - If `>>` is used instead of `>`, the file is not initially cleared; output is *appended* after the original contents.
 
 ### 4.5. Output Into Pipes
+
+It is also possible to direct output into a *pipe* instead of a *file* on systems that support pipes. The statement
+
+```awk
+print | command
+```
+
+causes the output of `print` to be piped into the *command*.
+
+Suppose we want to create a list of continent-population pairs, sorted in reverse numeric order by population. The program below accumulates in an array `pop` the population values in the third field for each of the distinct continent names in the fourth field. The `END` action prints each continent name and its population, and pipes this output into a suitable `sort` command.
+
+```awk
+# print continents and populations, sorted by population
+
+BEGIN { FS = "\t" }
+      { pop[$4] += $3 }
+END   { for (c in pop)
+          printf("%15s\t%6d\n", c, pop[c]) | "sort -t'\t' +1rn"
+      }
+```
+
+This yields
+
+```awk
+           Asia   2173
+  North America    340
+         Europe    172
+  South America    134
+```
+
+Another use for a pipe is writing onto the *standard error file* on Unix systems; output written there appears on the user's terminal instead of the *standard output*. There are several idioms for writing on the *standard error file*:
+
+> Note: The `message` below is a variable in awk.
+
+```awk
+print message | "cat 1>&2"            # redirect cat to stderr
+system("echo '" message "' 1>&2")     # redirect echo to stderr
+print message > "/dev/tty"            # write directly on terminal
+```
+
+> Tips: In shell scripting,
+>
+> - `1` represents *standard output (stdout)*
+> - `2` represents *standard error (stderr)*
+> - `1>&2` is used to redirect the output of the `echo` command to *stderr* instead of the default *stdout*
+
+e.g.
+
+```awk
+# Assuming "message" holds the text "Error: Something went wrong!"
+message = "Error: Something went wrong!"
+system("echo '" message "' 1>&2")
+```
+
+prints
+
+```console
+Error: Something went wrong!
+```
+
+Although most of our examples show literal strings enclosed in quotes, *command lines and filenames can be specified by any expression*. In `print` statements involving redirection of output, the files or pipes are identified by their names; that is, the pipe in the program above is literally named
+
+```awk
+sort -t'\t' +1rn
+```
+
+Normally, a *file* or *pipe* is created and opened only once during the run of a program. If the *file* or *pipe* is explicitly closed and then reused, it will be reopened.
+
+### 4.6. Closing Flies and Pipes
+
+The statement `close(expr)` closes a *file* or *pipe* denoted by *expr*; the string value of *expr* must be the same as the string used to create the file or pipe in the first place. Thus
+
+```awk
+close("sort -t'\t' +1rn" )
+```
+
+closes the `sort` pipe opened above.
+
+**close is necessary if you intend to write a file, then read it later in the same program.** There are also system-defined limits on the number of files and pipes that can be open at the same time.
+
+## 5. Input
