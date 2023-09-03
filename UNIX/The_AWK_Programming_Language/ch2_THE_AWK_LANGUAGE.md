@@ -50,6 +50,9 @@
     - [2.4.4. Multidimensional Arrays](#244-multidimensional-arrays)
 - [3. User-Defined Functions](#3-user-defined-functions)
 - [4. Output](#4-output)
+  - [4.1. The `print` Statement](#41-the-print-statement)
+  - [4.2. Output Separators (`OFS` and `ORS`)](#42-output-separators-ofs-and-ors)
+  - [4.3. The print£ Statement](#43-the-print-statement)
 
 This chapter explains, mostly with examples, the constructs that make up awk programs.
 
@@ -1639,3 +1642,55 @@ The argument list of a `printf` statement does not need to be enclosed in parent
 *Pipes* and *system* may not be available on non-Unix systems.
 
 ---
+
+### 4.1. The `print` Statement
+
+The `print` statement has two forms:
+
+- `print expr_1, expr_2, expr_3, ... , expr_n`
+- `print(expr_1, expr_2, expr_3, ... , expr_n)`
+
+Both forms print the string value of each *expression* separated by the *output field separator(OFS)* followed by the *output record separator(ORS)*. The statement
+
+```awk
+print
+```
+
+is an abbreviation for
+
+```awk
+print $0
+```
+
+To print a blank line. that is, a line with only a newline, use
+
+```awk
+print ""
+```
+
+The second form parentheses, as in
+
+```awk
+print($1 ":", $2)
+```
+
+Both forms of the print statement generate the same output but, as we will see, **parentheses are necessary for arguments containing *relational operators***.
+
+### 4.2. Output Separators (`OFS` and `ORS`)
+
+The *output field separator* and *output record separator* are stored in the *built-in variables* `OFS` and `ORS`. Initially, `OFS` is set to *a single blank* and `ORS` to *a single newline*, but these values can be changed at any time. For example, the following program prints the first and second fields of each line with a colon between the fields and two newlines after the second field:
+
+```awk
+BEGIN { OFS = ":"; ORS = "\n\n" }
+      { print $1, $2 }
+```
+
+By contrast,
+
+```awk
+{ print $1 $2 }
+```
+
+prints the first and second fields with **no** intervening *output field separator(OFS)*, because `$1 $2` is a string consisting of the **concatenation** of the two fields.
+
+### 4.3. The print£ Statement
