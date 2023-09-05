@@ -2,6 +2,8 @@
 
 - [1. Data Transformation and Reduction](#1-data-transformation-and-reduction)
   - [1.1. Summing Columns](#11-summing-columns)
+  - [1.2. Computing Percentages and Quantiles](#12-computing-percentages-and-quantiles)
+  - [1.3. Numbers with Commas](#13-numbers-with-commas)
 
 Awk was originally intended for everyday data-processing tasks, such as information retrieval, data validation, and data transformation and reduction. We have already seen simple examples of these in Chapters 1 and 2. In this chapter, we will consider more complex tasks of a similar nature.
 
@@ -100,3 +102,86 @@ function isnum(n) { return n ~ /^[+-]?[0-9]+$/ }
 > NOTE: `isnum` return `1` if matched, `0` otherwise.
 
 The function `isnum` defines a number as one or more digits, perhaps preceded by a sign. A more general definition for numbers can be found in the discussion of regular expressions in *Section 2.1*.
+
+Exercise 3-1. Modify the program `sum3` to ignore blank lines.
+
+Exercise 3-2. Add the more general regular expression for a number. How does it affect the running time?
+
+Exercise 3-3. What is the effect of removing the test of `numcol` in the second for statement?
+
+Exercise 3-4. Write a program that reads a list of item and quantity pairs and for each item on the list accumulates the total quantity; at the end, it prints the items and total quantities, sorted alphabetically by item.
+
+### 1.2. Computing Percentages and Quantiles
+
+Suppose that we want not the sum of a column of numbers but what **percentage** each is of the total. This requires two passes over the data. If there's *only one column of numbers* and not too much data, the easiest way is to store the numbers in an array on the first pass, then compute the percentages on the second pass as the values are being printed:
+
+```awk
+# percent
+#   input:  a column of nonnegative numbers
+#   output: each number and its percentage of the total
+
+    { x[NR] = $1; sum += $1 }
+
+END { if (sum != 0)
+          for (i = 1; i <= NR; i++)
+              printf("%10.2f %5.1f\n", x[i], 100*x[i]/sum)
+    }
+```
+
+This same approach, though with a more complicated transformation, could be used, for example, in adjusting student grades to fit some curve. Once the grades have been computed (as numbers between `0` and `100`), it might be interesting to see a *histogram*:
+
+```awk
+# histogram.awk
+#   input:  numbers between 0 and 100
+#   output: histogram of deciles
+
+    { x[int($1/10)]++ }
+
+END { for (i = 0; i < 10; i++)
+          printf(" %2d - %2d: %3d %s\n",
+              10*i, 10*i+9, x[i], rep(x[i],"*"))
+      printf("100:      %3d %s\n", x[10], rep(x[10],"*"))
+    }
+
+function rep(n,s,   t) {  # return string of n s's
+    while (n-- > 0)
+        t = t s
+    return t
+}
+```
+
+Note how the *postfix decrement operator* `--` is used to control the `while` loop.
+
+We can test `histogram.awk` with some randomly generated grades. The first program in the pipeline below generates *200* random numbers between `0` and `100`, and pipes them into the histogram maker.
+
+```console
+awk '
+# generate random integers
+BEGIN { for (i = 1; i <= 200; i++)
+            print int(101*rand())
+      }
+' |
+awk -f histogram.awk
+```
+
+It produces this output:
+
+```console
+  0 -  9:  17 *****************
+ 10 - 19:  23 ***********************
+ 20 - 29:  20 ********************
+ 30 - 39:  15 ***************
+ 40 - 49:  15 ***************
+ 50 - 59:  21 *********************
+ 60 - 69:  19 *******************
+ 70 - 79:  19 *******************
+ 80 - 89:  22 **********************
+ 90 - 99:  25 *************************
+100:        4 ****
+```
+
+Exercise 3-5. Scale the rows of stars so they don't overflow the line length when there's a lot of data.
+
+Exercise 3-6. Make a version of the histogram code that divides the input into a specified number of buckets, adjusting the ranges according to the data seen.
+
+### 1.3. Numbers with Commas
