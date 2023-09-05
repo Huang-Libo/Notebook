@@ -4,6 +4,7 @@
   - [1.1. Summing Columns](#11-summing-columns)
   - [1.2. Computing Percentages and Quantiles](#12-computing-percentages-and-quantiles)
   - [1.3. Numbers with Commas](#13-numbers-with-commas)
+  - [1.4. Fixed-Field Input](#14-fixed-field-input)
 
 Awk was originally intended for everyday data-processing tasks, such as information retrieval, data validation, and data transformation and reduction. We have already seen simple examples of these in Chapters 1 and 2. In this chapter, we will consider more complex tasks of a similar nature.
 
@@ -185,3 +186,54 @@ Exercise 3-5. Scale the rows of stars so they don't overflow the line length whe
 Exercise 3-6. Make a version of the histogram code that divides the input into a specified number of buckets, adjusting the ranges according to the data seen.
 
 ### 1.3. Numbers with Commas
+
+Suppose we have a list of numbers that contain commas and decimal points, like `12,345.67`. Since awk thinks that the first comma terminates a number, these numbers cannot be summed directly. The commas must first be erased:
+
+```awk
+# sumcomma - add up numbers containing commas
+
+    { gsub(/,/, ""); sum += $0 }
+END { print sum }
+```
+
+**The effect of `gsub(/,/, ""` is to replace every comma with the *null string*, that is, to delete the commas.**
+
+This program doesn't check that the commas are in the right places, nor does it print commas in its answer. Putting commas into numbers requires only a little effort, as the next program shows. It formats numbers with commas and two digits after the decimal point. The structure of this program is a useful one to emulate: it contains a function that only does the new thing, with the rest of the program just reading and printing. After it's been tested and is working, the new function can be included in the final program.
+
+The basic idea is to insert commas from the decimal point to the left in a loop; each iteration puts a comma in front of the leftmost three digits that are followed by a comma or decimal point, provided there will be at least one additional digit in front of the comma. The algorithm uses recursion to handle negative numbers: if the input is negative, the function addcomma calls itself with the positive value, tacks on a leading minus sign, and returns the result.
+
+```awk
+# addcomma - put commas in numbers
+#   input:  a number per line
+#   output: the input number followed by
+#      the number with commas and two decimal places 
+
+    { printf("%-12s %20s\n", $0, addcomma($0)) }
+
+function addcomma(x,   num) {
+    if (x < 0)
+        return "-" addcomma(-x)
+    num = sprintf("%.2f", x)   # num is dddddd.dd
+    while (num ~ /[0-9][0-9][0-9][0-9]/)
+        sub(/[0-9][0-9][0-9][,.]/, ",&", num)
+    return num
+}
+```
+
+Note the use of the `&` in the replacement text for `sub` to add a comma *before* each triplet of numbers.
+
+Here are the results for some test data:
+
+```console
+0                            0.00
+-1                          -1.00
+-12.34                     -12.34
+12345                   12,345.00
+-1234567.89         -1,234,567.89
+-123.                     -123.00
+-123456               -123,456.00
+```
+
+Exercise 3-7. Modify sumcomma, the program that adds numbers with commas, to check that the commas in the numbers are properly positioned.
+
+### 1.4. Fixed-Field Input
