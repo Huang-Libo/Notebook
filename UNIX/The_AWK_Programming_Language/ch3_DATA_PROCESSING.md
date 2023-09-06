@@ -105,13 +105,13 @@ function isnum(n) { return n ~ /^[+-]?[0-9]+$/ }
 
 The function `isnum` defines a number as one or more digits, perhaps preceded by a sign. A more general definition for numbers can be found in the discussion of regular expressions in *Section 2.1*.
 
-Exercise 3-1. Modify the program `sum3` to ignore blank lines.
+**Exercise 3-1.** Modify the program `sum3` to ignore blank lines.
 
-Exercise 3-2. Add the more general regular expression for a number. How does it affect the running time?
+**Exercise 3-2.** Add the more general regular expression for a number. How does it affect the running time?
 
-Exercise 3-3. What is the effect of removing the test of `numcol` in the second for statement?
+**Exercise 3-3.** What is the effect of removing the test of `numcol` in the second for statement?
 
-Exercise 3-4. Write a program that reads a list of item and quantity pairs and for each item on the list accumulates the total quantity; at the end, it prints the items and total quantities, sorted alphabetically by item.
+**Exercise 3-4.** Write a program that reads a list of item and quantity pairs and for each item on the list accumulates the total quantity; at the end, it prints the items and total quantities, sorted alphabetically by item.
 
 ### 1.2. Computing Percentages and Quantiles
 
@@ -182,9 +182,9 @@ It produces this output:
 100:        4 ****
 ```
 
-Exercise 3-5. Scale the rows of stars so they don't overflow the line length when there's a lot of data.
+**Exercise 3-5.** Scale the rows of stars so they don't overflow the line length when there's a lot of data.
 
-Exercise 3-6. Make a version of the histogram code that divides the input into a specified number of buckets, adjusting the ranges according to the data seen.
+**Exercise 3-6.** Make a version of the histogram code that divides the input into a specified number of buckets, adjusting the ranges according to the data seen.
 
 ### 1.3. Numbers with Commas
 
@@ -235,7 +235,7 @@ Here are the results for some test data:
 -123456               -123,456.00
 ```
 
-Exercise 3-7. Modify sumcomma, the program that adds numbers with commas, to check that the commas in the numbers are properly positioned.
+**Exercise 3-7.** Modify sumcomma, the program that adds numbers with commas, to check that the commas in the numbers are properly positioned.
 
 ### 1.4. Fixed-Field Input
 
@@ -269,6 +269,6 @@ it produces the output
 
 which is ready to be sorted by year, month and day.
 
-Exercise 3-8. How would you convert dates into a form in which you can do arithmetic like computing the number of days between two dates?
+**Exercise 3-8**. How would you convert dates into a form in which you can do arithmetic like computing the number of days between two dates?
 
 ### 1.5. Program Cross-Reference Checking
