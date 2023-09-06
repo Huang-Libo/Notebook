@@ -5,6 +5,7 @@
   - [1.2. Computing Percentages and Quantiles](#12-computing-percentages-and-quantiles)
   - [1.3. Numbers with Commas](#13-numbers-with-commas)
   - [1.4. Fixed-Field Input](#14-fixed-field-input)
+  - [1.5. Program Cross-Reference Checking](#15-program-cross-reference-checking)
 
 Awk was originally intended for everyday data-processing tasks, such as information retrieval, data validation, and data transformation and reduction. We have already seen simple examples of these in Chapters 1 and 2. In this chapter, we will consider more complex tasks of a similar nature.
 
@@ -187,7 +188,7 @@ Exercise 3-6. Make a version of the histogram code that divides the input into a
 
 ### 1.3. Numbers with Commas
 
-Suppose we have a list of numbers that contain commas and decimal points, like `12,345.67`. Since awk thinks that the first comma terminates a number, these numbers cannot be summed directly. The commas must first be erased:
+Suppose we have a list of numbers that contain commas and decimal points, like `12,345.67`. **Since awk thinks that the first comma terminates a number**(The value of `12,345.67` will be treated as `12` when converting from string to number), these numbers cannot be summed directly. The commas must first be erased:
 
 ```awk
 # sumcomma - add up numbers containing commas
@@ -196,7 +197,7 @@ Suppose we have a list of numbers that contain commas and decimal points, like `
 END { print sum }
 ```
 
-**The effect of `gsub(/,/, ""` is to replace every comma with the *null string*, that is, to delete the commas.**
+**The effect of `gsub(/,/, "")` is to replace every comma with the *null string*, that is, to delete the commas.**
 
 This program doesn't check that the commas are in the right places, nor does it print commas in its answer. Putting commas into numbers requires only a little effort, as the next program shows. It formats numbers with commas and two digits after the decimal point. The structure of this program is a useful one to emulate: it contains a function that only does the new thing, with the rest of the program just reading and printing. After it's been tested and is working, the new function can be included in the final program.
 
@@ -237,3 +238,37 @@ Here are the results for some test data:
 Exercise 3-7. Modify sumcomma, the program that adds numbers with commas, to check that the commas in the numbers are properly positioned.
 
 ### 1.4. Fixed-Field Input
+
+Information appearing in *fixed-width fields* often requires some kind of preprocessing before it can be used directly. Some programs, such as spreadsheets, put out numbers in fixed columns, rather than with field separators; if the numbers are too wide, the columns abut. Fixed-field data is best handled with `substr`, which can be used to pick apart any combination of columns. For example, suppose the first `6` characters of each line contain a date in the form `mmddyy`. The easiest way to sort this by date is to convert the dates into the form `yymmdd`:
+
+```awk
+# date convert - convert mmddyy into yymmdd in $1
+
+{ $1 = substr($1,5,2) substr($1,1,2) substr($1,3,2); print }
+```
+
+On input sorted by month, like this:
+
+```plaintext
+013042 mary's birthday
+032772 mark's birthday
+052470 anniversary
+061209 mother's birthday
+110175 elizabeth's birthday
+```
+
+it produces the output
+
+```console
+420130 mary's birthday
+720327 mark's birthday
+700524 anniversary
+090612 mother's birthday
+751101 elizabeth's birthday
+```
+
+which is ready to be sorted by year, month and day.
+
+Exercise 3-8. How would you convert dates into a form in which you can do arithmetic like computing the number of days between two dates?
+
+### 1.5. Program Cross-Reference Checking
