@@ -8,6 +8,7 @@
   - [1.5. Program Cross-Reference Checking](#15-program-cross-reference-checking)
   - [1.6. Formatted Output](#16-formatted-output)
 - [2. Data Validation](#2-data-validation)
+  - [2.1. Balanced Delimiters](#21-balanced-delimiters)
 
 Awk was originally intended for everyday data-processing tasks, such as information retrieval, data validation, and data transformation and reduction. We have already seen simple examples of these in Chapters 1 and 2. In this chapter, we will consider more complex tasks of a similar nature.
 
@@ -449,3 +450,33 @@ The functions `numtowords` and `intowords` convert *numbers* to *words*. They ar
 **Exercise 3-12**. Modify the program to put hyphens into the proper places in spelled-out amounts, as in "twenty-one dollars."
 
 ## 2. Data Validation
+
+Another common use for awk programs is data validation: making sure that data is legal or at least **plausible**. This section contains several small programs that check input for validity.
+
+For example, consider the column-summing programs in the previous section. Are there any numeric fields where there should be nonnumeric ones, or vice versa? Such a program is very close to one we saw before, with the summing removed:
+
+```awk
+# colcheck - check consistency of columns
+#   input:  rows of numbers and strings
+#   output: lines whose format differs from first line
+
+NR == 1	{
+    nfld = NF
+    for (i = 1; i <= NF; i++)
+       type[i] = isnum($i)
+}
+{   if (NF != nfld)
+       printf("line %d has %d fields instead of %d\n",
+          NR, NF, nfld)
+    for (i = 1; i <= NF; i++)
+       if (isnum($i) != type[i])
+          printf("field %d in line %d differs from line 1\n",
+             i, NR)
+}
+
+function isnum(n) { return n ~ /^[+-]?[0-9]+$/ }
+```
+
+The test for numbers is again just a sequence of digits with an optional sign; see the discussion of *regular expressions* in *Section 2.1* for a more complete version.
+
+### 2.1. Balanced Delimiters

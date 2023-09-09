@@ -35,6 +35,7 @@
         "CMAKE",
         "CocoaPods",
         "Codacy",
+        "colcheck",
         "colorpickerdir",
         "conda",
         "coreutils",
