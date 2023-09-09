@@ -7,6 +7,7 @@
   - [1.4. Fixed-Field Input](#14-fixed-field-input)
   - [1.5. Program Cross-Reference Checking](#15-program-cross-reference-checking)
   - [1.6. Formatted Output](#16-formatted-output)
+- [2. Data Validation](#2-data-validation)
 
 Awk was originally intended for everyday data-processing tasks, such as information retrieval, data validation, and data transformation and reduction. We have already seen simple examples of these in Chapters 1 and 2. In this chapter, we will consider more complex tasks of a similar nature.
 
@@ -325,3 +326,126 @@ Now it is easy for other programs to search this output or process it further.
 This technique does not provide line number information nor tell how many times a name is used in a file, but these things can be found by a text editor or another awk program. Nor does it depend on which language the programs are written in, so it is much more flexible than the usual run of cross-referencing tools, and shorter and simpler too.
 
 ### 1.6. Formatted Output
+
+As another example we'll use awk to make money, or at least to print checks. The input consists of lines, each containing
+
+- a check number,
+- an amount,
+- a payee
+
+separated by *tabs*.
+
+The output goes on check forms, `8` lines high.
+
+- The *second* and *third* lines have the *check number* and *date* indented `45` spaces,
+- the *fourth* line contains the *payee* in a field `45` characters long, followed by `3` blanks, followed by the *amount*.
+- The *fifth* line contains the amount in *words*, and the other lines are blank.
+
+A check looks like this:
+
+```console
+1 
+2                                              1026
+3                                              Sep 10, 2023
+4 Pay to Mary R. Worth--------------------------------   $123.45
+5 the sum of one hundred twenty three dollars and 45 cents exactly
+6
+7                                --------------------------------
+8
+```
+
+> **Note**: The *line number* above is added by me manually, just for readers to identify each line easier.
+
+`prchecks.awk`:
+
+```awk
+# prchecks - print formatted checks
+#   input:  number \t amount \t payee
+#   output: eight lines of text for preprinted check forms
+
+BEGIN {
+    FS = "\t"
+    dashes = sp45 = sprintf("%45s", " ")
+    gsub(/ /, "-", dashes)        # to protect the payee
+    "date" | getline date         # get today's date
+    split(date, d, " ")
+    date = d[2] " " d[3] ", " d[6]
+    initnum()    # set up tables for number conversion
+}
+NF != 3 || $2 >= 1000000 {        # illegal data
+    printf("\nline %d illegal:\n%s\n\nVOID\nVOID\n\n\n", NR, $0)
+    next                          # no check printed
+}
+{   printf("\n")                  # nothing on line 1
+    printf("%s%s\n", sp45, $1)    # number, indented 45 spaces
+    printf("%s%s\n", sp45, date)  # date, indented 45 spaces
+    amt = sprintf("%.2f", $2)     # formatted amount
+    printf("Pay to %45.45s   $%s\n", $3 dashes, amt)  # line 4
+    printf("the sum of %s\n", numtowords(amt))        # line 5
+    printf("\n\n\n")              # lines 6, 7 and 8
+}
+
+function numtowords(n,   cents, dols) { # n has 2 decimal places
+    cents = substr(n, length(n)-1, 2)
+    dols = substr(n, 1, length(n)-3)
+    if (dols == 0)
+        return "zero dollars and " cents " cents exactly"
+    return intowords(dols) " dollars and " cents " cents exactly"
+}
+
+function intowords(n) {
+    n = int(n)
+    if (n >= 1000)
+        return intowords(n/1000) " thousand " intowords(n%1000)
+    if (n >= 100)
+        return intowords(n/100) " hundred " intowords(n%100)
+    if (n >= 20)
+        return tens[int(n/10)] " " intowords(n%10)
+    return nums[n]
+}
+
+function initnum() {
+    split("one two three four five six seven eight nine " \
+          "ten eleven twelve thirteen fourteen fifteen " \
+          "sixteen seventeen eighteen nineteen", nums, " ")
+    split("ten twenty thirty forty fifty sixty " \
+          "seventy eighty ninety", tens, " ")
+}
+```
+
+The program contains several interesting constructs.
+
+- First, notice how we generate a long string of blanks in the `BEGIN` action with `sprintf`, and then convert them to *dashes* by *substitution*.
+- Note also how we combine *line continuation* and *string concatenation* to create the *string argument* to `split` in the function `initnum`; this is a useful idiom.
+
+The date comes from the system by the line
+
+```awk
+"date" | getline date # get today's date
+```
+
+which runs the `date` command and *pipes* its output into `getline`. A little processing converts the date from
+
+```console
+Wed Jun 17 13:39:36 EDT 1987
+```
+
+into
+
+```console
+Jun 17, 1987
+```
+
+(This may need revision on non-Unix systems that do not support pipes.)
+
+The functions `numtowords` and `intowords` convert *numbers* to *words*. They are straightforward, although about half the program is devoted to them. The function `intowords` is recursive: it calls itself to deal with a simpler part of the problem. This is the second example of recursion in this chapter, and we will see others later on. In each case, recursion is an effective way to break a big job into smaller, more manageable pieces.
+
+**Exercise 3-9**. Use the function addcomma from a previous example to include commas in the printed amount.
+
+**Exercise 3-10**. The program prchecks does not deal with negative quantities or very long amounts in a graceful way. Modify the program to reject requests for checks for negative amounts and to split very long amounts onto two lines.
+
+**Exercise 3-11**. The function numtowords sometimes puts out two blanks in a row. It also produces blunders like "one dollars." How would you fix these defects?
+
+**Exercise 3-12**. Modify the program to put hyphens into the proper places in spelled-out amounts, as in "twenty-one dollars."
+
+## 2. Data Validation
