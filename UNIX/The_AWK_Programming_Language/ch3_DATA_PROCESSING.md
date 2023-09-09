@@ -6,6 +6,7 @@
   - [1.3. Numbers with Commas](#13-numbers-with-commas)
   - [1.4. Fixed-Field Input](#14-fixed-field-input)
   - [1.5. Program Cross-Reference Checking](#15-program-cross-reference-checking)
+  - [1.6. Formatted Output](#16-formatted-output)
 
 Awk was originally intended for everyday data-processing tasks, such as information retrieval, data validation, and data transformation and reduction. We have already seen simple examples of these in Chapters 1 and 2. In this chapter, we will consider more complex tasks of a similar nature.
 
@@ -188,7 +189,7 @@ It produces this output:
 
 ### 1.3. Numbers with Commas
 
-Suppose we have a list of numbers that contain commas and decimal points, like `12,345.67`. **Since awk thinks that the first comma terminates a number**(The value of `12,345.67` will be treated as `12` when converting from string to number), these numbers cannot be summed directly. The commas must first be erased:
+Suppose we have a list of numbers that contain commas and decimal points, like `12,345.67`. **Since awk thinks that the first comma terminates a number**(The value of `12,345.67` will be treated as `12` when converting from *string* to *number*), these numbers cannot be summed directly. The commas must first be erased:
 
 ```awk
 # sumcomma - add up numbers containing commas
@@ -201,7 +202,7 @@ END { print sum }
 
 This program doesn't check that the commas are in the right places, nor does it print commas in its answer. Putting commas into numbers requires only a little effort, as the next program shows. It formats numbers with commas and two digits after the decimal point. The structure of this program is a useful one to emulate: it contains a function that only does the new thing, with the rest of the program just reading and printing. After it's been tested and is working, the new function can be included in the final program.
 
-The basic idea is to insert commas from the decimal point to the left in a loop; each iteration puts a comma in front of the leftmost three digits that are followed by a comma or decimal point, provided there will be at least one additional digit in front of the comma. The algorithm uses recursion to handle negative numbers: if the input is negative, the function addcomma calls itself with the positive value, tacks on a leading minus sign, and returns the result.
+The basic idea is to insert commas from the decimal point to the left in a loop; each iteration puts a comma in front of the leftmost three digits that are followed by a comma or decimal point, provided there will be at least one additional digit in front of the comma. The algorithm uses recursion to handle negative numbers: if the input is negative, the function `addcomma` calls itself with the positive value, tacks on a leading minus sign, and returns the result.
 
 ```awk
 # addcomma - put commas in numbers
@@ -235,7 +236,7 @@ Here are the results for some test data:
 -123456               -123,456.00
 ```
 
-**Exercise 3-7.** Modify sumcomma, the program that adds numbers with commas, to check that the commas in the numbers are properly positioned.
+**Exercise 3-7.** Modify `sumcomma`, the program that adds numbers with commas, to check that the commas in the numbers are properly positioned.
 
 ### 1.4. Fixed-Field Input
 
@@ -272,3 +273,55 @@ which is ready to be sorted by year, month and day.
 **Exercise 3-8**. How would you convert dates into a form in which you can do arithmetic like computing the number of days between two dates?
 
 ### 1.5. Program Cross-Reference Checking
+
+Awk is often used to extract information from the output of other programs. Sometimes that output is merely a set of **homogeneous** lines, in which case field-splitting or `substr` operations are quite adequate. Sometimes, however, the upstream program thinks its output is intended for people. In that case, the task of the awk program is to undo careful formatting, so as to extract the information from the irrelevant. The next example is a simple instance.
+
+Large programs are built from many files. *It is convenient (and sometimes vital) to know which file defines which function, and where the function is used.* To that end, the Unix program `nm` prints a neatly formatted list of the names, definitions, and uses of the names in a set of *object files*(`*.o` files). A typical fragment of its output looks like this:
+
+```console
+file.o:
+00000c80 T _addroot
+00000b30 T _checkdev
+00000a3c T _checkdupl
+         U _chown
+         U _client
+         U _close
+funmount.o:
+00000000 T _funmount
+         U cerror
+```
+
+- Lines with *one* field (e.g., `file.o`) are filenames,
+- lines with *two* fields (e.g., `U` and `_close`) are uses of names,
+- lines with *three* fields are *definitions* of names.
+
+`T` indicates that a definition is a text symbol (*function*) and `U` indicates that the name is undefined.
+
+Using this raw output to determine what file defines or uses a particular symbol can be a nuisance, since the filename is not attached to each symbol. For a C program the list can be long - it's 850 lines for the nine files of source that make up awk itself. A three-line awk program, however, can add the name to each item, so subsequent programs can retrieve the useful information from one line:
+
+```awk
+# nm.format - add filename to each line
+
+NF == 1 { file = $1 }
+NF == 2 { print file, $1, $2 }
+NF == 3 { print file, $2, $3 }
+```
+
+The output from `um.format` on the data shown above is
+
+```console
+file.o: T _addroot
+file.o: T _checkdev
+file.o: T _checkdupl
+file.o: U _chown
+file.o: U _client
+file.o: U _close
+funmount.o: T _funmount
+funmount.o: U cerror
+```
+
+Now it is easy for other programs to search this output or process it further.
+
+This technique does not provide line number information nor tell how many times a name is used in a file, but these things can be found by a text editor or another awk program. Nor does it depend on which language the programs are written in, so it is much more flexible than the usual run of cross-referencing tools, and shorter and simpler too.
+
+### 1.6. Formatted Output
