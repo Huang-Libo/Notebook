@@ -1808,8 +1808,10 @@ It is also important to note that a *redirection operator* opens a file only onc
 It is also possible to direct output into a *pipe* instead of a *file* on systems that support pipes. The statement
 
 ```awk
-print | command
+print | "command"
 ```
+
+> **Note**: The shell command is enclosed by a pair to double quotes.
 
 causes the output of `print` to be piped into the *command*.
 
@@ -2032,7 +2034,7 @@ is replaced by the contents of the file *filename*.
 { print }
 ```
 
-It is also possible to pipe the output of another *command* directly into `getline`. For example, the statement
+**It is also possible to pipe the output of another *command* directly into `getline`.** For example, the statement
 
 ```awk
 while("who" | getline)
@@ -2150,7 +2152,16 @@ This section describes some of the ways in which awk programs can cooperate with
 
 ### 6.1. The `system` Function
 
-The *built-in function* `system(expression)` executes the command given by the *string value* of *expression*. The value returned by `system` is the *status* returned by the *command* executed.
+The *built-in function* `system(expression)` executes the command given by the **string value** of *expression*. The value returned by `system` is the *exit status* returned by the *command* executed.
+
+> **Note**:
+>
+> The difference between **system("command")** vs **print "Some String" | "command"** and **"command" | getline my_awk_var**:
+>
+> - **system("command")** doesn't return the output of the *command*, instead, it returns the *exit status code* of the *command* executed. It's generally used to perform a *command* and get its *exit status*, rather than to capture its output.
+> - On the other hand, the commands in the statement below can obtain outputs from awk `print`, or provide inputs to an awk function like `getline`:
+>   - **print "Some String" | "command"**, the *command* obtain outputs from awk `print`.
+>   - **"command" | getline my_awk_var**, the *command* provide inputs to awk function `getline`, then assign the result to the awk variable `my_awk_var`.
 
 For example, we can build another version of the *file-inclusion program* of *Section 2.5* like this,
 
