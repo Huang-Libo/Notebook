@@ -9,6 +9,7 @@
   - [1.6. Formatted Output](#16-formatted-output)
 - [2. Data Validation](#2-data-validation)
   - [2.1. Balanced Delimiters](#21-balanced-delimiters)
+  - [2.2. Password-File Checking](#22-password-file-checking)
 
 Awk was originally intended for everyday data-processing tasks, such as information retrieval, data validation, and data transformation and reduction. We have already seen simple examples of these in Chapters 1 and 2. In this chapter, we will consider more complex tasks of a similar nature.
 
@@ -480,3 +481,31 @@ function isnum(n) { return n ~ /^[+-]?[0-9]+$/ }
 The test for numbers is again just a sequence of digits with an optional sign; see the discussion of *regular expressions* in *Section 2.1* for a more complete version.
 
 ### 2.1. Balanced Delimiters
+
+In the machine-readable text of this book, each program is introduced by a line beginning with `.P1` and is terminated by a line beginning with `.P2`. These lines are text-formatting commands that make the programs come out in their distinctive font when the text is typeset. Since programs cannot be nested, these text-formatting commands must form an alternating sequence
+
+```plaintext
+.P1 .P2 .P1 .P2 ... .P1 .P2
+```
+
+If one or the other of these delimiters is omitted, the output will be badly **mangled** by our text formatter. To make sure that the programs would be typeset properly, we wrote this tiny delimiter checker, which is typical of a large class of such programs:
+
+```awk
+# p12check - check input for alternating .P1/.P2 delimiters
+
+/^\.P1/ { if (p != 0)
+              print ".P1 after .P1, line", NR
+          p = 1
+        }
+/^\.P2/ { if (p != 1)
+              print ".P2 with no preceding .P1, line", NR
+          p = 0
+        }
+END     { if (p != 0) print "missing .P2 at end" }
+```
+
+If the delimiters are in the right order, the variable `p` silently goes through the sequence of values 0 1 0 1 0 ... 1 0. Otherwise, the appropriate error messages are printed.
+
+**Exercise 3-13**. What is the best way to extend this program to handle multiple sets of delimiter pairs?
+
+### 2.2. Password-File Checking
