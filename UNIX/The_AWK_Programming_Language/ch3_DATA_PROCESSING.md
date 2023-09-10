@@ -10,6 +10,7 @@
 - [2. Data Validation](#2-data-validation)
   - [2.1. Balanced Delimiters](#21-balanced-delimiters)
   - [2.2. Password-File Checking](#22-password-file-checking)
+  - [2.3. Generating Data-Validation Programs](#23-generating-data-validation-programs)
 
 Awk was originally intended for everyday data-processing tasks, such as information retrieval, data validation, and data transformation and reduction. We have already seen simple examples of these in Chapters 1 and 2. In this chapter, we will consider more complex tasks of a similar nature.
 
@@ -509,3 +510,48 @@ If the delimiters are in the right order, the variable `p` silently goes through
 **Exercise 3-13**. What is the best way to extend this program to handle multiple sets of delimiter pairs?
 
 ### 2.2. Password-File Checking
+
+The password file(`/etc/passwd`) on a Unix system contains the name of and other information about authorized users. Each line of the password file has `7` fields, separated by *colons*:
+
+```plaintext
+root:qyxRi2uhuVjrg:0:2::/:
+bwk:1L./v6iblzzNE:9:1:Brian Kernighan:/usr/bwk:
+ava:otxs1oTVoyvMQ:15:1:Al Aho:/usr/ava:
+uucp:xutiBs2hKtcls:48:1:uucp daemon:/usr/lib/uucp:uucico
+pjw:xNqy//GDc8FFg:170:2:Peter Weinberger:/usr/pjw:
+mark:jOz1fuQmqivdE:374:1:Mark Kernighan:/usr/bwk/mark:
+...
+```
+
+- The *first* field is the user's login name, which should be **alphanumeric**.
+- The *second* is an encrypted version of the password; if this field is empty, anyone can log in pretending to be that user, while if there is a password, only people who know the password can log in.
+- The *third* and *fourth* fields are supposed to be numeric.
+- The *sixth* field should begin with `/`.
+
+The following program prints all lines that fail to satisfy these criteria, along with the number of the **erroneous** line and an appropriate diagnostic message. Running this program every night is a small part of keeping a system healthy and safe from intruders.
+
+> **Note**: The `/etc/passwd` file has changed a lot over the last 30 years, so the program below may not be correct on the UNIX as of the year 2023. But it's still a good example for validation.
+
+```awk
+# passwd - check password file
+
+BEGIN {
+    FS = ":"
+}
+NF != 7 {
+    printf("line %d, does not have 7 fields: %s\n", NR, $0) }
+$1 ~ /[^A-Za-z0-9]/ {
+    printf("line %d, non-alphanumeric user id: %s\n", NR, $0) }
+$2 == "" {
+    printf("line %d, no password: %s\n", NR, $0) }
+$3 ~ /[^0-9]/ {
+    printf("line %d, nonnumeric user id: %s\n", NR, $0) }
+$4 ~ /[^0-9]/ {
+    printf("line %d, nonnumeric group id: %s\n", NR, $0) }
+$6 !~ /^\// {
+    printf("line %d, invalid login directory: %s\n", NR, $0) }
+```
+
+This is a good example of a program that can be developed incrementally: each time someone thinks of a new condition that should be checked, it can be added, so the program steadily becomes more thorough.
+
+### 2.3. Generating Data-Validation Programs
