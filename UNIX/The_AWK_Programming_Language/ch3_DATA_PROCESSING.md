@@ -11,6 +11,7 @@
   - [2.1. Balanced Delimiters](#21-balanced-delimiters)
   - [2.2. Password-File Checking](#22-password-file-checking)
   - [2.3. Generating Data-Validation Programs](#23-generating-data-validation-programs)
+  - [2.4. Which Version of AWK?](#24-which-version-of-awk)
 
 Awk was originally intended for everyday data-processing tasks, such as information retrieval, data validation, and data transformation and reduction. We have already seen simple examples of these in Chapters 1 and 2. In this chapter, we will consider more complex tasks of a similar nature.
 
@@ -555,3 +556,47 @@ $6 !~ /^\// {
 This is a good example of a program that can be developed incrementally: each time someone thinks of a new condition that should be checked, it can be added, so the program steadily becomes more thorough.
 
 ### 2.3. Generating Data-Validation Programs
+
+We constructed the password-file checking program by hand, but a more interesting approach is to convert a set of conditions and messages into a checking program automatically. Here is a small set of error conditions and messages, where each condition is a pattern from the program above. The error message is to be printed for each input line where the condition is true.
+
+`checkgen.data`:
+
+```plaintext
+NF != 7			does not have 7 fields
+$1 ~ /[^A-Za-z0-9]/	non-alphanumeric user id
+$2 == ""		no password
+```
+
+The following program converts these condition-message pairs into a checking program:
+
+`checkgen.awk`:
+
+```awk
+# checkgen - generate data-checking program
+#     input:  expressions of the form: pattern tabs message
+#     output: program to print message when pattern matches
+
+BEGIN { FS = "\t+" }
+{ printf("%s {\n\tprintf(\"line %%d, %s: %%s\\n\",NR,$0) }\n",
+      $1, $2)
+}
+```
+
+The output is a sequence of conditions and the actions to print the corresponding messages:
+
+```awk
+NF != 7 {
+        printf("line %d, does not have 7 fields: %s\n",NR,$0) }
+$1 ~ /[^A-Za-z0-9]/ {
+        printf("line %d, non-alphanumeric user id: %s\n",NR,$0) }
+$2 == "" {
+        printf("line %d, no password: %s\n",NR,$0) }
+```
+
+When the resulting checking program is executed, each condition will be tested on each line, and if it is satisfied, the line number, error message, and input line will be printed. Note that in `checkgen`, some of the special characters in the `printf` format string must be *quoted* to produce a valid generated program. For example, `%` is preserved by writing `%%` and `\n` is created by writing `\\n`.
+
+This technique in which one awk program creates another is broadly applicable (and of course it's not restricted to awk programs). We will see several more examples of its use throughout this book.
+
+**Exercise 3-14**. Add a facility to `checkgen` so that pieces of code can be passed through verbatim, for example, to create a `BEGIN` action to set the field separator.
+
+### 2.4. Which Version of AWK?
