@@ -12,6 +12,7 @@
   - [2.2. Password-File Checking](#22-password-file-checking)
   - [2.3. Generating Data-Validation Programs](#23-generating-data-validation-programs)
   - [2.4. Which Version of AWK?](#24-which-version-of-awk)
+- [3. Bundle and Unbundle](#3-bundle-and-unbundle)
 
 Awk was originally intended for everyday data-processing tasks, such as information retrieval, data validation, and data transformation and reduction. We have already seen simple examples of these in Chapters 1 and 2. In this chapter, we will consider more complex tasks of a similar nature.
 
@@ -600,3 +601,84 @@ This technique in which one awk program creates another is broadly applicable (a
 **Exercise 3-14**. Add a facility to `checkgen` so that pieces of code can be passed through verbatim, for example, to create a `BEGIN` action to set the field separator.
 
 ### 2.4. Which Version of AWK?
+
+Awk is often useful for inspecting programs, or for organizing the activities of other testing programs. This section contains a somewhat incestuous example: a program that examines awk programs.
+
+The new version of the language has more *built-in variables and functions*, so there is a chance that an old program may inadvertently include one of these names, for example, by using as a variable name a word like `sub` that is now a *built-in function*. The following program does a reasonable job of detecting such problems in old programs:
+
+```awk
+# compat - check if awk program uses new built-in names
+
+BEGIN { asplit("close system atan2 sin cos rand srand " \
+               "match sub gsub", fcns)
+        asplit("ARGC ARGV FNR RSTART RLENGTH SUBSEP", vars)
+        asplit("do delete function return", keys)
+      }
+
+      { line = $0 }
+
+/"/   { gsub(/"([^"]|\\")*"/, "", line) }     # remove strings,
+/\//  { gsub(/\/([^\/]|\\\/)+\//, "", line) } # reg exprs,
+/#/   { sub(/#.*/, "", line) }                # and comments
+
+      { n = split(line, x, "[^A-Za-z0-9_]+")  # into words
+        for (i = 1; i <= n; i++) {
+            if (x[i] in fcns)	
+                warn(x[i] " is now a built-in function")
+            if (x[i] in vars)
+                warn(x[i] " is now a built-in variable")
+            if (x[i] in keys)
+                warn(x[i] " is now a keyword")
+        }
+      }
+
+function asplit(str, arr) {  # make an assoc array from str
+    n = split(str, temp)
+    for (i = 1; i <= n; i++)
+        arr[temp[i]]++
+    return n
+}
+
+function warn(s) {
+    sub(/^[ \t]*/, "")
+    printf("file %s, line %d: %s\n\t%s\n", FILENAME, FNR, s, $0)
+}
+```
+
+> **Note**: Difference between `\/` and `\\\/` in the regex above,
+>
+> - `\/` represents a single forward slash `/`
+> - `\\\/` represents a literal backslash `\` followed by a forward slash `/`. It can be understood easier by split it to two parts:
+>   1. `\\` represents a literal backslash `\`
+>   2. `\/` represents a forward slash `/`
+
+The only real complexity in this program is in the *substitution* commands that attempt to *remove quoted strings, regular expressions, and comments* before an input line is checked. This job isn't done perfectly, so some lines may not be properly processed.
+
+The third argument of the first `split` function(`split(line, x, "[^A-Za-z0-9_]+")`) is a string that is interpreted as a *regular expression*. The leftmost longest substrings matched by this regular expression in the input line become the field separators. **The `split` command divides the resulting input line into alphanumeric strings by using non-alphanumeric strings as the field separator**; this removes all the operators and punctuation at once.
+
+The function `asplit` is just like `split`, except that it creates an array whose subscripts are the words within the string. Incoming words can then be tested for membership in this array.
+
+This is the output of `compat` on itself:
+
+```console
+file awk-demo.awk, line 12: gsub is now a built-in function
+        /\//  { gsub(/\/([^\/]|\\\/)+\//, "", line) } # reg exprs,
+file awk-demo.awk, line 13: sub is now a built-in function
+        /\#/   { sub(/#.*/, "", line) }                # and comments
+file awk-demo.awk, line 26: function is now a keyword
+        function asplit(str, arr) {  # make an assoc array from str
+file awk-demo.awk, line 30: return is now a keyword
+        return n
+file awk-demo.awk, line 33: function is now a keyword
+        function warn(s) {
+file awk-demo.awk, line 34: sub is now a built-in function
+        sub(/^[ \t]*/, "")
+file awk-demo.awk, line 35: FNR is now a built-in variable
+        printf("file %s, line %d: %s\n\t%s\n", FILENAME, FNR, s, $0)
+```
+
+**Exercise 3-15**. Rewrite `compat` to identify keywords, etc., with regular expressions instead of the function `asplit`. Compare the two versions on complexity and speed.
+
+**Exercise 3-16**. Because awk variables are not declared, a misspelled name will not be detected. Write a program to identify names that are used only once. To make it truly useful, you will have to handle function declarations and variables used in functions.
+
+## 3. Bundle and Unbundle
