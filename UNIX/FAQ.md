@@ -17,11 +17,12 @@
 - [6. What's the difference between `<<` and `<<<`](#6-whats-the-difference-between--and-)
   - [6.1. Here Document: output multi lines](#61-here-document-output-multi-lines)
   - [6.2. Here String Usage](#62-here-string-usage)
-- [7. Process Substitution](#7-process-substitution)
-  - [7.1. Introduction](#71-introduction)
-  - [7.2. Difference between Process Substitution and Pipe](#72-difference-between-process-substitution-and-pipe)
-- [8. Process Status](#8-process-status)
-  - [8.1. `ps aux`](#81-ps-aux)
+- [7. What does `2>&1` or `&>` mean?](#7-what-does-21-or--mean)
+- [8. Process Substitution](#8-process-substitution)
+  - [8.1. Introduction](#81-introduction)
+  - [8.2. Difference between Process Substitution and Pipe](#82-difference-between-process-substitution-and-pipe)
+- [9. Process Status](#9-process-status)
+  - [9.1. `ps aux`](#91-ps-aux)
 
 ## 1. Arguments in `if` Statement
 
@@ -316,9 +317,36 @@ Line 3
 
 `<<<` is known as **here-string**. Instead of typing in text, you give a pre-made string of text to a program. For example, with such program as `bc` we can do `bc <<< 5*4` to just get output for that specific case, no need to run `bc` interactively. Think of it as the equivalent of `echo '5*4' | bc`.
 
-## 7. Process Substitution
+## 7. What does `2>&1` or `&>` mean?
 
-### 7.1. Introduction
+> **Note**: `&>` is a shorthand way of writing `2>&1`
+
+In Unix-based systems, **file descriptors are numbers associated with open files**. By convention, file descriptor `0` is `stdin`, `1` is `stdout`, and `2` is `stderr`.
+
+- `O`: `STDIN`
+- `1`: `STDOUT`
+- `2`: `STDERR`
+
+`2>&1` is a shell *redirection operator* to redirect the standard error (`stderr`) to the same location as standard output (`stdout`). Let's break it down:
+
+- `2`: This refers to file descriptor `2`, which is `stderr`.
+- `>`: This is the output redirection operator. It's used to redirect output from one location to another.
+- `&`: **This indicates that what follows is a file descriptor, rather than a filename.**
+- `1`: This refers to file descriptor `1`, which is `stdout`.
+
+So, `2>&1` means "redirect file descriptor `2` (`stderr`) to the same location as file descriptor 1 (stdout)". This is **often used to capture both standard output and standard error in the same stream**.
+
+For example, consider the command:
+
+```bash
+some_command 2>&1 output.txt
+# Or
+some_command >& output.txt
+```
+
+## 8. Process Substitution
+
+### 8.1. Introduction
 
 > [Wikipedia: Process substitution
 ](https://en.wikipedia.org/wiki/Process_substitution)
@@ -395,7 +423,7 @@ sort file1 | diff - /tmp/file2.sorted
 rm /tmp/file2.sorted
 ```
 
-### 7.2. Difference between Process Substitution and Pipe
+### 8.2. Difference between Process Substitution and Pipe
 
 > From [Stack Exchange](https://unix.stackexchange.com/questions/17107/process-substitution-and-pipe)
 
@@ -450,9 +478,9 @@ Since `echo` doesn't read STDIN and no argument was passed, we get nothing.
 
 Pipes and input redirects shove content onto the STDIN stream. *Process substitution* runs the commands, saves their output to a **special temporary file** and then passes that file name in place of the command. **Whatever command you are using treats it as a file name**. Note that the file created is not a regular file but a named pipe that gets removed automatically once it is no longer needed.
 
-## 8. Process Status
+## 9. Process Status
 
-### 8.1. `ps aux`
+### 9.1. `ps aux`
 
 The `ps aux` command is a common and powerful way to list information about processes in Unix-like operating systems.
 
