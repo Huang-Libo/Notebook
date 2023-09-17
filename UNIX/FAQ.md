@@ -19,6 +19,8 @@
 - [6. Process Substitution](#6-process-substitution)
   - [6.1. Introduction](#61-introduction)
   - [6.2. Difference between Process Substitution and Pipe](#62-difference-between-process-substitution-and-pipe)
+- [7. Process Status](#7-process-status)
+  - [7.1. `ps aux`](#71-ps-aux)
 
 ## 1. Arguments in `if` Statement
 
@@ -357,3 +359,17 @@ $ echo < <(date)
 Since `echo` doesn't read STDIN and no argument was passed, we get nothing.
 
 Pipes and input redirects shove content onto the STDIN stream. *Process substitution* runs the commands, saves their output to a **special temporary file** and then passes that file name in place of the command. **Whatever command you are using treats it as a file name**. Note that the file created is not a regular file but a named pipe that gets removed automatically once it is no longer needed.
+
+## 7. Process Status
+
+### 7.1. `ps aux`
+
+The `ps aux` command is a common and powerful way to list information about processes in Unix-like operating systems.
+
+`ps`: This is the command itself and it stands for "**process status**". It is used to view information about running processes.
+
+- `a`: This option tells ps to list information about **all** processes associated with terminals. It includes processes from all users.
+- `u`: This option provides a more detailed output, including the user and other additional information about each process.
+- `x`: This option adds processes not attached to a terminal. It includes background processes and daemons.
+
+When you combine these options with `ps aux`, you're asking the system to list detailed information about all processes, including those of other users, both attached and not attached to a terminal.
