@@ -410,6 +410,14 @@ This command redirects both `stdout` and `stderr` to a **process substitution** 
 
 *Process substitution* is a form of *inter-process communication(IPC)* that **allows the input or output of a command to appear as a file**. The command is substituted in-line, where a file name would normally occur, by the command shell. This allows programs that normally only accept files to directly read from or write to another program.
 
+*Process substitution* uses **anonymous pipes** behind the scenes to facilitate communication between processes.
+
+When you use process substitution, such as in the form `>(command)` or `<(command)`, **a special file is created** in the `/dev/fd` directory. This file acts as a placeholder or handle for the input or output stream of the process. Behind the scenes, this placeholder is implemented using an anonymous pipe.
+
+For example, in the command `java --version &> >(grep "VM")`, the `>(grep "VM")` part is a process substitution. It creates a special file that represents the output of the command `grep "VM"`. This special file is then used as an argument to the `&>` operator, effectively **redirecting both `stdout` and `stderr` to the anonymous pipe created by the process substitution**.
+
+So, in summary, **process substitution relies on anonymous pipes to establish a communication channel between processes**, allowing them to interact with each other.
+
 **e.g. 1.1**
 
 > Reference: [shellcheck/SC2031](https://www.shellcheck.net/wiki/SC2031)
