@@ -18,11 +18,12 @@
   - [6.1. Here Document: output multi lines](#61-here-document-output-multi-lines)
   - [6.2. Here String Usage](#62-here-string-usage)
 - [7. What does `2>&1` or `&>` mean?](#7-what-does-21-or--mean)
-- [8. Process Substitution](#8-process-substitution)
-  - [8.1. Introduction](#81-introduction)
-  - [8.2. Difference between Process Substitution and Pipe](#82-difference-between-process-substitution-and-pipe)
-- [9. Process Status](#9-process-status)
-  - [9.1. `ps aux`](#91-ps-aux)
+- [8. When do we use `/dev/null` in Bash?](#8-when-do-we-use-devnull-in-bash)
+- [9. Process Substitution](#9-process-substitution)
+  - [9.1. Introduction](#91-introduction)
+  - [9.2. Difference between Process Substitution and Pipe](#92-difference-between-process-substitution-and-pipe)
+- [10. Process Status](#10-process-status)
+  - [10.1. `ps aux`](#101-ps-aux)
 
 ## 1. Arguments in `if` Statement
 
@@ -344,9 +345,41 @@ some_command 2>&1 output.txt
 some_command >& output.txt
 ```
 
-## 8. Process Substitution
+## 8. When do we use `/dev/null` in Bash?
 
-### 8.1. Introduction
+`/dev/null` is a *special device file* that serves as a "bit bucket" or a **black hole for data**. It is often used in Bash for various purposes, including:
+
+1. Discarding Output:
+
+    ```bash
+    command > /dev/null
+    ```
+
+    This `command` redirects the **standard output** of `command` to `/dev/null`, effectively discarding any output that would have been displayed on the terminal.
+
+2. Suppressing Output:
+
+    ```bash
+    command &> /dev/null
+    ```
+
+    This `command` redirects both **standard output and standard error** to `/dev/null`, effectively silencing the `command`.
+
+3. Checking if a Command Succeeds:
+
+    ```bash
+    if command > /dev/null; then
+        echo "Command succeeded"
+    else
+        echo "Command failed"
+    fi
+    ```
+
+    This checks if `command` succeeds, but discards any output. It's useful when you're only interested in the success or failure of a command, not its output.
+
+## 9. Process Substitution
+
+### 9.1. Introduction
 
 > [Wikipedia: Process substitution
 ](https://en.wikipedia.org/wiki/Process_substitution)
@@ -423,7 +456,7 @@ sort file1 | diff - /tmp/file2.sorted
 rm /tmp/file2.sorted
 ```
 
-### 8.2. Difference between Process Substitution and Pipe
+### 9.2. Difference between Process Substitution and Pipe
 
 > From [Stack Exchange](https://unix.stackexchange.com/questions/17107/process-substitution-and-pipe)
 
@@ -478,9 +511,9 @@ Since `echo` doesn't read STDIN and no argument was passed, we get nothing.
 
 Pipes and input redirects shove content onto the STDIN stream. *Process substitution* runs the commands, saves their output to a **special temporary file** and then passes that file name in place of the command. **Whatever command you are using treats it as a file name**. Note that the file created is not a regular file but a named pipe that gets removed automatically once it is no longer needed.
 
-## 9. Process Status
+## 10. Process Status
 
-### 9.1. `ps aux`
+### 10.1. `ps aux`
 
 The `ps aux` command is a common and powerful way to list information about processes in Unix-like operating systems.
 
