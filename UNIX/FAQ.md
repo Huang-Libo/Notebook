@@ -283,11 +283,38 @@ Line 3
 
 ### 6.1. Introduction
 
-> [Wikipedia](https://en.wikipedia.org/wiki/Process_substitution)
+> [Wikipedia: Process substitution
+](https://en.wikipedia.org/wiki/Process_substitution)
 
 *Process substitution* is a form of *inter-process communication(IPC)* that **allows the input or output of a command to appear as a file**. The command is substituted in-line, where a file name would normally occur, by the command shell. This allows programs that normally only accept files to directly read from or write to another program.
 
-**e.g.**
+**e.g.1**
+
+> Reference: [shellcheck/SC2031](https://www.shellcheck.net/wiki/SC2031)
+
+There are many ways of accidentally creating **subshells**, but a common one is **piping** to a loop:
+
+**Problematic code**:
+
+```bash
+n=0
+printf "%s\n" {1..10} | while read i; do (( n+=i )); done
+echo $n
+```
+
+**Correct code**:
+
+```bash
+n=0
+while read i; do (( n+=i )); done < <(printf "%s\n" {1..10})
+echo $n
+```
+
+**Rationale**:
+
+Variables set in subshells are not available outside the subshell.
+
+**e.g.2**
 
 The Unix `diff` command normally accepts the names of two files to compare, or one file name and standard input. *Process substitution* allows one to compare the output of two programs directly:
 
