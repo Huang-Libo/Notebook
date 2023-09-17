@@ -12,15 +12,16 @@
   - [3.2. `$0`](#32-0)
   - [3.3. `$#` and `${!#}`](#33--and-)
   - [3.4. `$*` and `$@`](#34--and-)
-- [4. How to display `$PATH` as one directory per line?](#4-how-to-display-path-as-one-directory-per-line)
-- [5. What's the difference between `<<` and `<<<`](#5-whats-the-difference-between--and-)
-  - [5.1. Here Document: output multi lines](#51-here-document-output-multi-lines)
-  - [5.2. Here String Usage](#52-here-string-usage)
-- [6. Process Substitution](#6-process-substitution)
-  - [6.1. Introduction](#61-introduction)
-  - [6.2. Difference between Process Substitution and Pipe](#62-difference-between-process-substitution-and-pipe)
-- [7. Process Status](#7-process-status)
-  - [7.1. `ps aux`](#71-ps-aux)
+- [4. What's indirectly reference in Bash?](#4-whats-indirectly-reference-in-bash)
+- [5. How to display `$PATH` as one directory per line?](#5-how-to-display-path-as-one-directory-per-line)
+- [6. What's the difference between `<<` and `<<<`](#6-whats-the-difference-between--and-)
+  - [6.1. Here Document: output multi lines](#61-here-document-output-multi-lines)
+  - [6.2. Here String Usage](#62-here-string-usage)
+- [7. Process Substitution](#7-process-substitution)
+  - [7.1. Introduction](#71-introduction)
+  - [7.2. Difference between Process Substitution and Pipe](#72-difference-between-process-substitution-and-pipe)
+- [8. Process Status](#8-process-status)
+  - [8.1. `ps aux`](#81-ps-aux)
 
 ## 1. Arguments in `if` Statement
 
@@ -181,7 +182,31 @@ Both `$*` and `$@` variables provide quick access to all parameters. [The differ
 
 where `c` in the third row is the first character of `$IFS`, the *Input Field Separator*, a shell variable.
 
-## 4. How to display `$PATH` as one directory per line?
+## 4. What's indirectly reference in Bash?
+
+*Indirect referencing* in Bash means using the value of a variable to dynamically determine the name of another variable. This allows you to access variables indirectly, based on the value of another variable.
+
+For example, consider the following script:
+
+```bash
+#!/bin/bash
+
+var_name="my_variable"
+my_variable="Hello, World!"
+echo "${!var_name}"
+```
+
+In this script, `var_name` contains the name of another variable (`my_variable`). `${!var_name}` is used to access the value of the variable whose name is stored in `var_name`. So, it dynamically resolves to `${my_variable}`, resulting in the output:
+
+```console
+Hello, World!
+```
+
+Here, the indirect reference `${!var_name}` allows you to access the variable whose name is stored in `var_name`.
+
+Similarly, **`${!#}`** in Bash allows you to indirectly reference the last argument provided to a script or function. It evaluates to the value of the variable whose name is the result of the expansion of `#` (which represents the number of arguments passed). This is a way to **dynamically access the last argument without explicitly using its position**.
+
+## 5. How to display `$PATH` as one directory per line?
 
 > From [ask ubuntu](https://askubuntu.com/a/600019).
 
@@ -244,11 +269,11 @@ function mypath() { tr ':' '\n' <<< "$PATH" }
 
 Then you can use `mypath` to display directories in `PATH` in single lines.
 
-## 5. What's the difference between `<<` and `<<<`
+## 6. What's the difference between `<<` and `<<<`
 
 > From [ask ubuntu](https://askubuntu.com/questions/678915/whats-the-difference-between-and-in-bash)
 
-### 5.1. Here Document: output multi lines
+### 6.1. Here Document: output multi lines
 
 `<<` is known as **here-document** structure. You let the program know what will be the ending text, and whenever that delimiter is seen, the program will read all the stuff you've given to the program as input and perform a task upon it.
 
@@ -287,13 +312,13 @@ Line 2
 Line 3
 ```
 
-### 5.2. Here String Usage
+### 6.2. Here String Usage
 
 `<<<` is known as **here-string**. Instead of typing in text, you give a pre-made string of text to a program. For example, with such program as `bc` we can do `bc <<< 5*4` to just get output for that specific case, no need to run `bc` interactively. Think of it as the equivalent of `echo '5*4' | bc`.
 
-## 6. Process Substitution
+## 7. Process Substitution
 
-### 6.1. Introduction
+### 7.1. Introduction
 
 > [Wikipedia: Process substitution
 ](https://en.wikipedia.org/wiki/Process_substitution)
@@ -370,7 +395,7 @@ sort file1 | diff - /tmp/file2.sorted
 rm /tmp/file2.sorted
 ```
 
-### 6.2. Difference between Process Substitution and Pipe
+### 7.2. Difference between Process Substitution and Pipe
 
 > From [Stack Exchange](https://unix.stackexchange.com/questions/17107/process-substitution-and-pipe)
 
@@ -425,9 +450,9 @@ Since `echo` doesn't read STDIN and no argument was passed, we get nothing.
 
 Pipes and input redirects shove content onto the STDIN stream. *Process substitution* runs the commands, saves their output to a **special temporary file** and then passes that file name in place of the command. **Whatever command you are using treats it as a file name**. Note that the file created is not a regular file but a named pipe that gets removed automatically once it is no longer needed.
 
-## 7. Process Status
+## 8. Process Status
 
-### 7.1. `ps aux`
+### 8.1. `ps aux`
 
 The `ps aux` command is a common and powerful way to list information about processes in Unix-like operating systems.
 
