@@ -208,25 +208,37 @@ You can do this with any one of the following commands, which substitutes all oc
 
 `sed`:
 
-```sh
+```bash
 sed 's/:/\n/g' <<< "$PATH"
+```
+
+`awk`:
+
+> **Note**: In the example below, `1` is used to print each modified line. Essentially, it's a pattern that always evaluates to `true`, so it prints every line after the substitution. This is a common AWK idiom.
+
+```bash
+awk '{ gsub(/:/, "\n") }1' <<< $PATH
+# This statement equals to:
+#   awk '{ gsub(/:/, "\n"); print $0 }' <<< $PATH
+# Or
+#   awk '{ gsub(/:/, "\n"); print }' <<< $PATH
 ```
 
 `tr`:
 
-```sh
+```bash
 tr ':' '\n' <<< "$PATH"
 ```
 
 `python`:
 
-```sh
+```bash
 python -c "print(r'$PATH'.replace(':', '\n'))"
 ```
 
 **Add function to ~/.zshrc**:
 
-```sh
+```bash
 function mypath() { tr ':' '\n' <<< "$PATH" }
 ```
 
