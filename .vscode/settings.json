@@ -98,6 +98,7 @@
         "Miniconda",
         "MITM",
         "mkdir",
+        "mkfifo",
         "mktemp",
         "MVVM",
         "mypath",
