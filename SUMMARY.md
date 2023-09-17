@@ -21,6 +21,7 @@
 ## 🕹️ UNIX
 
 - [FAQ](UNIX/FAQ.md)
+- [Commands](UNIX/Commands.md)
 - [ShellCheck](UNIX/ShellCheck.md)
 - [The AWK Programming Language](UNIX/The_AWK_Programming_Language/README.md)
   - [ch1: AN AWK TUTORIAL](UNIX/The_AWK_Programming_Language/ch1_AN_AWK_TUTORIAL.md)
