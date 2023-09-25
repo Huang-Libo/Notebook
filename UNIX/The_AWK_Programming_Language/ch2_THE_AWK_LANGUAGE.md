@@ -691,7 +691,7 @@ For example, consider the following awk code:
 awk 'BEGIN { value = 123.456789; printf "%.6g\n", value }'
 ```
 
-In this code, the printf function uses the format specifier `%.6g` to format the value `123.456789`. The output will be:
+In this code, the `printf` function uses the format specifier `%.6g` to format the value `123.456789`. The output will be:
 
 ```console
 123.457
@@ -913,13 +913,16 @@ $0 ~ "(\\+|-)[0-9]+"
 
 are equivalent.
 
-This behavior may seem *arcane*, but it arises because **one level of protecting backslashes is removed when a quoted string is parsed by awk**. If a backslash is needed in front of a metacharacter to turn off its special meaning in a regular expression, then that *backslash needs a preceding backslash to protect it in a string*. If the right operand of a matching operator is a *variable* or *field variable*, as in
+This behavior may seem *arcane*, but it arises because **one level of protecting backslashes is removed when a quoted string is parsed by awk**.
 
-```awk
-x ~ $1
-```
+- If a backslash is needed in front of a metacharacter to turn off its special meaning in a regular expression, then that *backslash needs a preceding backslash to protect it in a string*.
+- If the right operand of a matching operator is a *variable* or *field variable*, as in
 
-**then the additional level of backslashes is not needed in the first field because backslashes have no special meaning in data.**
+    ```awk
+    x ~ $1
+    ```
+
+    **then the additional level of backslashes is not needed in the first field because backslashes have no special meaning in data.**
 
 As an aside, it's easy to test your understanding of regular expressions interactively: the program
 
@@ -937,7 +940,7 @@ Awk provides the built-in string functions shown in Table below.
 |---------------------------|--------------------------------------------------------------------------------------------------------------------|
 | `length(s)`               | return number of characters in `s`                                                                                 |
 | `substr(s, p)`            | return *suffix* of `s` starting at position `p`                                                                    |
-| `substr(s, p, n)`         | return substring of s of length `n` starting at position `p`                                                       |
+| `substr(s, p, n)`         | return substring of `s` of length `n` starting at position `p`                                                     |
 | `sub(r, s)`               | substitute `s` for the leftmost longest substring of `$0` matched by `r`, <br> return number of substitutions made |
 | `sub(r, s, t)`            | substitute `s` for the leftmost longest substring of `t` matched by `r`, <br> return number of substitutions made  |
 | `gsub(r,s)`               | substitute `s` for `r` globally in `$0`, <br> return number of substitutions made                                  |
@@ -983,7 +986,7 @@ assigns to `x` the string produced by formatting the values of `$1` and `$2` as 
 The functions `sub` and `gsub` are patterned after the substitute command in the Unix text editor `ed`. The function `sub(r, s, t)` first finds the **leftmost longest substring** matched by the *regular expression* `r` in the target string `t`; it then replaces the substring by the substitution string `s`. As in `ed`, **"leftmost longest" means that the leftmost match is found first, then extended as far as possible.**
 
 - In the target string `banana`, for example, `anan` is the leftmost longest substring matched by the *regular expression* `(an)+`.
-- **By contrast, the leftmost longest match of `(an)*` is the *null string* before `b`.**
+- **⚠️ By contrast, the leftmost longest match of `(an)*` is the *null string* before `b`.**
 
 The `sub` function returns the number of substitutions made. The function `sub(r,s)` is a synonym for `sub(r, s, $0)`.
 
@@ -1001,7 +1004,7 @@ will transcribe its input, replacing all occurrences of *"USA"* by *"United Stat
 gsub(/ana/, "anda", "banana")
 ```
 
-will replace *banana* by *bandana*; matches are non-overlapping.
+will replace *banana* by *bandana*; matches are **non-overlapping**.
 
 ##### 2.1.14.7. Special Meaning of `&` Symbol in `sub()` and `gsub()`
 
@@ -1092,14 +1095,17 @@ $1 $2
 
 the operands `$1` and `$2` must be strings to be *concatenated*, so they will be coerced to strings if necessary.
 
-In contexts where the same operator applies to both numbers and strings, there are special rules. In the assignment `v = e`, both the assignment and the variable `v` acquire the type of the expression `e`. In a comparison expression like
+In contexts where the same operator applies to both numbers and strings, there are special rules.
 
-```awk
-x == y
-```
+- In the assignment `v = e`, both the assignment and the variable `v` acquire the type of the expression `e`.
+- In a comparison expression like
 
-- if **both** operands have a numeric type, the comparison is numeric;
-- otherwise, any numeric operand is coerced to a string and the comparison is made on the string values.
+    ```awk
+    x == y
+    ```
+
+  - if **both** operands have a numeric type, the comparison is numeric;
+  - otherwise, any numeric operand is coerced to a string and the comparison is made on the string values.
 
 Let us examine what this rule means for a comparison like
 
@@ -1189,24 +1195,24 @@ The default value of `OFMT` can be changed by assigning it a new value. If `OFMT
 
 The operators that can appear in expressions are summarized in Table below. Expressions can be created by applying these operators to *constants*, *variables*, *field names*, *array elements*, *functions*, and *other expressions*.
 
-| OPERATION             | OPERATORS                                       | EXAMPLE      | MEANING OF EXAMPLE                     |
-|-----------------------|-------------------------------------------------|--------------|----------------------------------------|
-| assignment            | `=`<br>`+=` `-=`<br>`*=` `/=`<br>`%=` `^=`      | `x *= 2`     |                                        |
-| conditional           | `?:`                                            | `x ? y : z`  |                                        |
-| logical OR            | `||`                                            | `x || y`     |                                        |
-| logical AND           | `&&`                                            | `x && y`     |                                        |
-| array membership      | `in`                                            | `i in a`     | `1` if `a[i]` exists,<br>`0` otherwise |
-| matching              | `~` `!~`                                        | `$1 ~ /x/`   |                                        |
-| relational            | `<` `<=`<br>`==` `!=`<br>`>=` `>`               | `x == y`     |                                        |
-| concatenation         | (There is *no* explicit concatenation operator) | `"a" "bc"`   | `abc`                                  |
-| add, subtract         | `+` `-`                                         | `x + y`      |                                        |
-| multiply, divide, mod | `*` `/` `%`                                     | `x % y`      |                                        |
-| unary plus and minus  | `+` `-`                                         | `-x`         |                                        |
-| logical NOT           | `!`                                             | `!$1`        |                                        |
-| exponentiation        | `^`                                             | `x ^ y`      |                                        |
-| increment, decrement  | `++` `--`                                       | `x++`        |                                        |
-| field                 | `$`                                             |              |                                        |
-| grouping              | `()`                                            | ~~`($i)++`~~ | Incorrect example                      |
+| OPERATION             | OPERATORS                                  | EXAMPLE      | MEANING OF EXAMPLE                     |
+|-----------------------|--------------------------------------------|--------------|----------------------------------------|
+| assignment            | `=`<br>`+=` `-=`<br>`*=` `/=`<br>`%=` `^=` | `x *= 2`     |                                        |
+| conditional           | `?:`                                       | `x ? y : z`  |                                        |
+| logical OR            | `\|\|`                                     | `x \|\| y`   |                                        |
+| logical AND           | `&&`                                       | `x && y`     |                                        |
+| array membership      | `in`                                       | `i in a`     | `1` if `a[i]` exists,<br>`0` otherwise |
+| matching              | `~` `!~`                                   | `$1 ~ /x/`   |                                        |
+| relational            | `<` `<=`<br>`==` `!=`<br>`>=` `>`          | `x == y`     |                                        |
+| concatenation         | (No explicit concatenation operator)       | `"a" "bc"`   | `abc`                                  |
+| add, subtract         | `+` `-`                                    | `x + y`      |                                        |
+| multiply, divide, mod | `*` `/` `%`                                | `x % y`      |                                        |
+| unary plus and minus  | `+` `-`                                    | `-x`         |                                        |
+| logical NOT           | `!`                                        | `!$1`        |                                        |
+| exponentiation        | `^`                                        | `x ^ y`      |                                        |
+| increment, decrement  | `++` `--`                                  | `x++`        |                                        |
+| field                 | `$`                                        |              |                                        |
+| grouping              | `()`                                       | ~~`($i)++`~~ | Incorrect example                      |
 
 > Note: The last example is incorrect, awk will report syntax error - *illegal statement*.
 
@@ -1252,7 +1258,7 @@ both do what was intended.
   - if *expression* is `true`, execute *statement*, then repeat
 - `for (expression_1; expression_2; expression_3) statement`
   - equivalent to `expression_1; while (expression_2 ) { statement; expression_3 }`
-- `for (key in array) statement`
+- `for (key in array)  statement`
   - execute *statement* with variable set to each *subscript* (**key**) in array in turn
 - `do statement while (expression)`
   - execute *statement*; if *expression* is `true`, repeat
