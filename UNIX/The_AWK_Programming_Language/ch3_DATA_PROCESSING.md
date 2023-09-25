@@ -14,6 +14,8 @@
   - [2.4. Which Version of AWK?](#24-which-version-of-awk)
 - [3. Bundle and Unbundle](#3-bundle-and-unbundle)
 - [4. Multiline Records](#4-multiline-records)
+  - [4.1. Records Separated by Blank Lines](#41-records-separated-by-blank-lines)
+  - [4.2. Processing Multiline Records](#42-processing-multiline-records)
 
 Awk was originally intended for everyday data-processing tasks, such as information retrieval, data validation, and data transformation and reduction. We have already seen simple examples of these in Chapters 1 and 2. In this chapter, we will consider more complex tasks of a similar nature.
 
@@ -709,3 +711,115 @@ There are other ways to write bundle and unbundle, but the versions here are the
 **Exercise 3-17**. Compare the speed and space requirements of these versions of bundle and unbundle with variations that use headers and perhaps trailers. Evaluate the tradeoff between performance and program complexity.
 
 ## 4. Multiline Records
+
+The examples so far have featured data where each record fits neatly on one line. Many other kinds of data, however, come in multiline chunks. Examples include address lists:
+
+```plaintext
+Adam Smith
+1234 Wall St., Apt. 5C
+New York, NY 10021
+212 555-4321
+```
+
+or bibliographic citations:
+
+```plaintext
+Donald E. Knuth
+The Art of Computer Programming
+Volume 2: Seminumerical Algorithms, Second Edition
+Addison-Wesley, Reading, Mass.
+1981
+```
+
+or personal databases:
+
+```plaintext
+Chateau Lafite Rothschild 1947
+12 bottles @ 12.95
+```
+
+It's easy to create and maintain such information if it's of modest size and regular structure; in effect, each record is the equivalent of an index card. Dealing with such data in awk requires only a bit more work than single-line data does; we'll show several approaches.
+
+### 4.1. Records Separated by Blank Lines
+
+Imagine an address list, where each record contains on the first four lines a name, street address, city and state, and phone number; after these, there may be additional lines of other information. blank line:
+
+```plaintext
+Adam Smith
+1234 Wall St., Apt. 5C
+New York, NY 10021
+212 555-4321
+
+David W. Copperfield
+221 Dickens Lane
+Monterey, CA 93940
+408 555-0041
+work phone 408 555-6532
+Mary, birthday January 30
+
+Canadian Consulate
+555 Fifth Ave
+New York, NY
+212 586-2400
+```
+
+When records are separated by *blank lines*, they can be manipulated directly: if the record separator variable `RS` is set to *null string* (`RS=""`), each multiline group becomes a record. Thus
+
+```awk
+BEGIN { RS = "" }
+/New York/
+```
+
+will print each record that contains New York, regardless of how many lines it has:
+
+```plaintext
+Adam Smith
+1234 Wall St., Apt. 5C
+New York, NY 10021
+212 555-4321
+Canadian Consulate
+555 Fifth Ave
+New York, NY
+212 586-2400
+```
+
+When several records are printed in this way, there is no blank line between them, so the input format is not preserved. The easiest way to fix this is to set the output record separator `ORS` to a double newline `\n\n`:
+
+```awk
+BEGIN { RS = ""; ORS = "\n\n" }
+/New York/
+```
+
+Output:
+
+```plaintext
+Adam Smith
+1234 Wall St., Apt. 5C
+New York, NY 10021
+212 555-4321
+
+Canadian Consulate
+555 Fifth Ave
+New York, NY
+212 586-2400
+```
+
+Suppose we want to print the *names* and *phone numbers* of all Smith's, that is, the *first* and *fourth* lines of all records in which the first line ends with Smith. That would be easy if each line were a field. This can be arranged by setting `FS` to `\n`:
+
+```awk
+BEGIN         { RS = ""; FS = "\n" }
+$1 ~ /Smith$/ { print $1, $4 }   # name, phone
+```
+
+This produces
+
+```plaintext
+Adam Smith 212 555-4321
+```
+
+Recall that newline is always a field separator for multiline records, regardless of the value of `FS`.
+
+- When `RS` is set to `""`, the field separator `FS` *by default* is any sequence of *blanks* and *tabs*, or *newline*.
+- When `FS` is set to `\n`, only a newline acts as a field separator.
+
+### 4.2. Processing Multiline Records
