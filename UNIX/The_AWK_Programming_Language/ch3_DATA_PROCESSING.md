@@ -13,6 +13,7 @@
   - [2.3. Generating Data-Validation Programs](#23-generating-data-validation-programs)
   - [2.4. Which Version of AWK?](#24-which-version-of-awk)
 - [3. Bundle and Unbundle](#3-bundle-and-unbundle)
+- [4. Multiline Records](#4-multiline-records)
 
 Awk was originally intended for everyday data-processing tasks, such as information retrieval, data validation, and data transformation and reduction. We have already seen simple examples of these in Chapters 1 and 2. In this chapter, we will consider more complex tasks of a similar nature.
 
@@ -682,3 +683,29 @@ file awk-demo.awk, line 35: FNR is now a built-in variable
 **Exercise 3-16**. Because awk variables are not declared, a misspelled name will not be detected. Write a program to identify names that are used only once. To make it truly useful, you will have to handle function declarations and variables used in functions.
 
 ## 3. Bundle and Unbundle
+
+Before discussing multiline records, let's consider a special case. The problem is to combine ("bundle") a set of `ASCII` files into one file in such a way that they can be easily separated ("unbundled") into the original files. This section contains two tiny awk programs that do this pair of operations. They can be used for bundling small files together to save disk space, or to package a collection of files for convenient electronic mailing.
+
+The bundle program is trivial, so short that you can just type it on a command line. All it does is prefix each line of the output with the name of the file, which comes from the built-in variable `FILENAME`.
+
+```awk
+# bundle - combine multiple files into one
+{ print FILENAME, $0 }
+```
+
+The matching unbundle is only a little more elaborate:
+
+```awk
+# unbundle - unpack a bundle into separate files
+
+$1 != prev { close(prev); prev = $1 }
+           { print substr($0, index($0, " ") + 1) > $1 }
+```
+
+The first line of unbundle closes the previous file when a new one is encountered; if bundles don't contain many files (less than the limit on the number of open files), this line isn't necessary.
+
+There are other ways to write bundle and unbundle, but the versions here are the easiest, and for short files, reasonably space efficient. Another organization is to add a distinctive line with the filename before each file, so the filename appears only once.
+
+**Exercise 3-17**. Compare the speed and space requirements of these versions of bundle and unbundle with variations that use headers and perhaps trailers. Evaluate the tradeoff between performance and program complexity.
+
+## 4. Multiline Records
