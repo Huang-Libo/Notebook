@@ -855,7 +855,7 @@ BEGIN { FS = "!!#" }
 
 In the first program, the function `split($1, x, " ")` splits *the first line of each record* into the array `x` and returns the number of elements created; thus, `x[split($1, x, " ")]` is the entry for the *last name*. (This assumes that the last word on the first line really is the last name.) For each multiline record the first program creates a single line consisting of the last name, followed by the string `!!#`, followed by all the fields in the record separated by this string. Any other separator that does not occur in the data and that sorts earlier than the data could be used in place of the string `!!#`. The program after the `sort` reconstructs the multiline records using this separator to identify the original fields.
 
-E.g., Here is a multiple line file named `address-list.txt`:
+E.g., Here is a multiple line file named `address-list-1.txt`:
 
 ```plaintext
 Adam Smith
@@ -879,7 +879,7 @@ New York, NY
 Only execute the first awk program on the file:
 
 ```bash
-cat address-list.txt |
+cat address-list-1.txt |
 awk '
 BEGIN { RS = ""; FS = "\n" }
       { printf("%s!!#", x[split($1, x, " ")])
@@ -908,7 +908,7 @@ Smith!!#Adam Smith!!#1234 Wall St., Apt. 5C!!#New York, NY 10021!!#212 555-4321
 Execute both first & second awk program:
 
 ```bash
-cat address-list.txt | 
+cat address-list-1.txt | 
 awk '
 BEGIN { RS = ""; FS = "\n" }
       { printf("%s!!#", x[split($1, x, " ")])
@@ -951,7 +951,9 @@ New York, NY 10021
 
 ### 4.3. Records with Headers and Trailers
 
-Sometimes records are identified by a header and trailer, rather than by a record separator. Consider a simple example, again an address list, but this time each record begins with a header that indicates some characteristic, such as occupation, of the person whose name follows, and each record (except possibly the last) is terminated by a trailer consisting of a blank line:
+Sometimes records are identified by a header and trailer, rather than by a record separator. Consider a simple example, again an address list, but this time each record begins with a header that indicates some characteristic, such as occupation, of the person whose name follows, and each record (except possibly the last) is terminated by a trailer consisting of a blank line.
+
+Here is a multiple line file named `address-list-2.txt`:
 
 ```plaintext
 accountant
@@ -994,5 +996,47 @@ p == 1
 > **Tips**: `p == 1` is short for `p == 1 { print $0 }`. (Rule: In the *action-pattern* statements of awk, if the corresponding action is omitted, awk will print the records matched by the pattern.)
 
 This program uses a variable `p` to control the printing of lines. When a line containing the desired header is found, `p` is set to `1`; a subsequent line containing a trailer resets `p` to `0`, its default initial value. Since lines are printed only when `p` is set to `1`, only the body and trailer of each record are printed; other combinations are easily selected instead.
+
+**E.g.1**
+
+```bash
+awk '/^doctor/, /^$/' address-list-2.txt
+```
+
+Output:
+
+```console
+doctor - ophthalmologist
+Dr. Will Seymour
+798 Maple Blvd.
+Berkeley Heights, NJ 07922
+
+doctor - pediatrician
+Dr. Susan Mark
+600 Mountain Avenue
+Murray Hill, NJ 07974
+```
+
+**E.g.2**
+
+```bash
+awk '
+/^doctor/ { p = 1; next }
+p == 1
+/^$/      { p = 0; next }
+' address-list-2.txt
+```
+
+Output:
+
+```console
+Dr. Will Seymour
+798 Maple Blvd.
+Berkeley Heights, NJ 07922
+
+Dr. Susan Mark
+600 Mountain Avenue
+Murray Hill, NJ 07974
+```
 
 ### 4.4. Name-Value Data
