@@ -945,8 +945,8 @@ Awk provides the built-in string functions shown in Table below.
 | `sub(r, s, t)`            | substitute `s` for the leftmost longest substring of `t` matched by `r`, <br> return number of substitutions made  |
 | `gsub(r,s)`               | substitute `s` for `r` globally in `$0`, <br> return number of substitutions made                                  |
 | `gsub(r ,s ,t)`           | substitute `s` for `r` globally in string `t`, <br> return number of substitutions made                            |
-| `split(s ,a)`             | split `s` into array `a` on `FS`, <br> *return number of fields*                                                   |
-| `split(s ,a ,fs)`         | split `s` into array `a` on field separator `fs`, <br> return number of fields                                     |
+| `split(s ,a)`             | split `s` into array `a`(index start from `1`) on `FS`, <br> *return number of fields*                             |
+| `split(s ,a ,fs)`         | split `s` into array `a`(index start from `1`) on field separator `fs`, <br> return number of fields               |
 | `index(s ,t)`             | return first position(start from `1`) of string `t` in `s`, or `0` if `t` is not present                           |
 | `match(s ,r)`             | test whether `s` contains a substring matched by `r`, <br> return index or `0`; sets `RSTART` and `RLENGTH`        |
 | `sprintf(fmt, expr-list)` | return *expr-list* formatted according to format string `fmt`                                                      |
@@ -969,7 +969,7 @@ The function `match(s, r)` finds the *leftmost longest substring* in the strings
 
 ##### 2.1.14.3. `split(s, a, fs)`
 
-The function `split(s, a, fs)` splits the string `s` into the array `a` according to the separator `fs` and returns the number of elements. It is described after arrays, at the end of this section.
+The function `split(s, a, fs)` splits the string `s` into the array `a`(index start from `1`) according to the separator `fs` and returns the number of elements. It is described after arrays, at the end of this section.
 
 ##### 2.1.14.4. `sprintf(format, expr_1 , expr_2 , ... , expr_n)`
 
