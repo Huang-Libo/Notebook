@@ -16,6 +16,7 @@
 - [4. Multiline Records](#4-multiline-records)
   - [4.1. Records Separated by Blank Lines](#41-records-separated-by-blank-lines)
   - [4.2. Processing Multiline Records](#42-processing-multiline-records)
+  - [4.3. Records with Headers and Trailers](#43-records-with-headers-and-trailers)
 
 Awk was originally intended for everyday data-processing tasks, such as information retrieval, data validation, and data transformation and reduction. We have already seen simple examples of these in Chapters 1 and 2. In this chapter, we will consider more complex tasks of a similar nature.
 
@@ -823,3 +824,36 @@ Recall that newline is always a field separator for multiline records, regardles
 - When `FS` is set to `\n`, only a newline acts as a field separator.
 
 ### 4.2. Processing Multiline Records
+
+If an existing program can process its input only by lines, we may still be able to use it for multiline records by writing two awk programs.
+
+- The first combines the multiline records into single-line records that can be processed by the existing program.
+- Then, the second transforms the processed output back into the original multiline format. (We'll assume that limits on line lengths are not a problem.)
+
+To illustrate, let's sort our address list with the Unix `sort` command. The following pipeline sorts the address list by *last name*:
+
+```bash
+# pipeline to sort address list by last names
+
+awk '
+BEGIN { RS = ""; FS = "\n" }
+      { printf("%s!!#", x[split($1, x, " ")])
+        for (i = 1; i <= NF; i++)
+            printf("%s%s", $i, i < NF ? "!!#" : "\n")
+      }
+' |
+sort |
+awk '
+BEGIN { FS = "!!#" }
+      { for (i = 2; i <= NF; i++)
+            printf("%s\n", $i)
+        printf("\n")
+      }
+'
+```
+
+In the first program, the function `split($1, x, " ")` splits *the first line of each record* into the array `x` and returns the number of elements created; thus, `x[split($1, x, " ")]` is the entry for the *last name*. (This assumes that the last word on the first line really is the last name.) For each multiline record the first program creates a single line consisting of the last name, followed by the string `!!#`, followed by all the fields in the record separated by this string. Any other separator that does not occur in the data and that sorts earlier than the data could be used in place of the string `!!#`. The program after the `sort` reconstructs the multiline records using this separator to identify the original fields.
+
+**Exercise 3-18.** Modify the first awk program to detect occurrences of the magic string `!!#` in the data.
+
+### 4.3. Records with Headers and Trailers
