@@ -17,6 +17,7 @@
   - [4.1. Records Separated by Blank Lines](#41-records-separated-by-blank-lines)
   - [4.2. Processing Multiline Records](#42-processing-multiline-records)
   - [4.3. Records with Headers and Trailers](#43-records-with-headers-and-trailers)
+  - [4.4. Name-Value Data](#44-name-value-data)
 
 Awk was originally intended for everyday data-processing tasks, such as information retrieval, data validation, and data transformation and reduction. We have already seen simple examples of these in Chapters 1 and 2. In this chapter, we will consider more complex tasks of a similar nature.
 
@@ -949,3 +950,49 @@ New York, NY 10021
 **Exercise 3-18.** Modify the first awk program to detect occurrences of the magic string `!!#` in the data.
 
 ### 4.3. Records with Headers and Trailers
+
+Sometimes records are identified by a header and trailer, rather than by a record separator. Consider a simple example, again an address list, but this time each record begins with a header that indicates some characteristic, such as occupation, of the person whose name follows, and each record (except possibly the last) is terminated by a trailer consisting of a blank line:
+
+```plaintext
+accountant
+Adam Smith
+1234 Wall St., Apt. 5C
+New York, NY 10021
+
+doctor - ophthalmologist
+Dr. Will Seymour
+798 Maple Blvd.
+Berkeley Heights, NJ 07922
+
+lawyer
+David W. Copperfield
+221 Dickens Lane
+Monterey, CA 93940
+
+doctor - pediatrician
+Dr. Susan Mark
+600 Mountain Avenue
+Murray Hill, NJ 07974
+```
+
+A range pattern is the simplest way to print the records of all doctors:
+
+```awk
+/^doctor/, /^$/
+```
+
+The range pattern matches records that begin with *doctor* and end with a blank line (`/^$/` matches a blank line).
+
+To print the doctor records without headers, we can use
+
+```awk
+/^doctor/ { p = 1; next }
+p == 1
+/^$/      { p = 0; next }
+```
+
+> **Tips**: `p == 1` is short for `p == 1 { print $0 }`. (Rule: In the *action-pattern* statements of awk, if the corresponding action is omitted, awk will print the records matched by the pattern.)
+
+This program uses a variable `p` to control the printing of lines. When a line containing the desired header is found, `p` is set to `1`; a subsequent line containing a trailer resets `p` to `0`, its default initial value. Since lines are printed only when `p` is set to `1`, only the body and trailer of each record are printed; other combinations are easily selected instead.
+
+### 4.4. Name-Value Data
