@@ -854,6 +854,98 @@ BEGIN { FS = "!!#" }
 
 In the first program, the function `split($1, x, " ")` splits *the first line of each record* into the array `x` and returns the number of elements created; thus, `x[split($1, x, " ")]` is the entry for the *last name*. (This assumes that the last word on the first line really is the last name.) For each multiline record the first program creates a single line consisting of the last name, followed by the string `!!#`, followed by all the fields in the record separated by this string. Any other separator that does not occur in the data and that sorts earlier than the data could be used in place of the string `!!#`. The program after the `sort` reconstructs the multiline records using this separator to identify the original fields.
 
+E.g., Here is a multiple line file named `address-list.txt`:
+
+```plaintext
+Adam Smith
+1234 Wall St., Apt. 5C
+New York, NY 10021
+212 555-4321
+
+David W. Copperfield
+221 Dickens Lane
+Monterey, CA 93940
+408 555-0041
+work phone 408 555-6532
+Mary, birthday January 30
+
+Canadian Consulate
+555 Fifth Ave
+New York, NY
+212 586-2400
+```
+
+Only execute the first awk program on the file:
+
+```bash
+cat address-list.txt |
+awk '
+BEGIN { RS = ""; FS = "\n" }
+      { printf("%s!!#", x[split($1, x, " ")])
+        for (i = 1; i <= NF; i++)
+            printf("%s%s", $i, i < NF ? "!!#" : "\n")
+      }
+'
+```
+
+Output of the first awk program:
+
+```console
+Smith!!#Adam Smith!!#1234 Wall St., Apt. 5C!!#New York, NY 10021!!#212 555-4321
+Copperfield!!#David W. Copperfield!!#221 Dickens Lane!!#Monterey, CA 93940!!#408 555-0041!!#work phone 408 555-6532!!#Mary, birthday January 30
+Consulate!!#Canadian Consulate!!#555 Fifth Ave!!#New York, NY!!#212 586-2400
+```
+
+After sorted, the output is:
+
+```console
+Consulate!!#Canadian Consulate!!#555 Fifth Ave!!#New York, NY!!#212 586-2400
+Copperfield!!#David W. Copperfield!!#221 Dickens Lane!!#Monterey, CA 93940!!#408 555-0041!!#work phone 408 555-6532!!#Mary, birthday January 30
+Smith!!#Adam Smith!!#1234 Wall St., Apt. 5C!!#New York, NY 10021!!#212 555-4321
+```
+
+Execute both first & second awk program:
+
+```bash
+cat address-list.txt | 
+awk '
+BEGIN { RS = ""; FS = "\n" }
+      { printf("%s!!#", x[split($1, x, " ")])
+        for (i = 1; i <= NF; i++)
+            printf("%s%s", $i, i < NF ? "!!#" : "\n")
+      }
+' |
+sort |
+awk '
+BEGIN { FS = "!!#" }
+      { for (i = 2; i <= NF; i++)
+            printf("%s\n", $i)
+        printf("\n")
+      }
+'
+```
+
+Final output:
+
+```console
+Canadian Consulate
+555 Fifth Ave
+New York, NY
+212 586-2400
+
+David W. Copperfield
+221 Dickens Lane
+Monterey, CA 93940
+408 555-0041
+work phone 408 555-6532
+Mary, birthday January 30
+
+Adam Smith
+1234 Wall St., Apt. 5C
+New York, NY 10021
+212 555-4321
+```
+
 **Exercise 3-18.** Modify the first awk program to detect occurrences of the magic string `!!#` in the data.
 
 ### 4.3. Records with Headers and Trailers
