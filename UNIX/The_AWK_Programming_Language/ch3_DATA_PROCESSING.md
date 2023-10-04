@@ -1040,3 +1040,141 @@ Murray Hill, NJ 07974
 ```
 
 ### 4.4. Name-Value Data
+
+In some applications data may have more structure than can be captured by a sequence of unformatted lines. For instance, addresses might include a country name, or might not have a street address.
+
+One way to deal with structured data is to add an identifying name or keyword to each field of each record. For example, here is how we might organize a checkbook in this format:
+
+```plaintext
+check	1021
+to	Champagne Unlimited
+amount	123.10
+date	1/1/87
+
+deposit
+amount	500.00
+date	1/1/87
+
+check	1022
+date	1/2/87
+amount	45.10
+to	Getwell Drug Store
+tax	medical
+
+check	1023
+amount	125.00
+to	International Travel
+date	1/3/87
+
+amount	50.00
+to	Carnegie Hall
+date	1/3/87
+check	1024
+tax	charitable contribution
+
+to	American Express
+check	1025
+amount	75.75
+date	1/5/87
+```
+
+We are still using multiline records separated by a single blank line, but within each record, every piece of data is self-identifying: each field consists of an item name, a tab, and the information. That means that different records can contain different fields, or similar fields in arbitrary order.
+
+One way to process this kind of data is to treat it as single lines, with occasional blank lines as separators. Each line identifies the value it corresponds to, but they are not otherwise connected. So to accumulate the sums of deposits and checks, for example, we could simply scan the input for deposits and checks, like this:
+
+`check1.awk`
+
+```awk
+# check1 - print total deposits and checks
+
+/^check/   { ck = 1; next }
+/^deposit/ { dep = 1; next }
+/^amount/  { amt = $2; next }
+/^$/       { addup() }
+
+END        { addup()
+             printf("deposits $%.2f, checks $%.2f\n",
+                 deposits, checks)
+           }
+
+function addup() {
+    if (ck)
+        checks += amt
+    else if (dep)
+        deposits += amt
+    ck = dep = amt = 0
+}
+```
+
+which produces
+
+```console
+deposits $500.00, checks $418.95
+```
+
+This is easy, and it works (on correct input) no matter what order the items of a record appear in. But it is delicate, requiring careful initialization, re-initialization, and end-of-file processing.
+
+Thus an appealing alternative is to read each record as a unit, then pick it apart as needed. The following program computes the same sums of deposits and checks, using a function to extract the value associated with an item of a given name:
+
+`check2.awk`
+
+```awk
+# check2 - print total deposits and checks
+
+BEGIN           { RS = ""; FS = "\n" }
+/(^|\n)deposit/ { deposits += field("amount"); next }
+/(^|\n)check/   { checks += field("amount"); next }
+END             { printf("deposits $%.2f, checks $%.2f\n",
+                      deposits, checks)
+                }
+
+function field(name,   i,f) {
+    for (i = 1; i <= NF; i++) {
+        split($i, f, "\t")
+        if (f[1] == name)
+            return f[2]
+    }
+    printf("error: no field %s in record\n%s\n", name, $0)
+}
+```
+
+The function `field(s)` finds an item in the current record whose name is `s`; it returns the value associated with that name.
+
+A third possibility is to split each field into an associative array and access that for the values. To illustrate, here is a program that prints the check information in a more compact form:
+
+Expected output:
+
+```plaintext
+1/1/87  1021  $123.10  Champagne Unlimited
+1/2/87  1022   $45.10  Getwell Drug Store
+1/3/87  1023  $125.00  International Travel
+1/3/87  1024   $50.00  Carnegie Hall
+1/5/87  1025   $75.75  American Express
+```
+
+The program is:
+
+`check3.awk`
+
+```awk
+# check3 - print check information
+
+BEGIN { RS = ""; FS = "\n" }
+/(^|\n)check/ {
+    for (i = 1; i <= NF; i++) {
+        split($i, f, "\t")
+        val[f[1]] = f[2]
+    }
+    printf("%8s %5d %8s  %s\n",
+        val["date"],
+        val["check"],
+        sprintf("$%.2f", val["amount"]),
+        val["to"])
+    for (i in val)
+        delete val[i]
+}
+```
+
+Note the use of `sprintf` to put a dollar sign(`$`) in front of the amount; the resulting string is then right-justified by `printf`.
+
+**Exercise 3-19.** Write a command lookup `x` `y` that will print from a known file all multiline records having the item name `x` with value `y`.
