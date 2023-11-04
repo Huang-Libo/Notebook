@@ -4,6 +4,9 @@
 - [2. `cut`](#2-cut)
 - [3. `tee`](#3-tee)
 - [4. `grep`](#4-grep)
+- [5. `find`](#5-find)
+  - [5.1. `find` + `-exec`](#51-find---exec)
+  - [5.2. `find` + `xargs`](#52-find--xargs)
 
 ## 1. `tr`
 
@@ -49,6 +52,8 @@ Hello
 
 ## 4. `grep`
 
+- `-v, --invert-match`: Selected lines are those not matching any of the specified patterns.
+- `-r, -R, --recursive`: Recursively search subdirectories listed.  (i.e., force grep to behave as rgrep).
 - `-i, --ignore-case`: Perform case insensitive matching.  By default, grep is case sensitive.
 - `-E, --extended-regexp`: Interpret pattern as an *extended regular expression* (i.e., force `grep` to behave as `egrep`).
 
@@ -69,4 +74,16 @@ Match empty lines:
 
 ```bash
 grep -E "^$" .zshrc
+```
+
+## 5. `find`
+
+### 5.1. `find` + `-exec`
+
+### 5.2. `find` + `xargs`
+
+E.g.
+
+```bash
+find . -name "*.sh" -print0 | xargs -0 grep "<content>"
 ```
