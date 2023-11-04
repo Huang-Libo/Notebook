@@ -33,6 +33,8 @@ South America   Brazil         134       3286       40.8
 
 The first two steps in preparing this report are done by the program `prep1`, which, when applied to the file `countries.txt`, determines the relevant information and sorts it:
 
+`prep1.awk`
+
 ```awk
 # prep1 - prepare countries by continent and pop. den.
 
@@ -43,6 +45,10 @@ BEGIN { FS = "\t" }
 ```
 
 The output is a sequence of lines containing **5** fields, separated by colons, that give the continent, country, population, area, and population density:
+
+```bash
+cat countries.txt | awk -f prep1.awk
+```
 
 ```plaintext
 Asia:Japan:120:144:833.3
@@ -66,7 +72,32 @@ We wrote `prep1` to print directly into the Unix `sort` command.
 
 (In **Section 6.3**, we will show a sort-generator program that creates these lists of options from a description in words.)
 
+---
+
+**Tips**:
+
+`prep1-1.awk`
+
+```awk
+# prep1-1 - prepare countries by continent and pop. den.
+
+BEGIN { FS = "\t" }
+      { printf("%s:%s:%d:%d:%.1f\n",
+            $4, $1, $3, $2, 1000*$3/$2)
+      }
+```
+
+sort just once:
+
+```bash
+cat countries.txt | awk -f prep1-1.awk | sort -t: +0 -1 +4rn
+```
+
+---
+
 We have completed the preparation and sort steps; all we need now is to format this information into the desired report. The program `form1` does the job:
+
+`form1.awk`
 
 ```awk
 # form1 - format countries data by continent, pop. den.
@@ -92,6 +123,8 @@ cat countries.txt | awk -f prep1.awk | awk -f form1.awk
 The **peculiar** arguments to `sort` in `prep1` can be avoided by having the program format its output so that `sort` doesn't need any arguments, and then having the formatting program reformat the lines.
 
 By default, the `sort` command sorts its input lexicographically. In the final report, the output needs to be sorted alphabetically by continent and in reverse numerical order by population density. To avoid arguments to `sort`, the preparation program can put at the beginning of each line a quantity depending on continent and population density that, when sorted lexicographically, will automatically order the output correctly. One possibility is a fixed-width representation of the continent followed by the **reciprocal**(倒数，e.g., `n`'s reciprocal value is`1/n`) of the population density, as in `prep2`:
+
+`prep2.awk`
 
 ```awk
 # prep2 - prepare countries by continent, inverse pop. den.
@@ -124,6 +157,8 @@ The format `%-15s` is wide enough for all the continent names, and `%12. 8f` cov
 The final formatting program is like `form1` but *skips* the new *second* field. The trick of manufacturing a `sort` key that simplifies the sorting options is quite general. We'll use it again in an indexing program in **Chapter 5**.
 
 If we would like a slightly fancier report in which only the first occurrence of each continent name is printed, we can use the formatting program form2 in place of `form1`:
+
+`form2.awk`
 
 ```awk
 # form2 - format countries by continent, pop. den.
