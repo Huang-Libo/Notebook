@@ -1223,6 +1223,7 @@ All operators are left associative except the *assignment operators*, the *condi
 Since there is no explicit operator for *concatenation*, it is wise to *parenthesize* expressions involving other operators in concatenations. the program
 
 ```awk
+# ❌
 $1 < 0 { print "abs($1) = " -$1 }
 ```
 
@@ -1231,12 +1232,14 @@ $1 < 0 { print "abs($1) = " -$1 }
 The programs
 
 ```awk
+# ✅
 $1 < 0 { print "abs($1) = " (-$1) }
 ```
 
 and
 
 ```awk
+# ✅
 $1 < 0 { print "abs($1) =", -$1 }
 ```
 
@@ -2127,7 +2130,9 @@ BEGIN {
 
 Notice that everything happens in the `BEGIN` action: because there are no other *pattern-action* statements, the arguments are never treated as filenames, and no input is read.
 
-Another program using *command-line arguments* is `seq`, which generates sequences of integers:
+Another program using *command-line arguments* is `seq.awk`, which generates sequences of integers:
+
+`seq.awk`
 
 ```awk
 # seq - print sequences of integers
@@ -2150,14 +2155,15 @@ BEGIN {
 The commands
 
 ```bash
-awk -f seq 10
-awk -f seq 1 10
-awk -f seq 1 10 1
+awk -f seq.awk 10
+awk -f seq.awk 1 10
+awk -f seq.awk 1 10 1
 ```
 
 all generate the integers `1` through `10`.
 
-The arguments in `ARGV` may be modified or added to; `ARGC` may be altered. As each input file ends, awk treats the next *non-null* element of `ARGV` (up through the current value of `ARGC-1`) as the name of the next input file. Thus setting an element of `ARGV` to *null* means that it will not be treated as an input file. The name `"-"` may be used for the standard input.
+- The arguments in `ARGV` may be modified or added to; `ARGC` may be altered. As each input file ends, awk treats the next *non-null* element of `ARGV` (up through the current value of `ARGC - 1`) as the name of the next input file. Thus setting an element of `ARGV` to `null` means that it will not be treated as an input file.
+- The name `"-"` may be used for the standard input.
 
 ## 6. Interaction with Other Programs
 
