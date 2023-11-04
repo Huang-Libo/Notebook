@@ -1443,7 +1443,7 @@ END      { print "Asian population is",
          }
 ```
 
-On countries, this program generates
+On `countries.txt`, this program generates
 
 ```console
 Asian population is 2173 million.
@@ -1486,7 +1486,7 @@ for (key in array)
 
 This loop executes *statement* with *variable* set in turn to each different *subscript* (**key**) in the array. **The order in which the subscripts are considered is implementation dependent. Results are unpredictable if new elements are added to the array by *statement*.**
 
-You can determine whether a particular subscript occurs in an array with the expression
+You can determine whether a particular *subscripts* (**keys**) occurs in an array with the expression
 
 ```awk
 subscript in A
@@ -1598,7 +1598,7 @@ function max(m, n) {
 }
 ```
 
-- When a function is called with an argument like `$1`, which is just an **ordinary variable**, the function is given a *copy* of the value of the variable, so the function manipulates the copy, not the variable itself. This means that the function cannot affect the value of the variable outside the function. (The jargon is that such variables, called "scalars," are **passed "by value."**)
+- When a function is called with an argument like `$1`, which is just an **ordinary variable**, the function is given a *copy* of the value of the variable, so the function manipulates the copy, not the variable itself. This means that the function cannot affect the value of the variable outside the function. (The **jargon** is that such variables, called "scalars(标量)," are **passed "by value."**)
 - **Arrays** are not copied, however, so it is possible for the function to alter array elements or create new ones. (This is called **passing "by reference."**)
 - The name of a function may not be used as a parameter.
 
@@ -1613,6 +1613,7 @@ This means that the way to provide *local variables* for the *private* use of a 
 >
 > - A more elegant approach - you can create a workaround by using variable *naming conventions* to simulate local scope:
 >   - By convention, an underscore `_` is often used as a **prefix** to indicate that a variable is intended to be "*private*" or "*local*" to a function.
+>   - *However, this approach can't thoroughly prevent duplication of names in complex situations.*
 
 ## 4. Output
 
@@ -1715,7 +1716,7 @@ prints the first and second fields with **no** intervening *output field separat
 
 > NOTE: Output produced by `printf` does not contain any *newlines* unless you put them in explicitly.
 
-The `printf` statement is used to generate *formatted* output. It is similar to that in `C` except that the `*` *format specifier* is not supported in awk's `printf`.
+The `printf` statement is used to generate *formatted* output. It is similar to that in `C Programming Language` except that the `*` *format specifier* is not supported in awk's `printf`.
 
 Like `print`, it has both an un-parenthesized and parenthesized form:
 
@@ -1746,26 +1747,26 @@ The *format argument* is always required; it is an expression whose string value
 
 **Ⅱ. EXAMPLES OF PRINTF SPECIFICATIONS**
 
-| fmt         | $1      | printf(fmt, $1)           |
-|-------------|---------|---------------------------|
-| `%c`        | 97      | <pre>a</pre>              |
-| `%d`        | 97.5    | <pre>97</pre>             |
-| `%5d`       | 97.5    | <pre>   97</pre>          |
-| `%e`        | 97.5    | <pre>9.750000e+01</pre>   |
-| `%f`        | 97.5    | <pre>97.500000</pre>      |
-| `%7.2f`     | 97.5    | <pre>  97.50</pre>        |
-| `%g`        | 97.5    | <pre>97.5</pre>           |
-| `%.6g`      | 97.5    | <pre>97.5</pre>           |
-| `%o`        | 97      | <pre>141</pre>            |
-| `%06o`      | 97      | <pre>000141</pre>         |
-| `%x`        | 97      | <pre>61</pre>             |
-| `|%s|`      | January | <pre>\|January\|</pre>    |
-| `|%10s|`    | January | <pre>\|   January\|</pre> |
-| `|%-10s|`   | January | <pre>\|January   \|</pre> |
-| `|%.3s|`    | January | <pre>\|Jan\|</pre>        |
-| `|%10.3s|`  | January | <pre>\|       Jan\|</pre> |
-| `|%-10.3s|` | January | <pre>\|Jan       \|</pre> |
-| `%%`        | January | <pre>%</pre>              |
+| fmt           | $1      | printf(fmt, $1)           |
+|---------------|---------|---------------------------|
+| `%c`          | 97      | <pre>a</pre>              |
+| `%d`          | 97.5    | <pre>97</pre>             |
+| `%5d`         | 97.5    | <pre>   97</pre>          |
+| `%e`          | 97.5    | <pre>9.750000e+01</pre>   |
+| `%f`          | 97.5    | <pre>97.500000</pre>      |
+| `%7.2f`       | 97.5    | <pre>  97.50</pre>        |
+| `%g`          | 97.5    | <pre>97.5</pre>           |
+| `%.6g`        | 97.5    | <pre>97.5</pre>           |
+| `%o`          | 97      | <pre>141</pre>            |
+| `%06o`        | 97      | <pre>000141</pre>         |
+| `%x`          | 97      | <pre>61</pre>             |
+| `\|%s\|`      | January | <pre>\|January\|</pre>    |
+| `\|%10s\|`    | January | <pre>\|   January\|</pre> |
+| `\|%-10s\|`   | January | <pre>\|January   \|</pre> |
+| `\|%.3s\|`    | January | <pre>\|Jan\|</pre>        |
+| `\|%10.3s\|`  | January | <pre>\|       Jan\|</pre> |
+| `\|%-10.3s\|` | January | <pre>\|Jan       \|</pre> |
+| `%%`          | January | <pre>%</pre>              |
 
 ### 4.4. Output Into Files
 
@@ -1776,9 +1777,8 @@ $3 > 100   { print $1, $3 > "big-pop" }
 $3 <= 100  { print $1, $3 > "small-pop" }
 ```
 
-Notice that the *filenames* have to be quoted.
-
-Filenames can be variables or expressions as well:
+- Notice that the *filename* have to be quoted if you are using a *raw string* as filename.
+- Filenames can be *variables* or *expressions* as well:
 
 ```awk
 { print($1, $3) > ($3 > 100 ? "big-pop" : "small-pop") }
@@ -1804,7 +1804,7 @@ In `print` and `printf` statements, if an expression in the *argument list* cont
 { print $1, ($2 > $3) }
 ```
 
-It is also important to note that a *redirection operator* opens a file only once; each successive `print` or `printf` statement adds more data to the open file.
+**It is also important to note that a *redirection operator* opens a file only once**; each successive `print` or `printf` statement adds more data to the open file.
 
 - When the *redirection operator* `>` is used, the file is initially cleared before any output is written to it.
 - If `>>` is used instead of `>`, the file is not initially cleared; output is *appended* after the original contents.
@@ -1832,6 +1832,8 @@ END   { for (c in pop)
           printf("%15s\t%6d\n", c, pop[c]) | "sort -t'\t' +1rn"
       }
 ```
+
+> Note: Call `sort` command inside `awk` script is not a efficient approach - it will sort the full content after *every* `printf` statement being executed. A better way is to call `sort` after the `awk` script completes.
 
 This yields
 
@@ -1872,7 +1874,7 @@ prints
 Error: Something went wrong!
 ```
 
-Although most of our examples show literal strings enclosed in quotes, *command lines and filenames can be specified by any expression*. In `print` statements involving redirection of output, the files or pipes are identified by their names; that is, the pipe in the program above is literally named
+Although most of our examples show literal strings enclosed in quotes, *command lines and filenames can be specified by any expression*. In `print` statements involving redirection of output, the *files* or *pipes* are identified by their names; that is, the pipe in the program above is literally named
 
 ```awk
 sort -t'\t' +1rn
@@ -1912,7 +1914,7 @@ egrep 'Asia' countries | awk 'program'
 
 The **default value** of the *built-in variable* `FS` is `" "`, that is, *a single blank*.
 
-- When `FS` has this specific value, input fields are **separated by blanks and/or tabs**,
+- When `FS` has this specific value, input fields are **separated by *blanks* and/or *tabs***,
 - and **leading blanks and tabs are discarded, so each of the following lines has the same first field**:
 
 ```plaintext
@@ -1968,7 +1970,7 @@ By default, records are separated by newlines, so the terms "line" and "record" 
 BEGIN { RS = "" }
 ```
 
-then records are separated by one or more blank lines and each record can therefore occupy several lines. Setting RS back to newline with the assignment `RS = "\n"` restores the default behavior. With multiline records, no matter what value `FS` has, newline is always one of the field separators.
+then records are separated by one or more blank lines and each record can therefore occupy several lines. Setting `RS` back to newline with the assignment `RS = "\n"` restores the default behavior. With multiline records, no matter what value `FS` has, *newline*(`\n`) is always one of the field separators.
 
 A common way to process multiline records is to use
 
@@ -2017,8 +2019,8 @@ The table below summarizes the forms of the `getline` function. The value of eac
 | `getline var`        | `var`, `NR`, `FNR`       |
 | `getline < file`     | `$0`, `NF`               |
 | `getline var < file` | `var`                    |
-| `cmd | getline`      | `$0`, `NF`               |
-| `cmd | getline var`  | `var`                    |
+| `cmd \| getline`     | `$0`, `NF`               |
+| `cmd \| getline var` | `var`                    |
 
 As an example, this program copies its input to its output, except that each line like
 
@@ -2053,7 +2055,7 @@ executes the Unix program `who` (once only) and pipes its output into `getline`.
 "date" | getline d
 ```
 
-pipes the output of the `date` command into the variable `d`, thus setting `d` to the current date. Again, input pipes may not be available on non-Unix systems.
+pipes the output of the `date` command into the variable `d`, thus setting `d` to the current date.
 
 In all cases involving `getline`, you should be aware of the possibility of an *error* return if the file can't be accessed. Although it's appealing to write
 
@@ -2080,6 +2082,8 @@ awk -Fsep 'program' f1 f2
 awk -Fsep -f progfile f1 f2
 ```
 
+> **Note**: We can also use `-v` option to pass in parameters.
+
 In these command lines, `f1`, `f2`, etc., are *command-line arguments* that normally represent *filenames*. If a filename has the form `var==text`, however, it is treated as an assignment of `text` to `var`, performed at the time when that argument would otherwise be accessed as a file (Usecase❓). This type of assignment allows variables to be changed before and after a file is read.
 
 ### 5.5. Command-Line Arguments
@@ -2091,11 +2095,14 @@ In these command lines, `f1`, `f2`, etc., are *command-line arguments* that norm
 awk -f progfile a v=1 b
 ```
 
+- `v=1`: This assigns the value `1` to the variable `v`.
+  - However, it doesn't work if you want use `v` in `BEGIN`, if you want to use variable in `BEGIN`, please use `-v` option to set variables.
+
 `ARGC` has the value **4**,
 
 - `ARGV[0]` contains `awk`,
 - `ARGV[1]` contains `a`,
-- `ARGV[2]` contains `v= 1`,
+- `ARGV[2]` contains `v=1`,
 - `ARGV[3]` contains `b`.
 
 **`ARGC` is one more than the number of arguments because `awk`, the name of the command, is counted as argument `0`, as it is in C programs.** If the awk *program* appears on the command line, however, the *program* is not treated as an argument, nor is `-f filename` or any `-F` option. For example, with the command line
