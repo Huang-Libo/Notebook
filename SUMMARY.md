@@ -52,10 +52,9 @@
 - [Pandas](Python/Pandas.md)
 - [Flask Web 开发](Python/Flask-Web.md)
 
-##  Apple Documents
+##  Apple Documentations
 
-- [Keychain Services](iOS/Keychain/README.md)
-- [Encoding and Decoding Custom Types](AppleDocuments/encoding_and_decoding_custom_types.md)
+- [Keychain Services](AppleDocumentations/encoding_and_decoding_custom_types.md)
 
 ## 📱 iOS
 
