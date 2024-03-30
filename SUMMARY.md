@@ -29,6 +29,10 @@
   - [ch3: DATA PROCESSING](UNIX/The_AWK_Programming_Language/ch3_DATA_PROCESSING.md)
   - [ch4: REPORTS AND DATABASES](UNIX/The_AWK_Programming_Language/ch4_REPORTS_AND_DATABASES.md)
 
+## ☕️ Java
+
+- [FAQ](Java/FAQ.md)
+
 ## 💎 Ruby
 
 - [rbenv](Ruby/rbenv.md)
