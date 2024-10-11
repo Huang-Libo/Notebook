@@ -13,6 +13,10 @@
 - [Authentication and Credentials](Diagram/AuthenticationAndCredentials.md)
 - [Alamofire](Diagram/Alamofire/Alamofire.md)
 
+## 🧮 Math
+
+- [INBOX](Math/INBOX.md)
+
 ## 🏭 PlantUML
 
 - [FAQ](PlantUML/FAQ.md)
