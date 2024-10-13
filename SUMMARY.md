@@ -16,6 +16,7 @@
 ## 🧮 Math
 
 - [INBOX](Math/INBOX.md)
+- [初等数论](Math/NumberTheory/Basic.md)
 - [密码学中的数论](Math/NumberTheory/CryptoMath.md)
 
 ## 🏭 PlantUML
