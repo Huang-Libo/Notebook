@@ -17,7 +17,8 @@
 
 - [INBOX](Math/INBOX.md)
 - [初等数论](Math/NumberTheory/Basic.md)
-- [密码学中的数论](Math/NumberTheory/CryptoMath.md)
+- [数论进阶](Math/NumberTheory/Advanced.md)
+- [RSA](Math/NumberTheory/RSA.md)
 
 ## 🏭 PlantUML
 
