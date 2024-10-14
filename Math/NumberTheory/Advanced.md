@@ -55,7 +55,7 @@ $$
 
 > 费马大定理在 1995 年被安德鲁·怀尔斯（Andrew Wiles）证明。 经过了长达 350 多年的努力，这个困扰数学家无数的难题终于被破解。
 
-费马大定理（亦名费马最后定理，法语：Le dernier théorème de Fermat，英语：Fermat's Last Theorem），其概要为：
+费马大定理（亦名费马最后定理 Fermat's Last Theorem），其概要为：
 
 当 $n$ 为大于 $2$ 的正整数时，方程
 
