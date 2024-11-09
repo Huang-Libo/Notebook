@@ -1,8 +1,19 @@
 # CryptoKit<!-- omit in toc -->
 
-- [1. Generate hex string from `SHA256Digest`](#1-generate-hex-string-from-sha256digest)
+- [1. HMAC](#1-hmac)
+- [2. Generate hex string from `SHA256Digest`](#2-generate-hex-string-from-sha256digest)
 
-## 1. Generate hex string from `SHA256Digest`
+## 1. HMAC
+
+A hash-based message authentication algorithm.
+
+Use hash-based message authentication to create a code with a value that’s dependent on both a block of data and a symmetric cryptographic key. Another party with access to the data and the same secret key can compute the code again and compare it to the original to detect whether the data changed.
+
+This serves a purpose similar to digital signing and verification, but depends on a **shared symmetric key** instead of public-key cryptography.
+
+**As with digital signing, the data isn’t hidden by this process.** When you need to encrypt the data as well as authenticate it, use a cipher like ``AES`` or ``ChaChaPoly`` to put the data into a sealed box (an instance of ``AES/GCM/SealedBox`` or ``ChaChaPoly/SealedBox``).
+
+## 2. Generate hex string from `SHA256Digest`
 
 Use `withUnsafeBytes()`:
 
