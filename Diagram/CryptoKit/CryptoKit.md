@@ -1,9 +1,51 @@
 # CryptoKit<!-- omit in toc -->
 
-- [1. HMAC](#1-hmac)
-- [2. Generate hex string from `SHA256Digest`](#2-generate-hex-string-from-sha256digest)
+- [1. Introduction](#1-introduction)
+  - [1.1. CryptoKit](#11-cryptokit)
+  - [1.2. swift-crypto](#12-swift-crypto)
+    - [1.2.1. SwiftASN1](#121-swiftasn1)
+    - [1.2.2. BoringSSL](#122-boringssl)
+- [2. HMAC](#2-hmac)
+- [3. Generate hex string from `SHA256Digest`](#3-generate-hex-string-from-sha256digest)
 
-## 1. HMAC
+## 1. Introduction
+
+### 1.1. CryptoKit
+
+> CryptoKit is an Apple framework, not part of the Swift project umbrella.
+
+Introduced in *iOS 13*.
+
+### 1.2. swift-crypto
+
+> It's part of Swift open source project.
+> It's not the one used in iOS/macOS systems. It's created mainly for Linux platform. But we can refer to its implementation.
+
+Open-source implementation of a substantial portion of the API of Apple `CryptoKit` suitable for use on Linux platforms.
+
+- <https://github.com/apple/swift-crypto>
+  - <https://swiftpackageindex.com/apple/swift-crypto>
+
+Dependency:
+
+- `SwiftASN1`
+- `BoringSSL`
+
+#### 1.2.1. SwiftASN1
+
+- <https://github.com/apple/swift-asn1>
+  - [swift-asn1 documentation](https://swiftpackageindex.com/apple/swift-asn1/main/documentation/swiftasn1)
+
+
+#### 1.2.2. BoringSSL
+
+<https://boringssl.googlesource.com/boringssl>
+
+`BoringSSL` is a fork of `OpenSSL` that is designed to meet Google's needs.
+
+Although `BoringSSL` is an open source project, it is not intended for general use, as OpenSSL is. **We don't recommend that third parties depend upon it.** Doing so is likely to be frustrating because there are no guarantees of API or ABI stability.
+
+## 2. HMAC
 
 A hash-based message authentication algorithm.
 
@@ -13,7 +55,7 @@ This serves a purpose similar to digital signing and verification, but depends o
 
 **As with digital signing, the data isn’t hidden by this process.** When you need to encrypt the data as well as authenticate it, use a cipher like ``AES`` or ``ChaChaPoly`` to put the data into a sealed box (an instance of ``AES/GCM/SealedBox`` or ``ChaChaPoly/SealedBox``).
 
-## 2. Generate hex string from `SHA256Digest`
+## 3. Generate hex string from `SHA256Digest`
 
 Use `withUnsafeBytes()`:
 
