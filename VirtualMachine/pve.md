@@ -3,6 +3,7 @@
 - [1. 安装 PVE](#1-安装-pve)
 - [2. 常用虚拟机系统](#2-常用虚拟机系统)
   - [2.1. OpenWrt](#21-openwrt)
+    - [不同镜像的选择：ext4 / squashfs](#不同镜像的选择ext4--squashfs)
   - [2.2. iStoreOS](#22-istoreos)
   - [2.3. ImmortalWrt](#23-immortalwrt)
     - [Mirrors](#mirrors)
@@ -40,7 +41,13 @@ PVE 是基于 Debian 开发的虚拟机监视器，类似于 VMWare ESXi，但 P
 
 如果需要在 OpenWrt 中安装第三方插件，最好先给镜像扩容。此规则同意适用于其他衍生版，不过常用的衍生版已经修改过原始镜像设置的大小，可以安装更多的插件，如有需求可以再次扩容。
 
-[OpenWrt / Documentation / User guide / Advanced configuration / Expanding root partition and filesystem](https://openwrt.org/docs/guide-user/advanced/expand_root)
+[OpenWrt / Documentation / User guide / Advanced configuration / Expanding root partition and filesystem (x86)](https://openwrt.org/docs/guide-user/advanced/expand_root)
+
+#### 不同镜像的选择：ext4 / squashfs
+
+SquashFS is a **compressed, read-only filesystem**. It's the default and most common filesystem used for OpenWrt images, especially on *embedded devices* with limited flash memory (like most routers).
+
+ext4 is a journaling filesystem widely used in Linux distributions. In OpenWrt, ext4 images are typically found for platforms with larger storage, such as x86-based systems (e.g., mini PCs, VMs) or single-board computers (SBCs) that boot from SD cards or eMMC.
 
 ### 2.2. iStoreOS
 
