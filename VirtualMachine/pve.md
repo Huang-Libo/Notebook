@@ -1,4 +1,17 @@
-# PVE
+# PVE<!-- omit in toc -->
+
+- [1. 安装 PVE](#1-安装-pve)
+- [2. 常用虚拟机系统](#2-常用虚拟机系统)
+  - [2.1. OpenWrt](#21-openwrt)
+  - [2.2. iStoreOS](#22-istoreos)
+  - [2.3. ImmortalWrt](#23-immortalwrt)
+  - [2.4. Ubuntu server](#24-ubuntu-server)
+  - [2.5. RouterOS](#25-routeros)
+- [3. 小工具](#3-小工具)
+- [4. 其他新插件](#4-其他新插件)
+- [5. FAQ](#5-faq)
+  - [5.1. 新版 OpenWrt 找不到依赖包的问题](#51-新版-openwrt-找不到依赖包的问题)
+- [6. Reference](#6-reference)
 
 [Overview of Proxmox Virtual Environment](https://www.proxmox.com/en/products/proxmox-virtual-environment/overview)
 
@@ -8,27 +21,27 @@ Download
 
 PVE 是基于 Debian 开发的虚拟机监视器，类似于 VMWare ESXi，但 PVE 是开源的。安装 PVE 类似于裸机安装 Debian 系统，需要制作一个 USD 启动盘。
 
-## 安装
+## 1. 安装 PVE
 
 管理后台
 
 [https://192.168.xx.xx:8006/](https://192.168.xx.xx:8006/)
 
-## 常用虚拟机系统
+## 2. 常用虚拟机系统
 
-### OpenWrt
+### 2.1. OpenWrt
 
 [OpenWrt Packages x86_64](https://openwrt.pkgs.org/24.10/openwrt-packages-x86_64/)
 
-### iStoreOS
+### 2.2. iStoreOS
 
 [iStore插件包](https://github.com/AUK9527/Are-u-ok)
 
-### immortalwrt
+### 2.3. ImmortalWrt
 
-[mirror of immortalwrt packages](https://mirror.nju.edu.cn/immortalwrt/releases/24.10.1/targets/x86/64/packages/)
+[Mirror of ImmortalWrt packages](https://mirror.nju.edu.cn/immortalwrt/releases/24.10.1/targets/x86/64/packages/)
 
-### Ubuntu server
+### 2.4. Ubuntu server
 
 注意：登录使用的默认用户名不是 root ，而是安装系统设置的用户名。
 
@@ -69,29 +82,29 @@ sudo netplan try
 sudo netplan apply
 ```
 
-### RouterOS
+### 2.5. RouterOS
 
 [RouterOS](https://mikrotik.com/download)
 
 适合做主路由。
 
-## 小工具
+## 3. 小工具
 
 [GitHub 文件加速代理](https://gh-proxy.com/)
 [IP Subnet Calculator](https://www.omnicalculator.com/other/ip-subnet)
 
-## 其他新插件
+## 4. 其他新插件
 
 [OpenWrt-nikki](https://github.com/nikkinikki-org/OpenWrt-nikki)
 
-## FAQ
+## 5. FAQ
 
-### 新版 OpenWrt 找不到依赖包的问题
+### 5.1. 新版 OpenWrt 找不到依赖包的问题
 
 > 事实上，在 OpenWrt 的软件包网站，是可以找到对应的软件包下载的，但是由于软件库组织的问题，还不能在包管理工具中直接安装对应的软件包。于是只有手动安装这些软件包，当然在安装时还会遇到依赖问题，还要安装对应的依赖。
 
 [OpenWrt 24.10固件安装 Passwall](https://www.rultr.com/tutorials/68871.html)
 
-## Reference
+## 6. Reference
 
 - [在 PVE 虚拟环境中安装 OpenWRT 流程](https://optimus-xs.github.io/posts/install-openwrt-in-pve/)
