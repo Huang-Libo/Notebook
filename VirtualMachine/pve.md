@@ -5,6 +5,7 @@
   - [2.1. OpenWrt](#21-openwrt)
   - [2.2. iStoreOS](#22-istoreos)
   - [2.3. ImmortalWrt](#23-immortalwrt)
+    - [Mirrors](#mirrors)
   - [2.4. Ubuntu server](#24-ubuntu-server)
   - [2.5. RouterOS](#25-routeros)
 - [3. 小工具](#3-小工具)
@@ -31,13 +32,34 @@ PVE 是基于 Debian 开发的虚拟机监视器，类似于 VMWare ESXi，但 P
 
 ### 2.1. OpenWrt
 
+[OpenWrt](https://openwrt.org/)
+
 [OpenWrt Packages x86_64](https://openwrt.pkgs.org/24.10/openwrt-packages-x86_64/)
+
+请注意，原版的 OpenWrt 分区容量非常小，只有数百兆，即使 PVE 给其分配很大的硬盘容量，它也只是使用镜像指定的固定容量，剩下的硬盘空间则变成了“未使用容量”。
+
+如果需要在 OpenWrt 中安装第三方插件，最好先给镜像扩容。此规则同意适用于其他衍生版，不过常用的衍生版已经修改过原始镜像设置的大小，可以安装更多的插件，如有需求可以再次扩容。
+
+[OpenWrt / Documentation / User guide / Advanced configuration / Expanding root partition and filesystem](https://openwrt.org/docs/guide-user/advanced/expand_root)
 
 ### 2.2. iStoreOS
 
 [iStore插件包](https://github.com/AUK9527/Are-u-ok)
 
 ### 2.3. ImmortalWrt
+
+> An open source OpenWrt variant for mainland China users.
+
+[GitHub: ImmortalWrt](https://github.com/immortalwrt/immortalwrt)
+
+[ImmortalWrt Firmware Selector](https://firmware-selector.immortalwrt.org/)
+
+[ImmortalWrt Downloads](https://downloads.immortalwrt.org/)
+
+#### Mirrors
+
+[MirrorZ](https://help.mirrors.cernet.edu.cn/immortalwrt/)
+(中国教育和科研计算机网网络中心)
 
 [Mirror of ImmortalWrt packages](https://mirror.nju.edu.cn/immortalwrt/releases/24.10.1/targets/x86/64/packages/)
 
