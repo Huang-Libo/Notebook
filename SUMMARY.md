@@ -10,6 +10,7 @@
 ## 🇻 Virtual Machine
 
 - [PVE](VirtualMachine/pve.md)
+- [OpenWrt](VirtualMachine/OpenWrt.md)
 
 ## 🌉 Diagrams
 
