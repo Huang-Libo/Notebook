@@ -7,6 +7,10 @@
 - [Special Keys](KeyboardShortcuts/SpecialKeys.md)
 - [Xcode](KeyboardShortcuts/Xcode.md)
 
+## 🇻 Virtual Machine
+
+- [PVE](VirtualMachine/pve.md)
+
 ## 🌉 Diagrams
 
 - [URLSession](Diagram/URLSession.md)
