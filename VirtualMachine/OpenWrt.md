@@ -82,11 +82,11 @@ An `ext4` image usually means the entire root filesystem is a single, writable e
 
 #### 1.4.1. JFFS2 / UBIFS
 
-**Journalling Flash File System version 2** , It's a specialized file system designed specifically for use with flash memory devices, particularly in embedded systems like routers (where OpenWrt is commonly used).
+**JFFS2(Journalling Flash File System version 2)** , It's a specialized file system designed specifically for use with flash memory devices, particularly in embedded systems like routers (where OpenWrt is commonly used).
 
 Despite the emergence of UBIFS, JFFS2 remains widely used in many embedded systems, particularly for smaller **NOR flash devices** where its simplicity and robustness are still highly valued.
 
-**Unsorted Block Image File System** , a prominent successor of JFFS2 .
+**UBIFS(Unsorted Block Image File System)** , a prominent successor of JFFS2 .
 
 UBIFS is a modern, log-structured file system specifically designed for larger unmanaged NAND flash memory devices. It was developed by Nokia engineers and made its way into the Linux kernel (2.6.27 and later).
 
