@@ -11,9 +11,8 @@
     - [1.2.3. Disadvantages of ext4](#123-disadvantages-of-ext4)
   - [1.3. Summary](#13-summary)
   - [1.4. Terminology](#14-terminology)
-    - [1.4.1. JFFS2](#141-jffs2)
-    - [1.4.2. UBIFS](#142-ubifs)
-    - [1.4.3. NOR flash / NAND flash](#143-nor-flash--nand-flash)
+    - [1.4.1. JFFS2 / UBIFS](#141-jffs2--ubifs)
+    - [1.4.2. NOR / NAND flash](#142-nor--nand-flash)
 
 ## 1. ext4 and SquashFS image types
 
@@ -81,13 +80,11 @@ An `ext4` image usually means the entire root filesystem is a single, writable e
 
 ### 1.4. Terminology
 
-#### 1.4.1. JFFS2
+#### 1.4.1. JFFS2 / UBIFS
 
 **Journalling Flash File System version 2** , It's a specialized file system designed specifically for use with flash memory devices, particularly in embedded systems like routers (where OpenWrt is commonly used).
 
 Despite the emergence of UBIFS, JFFS2 remains widely used in many embedded systems, particularly for smaller **NOR flash devices** where its simplicity and robustness are still highly valued.
-
-#### 1.4.2. UBIFS
 
 **Unsorted Block Image File System** , a prominent successor of JFFS2 .
 
@@ -112,7 +109,7 @@ In essence, UBIFS, by leveraging the UBI layer, provides a more robust, performa
 | **Bad Block Handling**  | Transparently handled by UBI layer                       | Handled by JFFS2 itself (can be less robust for large NAND) |
 | **Wear Leveling Scope** | Global across all UBI volumes                            | Per-JFFS2 partition                                         |
 
-#### 1.4.3. NOR flash / NAND flash
+#### 1.4.2. NOR / NAND flash
 
 - **NOR(Not OR)** flash: Its name comes from the way its memory cells are arranged, which resembles a NOR logic gate.
 - **NAND(Negative-AND)** flash: Its name comes from the series connection of its memory cells, which resembles a NAND logic gate.
