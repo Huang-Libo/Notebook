@@ -6,10 +6,10 @@
     - [1.1.2. Advantages of SquashFS](#112-advantages-of-squashfs)
     - [1.1.3. Disadvantages of SquashFS](#113-disadvantages-of-squashfs)
   - [1.2. ext4 Image](#12-ext4-image)
-    - [How it works in OpenWrt](#how-it-works-in-openwrt)
-    - [Advantages of ext4](#advantages-of-ext4)
-    - [Disadvantages of ext4](#disadvantages-of-ext4)
-  - [Summary](#summary)
+    - [1.2.1. How it works in OpenWrt](#121-how-it-works-in-openwrt)
+    - [1.2.2. Advantages of ext4](#122-advantages-of-ext4)
+    - [1.2.3. Disadvantages of ext4](#123-disadvantages-of-ext4)
+  - [1.3. Summary](#13-summary)
 
 ## 1. ext4 and SquashFS image types
 
@@ -45,24 +45,24 @@ OpenWrt employs a clever trick to make a read-only SquashFS partition appear wri
 
 `ext4` is a journaling filesystem widely used in Linux distributions. In OpenWrt, `ext4` images are typically found for platforms with larger storage, such as x86-based systems (e.g., **mini PCs**, **VMs**) or single-board computers (SBCs) that boot from SD cards or eMMC.
 
-#### How it works in OpenWrt
+#### 1.2.1. How it works in OpenWrt
 
 An `ext4` image usually means the entire root filesystem is a single, writable ext4 partition. There's no separate read-only *base* or *overlay*.
 
-#### Advantages of ext4
+#### 1.2.2. Advantages of ext4
 
 - **Full Writable Space**: The entire partition space allocated to `ext4` is available for installation of packages, logs, and user data. This is a significant advantage for devices with large storage, as you can easily utilize the full capacity of an SD card or SSD.
 - **Simpler Management**: Since it's a single, writable filesystem, operations like resizing the root partition to fill the entire disk are generally simpler and more straightforward than with *SquashFS* + *OverlayFS*.
 - **Better for Data-Intensive Applications**: If you plan to run applications that generate a lot of logs, store large files (e.g., Docker containers, file sharing services), or install many packages, `ext4` is usually a better choice due to its direct access to all available storage.
 - **No "Wasted" Space from Modifications**: Files are modified in place, so there's no duplication of files as seen with the OverlayFS model.
 
-#### Disadvantages of ext4
+#### 1.2.3. Disadvantages of ext4
 
 - **No Built-in "Factory Reset" via File System**: Unlike SquashFS, there's no inherent "factory reset" mechanism by simply erasing an overlay. If you corrupt your `ext4` filesystem or configuration, a full reflash of the image is usually required to restore the system to a clean state. You'd need to manually backup/restore configurations.
 - **Larger Image Size**: `ext4` images are uncompressed, making them larger than equivalent SquashFS images. This isn't an issue for x86 or SBCs with ample storage but makes them unsuitable for routers with tiny flash memory.
 - **Less Robust Against Corruption (Compared to Read-Only)**: While `ext4` is a robust journaling filesystem, a power loss or system crash during a write operation could potentially lead to filesystem corruption, requiring manual recovery tools (`fsck`). The read-only nature of SquashFS offers a higher degree of inherent resilience for the core system.
 
-### Summary
+### 1.3. Summary
 
 | Feature              | SquashFS Image                                  | ext4 Image                                     |
 |:---------------------|:------------------------------------------------|:-----------------------------------------------|
