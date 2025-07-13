@@ -1,6 +1,6 @@
 # OpenWrt<!-- omit in toc -->
 
-- [1. ext4 and squashfs image types](#1-ext4andsquashfsimage-types)
+- [1. ext4 and SquashFS image types](#1-ext4-and-squashfs-image-types)
   - [1.1. SquashFS Image](#11-squashfs-image)
     - [1.1.1. How it works in OpenWrt](#111-how-it-works-in-openwrt)
     - [1.1.2. Advantages of SquashFS](#112-advantages-of-squashfs)
@@ -9,8 +9,9 @@
     - [How it works in OpenWrt](#how-it-works-in-openwrt)
     - [Advantages of ext4](#advantages-of-ext4)
     - [Disadvantages of ext4](#disadvantages-of-ext4)
+  - [Summary](#summary)
 
-## 1. ext4 and squashfs image types
+## 1. ext4 and SquashFS image types
 
 ### 1.1. SquashFS Image
 
@@ -60,3 +61,16 @@ An `ext4` image usually means the entire root filesystem is a single, writable e
 - **No Built-in "Factory Reset" via File System**: Unlike SquashFS, there's no inherent "factory reset" mechanism by simply erasing an overlay. If you corrupt your `ext4` filesystem or configuration, a full reflash of the image is usually required to restore the system to a clean state. You'd need to manually backup/restore configurations.
 - **Larger Image Size**: `ext4` images are uncompressed, making them larger than equivalent SquashFS images. This isn't an issue for x86 or SBCs with ample storage but makes them unsuitable for routers with tiny flash memory.
 - **Less Robust Against Corruption (Compared to Read-Only)**: While `ext4` is a robust journaling filesystem, a power loss or system crash during a write operation could potentially lead to filesystem corruption, requiring manual recovery tools (`fsck`). The read-only nature of SquashFS offers a higher degree of inherent resilience for the core system.
+
+### Summary
+
+| Feature              | SquashFS Image                                  | ext4 Image                                     |
+|:---------------------|:------------------------------------------------|:-----------------------------------------------|
+| **Root Filesystem**  | Compressed, Read-Only (with Writable Overlay)   | Writable                                       |
+| **Storage Layout**   | `/rom` (SquashFS) + `/overlay` (JFFS2/UBIFS)    | Single `ext4` partition                        |
+| **Space Efficiency** | High (due to compression)                       | Lower (uncompressed)                           |
+| **Writable Space**   | Limited (only `/overlay`)                       | Full partition capacity                        |
+| **"Factory Reset"**  | Easy (erase `/overlay`)                         | Requires re-flashing or manual restore         |
+| **Resilience**       | High (core is read-only)                        | Standard (journaling helps, but not read-only) |
+| **Use Cases**        | Most routers, embedded devices with small flash | x86, SBCs, devices with large storage          |
+| **Complexity**       | OverlayFS can be conceptually more complex      | Simpler, direct filesystem                     |
