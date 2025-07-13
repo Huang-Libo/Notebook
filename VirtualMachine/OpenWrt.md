@@ -10,6 +10,10 @@
     - [1.2.2. Advantages of ext4](#122-advantages-of-ext4)
     - [1.2.3. Disadvantages of ext4](#123-disadvantages-of-ext4)
   - [1.3. Summary](#13-summary)
+  - [1.4. Terminology](#14-terminology)
+    - [1.4.1. JFFS2](#141-jffs2)
+    - [1.4.2. UBIFS](#142-ubifs)
+    - [1.4.3. NOR flash / NAND flash](#143-nor-flash--nand-flash)
 
 ## 1. ext4 and SquashFS image types
 
@@ -74,3 +78,60 @@ An `ext4` image usually means the entire root filesystem is a single, writable e
 | **Resilience**       | High (core is read-only)                        | Standard (journaling helps, but not read-only) |
 | **Use Cases**        | Most routers, embedded devices with small flash | x86, SBCs, devices with large storage          |
 | **Complexity**       | OverlayFS can be conceptually more complex      | Simpler, direct filesystem                     |
+
+### 1.4. Terminology
+
+#### 1.4.1. JFFS2
+
+**Journalling Flash File System version 2** , It's a specialized file system designed specifically for use with flash memory devices, particularly in embedded systems like routers (where OpenWrt is commonly used).
+
+Despite the emergence of UBIFS, JFFS2 remains widely used in many embedded systems, particularly for smaller **NOR flash devices** where its simplicity and robustness are still highly valued.
+
+#### 1.4.2. UBIFS
+
+**Unsorted Block Image File System** , a prominent successor of JFFS2 .
+
+UBIFS is a modern, log-structured file system specifically designed for larger unmanaged NAND flash memory devices. It was developed by Nokia engineers and made its way into the Linux kernel (2.6.27 and later).
+
+While JFFS2 was a groundbreaking flash file system, UBIFS addresses many of its limitations, particularly for larger NAND flash storage, making it a "next-generation" solution.
+
+**The UBI Layer: The Foundation of UBIFS**
+
+A key distinguishing feature of UBIFS is that it doesn't directly interact with the raw flash (*Memory Technology Device - MTD*). Instead, it sits on top of an intermediate layer called **UBI (Unsorted Block Images)**. This two-layer architecture is fundamental to UBIFS's advantages.
+
+In essence, UBIFS, by leveraging the UBI layer, provides a more robust, performant, and scalable flash file system solution compared to JFFS2, particularly well-suited for modern NAND flash-based embedded systems.
+
+| Feature                 | UBIFS                                                    | JFFS2                                                       |
+|:------------------------|:---------------------------------------------------------|:------------------------------------------------------------|
+| **Underlying Layer**    | UBI (handles wear leveling, bad blocks)                  | MTD (handles raw flash, JFFS2 does its own wear leveling)   |
+| **Mount Time**          | Much faster (on-media index, fastmap)                    | Slower (scans entire flash to build in-memory index)        |
+| **Memory Consumption**  | Lower (index on media)                                   | Higher (index built in RAM)                                 |
+| **Scalability**         | Scales much better with larger flash sizes               | Performance degrades with larger flash                      |
+| **Write Performance**   | Generally faster (write-back caching, UBI optimizations) | Slower (write-through)                                      |
+| **Volume Management**   | Built-in (via UBI)                                       | No direct volume management                                 |
+| **Bad Block Handling**  | Transparently handled by UBI layer                       | Handled by JFFS2 itself (can be less robust for large NAND) |
+| **Wear Leveling Scope** | Global across all UBI volumes                            | Per-JFFS2 partition                                         |
+
+#### 1.4.3. NOR flash / NAND flash
+
+- **NOR(Not OR)** flash: Its name comes from the way its memory cells are arranged, which resembles a NOR logic gate.
+- **NAND(Negative-AND)** flash: Its name comes from the series connection of its memory cells, which resembles a NAND logic gate.
+
+| Feature           | NOR Flash                                           | NAND Flash                                            |
+| :---------------- | :-------------------------------------------------- | :---------------------------------------------------- |
+| **Architecture** | Cells connected in **parallel** (like NOR gate)     | Cells connected in **series** (like NAND gate)        |
+| **Access Type** | Random access (byte-addressable)                    | Sequential access (page/block addressable)            |
+| **Read Speed** | **Very Fast** (for random reads, XIP)               | Slower (for random reads), **Faster for sequential** |
+| **Write/Erase Speed** | Slower (byte/word-level write, larger block erase) | **Faster** (page write, block erase)                  |
+| **Execute-In-Place (XIP)** | **Yes** (code can run directly from flash)      | **No** (code must be "shadowed" to RAM first)         |
+| **Density** | Lower (larger cell size, more complex wiring)       | **Higher** (smaller cell size, simpler wiring)        |
+| **Cost per Bit** | Higher                                              | **Lower** |
+| **Reliability** | Very High (fewer bit errors, less prone to bad blocks) | Good (requires ECC for error correction)              |
+| **Bad Blocks** | Generally ships with 0 bad blocks, rarely develops new ones | Can ship with bad blocks, prone to developing more    |
+| **Endurance (P/E Cycles)** | Higher (e.g., 100K-1M)                            | Lower (e.g., 500-10K for MLC/TLC, 100K+ for SLC/3D)   |
+| **Wear Leveling** | Less critical (managed by file system if needed)    | **Crucial** (managed by FTL/UBI to prolong life)      |
+| **Management** | Simpler, often direct interface                     | More complex (requires FTL, UBI layer, ECC)           |
+| **Typical Capacity** | MBs to a few GBs                                  | **GBs to TBs** |
+| **Common Use Cases** | Boot code (BIOS/firmware), embedded code, small OS, network router firmware, microcontrollers, IoT devices | Mass storage (SSDs, USB drives, SD cards), smartphones, tablets, high-capacity data logging |
+
+In conclusion, NOR flash is the workhorse for **code execution and low-capacity, high-reliability firmware storage**, where fast random reads and XIP are essential. NAND flash, on the other hand, is the dominant technology for **mass data storage** where high capacity, low cost, and fast sequential transfers are key. Many modern devices, like smartphones, use both: NOR for the initial boot code, and NAND for the operating system and user data.
