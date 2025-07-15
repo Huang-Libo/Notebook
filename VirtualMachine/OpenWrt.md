@@ -18,7 +18,7 @@
 
 ## 1. Instruction of OpenWrt
 
-OpenWrt: **Wrt** stands for **W**ireless **r**ou**t**er.
+[OpenWrt](https://openwrt.org/): **Wrt** stands for **W**ireless **r**ou**t**er.
 
 ## 2. ext4 and SquashFS image types
 
