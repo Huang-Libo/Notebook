@@ -246,7 +246,9 @@ config interface 'lan'
 
 之后就方便使用 ssh 登录了。
 
-最后，通过浏览器登录 OpenWrt 后台，配置 Gateway 等参数（如果是当旁路由使用），以便让其连上网络。
+最后，通过浏览器登录 OpenWrt 后台，配置 Gateway / DNS / DHCP 等参数，以便让其连上网络。
+
+如果是当旁路由使用，则将 DHCP 关闭，将 Gateway 和 DNS 的值都设置为主路由。
 
 ## 4. 小工具
 
