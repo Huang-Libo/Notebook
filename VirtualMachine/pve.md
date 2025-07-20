@@ -177,9 +177,9 @@ target file:
 | key  | value             | comment          |
 |------|-------------------|------------------|
 | BIOS | Default (SeaBIOS) | 比 UEFI 配置简单 |
-| CPU  | x86-64-v2-AES     | 性能比 kvm64     |
+| CPU  | x86-64-v2-AES     | 性能比 kvm64 好  |
 
-ssh 到 **pve terminal**导入镜像：
+ssh 到 **pve terminal** 导入镜像：
 
 命令的格式：
 
@@ -244,7 +244,7 @@ config interface 'lan'
 
 最后，通过浏览器登录 OpenWrt 后台，配置 Gateway / DNS / DHCP 等参数，以便让其连上网络。
 
-如果是当旁路由使用，则将 DHCP 关闭，将 Gateway 和 DNS 的值都设置为主路由。
+如果是当旁路由使用，则将 DHCP 关闭，将 Gateway 和 DNS 的值都设置为主路由的 IP 地址。
 
 ## 4. 小工具
 
