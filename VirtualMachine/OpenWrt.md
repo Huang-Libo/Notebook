@@ -44,9 +44,13 @@ You can search in [Table of Hardware: Firmware downloads](https://openwrt.org/to
 
 In [firmware-selector](https://firmware-selector.openwrt.org/) page, you can select a firmware and do some customized settings for the selector. Specifically, you can "**Customize installed packages and/or first boot script**".
 
+In [Expanding root partition and filesystem](https://openwrt.org/docs/guide-user/advanced/expand_root?s[]=resize), it explains how to expand OpenWrt root partition and filesystem on x86 target.
+
+You can use [firmware-selector](https://firmware-selector.openwrt.org/) page to pre-install required packages in your customized firmware, then you can use them to resize the filesystem more convenient.
+
 ### 2.3. Stable release
 
-In [OpenWrt Downloads](https://downloads.openwrt.org/) page, you can find most recent release.
+In [OpenWrt Downloads](https://downloads.openwrt.org/) page, you can find the most recent release.
 
 ### 2.4. All releases
 
