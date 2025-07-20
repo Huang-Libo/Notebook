@@ -7,6 +7,7 @@
   - [2.3. ImmortalWrt](#23-immortalwrt)
     - [2.3.1. Mirrors](#231-mirrors)
   - [2.4. Ubuntu server](#24-ubuntu-server)
+    - [2.4.1. Ubuntu 设置静态 IP](#241-ubuntu-设置静态-ip)
   - [2.5. RouterOS](#25-routeros)
 - [3. 示例：安装原版 OpenWrt 镜像](#3-示例安装原版-openwrt-镜像)
   - [3.1. 镜像选择](#31-镜像选择)
@@ -22,7 +23,7 @@
 
 ## 1. 安装 PVE
 
-[PVE](https://www.proxmox.com/en/products/proxmox-virtual-environment/overview) 是基于 Debian 开发的虚拟机监视器，类似于 *VMWare ESXi* ，但 PVE 是开源的。安装 PVE 类似于裸机安装 Debian 系统，需要制作一个 USD 启动盘。
+[PVE](https://www.proxmox.com/en/products/proxmox-virtual-environment/overview) 是基于 Debian 开发的*虚拟机监视器（Hypervisor）*，类似于 *VMWare ESXi* ，但 PVE 是开源的。安装 PVE 类似于裸机安装 Debian 系统，需要制作一个 USD 启动盘。
 
 下载页面：
 
@@ -36,11 +37,7 @@
 
 ### 2.1. OpenWrt
 
-[OpenWrt](https://openwrt.org/)
-
-[OpenWrt Packages x86_64](https://openwrt.pkgs.org/24.10/openwrt-packages-x86_64/)
-
-请注意，原版的 OpenWrt 分区容量非常小，只有数百兆，即使 PVE 给其分配很大的硬盘容量，它也只是使用镜像指定的固定容量，剩下的硬盘空间则变成了“未使用容量”。
+请注意，原版的 [OpenWrt](https://openwrt.org/) 分区容量非常小，只有数百兆，即使 PVE 给其分配很大的硬盘容量，它也只是使用镜像指定的固定容量，剩下的硬盘空间则变成了“未使用容量”。
 
 如果需要在 OpenWrt 中安装第三方插件，最好先给镜像扩容。此规则同意适用于其他衍生版，不过常用的衍生版已经修改过原始镜像设置的大小，可以安装更多的插件，如有需求可以再次扩容。
 
@@ -48,17 +45,16 @@
 
 ### 2.2. iStoreOS
 
-[iStore插件包](https://github.com/AUK9527/Are-u-ok)
+- [iStoreOS: 开源免费的路由➕存储系统](https://site.istoreos.com/)
+- [iStore插件包](https://github.com/AUK9527/Are-u-ok)
 
 ### 2.3. ImmortalWrt
 
 > An open source OpenWrt variant for mainland China users.
 
-[GitHub: ImmortalWrt](https://github.com/immortalwrt/immortalwrt)
-
-[ImmortalWrt Firmware Selector](https://firmware-selector.immortalwrt.org/)
-
-[ImmortalWrt Downloads](https://downloads.immortalwrt.org/)
+- [GitHub: ImmortalWrt](https://github.com/immortalwrt/immortalwrt)
+- [ImmortalWrt Firmware Selector](https://firmware-selector.immortalwrt.org/)
+- [ImmortalWrt Downloads](https://downloads.immortalwrt.org/)
 
 #### 2.3.1. Mirrors
 
@@ -69,9 +65,9 @@
 
 ### 2.4. Ubuntu server
 
-注意：登录使用的默认用户名不是 root ，而是安装系统设置的用户名。
+注意：登录使用的默认用户名不是 `root` ，而是安装系统设置的用户名。
 
-Ubuntu 设置静态 IP
+#### 2.4.1. Ubuntu 设置静态 IP
 
 [Setting a Static IP in Ubuntu – Linux IP Address Tutorial](https://www.freecodecamp.org/news/setting-a-static-ip-in-ubuntu-linux-ip-address-tutorial/)
 
