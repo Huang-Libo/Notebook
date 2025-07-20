@@ -28,7 +28,6 @@
   - [4.4. Terminology](#44-terminology)
     - [4.4.1. JFFS2 / UBIFS](#441-jffs2--ubifs)
     - [4.4.2. NOR / NAND flash](#442-nor--nand-flash)
-- [5. Image type](#5-image-type)
 
 ## 1. Instruction of OpenWrt
 
@@ -46,7 +45,7 @@ In [firmware-selector](https://firmware-selector.openwrt.org/) page, you can sel
 
 In [Expanding root partition and filesystem](https://openwrt.org/docs/guide-user/advanced/expand_root?s[]=resize), it explains how to expand OpenWrt root partition and filesystem on x86 target.
 
-You can use [firmware-selector](https://firmware-selector.openwrt.org/) page to pre-install required packages in your customized firmware, then you can use them to resize the filesystem more convenient.
+The [firmware-selector](https://firmware-selector.openwrt.org/) page can be used to pre-install packages into your customized firmware, simplifying the filesystem resizing process.
 
 ### 2.3. Stable release
 
@@ -298,5 +297,3 @@ In essence, UBIFS, by leveraging the UBI layer, provides a more robust, performa
 | **Common Use Cases** | Boot code (BIOS/firmware), embedded code, small OS, network router firmware, microcontrollers, IoT devices | Mass storage (SSDs, USB drives, SD cards), smartphones, tablets, high-capacity data logging |
 
 In conclusion, NOR flash is the workhorse for **code execution and low-capacity, high-reliability firmware storage**, where fast random reads and XIP are essential. NAND flash, on the other hand, is the dominant technology for **mass data storage** where high capacity, low cost, and fast sequential transfers are key. Many modern devices, like smartphones, use both: NOR for the initial boot code, and NAND for the operating system and user data.
-
-## 5. Image type
