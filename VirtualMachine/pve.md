@@ -9,6 +9,7 @@
   - [2.4. Ubuntu server](#24-ubuntu-server)
     - [2.4.1. Ubuntu 设置静态 IP](#241-ubuntu-设置静态-ip)
   - [2.5. RouterOS](#25-routeros)
+  - [2.6. 其他系统](#26-其他系统)
 - [3. 示例：安装原版 OpenWrt 镜像](#3-示例安装原版-openwrt-镜像)
   - [3.1. 镜像选择](#31-镜像选择)
     - [3.1.1. 使用 legacy BIOS 镜像](#311-使用-legacy-bios-镜像)
@@ -109,6 +110,11 @@ sudo netplan apply
 [RouterOS](https://mikrotik.com/download)
 
 适合做主路由。
+
+### 2.6. 其他系统
+
+- [Arch Linux](https://archlinux.org/)
+- [Manjaro](https://manjaro.org/)
 
 ## 3. 示例：安装原版 OpenWrt 镜像
 
