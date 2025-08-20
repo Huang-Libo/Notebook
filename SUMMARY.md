@@ -11,6 +11,7 @@
 
 - [PVE](VirtualMachine/pve.md)
 - [OpenWrt](VirtualMachine/OpenWrt.md)
+- [Use Ubuntu in PVE](VirtualMachine/Ubuntu-in-PVE.md)
 
 ## 🌉 Diagrams
 
