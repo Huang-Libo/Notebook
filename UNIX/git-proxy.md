@@ -11,12 +11,17 @@
   - [3.1. 2.1 编辑 SSH 配置文件](#31-21-编辑-ssh-配置文件)
   - [3.2. 2.2 配置示例](#32-22-配置示例)
   - [3.3. 2.3 验证](#33-23-验证)
-- [4. 三、常见问题](#4-三常见问题)
-  - [4.1. Q1：配置了 `http.proxy`，为什么 `git clone git@github.com:...` 还是超时？](#41-q1配置了-httpproxy为什么-git-clone-gitgithubcom-还是超时)
-  - [4.2. Q2：代理是 SOCKS5 而不是 HTTP 怎么办？](#42-q2代理是-socks5-而不是-http-怎么办)
-  - [4.3. Q3：环境变量和永久代理能混用吗？](#43-q3环境变量和永久代理能混用吗)
-  - [4.4. Q4：代理配置在哪个文件里？](#44-q4代理配置在哪个文件里)
-- [5. 四、快速对照表](#5-四快速对照表)
+- [4. 三、HTTPS 与 SSH 链接的切换](#4-三https-与-ssh-链接的切换)
+  - [4.1. 3.1 查看当前 remote](#41-31-查看当前-remote)
+  - [4.2. 3.2 HTTPS 切换为 SSH](#42-32-https-切换为-ssh)
+  - [4.3. 3.3 SSH 切回 HTTPS](#43-33-ssh-切回-https)
+  - [4.4. 3.4 选择建议](#44-34-选择建议)
+- [5. 四、常见问题](#5-四常见问题)
+  - [5.1. Q1：配置了 `http.proxy`，为什么 `git clone git@github.com:...` 还是超时？](#51-q1配置了-httpproxy为什么-git-clone-gitgithubcom-还是超时)
+  - [5.2. Q2：代理是 SOCKS5 而不是 HTTP 怎么办？](#52-q2代理是-socks5-而不是-http-怎么办)
+  - [5.3. Q3：环境变量和永久代理能混用吗？](#53-q3环境变量和永久代理能混用吗)
+  - [5.4. Q4：代理配置在哪个文件里？](#54-q4代理配置在哪个文件里)
+- [6. 五、快速对照表](#6-五快速对照表)
 
 ## 1. 概述
 
@@ -161,22 +166,69 @@ Hi <username>! You've successfully authenticated, but GitHub does not provide sh
 
 ---
 
-## 4. 三、常见问题
+## 4. 三、HTTPS 与 SSH 链接的切换
 
-### 4.1. Q1：配置了 `http.proxy`，为什么 `git clone git@github.com:...` 还是超时？
+同一个仓库的远程地址可以随时在 HTTPS 和 SSH 之间切换：`git remote set-url` 只改本地 `.git/config` 里记录的 URL，不会重新下载仓库，已有的提交历史、分支和未提交改动都原样保留。因此不必在 clone 之前纠结选哪种协议：
+
+- **只读的开源仓库**（不需要、也没有权限推送代码）：直接用 HTTPS clone 即可，不用配置 SSH Key，也不用碰 `~/.ssh/config`。
+- **之后需要推送**（例如 fork 后提交 PR）：再把本地仓库切成 SSH，按第二节配好代理和密钥。
+
+### 4.1. 3.1 查看当前 remote
+
+```bash
+git remote -v
+# origin  https://github.com/user/repo.git (fetch)
+# origin  https://github.com/user/repo.git (push)
+```
+
+### 4.2. 3.2 HTTPS 切换为 SSH
+
+```bash
+git remote set-url origin git@github.com:user/repo.git
+```
+
+验证：
+
+```bash
+git remote -v
+# origin  git@github.com:user/repo.git (fetch)
+# origin  git@github.com:user/repo.git (push)
+```
+
+之后 `git fetch` / `git pull` / `git push` 都走 SSH，需要按第二节配置 `~/.ssh/config`（含 `ProxyCommand`）并把 SSH Key 添加到 GitHub。
+
+### 4.3. 3.3 SSH 切回 HTTPS
+
+反过来也可以随时切回，切回后不再依赖 SSH Key 与 `~/.ssh/config`：
+
+```bash
+git remote set-url origin https://github.com/user/repo.git
+```
+
+### 4.4. 3.4 选择建议
+
+- **只读开源仓库，不推送代码** → 直接 HTTPS clone：无 Key、无代理配置，clone 最省事。
+- **自己的仓库 / 需要 push** → SSH：密钥认证，免输密码。
+- **先只读，之后可能要改代码** → 先 HTTPS，需要时再切 SSH：切换只改远程地址，已下载内容和历史不丢失。
+
+---
+
+## 5. 四、常见问题
+
+### 5.1. Q1：配置了 `http.proxy`，为什么 `git clone git@github.com:...` 还是超时？
 
 因为 SSH 链接不经过 Git 的 HTTP 栈，环境变量和 Git 配置都对它无效，必须按第二节配置 `~/.ssh/config`。
 
-### 4.2. Q2：代理是 SOCKS5 而不是 HTTP 怎么办？
+### 5.2. Q2：代理是 SOCKS5 而不是 HTTP 怎么办？
 
 - HTTPS：`export HTTPS_PROXY=socks5://127.0.0.1:7897`，或 `git config --global http.proxy socks5://127.0.0.1:7897`
 - SSH：`ProxyCommand nc -X 5 -x 127.0.0.1:7897 %h %p`
 
-### 4.3. Q3：环境变量和永久代理能混用吗？
+### 5.3. Q3：环境变量和永久代理能混用吗？
 
 可以。环境变量优先级最高，会覆盖 `~/.gitconfig` 里的 `http.proxy`；关闭终端后环境变量失效，又回到配置文件的值。
 
-### 4.4. Q4：代理配置在哪个文件里？
+### 5.4. Q4：代理配置在哪个文件里？
 
 ```bash
 git config --list --show-origin
@@ -186,7 +238,7 @@ git config --list --show-origin
 
 ---
 
-## 5. 四、快速对照表
+## 6. 五、快速对照表
 
 | 操作            | HTTPS 链接                                                                 | SSH 链接                          |
 |-----------------|----------------------------------------------------------------------------|-----------------------------------|
