@@ -107,6 +107,27 @@ git config --global --unset http.https://github.com.proxy
 
 ### 2.5. 1.5 验证
 
+推荐用 `git ls-remote` 做轻量测试：它只查询远端 refs，不下载对象，也不在本地创建任何文件，改完配置后可以反复跑。
+
+```bash
+GIT_CURL_VERBOSE=1 git ls-remote https://github.com/git/git.git
+```
+
+`GIT_CURL_VERBOSE=1` 让 Git 底层 libcurl 输出详细日志，能直接看出代理是否生效、以及代理来自哪里：
+
+```text
+* Uses proxy env variable https_proxy == 'http://127.0.0.1:7897'
+*   Trying 127.0.0.1:7897...
+* CONNECT github.com:443 HTTP/1.1
+```
+
+- 出现 `Uses proxy env variable ...` 表示代理来自环境变量；没有这行但出现 `Trying 127.0.0.1:7897...` / `Connected to 127.0.0.1...`，说明 `http.proxy` 等 Git 配置生效。
+- 成功时输出一串 ref 及其 SHA，如 `HEAD`、`refs/heads/master`。
+- 代理不通会报 `Failed to connect to 127.0.0.1 port 7897` 或直接超时；日志里完全没有代理相关行，则说明 Git 没读到代理设置，回头检查 1.1～1.3 的配置。
+- 该命令只走 HTTPS，不能用来验证 SSH 代理（见 `ssh -T git@github.com`）。
+
+也可以直接 clone 一个仓库验证：
+
 ```bash
 git clone https://github.com/user/repo.git
 ```
